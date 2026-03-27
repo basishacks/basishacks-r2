@@ -1,6 +1,6 @@
 # basishacks_2026
 
-The official website for basishacks_2026.
+The official website for basishacks_2026. This is an updated version for season 2.
 
 ## Local setup
 
