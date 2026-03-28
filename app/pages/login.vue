@@ -1,6 +1,7 @@
 <script setup lang="ts">
 import type { FormSubmitEvent } from '@nuxt/ui'
 import { LoginRequest, SendCodeRequest } from '~~/shared/schemas'
+import oAuth2Config from '~~/shared/oauth2'
 
 useHead({
   title: `Login | ${WEBSITE_NAME}`,
@@ -12,10 +13,26 @@ const { fetch: refreshAuth } = useUserSession()
 const isSendingCode = ref(true)
 const isLoading = ref(false)
 
+const route = useRoute()
+
+const link = `https://login.microsoftonline.com/
+${oAuth2Config.tenant}/
+oauth2/v2.0/authorize?
+client_id=${oAuth2Config.clientId}
+&response_type=${oAuth2Config.responseType}
+&redirect_uri={CURRENT_URL_ORIGIN}${oAuth2Config.redirectUri}
+&response_mode=query
+&scope=${oAuth2Config.scope.replaceAll(' ', '%20')}`
+
+
 const state = reactive({
   email: '',
   code: '',
 })
+
+const navigateToOAuth2 = () => {
+  window.location.href = link.replace("{CURRENT_URL_ORIGIN}", window.location.origin);
+}
 
 async function onSendCodeSubmit(event: FormSubmitEvent<SendCodeRequest>) {
   const { email } = event.data
@@ -80,8 +97,6 @@ async function onLoginSubmit(event: FormSubmitEvent<LoginRequest>) {
   <div>
     <h1 class="text-4xl bold mb-4">Log in</h1>
 
-    <p class="mb-4">Please log in using the form below.</p>
-
     <UForm
       v-if="isSendingCode"
       :state="state"
@@ -89,7 +104,7 @@ async function onLoginSubmit(event: FormSubmitEvent<LoginRequest>) {
       class="max-w-[600px] space-y-4"
       @submit="onSendCodeSubmit"
     >
-      <UFormField name="email" label="Email">
+      <UFormField name="email" label="via your School Email">
         <UInput v-model="state.email" type="email" class="w-full" />
       </UFormField>
 
@@ -98,22 +113,21 @@ async function onLoginSubmit(event: FormSubmitEvent<LoginRequest>) {
       >
     </UForm>
 
-    <UForm
-      v-else
-      :state="state"
-      :schema="LoginRequest"
-      class="max-w-[600px] space-y-4"
-      @submit="onLoginSubmit"
-    >
-      <UFormField name="email" label="Email">
-        <UInput v-model="state.email" disabled type="email" class="w-full" />
+
+
+    <UForm class="mt-5">
+      <UFormField name="email" label="or use Microsoft Login">
+          <UButton @click="navigateToOAuth2">
+            <img src="/assets/microsoft_logo.svg" alt="Microsoft Logo" class="w-5 h-5 mr-2" />
+            Login with Microsoft
+          </UButton>
       </UFormField>
 
-      <UFormField name="code" label="Verification code">
-        <UInput v-model="state.code" class="w-full" />
-      </UFormField>
-
-      <UButton :disabled="isLoading" type="submit">Log in</UButton>
+      
     </UForm>
+
+    
   </div>
+
+
 </template>
