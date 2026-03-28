@@ -8,6 +8,10 @@ const { data: user } = await useFetch<GetUserResponse>(
 )
 const { data: hackathon } = await useFetch('/api/hackathon')
 
+const profileIconColor = computed(() => {
+  return userRef.value ? 'text-primary' : 'text-ui-muted'
+})
+
 const navItems = computed<NavigationMenuItem[]>(() => {
   const links = [
     {
@@ -67,6 +71,7 @@ const navItems = computed<NavigationMenuItem[]>(() => {
         <UButton
           icon="i-material-symbols-account-circle-full"
           variant="ghost"
+          :class="profileIconColor"
           href="/profile"
         />
       </template>
