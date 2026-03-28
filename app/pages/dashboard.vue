@@ -2,6 +2,7 @@
 definePageMeta({
   middleware: ['auth'],
 })
+
 useHead({
   title: `Dashboard | ${WEBSITE_NAME}`,
 })
@@ -23,6 +24,91 @@ if (error.value) {
 }
 
 const isDirty = ref(false)
+const confettiTriggered = ref(false)
+
+
+
+const rankColorClass = computed(() => {
+  const rank = data.value?.team?.rank
+  if (rank === 1) return 'text-yellow-400'
+  if (rank === 2) return 'text-gray-300'
+  if (rank === 3) return 'text-orange-600'
+  return 'text-white'
+})
+
+function triggerConfetti() {
+  const rank = data.value?.team?.rank
+  if (!rank || rank > 3 || confettiTriggered.value) return
+
+  confettiTriggered.value = true
+
+  import('canvas-confetti').then((confettiModule) => {
+
+    // if (sessionStorage.getItem('confettiShown')) {
+    //   return
+    // }
+
+
+    const confetti = (config: any) => {
+
+
+      sessionStorage.setItem('confettiShown', 'true'); // Set a flag in session storage to indicate confetti has been shown
+
+      confettiModule.default({
+        ...config
+      })
+    }
+
+    const origin = { x: 0.36, y: 0.42 } // Sorry i hard coded this because its just easier to tweak the position that way
+
+    // Different confetti effects based on rank
+    if (rank === 1) {
+      // Gold confetti for 1st place
+      confetti({
+        particleCount: 200,
+        spread: 70,
+        origin: origin,
+        colors: ['#FFD700', '#FFA500', '#FFFF00'],
+      })
+    } else if (rank === 2) {
+      // Silver confetti for 2nd place
+      confetti({
+        particleCount: 150,
+        spread: 60,
+        origin: origin,
+        colors: ['#C0C0C0', '#E8E8E8', '#D3D3D3'],
+      })
+    } else if (rank === 3) {
+      // Bronze confetti for 3rd place
+      confetti({
+        particleCount: 120,
+        spread: 55,
+        origin: origin,
+        colors: ['#CD7F32', '#B87333', '#A0522D'],
+      })
+    } else if (rank >= 10) {
+        confetti({
+          particleCount: 120,
+          spread: 55,
+          origin: origin,
+          colors: [""],
+        })
+    }
+  })
+}
+
+onMounted(() => {
+  triggerConfetti()
+})
+
+watch(
+  () => data.value?.team?.rank,
+  (newRank) => {
+    if (newRank && newRank <= 3 && !confettiTriggered.value) {
+      triggerConfetti()
+    }
+  }
+)
 
 async function refreshData() {
   await withLoadingIndicator(async () => {
@@ -121,12 +207,35 @@ onUnmounted(() => {
       </div>
 
       <template v-if="hackathon?.status !== 'not_started'">
+
         <h2 class="text-3xl bold mb-4">Your project</h2>
-        <p v-if="data.team.rank" class="mb-4">
-          You ranked <span class="bold">#{{ data.team.rank }}</span> in
-          <span class="text-primary glow">{{ WEBSITE_NAME }}</span
-          >, scoring {{ data.team.score }} points out of 1000. Thank you for participating!
-        </p>
+
+        <div v-if="data.team.rank" class="mb-4 max-w-[600px] border border-gray-200 dark:border-gray-800 rounded-lg p-6 bg-white dark:bg-gray-900">
+          <div class="flex items-center gap-8">
+            <!-- Score Section -->
+            <div class="flex-1">
+              <p class="text-sm text-gray-600 dark:text-gray-400 mb-2 uppercase tracking-wide">Your Score</p>
+              <div class="flex items-baseline gap-1">
+                <span class="text-6xl font-bold text-gray-900 dark:text-white">{{ data.team.score }}</span>
+                <span class="text-xl text-gray-500 dark:text-gray-400">/100</span>
+              </div>
+            </div>
+
+            <!-- Divider -->
+            <div class="w-0.5 h-24 bg-gray-300 dark:bg-gray-600"></div>
+
+            <!-- Rank Section -->
+            <div class="flex-1">
+              <p class="text-sm text-gray-600 dark:text-gray-400 mb-2 uppercase tracking-wide">Your Rank</p>
+              <div class="text-6xl font-bold" :class="rankColorClass">
+                #{{ data.team.rank }}
+              </div>
+            </div>
+          </div>
+
+          <ULink href="/results" class="mt-4 inline-block text-sm text-primary hover:underline" >See full results and feedback</ULink>
+        </div>  
+
         <p v-else-if="data.team.project.submitted" class="mb-4 glow">
           You have submitted your project. Congratulations! 🎉
         </p>

@@ -1,6 +1,7 @@
+import { applyRateLimit } from '~~/server/utils/rateLimit'
 import { UpdateUserRequest } from '~~/shared/schemas'
 
-export default defineEventHandler(async (event) => {
+export default defineEventHandler(applyRateLimit(async (event) => {
   const id = parseInt(getRouterParam(event, 'id')!)
 
   const {
@@ -30,4 +31,4 @@ export default defineEventHandler(async (event) => {
   await updateUserName(event, user)
 
   return { message: 'Your profile is updated' }
-})
+}, {maxRequests: 10, windowMs: 60 * 1000}))
