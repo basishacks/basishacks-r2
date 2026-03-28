@@ -63,34 +63,6 @@ async function onSendCodeSubmit(event: FormSubmitEvent<SendCodeRequest>) {
   }
 }
 
-async function onLoginSubmit(event: FormSubmitEvent<LoginRequest>) {
-  const { email, code } = event.data
-
-  isLoading.value = true
-
-  try {
-    await withLoadingIndicator(async () => {
-      const res = await $fetch('/api/auth/login', {
-        method: 'POST',
-        body: { email, code },
-      })
-      await refreshAuth()
-      toast.add({
-        color: 'success',
-        title: res.message,
-      })
-    })
-    await navigateTo('/dashboard')
-  } catch (e) {
-    toast.add({
-      color: 'error',
-      title: 'Failed to log in',
-      description: getErrorMessage(e),
-    })
-  } finally {
-    isLoading.value = false
-  }
-}
 </script>
 
 <template>

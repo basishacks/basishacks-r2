@@ -19,7 +19,7 @@ export async function getUserByEmail(event: H3Event, email: string) {
     .first<User>()
 }
 
-export async function addCodeToUser(event: H3Event, email: string) {
+export async function addCodeToUser(event: H3Event, email: string): Promise<User> {
   const oldUser = await getUserByEmail(event, email)
   if (
     oldUser?.login_expiry &&

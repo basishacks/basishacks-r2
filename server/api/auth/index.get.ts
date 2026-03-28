@@ -88,6 +88,9 @@ export default defineEventHandler(async (event) => {
       }
     }
 
+    user.name = name || user.name
+    await updateUserName(event, user);
+
     // Step 4: Set user session with nuxt-auth-utils
     await setUserSession(event, {
       user: {
