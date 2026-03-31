@@ -30,15 +30,23 @@ const confettiTriggered = ref(false)
 
 const rankColorClass = computed(() => {
   const rank = data.value?.team?.rank
-  if (rank === 1) return 'text-yellow-400'
-  if (rank === 2) return 'text-gray-300'
-  if (rank === 3) return 'text-orange-600'
-  return 'text-white'
+  if (rank == 1) return 'text-yellow-400'
+  if (rank == 2) return 'text-gray-300'
+  if (rank == 3) return 'text-orange-600'
+  return 'text-ui-text'
+})
+
+const rankMetallicClass = computed(() => {
+  const rank = data.value?.team?.rank
+  if (rank == 1) return 'metallic-gold'
+  if (rank == 2) return 'metallic-silver'
+  if (rank == 3) return 'metallic-bronze'
+  return ''
 })
 
 function triggerConfetti() {
   const rank = data.value?.team?.rank
-  if (!rank || rank > 3 || confettiTriggered.value) return
+  if (!rank || rank > 10 || confettiTriggered.value) return
 
   confettiTriggered.value = true
 
@@ -59,9 +67,8 @@ function triggerConfetti() {
       })
     }
 
-    const origin = { x: 0.36, y: 0.42 } // Sorry i hard coded this because its just easier to tweak the position that way
+    const origin = { x: 0.405, y: 0.42 } // Sorry i hard coded this because its just easier to tweak the position that way
 
-    // Different confetti effects based on rank
     if (rank === 1) {
       // Gold confetti for 1st place
       confetti({
@@ -79,19 +86,20 @@ function triggerConfetti() {
         colors: ['#C0C0C0', '#E8E8E8', '#D3D3D3'],
       })
     } else if (rank === 3) {
-      // Bronze confetti for 3rd place
+
       confetti({
         particleCount: 120,
         spread: 55,
         origin: origin,
         colors: ['#CD7F32', '#B87333', '#A0522D'],
       })
-    } else if (rank >= 10) {
+    } else if (rank <= 10){
+
         confetti({
           particleCount: 120,
           spread: 55,
           origin: origin,
-          colors: [""],
+          colors: ["#FF0000", "#00FF00", "#0000FF"],
         })
     }
   })
@@ -100,15 +108,6 @@ function triggerConfetti() {
 onMounted(() => {
   triggerConfetti()
 })
-
-watch(
-  () => data.value?.team?.rank,
-  (newRank) => {
-    if (newRank && newRank <= 3 && !confettiTriggered.value) {
-      triggerConfetti()
-    }
-  }
-)
 
 async function refreshData() {
   await withLoadingIndicator(async () => {
@@ -211,10 +210,13 @@ onUnmounted(() => {
         <h2 class="text-3xl bold mb-4">Your project</h2>
 
         <div v-if="data.team.rank" class="mb-4 max-w-[600px] border border-gray-200 dark:border-gray-800 rounded-lg p-6 bg-white dark:bg-gray-900">
+
+          <p class="mb-2"><strong>April 2026</strong><span style="color:var(--ui-text-muted)"> - </span>Cyberpunk</p>
+
           <div class="flex items-center gap-8">
             <!-- Score Section -->
             <div class="flex-1">
-              <p class="text-sm text-gray-600 dark:text-gray-400 mb-2 uppercase tracking-wide">Your Score</p>
+              <p class="text-sm text-gray-600 dark:text-gray-400 mb-2 uppercase tracking-wide">Overall Rating</p>
               <div class="flex items-baseline gap-1">
                 <span class="text-6xl font-bold text-gray-900 dark:text-white">{{ data.team.score }}</span>
                 <span class="text-xl text-gray-500 dark:text-gray-400">/100</span>
@@ -226,8 +228,8 @@ onUnmounted(() => {
 
             <!-- Rank Section -->
             <div class="flex-1">
-              <p class="text-sm text-gray-600 dark:text-gray-400 mb-2 uppercase tracking-wide">Your Rank</p>
-              <div class="text-6xl font-bold" :class="rankColorClass">
+              <p class="text-sm text-gray-600 dark:text-gray-400 mb-2 uppercase tracking-wide">Ranking</p>
+              <div class="text-6xl font-bold" :class="[rankColorClass, rankMetallicClass]">
                 #{{ data.team.rank }}
               </div>
             </div>
@@ -255,3 +257,47 @@ onUnmounted(() => {
     </template>
   </div>
 </template>
+
+<style scoped>
+@keyframes shimmer {
+  0% {
+    background-position: 0% 50%;
+  }
+  50% {
+    background-position: 100% 50%;
+  }
+  100% {
+    background-position: 0% 50%;
+  }
+}
+
+.metallic-gold {
+  background: linear-gradient(135deg, #FFD700 0%, #FFA500 25%, #FFD700 50%, #FFA500 75%, #FFD700 100%);
+  background-size: 200% 200%;
+  -webkit-background-clip: text;
+  background-clip: text;
+  -webkit-text-fill-color: transparent;
+  text-shadow: none;
+  animation: shimmer 3s ease-in-out infinite;
+}
+
+.metallic-silver {
+  background: linear-gradient(135deg, #E8E8E8 0%, #C0C0C0 25%, #E8E8E8 50%, #C0C0C0 75%, #E8E8E8 100%);
+  background-size: 200% 200%;
+  -webkit-background-clip: text;
+  background-clip: text;
+  -webkit-text-fill-color: transparent;
+  text-shadow: none;
+  animation: shimmer 3s ease-in-out infinite;
+}
+
+.metallic-bronze {
+  background: linear-gradient(135deg, #CD7F32 0%, #B87333 25%, #df9953 50%, #B87333 75%, #CD7F32 100%);
+  background-size: 200% 200%;
+  -webkit-background-clip: text;
+  background-clip: text;
+  -webkit-text-fill-color: transparent;
+  text-shadow: none;
+  animation: shimmer 3s ease-in-out infinite;
+}
+</style>

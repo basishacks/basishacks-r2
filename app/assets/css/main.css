@@ -26,4 +26,10 @@
 
 code {
   background: var(--background-color-accented);
+  padding: 0.25em 0.5em;
+  border-radius: 8px;
+}
+
+button:disabled {
+  filter: grayscale(1);
 }

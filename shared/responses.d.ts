@@ -18,7 +18,7 @@ interface APITeam {
     demo_url: string | null
     repo_url: string | null
     submitted: boolean
-  }
+  },
 }
 
 interface GetUserResponse extends APIUser {

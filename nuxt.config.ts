@@ -33,4 +33,7 @@ export default defineNuxtConfig({
       allowedHosts: true,
     },
   },
+  nitro: {
+    preset: 'node-server',
+  },
 })
