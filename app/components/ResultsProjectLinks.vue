@@ -11,6 +11,7 @@ const demoText = computed(() => demoLink ? 'Play demo' : 'Demo link not provided
 
 const videoText = computed(() => videoLink ? 'View presentation video' : 'Video link not provided')
 
+
 </script>
 
 <style>

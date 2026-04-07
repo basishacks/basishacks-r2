@@ -13,6 +13,7 @@ const profileIconColor = computed(() => {
   return userRef.value ? 'text-primary' : 'text-ui-muted'
 })
 
+
 const navItems = computed<NavigationMenuItem[]>(() => {
   const links = [
     {
@@ -56,11 +57,13 @@ const navItems = computed<NavigationMenuItem[]>(() => {
   }
   return links
 })
+
+const isSticky = computed(() => route.path !== '/results2')
 </script>
 
 <template>
   <div>
-    <UHeader>
+    <UHeader class="relative">
       <template #title>
         <span class="text-primary">basishacks_2026</span>
       </template>
