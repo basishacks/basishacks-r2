@@ -25,7 +25,7 @@ const sortedTeams = computed(() =>
 </script>
 
 <template>
-  <div>
+  <div class="mt-4">
     <h1 class="text-4xl bold mb-4 glow text-primary">Results</h1>
     <p class="mb-4">
       Here are the results from

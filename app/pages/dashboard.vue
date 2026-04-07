@@ -48,14 +48,14 @@ function confettiPride(confetti: any, color: Array<string>) {
 var end = Date.now() + (1 * 1000);
 (function frame() {
   confetti({
-    particleCount: 2,
+    particleCount: 3,
     angle: 60,
     spread: 55,
     origin: { x: 0, y:1},
     colors: color
   });
   confetti({
-    particleCount: 2,
+    particleCount: 3,
     angle: 120,
     spread: 55,
     origin: { x: 1, y:1},
@@ -128,8 +128,10 @@ function triggerConfetti(force: boolean = false) {
       confettiFireworks(confetti, ['#FFD700', '#FFA500', '#FFFF00'])
     } else if (rank === 2) {
       confettiPride(confetti, ['#C0C0C0', '#E8E8E8', '#D3D3D3'])
+      confettiFireworks(confetti, ['#C0C0C0', '#E8E8E8', '#D3D3D3'])
     } else if (rank === 3) {
       confettiPride(confetti, ['#CD7F32', '#B87333', '#A0522D'])
+      confettiFireworks(confetti, ['#CD7F32', '#B87333', '#A0522D'])
     } else if (rank <= 10){
       confettiPride(confetti, ["#FF0000", "#00FF00", "#0000FF"])
     }
@@ -181,7 +183,7 @@ onUnmounted(() => {
 </script>
 
 <template>
-  <div>
+  <div class="mt-4">
     <h1 class="text-4xl text-primary bold glow mb-4">Dashboard</h1>
 
     <div v-if="!data?.team">

@@ -61,7 +61,7 @@ async function onSubmit(event: FormSubmitEvent<SubmitVoteRequest>) {
 </script>
 
 <template>
-  <div>
+  <div class="mt-4">
     <h1 class="text-4xl text-primary bold glow mb-4">Peer voting</h1>
 
     <p class="mb-4">

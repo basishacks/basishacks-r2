@@ -55,7 +55,7 @@ async function onSubmitName(event: FormSubmitEvent<UpdateUserRequest>) {
 </script>
 
 <template>
-  <div>
+  <div class="mt-4">
     <h1 class="text-4xl bold mb-4">Hi, {{ user.name || user.email }}!</h1>
 
     <p class="mb-4">You are a {{ WEBSITE_NAME }} participant.</p>
