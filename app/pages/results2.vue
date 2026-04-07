@@ -47,6 +47,7 @@
                     <div class="mt-4">
                         <ResultsProjectLinks
                         githubLink="https://github.com/Rua-You/Syl"
+                        demoLink="https://rua-you.itch.io/syl"
                         videoLink="/assets/ee2c39cc-c590-4c36-a73e-43d335c76a86"></ResultsProjectLinks>
                     </div>
                     
