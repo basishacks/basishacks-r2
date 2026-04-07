@@ -34,7 +34,6 @@ interface Team {
   project_demo_url: string | null
   project_repo_url: string | null
   project_submitted: number,
-  season: string
 }
 
 interface TeamScores {
