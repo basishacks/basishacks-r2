@@ -1,22 +1,22 @@
 <template >
 
     <Transition name="fade">
-      <div v-show="showScrollText" class="fixed bottom-4 left-1/2 transform -translate-x-1/2 text-white text-center flex flex-col items-center gap-4">
+      <div v-show="showScrollText" class="fixed bottom-4 left-1/2 transform -translate-x-1/2 text-white text-center flex flex-col items-center gap-4 z-30">
         <h3 class="text-2xl text-gray-200">Scroll for more</h3>
         <UIcon name="i-mdi-chevron-double-down" size="2em" class="text-gray-200" />
       </div>
     </Transition>
 
-    <div class="relative overflow-visible">
-      <div class="m-0 bg-black text-white landscape min-h-screen flex flex-col items-center justify-center gap-4 relative z-20">
 
-          <div class="ml-auto text-right">
-              <h3 class="mx-32 text-2xl text-gray-200">Feburary 2026</h3>
-              <h1 class="mx-32 text-6xl text-right leading-16">When there is <br><span class="bold glow text-primary neon">Signal</span></h1>
-          </div>
+    <div class="m-0 bg-black text-white landscape min-h-screen flex flex-col items-center justify-center gap-4 relative z-20">
 
-      </div>
+        <div class="ml-auto text-right">
+            <h3 class="mx-32 text-2xl text-gray-200">Feburary 2026</h3>
+            <h1 class="mx-32 text-6xl text-right leading-16">When there is <br><span class="bold glow text-primary neon">Signal</span></h1>
+        </div>
+
     </div>
+
 
     <!--Team 1-->
 
@@ -252,6 +252,10 @@ onMounted(() => {
 
 .fade-leave-to {
   opacity: 0;
+}
+
+.fade-enter-active, .fade-leave-active {
+  transition: opacity 0.8s ease;
 }
 
 .slide-right-enter-active {
