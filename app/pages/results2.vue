@@ -57,7 +57,7 @@
             
         </div>
         
-        <video ref="videoRef" src="/assets/8a214d32-c43d-4141-b534-5225722a4d2b" muted preload="metadata" class="ml-auto h-auto"></video>
+        <video ref="videoRef" src="/assets/8a214d32-c43d-4141-b534-5225722a4d2b" muted preload="metadata" class="ml-auto h-auto w-[50vw]"></video>
         <!-- text -->
     </div>
 
@@ -209,7 +209,6 @@ onMounted(() => {
   transform: translate(-10%, -70%);
   font-size: 32rem;
   line-height: 0.8;
-  font-style: italic;
   font-weight: 900;
   color: rgba(255, 255, 255, 0.14);
   white-space: nowrap;
