@@ -36,7 +36,7 @@ async function onScored() {
 </script>
 
 <template>
-  <div>
+  <div class="mt-4">
     <h1 class="text-4xl text-primary bold glow mb-4">Judging</h1>
     <p v-if="!data">Loading projects...</p>
     <div v-else>

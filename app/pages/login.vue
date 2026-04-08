@@ -66,7 +66,7 @@ async function onSendCodeSubmit(event: FormSubmitEvent<SendCodeRequest>) {
 </script>
 
 <template>
-  <div>
+  <div class="'mt-4'">
     <h1 class="text-4xl bold mb-4">Log in</h1>
 
     <UForm

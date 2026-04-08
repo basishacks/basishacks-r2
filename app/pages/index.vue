@@ -24,7 +24,7 @@ const resultsOpenDate = computed(
 </script>
 
 <template>
-  <div>
+  <div class="mt-4">
     <h1 class="text-4xl bold mb-4 glow">
       Welcome to <span class="text-primary">{{ WEBSITE_NAME }}</span
       >!

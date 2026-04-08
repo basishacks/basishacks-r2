@@ -44,7 +44,54 @@ const rankMetallicClass = computed(() => {
   return ''
 })
 
-function triggerConfetti() {
+function confettiPride(confetti: any, color: Array<string>) {
+var end = Date.now() + (1 * 1000);
+(function frame() {
+  confetti({
+    particleCount: 3,
+    angle: 60,
+    spread: 55,
+    origin: { x: 0, y:1},
+    colors: color
+  });
+  confetti({
+    particleCount: 3,
+    angle: 120,
+    spread: 55,
+    origin: { x: 1, y:1},
+    colors: color
+  });
+
+  if (Date.now() < end) {
+    requestAnimationFrame(frame);
+  }
+}());
+}
+
+function confettiFireworks(confetti: any, color: Array<string>) {
+  var duration = 3 * 1000;
+var animationEnd = Date.now() + duration;
+var defaults = { startVelocity: 20, spread: 360, ticks: 60, zIndex: 0, colors: color };
+
+function randomInRange(min: number, max: number) {
+  return Math.random() * (max - min) + min;
+}
+
+var interval = setInterval(function() {
+  var timeLeft = animationEnd - Date.now();
+
+  if (timeLeft <= 0) {
+    return clearInterval(interval);
+  }
+
+  var particleCount = 100;
+  // since particles fall down, start a bit higher than random
+  confetti({ ...defaults, particleCount, origin: { x: randomInRange(0.1, 0.9), y: randomInRange(0.2, 0.9)} });
+  //confetti({ ...defaults, particleCount, origin: { x: randomInRange(0.7, 0.9), y: Math.random() - 0.2 } });
+}, 500);
+}
+
+function triggerConfetti(force: boolean = false) {
   const rank = data.value?.team?.rank
   if (!rank || rank > 10 || confettiTriggered.value) return
 
@@ -67,40 +114,26 @@ function triggerConfetti() {
       })
     }
 
-    const origin = { x: 0.405, y: 0.42 } // Sorry i hard coded this because its just easier to tweak the position that way
+    
+
+
+// go Buckeyes!
+
+
+
+     
 
     if (rank === 1) {
-      // Gold confetti for 1st place
-      confetti({
-        particleCount: 200,
-        spread: 70,
-        origin: origin,
-        colors: ['#FFD700', '#FFA500', '#FFFF00'],
-      })
+      confettiPride(confetti, ['#FFD700', '#FFA500', '#FFFF00'])
+      confettiFireworks(confetti, ['#FFD700', '#FFA500', '#FFFF00'])
     } else if (rank === 2) {
-      // Silver confetti for 2nd place
-      confetti({
-        particleCount: 150,
-        spread: 60,
-        origin: origin,
-        colors: ['#C0C0C0', '#E8E8E8', '#D3D3D3'],
-      })
+      confettiPride(confetti, ['#C0C0C0', '#E8E8E8', '#D3D3D3'])
+      confettiFireworks(confetti, ['#C0C0C0', '#E8E8E8', '#D3D3D3'])
     } else if (rank === 3) {
-
-      confetti({
-        particleCount: 120,
-        spread: 55,
-        origin: origin,
-        colors: ['#CD7F32', '#B87333', '#A0522D'],
-      })
+      confettiPride(confetti, ['#CD7F32', '#B87333', '#A0522D'])
+      confettiFireworks(confetti, ['#CD7F32', '#B87333', '#A0522D'])
     } else if (rank <= 10){
-
-        confetti({
-          particleCount: 120,
-          spread: 55,
-          origin: origin,
-          colors: ["#FF0000", "#00FF00", "#0000FF"],
-        })
+      confettiPride(confetti, ["#FF0000", "#00FF00", "#0000FF"])
     }
   })
 }
@@ -150,7 +183,7 @@ onUnmounted(() => {
 </script>
 
 <template>
-  <div>
+  <div class="mt-4">
     <h1 class="text-4xl text-primary bold glow mb-4">Dashboard</h1>
 
     <div v-if="!data?.team">
