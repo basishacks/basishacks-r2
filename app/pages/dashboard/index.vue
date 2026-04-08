@@ -1,5 +1,7 @@
+@ -1,336 +0,0 @@
 <script setup lang="ts">
 definePageMeta({
+    layout: 'dashboard',
   middleware: ['auth'],
 })
 
@@ -183,14 +185,13 @@ onUnmounted(() => {
 </script>
 
 <template>
-  <div class="mt-4">
-    <h1 class="text-4xl text-primary bold glow mb-4">Dashboard</h1>
+  <div class="mt-12">
 
     <div v-if="!data?.team">
       <p class="mb-4">
         Welcome <span class="bold">{{ data!.name || data!.email }}</span
         >! You don't have a team yet. You can
-        <ULink href="/teams/new">create a team</ULink> or ask a member from
+        <ULink href="/dashboard/teams">create a team</ULink> or ask a member from
         another team to add you!
       </p>
       <p v-if="hackathon?.status === 'not_started'" class="mb-4">
@@ -226,17 +227,7 @@ onUnmounted(() => {
         up-to-date rules and requirements.
       </p>
 
-      <div class="mb-4">
-        <TeamForm
-          :team="data.team"
-          :disabled="
-            (hackathon?.status !== 'in_progress' &&
-              hackathon?.status !== 'not_started') ||
-            data.team.project.submitted
-          "
-          @refresh="refreshData"
-        />
-      </div>
+      
 
       <template v-if="hackathon?.status !== 'not_started'">
 
@@ -271,6 +262,8 @@ onUnmounted(() => {
           <ULink href="/results" class="mt-4 inline-block text-sm text-primary hover:underline" >See full results and feedback</ULink>
         </div>  
 
+        
+
         <p v-else-if="data.team.project.submitted" class="mb-4 glow">
           You have submitted your project. Congratulations! 🎉
         </p>
@@ -278,14 +271,7 @@ onUnmounted(() => {
           The submission period is over, and you can no longer submit your
           project.
         </p>
-        <ProjectForm
-          :team="data.team"
-          :disabled="
-            hackathon?.status !== 'in_progress' || data.team.project.submitted
-          "
-          @dirty="dateUpdated"
-          @refresh="refreshData"
-        />
+        
       </template>
     </template>
   </div>

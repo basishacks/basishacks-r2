@@ -96,7 +96,6 @@
 
 </template> 
 <script setup>
-import Results from './results-old.vue'
 
 definePageMeta({
   layout: 'fullwidth-nostick'
