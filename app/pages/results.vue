@@ -66,7 +66,7 @@
     <div id="team2" ref="team2Ref" class="bg-white text-black min-h-screen flex flex-col items-center justify-center relative">
       <!--SuperCoolButCreepyVisualRecognitionRoboticHead: team2-->
       <h3 class="bold z-3 text-2xl text-neutral-400 uppercase leading-16">=^^= presents</h3>
-      <div class="metallic-silver team2-background-number">#2</div>
+      <div class="metallic-silver team2-background-number select-none">#2</div>
       <h1 :class="team2Visible ? 'animate' : ''" class="text-4xl text-left leading-16 bold relative z-10">
         <span class="word word-1">Super</span>
         <span class="word word-2">Cool</span>
@@ -99,7 +99,7 @@
 import Results from './results-old.vue'
 
 definePageMeta({
-  layout: 'fullwidth'
+  layout: 'fullwidth-nostick'
 })
 
 useHead({
