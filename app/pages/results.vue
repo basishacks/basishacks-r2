@@ -63,27 +63,56 @@
         <!-- text -->
     </div >
       
-    <div id="team2" ref="team2Ref" class="bg-white text-black min-h-screen flex flex-col items-center justify-center relative">
-      <!--SuperCoolButCreepyVisualRecognitionRoboticHead: team2-->
-      <h3 class="bold z-3 text-2xl text-neutral-400 uppercase leading-16">=^^= presents</h3>
-      <div class="metallic-silver team2-background-number select-none">#2</div>
-      <h1 :class="team2Visible ? 'animate' : ''" class="text-4xl text-left leading-16 bold relative z-10">
-        <span class="word word-1">Super</span>
-        <span class="word word-2">Cool</span>
-        <span class="word word-3">But</span>
-        <span class="word word-4">Creepy</span>
-        <span class="word word-5">Visual</span>
-        <span class="word word-6">Recognition</span>
-        <span class="word word-7">Robotic</span>
-        <span class="word word-8">Head</span>
-      </h1>
-      <p class="z-3 w-max-2 mx-50vw text-center px-8">A robotic head that looks cool and 
-        is able to recognize learned faces and colors,
-         and provide personalized reactions</p>
+    <div id="team2" ref="team2Ref" class="bg-white text-black m-0 p-0 min-h-screen max-h-screen flex flex-col items-stretch justify-center overflow-hidden">
 
-         <div class="mt-12 text-black fill-black z-3"><ResultsProjectLinks color="fill-gray-400" class="z-3"
-            githubLink="https://github.com/zhizhizhi00/visual-recognition-robotic-head"
-            videoLink="/assets/b1aee7a2-33fa-4681-bdbe-1fef3a481f0e"></ResultsProjectLinks></div>
+      <div class="flex flex-row items-center justify-between w-full h-full">
+        <div class="mt-auto w-[20vw]">
+          <img src="/assets/d3048fe7-b43b-4a95-a0a8-1d654819ddb3" class="w-[20vw] hidden xl:block">
+        </div>
+        
+        <div class="min-h-screen flex flex-col justify-center">
+          <div class="flex flex-col items-center justify-center flex-90">
+            <h3 class="bold z-3 text-2xl text-neutral-400 uppercase leading-16">=^^= presents</h3>
+            <div class="metallic-silver team2-background-number select-none">#2</div>
+            <h1 :class="team2Visible ? 'animate' : ''" class="text-4xl text-left leading-16 bold relative z-10">
+              <span class="word word-1">Super</span>
+              <span class="word word-2">Cool</span>
+              <span class="word word-3">But</span>
+              <span class="word word-4">Creepy</span>
+              <span class="word word-5">Visual</span>
+              <span class="word word-6">Recognition</span>
+              <span class="word word-7">Robotic</span>
+              <span class="word word-8">Head</span>
+            </h1>
+            <p class="z-3 w-max-2 mx-50vw text-center px-8">A robotic head that looks cool and 
+              is able to recognize learned faces and colors,
+              and provide personalized reactions</p>
+
+              <div class="mt-12 text-black fill-black z-3"><ResultsProjectLinks color="fill-gray-400" class="z-3"
+                  githubLink="https://github.com/zhizhizhi00/visual-recognition-robotic-head"
+                  videoLink="/assets/b1aee7a2-33fa-4681-bdbe-1fef3a481f0e"></ResultsProjectLinks></div>
+          </div>
+
+          <div class="flex-1 mx-auto">
+            Report Abuse
+          </div>
+        </div>
+        
+        <div class="mt-auto w-[20vw]">
+          <img src="/assets/aea63660-a483-4308-bd3c-0934bb1e3339" class="w-[20vw] hidden xl:block">
+        </div>
+        
+      </div>
+
+      
+
+      <!--SuperCoolButCreepyVisualRecognitionRoboticHead: team2-->
+      
+        
+    </div>
+
+    <div id="team3" ref="team3Ref" class="bg-gray-500 text-black min-h-screen flex flex-col items-center justify-center relative">
+
         
     </div>
     
