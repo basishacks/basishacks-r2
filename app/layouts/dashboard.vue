@@ -1,22 +1,7 @@
 <script setup lang="ts">
 import type { NavigationMenuItem } from '@nuxt/ui'
 
-definePageMeta({
-  layout: 'dashboard',
-})
-
-const items = ref<NavigationMenuItem[][]>([
-  [
-    
-    {
-      label: 'Dashboard',
-      type: 'label'
-    },
-
-
-
-
-
+const dashboardContent: NavigationMenuItem[] = [
         
     {
       label: 'Guide',
@@ -77,6 +62,19 @@ const items = ref<NavigationMenuItem[][]>([
     },
     
    
+  ]
+
+definePageMeta({
+  layout: 'dashboard',
+})
+
+const dashboardItems = ref<NavigationMenuItem[][]>([
+  [
+  {
+      label: 'Dashboard',
+      type: 'label'
+  },
+    ...dashboardContent
   ],
   [
     {
@@ -100,8 +98,8 @@ const items = ref<NavigationMenuItem[][]>([
   
 
 
-  <UContainer class="flex">
-    <div class="fixed -translate-x-full -mx-12 ">
+  <UContainer class="flex flex-col gap-0">
+    <div class="panel fixed -translate-x-full -mx-12 ">
       <div class="mt-12"></div>
       <UCard>
         <template #header>
@@ -112,8 +110,10 @@ const items = ref<NavigationMenuItem[][]>([
           <ULink class="text-xs" href="/theme/june2026">See event details <UIcon name="i-lucide-arrow-right"></UIcon></ULink>
         </template>
       </UCard>
-      <UNavigationMenu orientation="vertical" :items="items" class="data-[orientation=vertical]:w-48 mt-12" />
+      <UNavigationMenu orientation="vertical" :items="dashboardItems" class="data-[orientation=vertical]:w-48 mt-12" />
     </div>
+
+    <p class="mt-4 nopanel text-xs text-muted">Hover over the dashboard tag to see more options</p>
     
     <slot />
   </UContainer>
@@ -150,6 +150,18 @@ const items = ref<NavigationMenuItem[][]>([
   -webkit-text-fill-color: transparent;
   text-shadow: none;
   animation: shimmer 3s ease-in-out infinite;
+}
+
+.panel {
+  @media (width <= 1780px) {
+    display: none;
+  }
+}
+
+.nopanel {
+  @media (width > 1780px) {
+    display: none;
+  }
 }
 
 @keyframes shimmer {

@@ -8,6 +8,12 @@
       <UNavigationMenu :items="navItems" />
 
       <template #right>
+        <UButton
+          icon="i-lucide-menu"
+          variant="ghost"
+          class="lg:hidden"
+          @click="emit('toggleDrawer')"
+        />
         <UColorModeButton />
         <UButton
           icon="i-material-symbols-account-circle-full"
@@ -31,6 +37,10 @@
 <script setup lang="ts">
 import type { NavigationMenuItem } from '@nuxt/ui'
 
+const emit = defineEmits<{
+  toggleDrawer: []
+}>()
+
 const { user: userRef } = useUserSession()
 // this is honestly ugly asf but i can't think of a clean solution
 const { data: user } = await useFetch<GetUserResponse>(
@@ -41,6 +51,43 @@ const { data: hackathon } = await useFetch('/api/hackathon')
 const profileIconColor = computed(() => {
   return userRef.value ? 'text-primary' : 'text-ui-muted'
 })
+
+
+const dashboardContent: NavigationMenuItem[] = [
+        
+   
+
+        {
+          label: 'Overview',
+          icon: 'i-lucide-info',
+          to: '/dashboard'
+    },
+
+
+    {
+          label: 'General',
+          icon: 'i-lucide-file-text',
+          to: '/dashboard/general'
+    },
+
+    {
+          label: 'Teams',
+          icon: 'i-fluent-people-team-16-filled',
+          to: '/dashboard/teams'
+    },
+
+    {
+          label: 'Presentation',
+          icon: 'i-majesticons-presentation-play',
+          to: '/dashboard/presentation',
+          chip: true
+    },
+    
+   
+  ]
+
+
+
 
 const navItems = computed<NavigationMenuItem[]>(() => {
   const links = [
@@ -54,7 +101,7 @@ const navItems = computed<NavigationMenuItem[]>(() => {
       label: 'Dashboard',
       to: '/dashboard',
       icon: 'i-material-symbols-space-dashboard',
-      
+      children: dashboardContent,
     },
   ]
   if (
