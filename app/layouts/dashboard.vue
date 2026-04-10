@@ -113,7 +113,9 @@ const dashboardItems = ref<NavigationMenuItem[][]>([
       <UNavigationMenu orientation="vertical" :items="dashboardItems" class="data-[orientation=vertical]:w-48 mt-12" />
     </div>
 
-    <p class="mt-4 nopanel text-xs text-muted">Hover over the dashboard tag to see more options</p>
+    <UBanner color="neutral" id="hoverdashnotif" class="z-0 mt-4 nopanel text-xs text-muted rounded-md"
+    title="You can also hover over the dashboard tag to see more options"
+    close></UBanner>
     
     <slot />
   </UContainer>
