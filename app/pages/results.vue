@@ -28,7 +28,7 @@
             <div class="team1-background-number" ref="team1NumberRef" :style="team1NumberStyle">#1</div>
             <div v-if="cursorAuraVisible" class="team1-cursor-aura" :style="team1AuraStyle"></div>
             <Transition name="slide-right">
-                <div v-if="team1showDescriptionRef" class="team1-description transition-team1">
+                <div v-if="team1showDescriptionRef" class="team1-description transition-content">
 
                     <h3 class="text-2xl text-left text-neutral-400 uppercase leading-16">Featuring 白鹿青崖间</h3>
                     <h1 class="text-6xl text-left leading-16 bold glow">Syl</h1>
@@ -63,27 +63,93 @@
         <!-- text -->
     </div >
       
-    <div id="team2" ref="team2Ref" class="bg-white text-black min-h-screen flex flex-col items-center justify-center relative">
-      <!--SuperCoolButCreepyVisualRecognitionRoboticHead: team2-->
-      <h3 class="bold z-3 text-2xl text-neutral-400 uppercase leading-16">=^^= presents</h3>
-      <div class="metallic-silver team2-background-number select-none">#2</div>
-      <h1 :class="team2Visible ? 'animate' : ''" class="text-4xl text-left leading-16 bold relative z-10">
-        <span class="word word-1">Super</span>
-        <span class="word word-2">Cool</span>
-        <span class="word word-3">But</span>
-        <span class="word word-4">Creepy</span>
-        <span class="word word-5">Visual</span>
-        <span class="word word-6">Recognition</span>
-        <span class="word word-7">Robotic</span>
-        <span class="word word-8">Head</span>
-      </h1>
-      <p class="z-3 w-max-2 mx-50vw text-center px-8">A robotic head that looks cool and 
-        is able to recognize learned faces and colors,
-         and provide personalized reactions</p>
+    <div id="team2" ref="team2Ref" class="bg-white text-black m-0 p-0 min-h-screen max-h-screen flex flex-col items-stretch justify-center overflow-hidden">
 
-         <div class="mt-12 text-black fill-black z-3"><ResultsProjectLinks color="fill-gray-400" class="z-3"
-            githubLink="https://github.com/zhizhizhi00/visual-recognition-robotic-head"
-            videoLink="/assets/b1aee7a2-33fa-4681-bdbe-1fef3a481f0e"></ResultsProjectLinks></div>
+      <div class="flex flex-row items-center justify-between w-full h-full">
+        <div class="mt-auto w-[20vw]">
+          <img src="/assets/d3048fe7-b43b-4a95-a0a8-1d654819ddb3" class="w-[20vw] hidden xl:block">
+        </div>
+        
+        <div class="min-h-screen flex flex-col justify-center">
+          <div class="flex flex-col items-center justify-center flex-90">
+            <h3 class="bold z-3 text-2xl text-neutral-400 uppercase leading-16">=^^= presents</h3>
+            <div class="metallic-silver team2-background-number select-none">#2</div>
+            <h1 :class="team2Visible ? 'animate' : ''" class="text-4xl text-left leading-16 bold relative z-10">
+              <span class="word word-1">Super</span>
+              <span class="word word-2">Cool</span>
+              <span class="word word-3">But</span>
+              <span class="word word-4">Creepy</span>
+              <span class="word word-5">Visual</span>
+              <span class="word word-6">Recognition</span>
+              <span class="word word-7">Robotic</span>
+              <span class="word word-8">Head</span>
+            </h1>
+            <p class="z-3 w-max-2 mx-50vw text-center px-8">A robotic head that looks cool and 
+              is able to recognize learned faces and colors,
+              and provide personalized reactions</p>
+
+              <div class="mt-12 text-black fill-black z-3"><ResultsProjectLinks color="fill-gray-400" class="z-3"
+                  githubLink="https://github.com/zhizhizhi00/visual-recognition-robotic-head"
+                  videoLink="/assets/b1aee7a2-33fa-4681-bdbe-1fef3a481f0e"></ResultsProjectLinks></div>
+          </div>
+
+          <!-- <div class="flex-1 mx-auto">
+            <UPopover mode="hover" :ui="{content: 'p-4'}">
+              <UButton label="Report Image Usage" variant="ghost" size="xs" color="error"/>
+
+              <template #content>
+                <div class="flex items-center gap-4 mb-4">
+                  <h3>
+                    <UIcon name=""></UIcon>
+                  </h3>
+                </div>
+              </template>
+            </UPopover>
+          </div> -->
+        </div>
+        
+        <div class="mt-auto w-[20vw]">
+          <img src="/assets/aea63660-a483-4308-bd3c-0934bb1e3339" class="w-[20vw] hidden xl:block">
+        </div>
+        
+      </div>
+
+      
+
+      <!--SuperCoolButCreepyVisualRecognitionRoboticHead: team2-->
+      
+        
+    </div>
+
+    <div id="team3" ref="team3Ref" class="bg-red-950 text-black min-h-screen flex flex-col items-start justify-center relative z-0">
+      <!--close to MIT color but darker for better visuals-->
+      <Transition name="slide-left">
+        <div v-if="team3Visible" class="metallic-bronze team3-background-number select-none transition-content">
+          #3
+        </div>
+      </Transition>
+      
+      <div class="ml-24 max-w-[50vw]">
+        <h3 class="text-3xl bold glow text-white">Dysarthria Speech Classifier</h3>
+
+        <p class="text-gray-300 mt-8">
+          Dysarthria is a motor speech disorder that affects the muscles we use for speaking, making speech difficult to understand, especially for traditional speech systems like Apple Siri.
+          
+        </p>
+
+        <p class="text-gray-300 mt-8">
+          This project bridges the gap for speakers with dysarthria by using a fine-tuned HuBERT-large model to accurately classify essential voice commands.
+        </p>
+
+        <div class="z-0 mt-8">
+          <ResultsProjectLinks color="fill-gray-400" 
+                  githubLink="https://github.com/FYC23/dysarthric-voice-command-classifier"
+                  demoLink="https://huggingface.co/spaces/DNE58293/dysarthric-voice-cmds"
+                  videoLink="/assets/3f9cbe2c-c8ea-42f4-94f6-4a4a0cb01549"></ResultsProjectLinks>
+        </div>
+        
+        
+      </div>
         
     </div>
     
@@ -106,7 +172,22 @@ useHead({
     {
       rel: 'preload',
       as: 'image',
-      href: '/assets/c6c7b5b3-4256-4f9d-9899-15a7905a154c'
+      href: '/assets/c6c7b5b3-4256-4f9d-9899-15a7905a154c' // title image
+    },
+    {
+      rel: 'preload',
+      as: 'video',
+      href: '/assets/8a214d32-c43d-4141-b534-5225722a4d2b' // syl intro
+    },
+    {
+      rel: 'preload',
+      as: 'image',
+      href: '/assets/d3048fe7-b43b-4a95-a0a8-1d654819ddb3' // wojak left
+    },
+    {
+      rel: 'preload',
+      as: 'image',
+      href: '/assets/aea63660-a483-4308-bd3c-0934bb1e3339' // wojak right
     }
   ]
 })
@@ -116,7 +197,9 @@ const videoRef = ref()
 const team1showDescriptionRef = ref(false)
 const team1Ref = ref()
 const team2Ref = ref()
+const team3Ref = ref()
 const team2Visible = ref(false)
+const team3Visible = ref(false)
 const team1DescriptionWrapper = ref(null)
 const team1NumberRef = ref(null)
 const cursorAuraVisible = ref(false)
@@ -206,6 +289,15 @@ onMounted(() => {
         team2Visible.value = true
       }
     }
+
+    // Team 3 animation trigger
+    const team3Element = team3Ref.value
+    if (team3Element && !team3Visible.value) {
+      const rect = team3Element.getBoundingClientRect()
+      if (rect.top + rect.height / 1.5 < window.innerHeight && rect.bottom > 0) {
+        team3Visible.value = true
+      }
+    }
   }
 
   window.addEventListener('scroll', handleScroll)
@@ -216,7 +308,7 @@ onMounted(() => {
 </script>
 <style scoped>
 
-.transition-team1 {
+.transition-content {
     animation: display 1.5s;
 }
 
@@ -270,9 +362,8 @@ onMounted(() => {
 
 .team2-background-number {
   position: absolute;
-  top: 50%;
   left: 50%;
-  transform: translate(-50%, -50%);
+  transform: translate(-50%, -10%);
   font-size: 32rem;
   line-height: 0.8;
   font-weight: 900;
@@ -280,6 +371,19 @@ onMounted(() => {
   pointer-events: none;
   z-index: 0;
   color: #C0C0C0;
+}
+
+.team3-background-number {
+  position: absolute;
+  top: -0.2em;
+  right: 0.3em;
+
+  font-size: 32rem;
+  line-height: 0.8;
+  font-weight: 900;
+  white-space: nowrap;
+  pointer-events: none;
+  z-index: -1;
 }
 
 .neon {
@@ -319,6 +423,20 @@ onMounted(() => {
 }
 
 .slide-right-enter-to {
+  transform: translateX(0);
+  opacity: 1;
+}
+
+.slide-left-enter-active {
+  transition: all 0.8s ease-out;
+}
+
+.slide-left-enter-from {
+  transform: translateX(25%);
+  opacity: 0;
+}
+
+.slide-left-enter-to {
   transform: translateX(0);
   opacity: 1;
 }
