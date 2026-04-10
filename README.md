@@ -6,6 +6,10 @@ The official website for basishacks_2026. This is an updated version for season 
 
 First, copy `.env.example` as `.env` and fill out the fields. Then choose one of the methods below.
 
+## Requirements
+Node.js >= v24
+@nuxt/ui >= v4.6
+
 Using Bun (preferred):
 
 ```shell

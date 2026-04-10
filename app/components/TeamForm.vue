@@ -25,8 +25,8 @@ if (error.value) {
   throw error.value
 }
 
-async function removeUser(user: Pick<User, 'id' | 'name' | 'email'>) {
-  const message = `Are you sure you want to ${
+const removeMemberMessage = (user: Pick<User, 'id' | 'name' | 'email'>) => {
+  return `Are you sure you want to ${
     user.id === currentUser.value?.id
       ? 'leave'
       : `remove ${user.name || user.email} from`
@@ -35,7 +35,13 @@ async function removeUser(user: Pick<User, 'id' | 'name' | 'email'>) {
       ? " This is the last member of your team, so you won't be able to recover it."
       : ''
   }`
-  if (confirm(message)) {
+}
+
+async function removeUser(user: Pick<User, 'id' | 'name' | 'email'>) {
+
+  console.log(1)
+  
+  if (true) {
     try {
       await withLoadingIndicator(async () => {
         const { message } = await $fetch(`/api/teams/${id}/users/${user.id}`, {
@@ -192,13 +198,21 @@ async function onSubmit(
           <h3 class="flex flex-wrap items-center gap-2">
             <span class="bold">{{ user.name || user.email }}</span>
             <div class="flex-1" />
-            <UButton
-              :disabled="disabled"
-              icon="i-material-symbols-delete"
-              color="warning"
-              variant="soft"
-              @click="removeUser(user)"
-            />
+            <ModalConfirm 
+            title="Remove team member"
+            color="error"
+            :click="() => {removeUser(user)}">
+              <UButton
+                :disabled="disabled"
+                icon="i-material-symbols-delete"
+                color="warning"
+                variant="soft"
+              />
+
+              <template #content>
+                {{ removeMemberMessage(user) }}
+              </template>
+            </ModalConfirm>
           </h3>
           <p v-if="user.name">{{ user.email }}</p>
         </UCard>
