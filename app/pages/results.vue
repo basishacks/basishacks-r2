@@ -22,55 +22,58 @@
 
     <!--Team 1-->
 
-    <div id="team1" ref="team1Ref" class="bg-black text-white min-h-screen flex items-center justify-center">
+    <div id="team1" ref="team1Ref" class="bg-black text-white min-h-screen flex items-center justify-center max-lg:flex-col">
 
-        <div ref="team1DescriptionWrapper" class="team1-description-wrapper mx-8 lg:ml-48 lg:pl-16 relative overflow-visible" @mousemove="updateTeam1Cursor" @mouseleave="resetTeam1Cursor">
-            <div class="team1-background-number" ref="team1NumberRef" :style="team1NumberStyle">#1</div>
-            <div v-if="cursorAuraVisible" class="team1-cursor-aura" :style="team1AuraStyle"></div>
-            <Transition name="slide-right">
-                <div v-if="team1showDescriptionRef" class="team1-description transition-content">
+      <div ref="team1DescriptionWrapper" class="team1-description-wrapper mx-8 lg:ml-48 lg:pl-16 relative overflow-visible max-lg:flex-2" @mousemove="updateTeam1Cursor" @mouseleave="resetTeam1Cursor">
 
-                    <h3 class="text-2xl text-left text-neutral-400 uppercase leading-16">Featuring 白鹿青崖间</h3>
-                    <h1 class="text-6xl text-left leading-16 bold glow">Syl</h1>
-                    
-                    <p class="mt-16 text-neutral-400">
-                        ... by 6 scenes, the player can experience the story of a fallen civilization and a blade of grass
-                        in a fading world seeking self-redemption
-                    </p>
-                    <p class="mt-4 text-neutral-400">
-                        In this chaotic time, Syl tries to give herself purpose by delivering the mail "feather", imitating
-                        a predecessor.
-                    </p>
-                    <p class="mt-4 text-white">
-                        If the player pays more
-                        attention to the surroundings while playing, they may discover and reveal a hidden truth of that world
-                    </p>
+          <div class="team1-background-number hidden lg:block" ref="team1NumberRef" :style="team1NumberStyle">#1</div>
+          <div v-if="cursorAuraVisible" class="team1-cursor-aura" :style="team1AuraStyle"></div>
+          <Transition name="slide-right">
+              <div v-if="team1showDescriptionRef" class="team1-description transition-content">
 
-                    <div class="mt-4">
-                        <ResultsProjectLinks
-                        githubLink="https://github.com/Rua-You/Syl"
-                        demoLink="https://rua-you.itch.io/syl"
-                        videoLink="/assets/ee2c39cc-c590-4c36-a73e-43d335c76a86"></ResultsProjectLinks>
-                    </div>
-                    
+                <h1 class="block lg:hidden text-8xl text-left metallic-gold uppercase mb-12 bold">#1</h1>
+
+                <h3 class="text-2xl text-left text-neutral-400 uppercase leading-16">Featuring 白鹿青崖间</h3>
+                <h1 class="text-6xl text-left leading-16 bold glow">Syl</h1>
+                
+                <p class="mt-16 text-neutral-400">
+                    ... by 6 scenes, the player can experience the story of a fallen civilization and a blade of grass
+                    in a fading world seeking self-redemption
+                </p>
+                <p class="mt-4 text-neutral-400">
+                    In this chaotic time, Syl tries to give herself purpose by delivering the mail "feather", imitating
+                    a predecessor.
+                </p>
+                <p class="mt-4 text-white">
+                    If the player pays more
+                    attention to the surroundings while playing, they may discover and reveal a hidden truth of that world
+                </p>
+
+                <div class="mt-4">
+                    <ResultsProjectLinks
+                    githubLink="https://github.com/Rua-You/Syl"
+                    demoLink="https://rua-you.itch.io/syl"
+                    videoLink="/assets/ee2c39cc-c590-4c36-a73e-43d335c76a86"></ResultsProjectLinks>
                 </div>
-            </Transition>
+                  
+              </div>
+          </Transition>
 
-            
-        </div>
+          
+      </div>
         
-        <video ref="videoRef" src="/assets/8a214d32-c43d-4141-b534-5225722a4d2b" muted preload="metadata" class="ml-auto h-auto w-[50vw] hidden lg:block"></video>
+      <video ref="videoRef" src="/assets/8a214d32-c43d-4141-b534-5225722a4d2b" muted preload="metadata" class="lg:ml-auto h-auto w-[50vw] max-lg:w-[75vw] max-lg:-order-1 max-lg:flex-1"></video>
         <!-- text -->
     </div >
       
-    <div id="team2" ref="team2Ref" class="bg-white text-black m-0 p-0 min-h-screen max-h-screen flex flex-col items-stretch justify-center overflow-hidden">
+    <div id="team2" ref="team2Ref" class="bg-white text-black m-0 p-0 min-h-screen max-h-screen">
 
-      <div class="flex flex-row items-center justify-between w-full h-full">
-        <div class="mt-auto w-[20vw]">
-          <img src="/assets/d3048fe7-b43b-4a95-a0a8-1d654819ddb3" class="w-[20vw] hidden xl:block">
+      <div class="flex flex-col xl:flex-row items-center justify-between w-full min-h-screen">
+        <div class="xl:mt-auto max-xl:flex items-center justify-start max-xl:w-full">
+          <img src="/assets/d3048fe7-b43b-4a95-a0a8-1d654819ddb3" class="max-xl:h-[40vh] xl:w-[20vw] max-xl:-scale-y-100">
         </div>
         
-        <div class="min-h-screen flex flex-col justify-center w-full">
+        <div class="max-h-[20vh] xl:min-h-screen flex flex-col justify-center w-full">
           <div class="flex flex-col items-center justify-center">
             <h3 class="bold z-3 text-2xl text-neutral-400 uppercase leading-16">=^^= presents</h3>
             <div class="metallic-silver team2-background-number select-none">#2</div>
@@ -111,8 +114,8 @@
           </div> -->
         </div>
         
-        <div class="mt-auto w-[20vw]">
-          <img src="/assets/aea63660-a483-4308-bd3c-0934bb1e3339" class="w-[20vw] hidden xl:block">
+        <div class="xl:mt-auto max-xl:flex items-center justify-end max-xl:w-full">
+          <img src="/assets/aea63660-a483-4308-bd3c-0934bb1e3339" class="max-xl:h-[40vh] xl:w-[20vw]">
         </div>
         
       </div>
@@ -124,15 +127,15 @@
         
     </div>
 
-    <div id="team3" ref="team3Ref" class="bg-red-950 text-black min-h-screen flex flex-col items-start justify-center relative z-0">
+    <div id="team3" ref="team3Ref" class="bg-red-950 text-black min-h-screen flex flex-row max-2xl:flex-col items-center justify-between relative z-0">
       <!--close to MIT color but darker for better visuals-->
       <Transition name="slide-left">
-        <div v-if="team3Visible" class="metallic-bronze team3-background-number select-none transition-content">
+        <div v-if="team3Visible" class="metallic-bronze team3-background-number select-none transition-content team3-background-number-max-lg">
           #3
         </div>
       </Transition>
       
-      <div class="ml-24 max-w-[50vw]">
+      <div class="ml-24 max-w-[50vw] mr-24 max-2xl:my-auto max-2xl:p-16 max-2xl:bg-[#8C1515] rounded-lg">
         <h3 class="text-3xl bold glow text-white">Dysarthria Speech Classifier</h3>
 
         <p class="text-gray-300 mt-8">
@@ -150,8 +153,17 @@
                   demoLink="https://huggingface.co/spaces/DNE58293/dysarthric-voice-cmds"
                   videoLink="/assets/3f9cbe2c-c8ea-42f4-94f6-4a4a0cb01549"></ResultsProjectLinks>
         </div>
-        
-        
+      </div>
+
+      <div class="bg-gray-300 rounded-lg ml-auto mr-48 mb-48 mt-auto max-2xl:mb-20 max-2xl:mx-auto">
+        <div class="m-[8px] flex items-center justify-start pr-auto gap-1">
+          <UIcon name="i-material-symbols-circle" size="4em" class="text-red-500 h-4 w-4"></UIcon>
+          <UIcon name="i-material-symbols-circle" size="4em" class="text-yellow-500 h-4 w-4"></UIcon>
+          <UIcon name="i-material-symbols-circle" size="4em" class="text-green-500 h-4 w-4"></UIcon>
+        </div>
+        <div class="window-image w-196 h-108 rounded-lg mx-[8px] mb-[8px] select-none"></div>
+
+
       </div>
         
     </div>
@@ -311,6 +323,13 @@ onMounted(() => {
 </script>
 <style scoped>
 
+.window-image {
+  background-image: url("/assets/fbc59d8a-a2ac-490b-83c2-af318e650cdc");
+  background-repeat: no-repeat;
+  background-position: center;
+  background-size: cover;
+}
+
 .transition-content {
     animation: display 1.5s;
 }
@@ -378,6 +397,7 @@ onMounted(() => {
 
 .team3-background-number {
   position: absolute;
+  
   top: -0.2em;
   right: 0.3em;
 
@@ -387,6 +407,15 @@ onMounted(() => {
   white-space: nowrap;
   pointer-events: none;
   z-index: -1;
+}
+
+.team3-background-number-max-lg {
+  @media (width < 64rem) { 
+    right: 0;
+  }
+  
+
+  
 }
 
 .neon {
