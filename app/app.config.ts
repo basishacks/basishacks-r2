@@ -5,9 +5,6 @@ export default defineAppConfig({
         label: 'block bold text-default',
       },
     },
-    container: {
-      base: "ml:px-64 px-32"
-    },
     link: {
       variants: {
         active: {

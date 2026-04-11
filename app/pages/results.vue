@@ -12,9 +12,9 @@
 
     <div id="title" class="m-0 bg-black text-white landscape min-h-screen flex flex-col items-center justify-center gap-4 relative z-20">
 
-        <div class="ml-auto text-right">
-            <h3 class="mx-48 text-2xl text-gray-200">Feburary 2026</h3>
-            <h1 class="mx-48 text-6xl text-right leading-16">When there is <br><span class="bold glow text-primary neon">Signal</span></h1>
+        <div class="text-center lg:text-right lg:ml-auto lg:mr-48">
+            <h3 class="text-2xl text-gray-200">Feburary 2026</h3>
+            <h1 class="text-6xl leading-16">When there is <br><span class="bold glow text-primary neon">Signal</span></h1>
         </div>
 
     </div>
@@ -24,7 +24,7 @@
 
     <div id="team1" ref="team1Ref" class="bg-black text-white min-h-screen flex items-center justify-center">
 
-        <div ref="team1DescriptionWrapper" class="team1-description-wrapper ml-48 pl-16 relative overflow-visible" @mousemove="updateTeam1Cursor" @mouseleave="resetTeam1Cursor">
+        <div ref="team1DescriptionWrapper" class="team1-description-wrapper mx-8 lg:ml-48 lg:pl-16 relative overflow-visible" @mousemove="updateTeam1Cursor" @mouseleave="resetTeam1Cursor">
             <div class="team1-background-number" ref="team1NumberRef" :style="team1NumberStyle">#1</div>
             <div v-if="cursorAuraVisible" class="team1-cursor-aura" :style="team1AuraStyle"></div>
             <Transition name="slide-right">
@@ -59,7 +59,7 @@
             
         </div>
         
-        <video ref="videoRef" src="/assets/8a214d32-c43d-4141-b534-5225722a4d2b" muted preload="metadata" class="ml-auto h-auto w-[50vw]"></video>
+        <video ref="videoRef" src="/assets/8a214d32-c43d-4141-b534-5225722a4d2b" muted preload="metadata" class="ml-auto h-auto w-[50vw] hidden lg:block"></video>
         <!-- text -->
     </div >
       
@@ -70,11 +70,11 @@
           <img src="/assets/d3048fe7-b43b-4a95-a0a8-1d654819ddb3" class="w-[20vw] hidden xl:block">
         </div>
         
-        <div class="min-h-screen flex flex-col justify-center">
-          <div class="flex flex-col items-center justify-center flex-90">
+        <div class="min-h-screen flex flex-col justify-center w-full">
+          <div class="flex flex-col items-center justify-center">
             <h3 class="bold z-3 text-2xl text-neutral-400 uppercase leading-16">=^^= presents</h3>
             <div class="metallic-silver team2-background-number select-none">#2</div>
-            <h1 :class="team2Visible ? 'animate' : ''" class="text-4xl text-left leading-16 bold relative z-10">
+            <h1 :class="team2Visible ? 'animate' : ''" class="text-4xl text-left leading-16 bold relative z-10 hidden lg:block">
               <span class="word word-1">Super</span>
               <span class="word word-2">Cool</span>
               <span class="word word-3">But</span>
@@ -83,6 +83,9 @@
               <span class="word word-6">Recognition</span>
               <span class="word word-7">Robotic</span>
               <span class="word word-8">Head</span>
+            </h1>
+            <h1 class="text-4xl text-center lg:leading-16 bold relative z-10 lg:hidden max-lg:mb-8">
+              Super Cool But Creepy Visual Recognition Robotic Head
             </h1>
             <p class="z-3 w-max-2 mx-50vw text-center px-8">A robotic head that looks cool and 
               is able to recognize learned faces and colors,

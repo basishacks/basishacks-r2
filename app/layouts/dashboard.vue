@@ -116,7 +116,7 @@ const items = ref<NavigationMenuItem[][]>([
     </div>
 
     <UBanner color="neutral" id="hoverdashnotif" class="z-0 mt-4 nopanel text-xs text-muted rounded-md show-small"
-    title="You can also hover over the dashboard tag to see more options"
+    title="You can also expand the dashboard tab to see more options"
     close></UBanner>
     
     <slot />
