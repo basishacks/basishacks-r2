@@ -102,6 +102,7 @@ const navItems = computed<NavigationMenuItem[]>(() => {
       to: '/dashboard',
       icon: 'i-material-symbols-space-dashboard',
       children: dashboardContent,
+      
     },
   ]
   if (
