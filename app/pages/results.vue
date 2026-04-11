@@ -13,8 +13,8 @@
     <div id="title" class="m-0 bg-black text-white landscape min-h-screen flex flex-col items-center justify-center gap-4 relative z-20">
 
         <div class="ml-auto text-right">
-            <h3 class="mx-32 text-2xl text-gray-200">Feburary 2026</h3>
-            <h1 class="mx-32 text-6xl text-right leading-16">When there is <br><span class="bold glow text-primary neon">Signal</span></h1>
+            <h3 class="mx-48 text-2xl text-gray-200">Feburary 2026</h3>
+            <h1 class="mx-48 text-6xl text-right leading-16">When there is <br><span class="bold glow text-primary neon">Signal</span></h1>
         </div>
 
     </div>
