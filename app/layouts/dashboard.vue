@@ -100,8 +100,8 @@ const items = ref<NavigationMenuItem[][]>([
   
 
 
-  <UContainer class="flex">
-    <div class="fixed -translate-x-full -mx-12 ">
+  <UContainer class="flex flex-col ">
+    <div class="hide-small fixed -translate-x-full -mx-12 ">
       <div class="mt-12"></div>
       <UCard>
         <template #header>
@@ -112,10 +112,10 @@ const items = ref<NavigationMenuItem[][]>([
           <ULink class="text-xs" href="/theme/june2026">See event details <UIcon name="i-lucide-arrow-right"></UIcon></ULink>
         </template>
       </UCard>
-      <UNavigationMenu orientation="vertical" :items="items" class="data-[orientation=vertical]:w-48 mt-12" />
+      <UNavigationMenu orientation="vertical" :items="items" class="data-[orientation=vertical]:w-48 mt-12" trailing-icon="none"/>
     </div>
 
-    <UBanner color="neutral" id="hoverdashnotif" class="z-0 mt-4 nopanel text-xs text-muted rounded-md"
+    <UBanner color="neutral" id="hoverdashnotif" class="z-0 mt-4 nopanel text-xs text-muted rounded-md show-small"
     title="You can also hover over the dashboard tag to see more options"
     close></UBanner>
     
@@ -166,5 +166,18 @@ const items = ref<NavigationMenuItem[][]>([
   100% {
     background-position: 0% 50%;
   }
+}
+
+
+.hide-small {
+    @media (width < 1800px) {
+        display: none;
+    }
+}
+
+.show-small {
+    @media (width >= 1800px) {
+        display: none;
+    }
 }
 </style>
