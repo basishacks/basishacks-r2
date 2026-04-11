@@ -155,13 +155,13 @@
         </div>
       </div>
 
-      <div class="bg-gray-300 rounded-lg ml-auto mr-48 mb-48 mt-auto max-2xl:mb-20 max-2xl:mx-auto">
+      <div class="bg-gray-300 rounded-lg ml-auto mr-48 mb-48 mt-auto max-2xl:mb-20 max-2xl:mx-auto max-sm:hidden">
         <div class="m-[8px] flex items-center justify-start pr-auto gap-1">
           <UIcon name="i-material-symbols-circle" size="4em" class="text-red-500 h-4 w-4"></UIcon>
           <UIcon name="i-material-symbols-circle" size="4em" class="text-yellow-500 h-4 w-4"></UIcon>
           <UIcon name="i-material-symbols-circle" size="4em" class="text-green-500 h-4 w-4"></UIcon>
         </div>
-        <div class="window-image w-196 h-108 rounded-lg mx-[8px] mb-[8px] select-none"></div>
+        <div class="window-image w-128 h-72 lg:w-196 lg:h-108 rounded-lg mx-[8px] mb-[8px] select-none"></div>
 
 
       </div>
