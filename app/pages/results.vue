@@ -1,6 +1,7 @@
 <template >
 
   <GoBackUp></GoBackUp>
+  <LoaderAnimation :show="dirtyLoading"></LoaderAnimation>
 
     <Transition name="fade">
       <div v-show="showScrollText" class="fixed bottom-4 left-1/2 transform -translate-x-1/2 text-white text-center flex flex-col items-center gap-4 z-30">
@@ -75,8 +76,11 @@
         
         <div class="max-h-[20vh] xl:min-h-screen flex flex-col justify-center w-full">
           <div class="flex flex-col items-center justify-center">
+
+            <h1 class="hidden max-sm:block metallic-silver text-8xl z-4 bold mb-4">#2</h1>
+
             <h3 class="bold z-3 text-2xl text-neutral-400 uppercase leading-16">=^^= presents</h3>
-            <div class="metallic-silver team2-background-number select-none">#2</div>
+            <div class="metallic-silver team2-background-number select-none max-sm:hidden">#2</div>
             <h1 :class="team2Visible ? 'animate' : ''" class="text-4xl text-left leading-16 bold relative z-10 hidden lg:block">
               <span class="word word-1">Super</span>
               <span class="word word-2">Cool</span>
@@ -171,6 +175,12 @@
     
 
 
+    <UMarquee>
+      
+    </UMarquee>
+
+
+
     <div>
         <p class="py-500"></p>
     </div>
@@ -203,6 +213,21 @@ useHead({
       rel: 'preload',
       as: 'image',
       href: '/assets/aea63660-a483-4308-bd3c-0934bb1e3339' // wojak right
+    },
+    {
+      rel: 'preload',
+      as: 'video',
+      href: '/assets/b1aee7a2-33fa-4681-bdbe-1fef3a481f0e' // team2 demo
+    },
+    {
+      rel: 'preload',
+      as: 'video',
+      href: '/assets/3f9cbe2c-c8ea-42f4-94f6-4a4a0cb01549' // team3 demo
+    },
+    {
+      rel: 'preload',
+      as: 'video',
+      href: '/assets/ee2c39cc-c590-4c36-a73e-43d335c76a86' // team3 demo
     }
   ]
 })
@@ -220,6 +245,7 @@ const team1NumberRef = ref(null)
 const cursorAuraVisible = ref(false)
 const cursorPosition = ref({ x: 0, y: 0 })
 const team1Proximity = ref(0)
+const dirtyLoading = ref(true)
 
 const team1NumberStyle = computed(() => {
   const intensity = team1Proximity.value
@@ -271,7 +297,12 @@ const resetTeam1Cursor = () => {
   team1Proximity.value = 0
 }
 
+
+
 onMounted(() => {
+
+  dirtyLoading.value = false
+
   const handleScroll = () => {
     const scrollThreshold = window.innerHeight * 0.25
     if (showScrollText.value) showScrollText.value = window.scrollY < scrollThreshold;
@@ -316,11 +347,17 @@ onMounted(() => {
   }
 
   window.addEventListener('scroll', handleScroll)
+
+  
+
   onUnmounted(() => {
     window.removeEventListener('scroll', handleScroll)
   })
 })
 </script>
+
+
+
 <style scoped>
 
 .window-image {
