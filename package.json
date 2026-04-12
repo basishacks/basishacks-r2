@@ -16,6 +16,7 @@
     "@nuxt/ui": "^4.6.1",
     "canvas-confetti": "^1.9.4",
     "eslint": "^9.0.0",
+    "jdenticon": "^3.3.0",
     "nitro-cloudflare-dev": "^0.2.2",
     "nuxt": "latest",
     "nuxt-auth-utils": "0.5.25",

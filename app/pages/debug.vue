@@ -26,6 +26,8 @@
     <div v-if="error" class="mt-4 text-red-500">
       Error: {{ error }}
     </div>
+
+    <h1 class="text-2xl font-bold mb-4 mt-8">Make icon</h1>
   </div>
 </template>
 

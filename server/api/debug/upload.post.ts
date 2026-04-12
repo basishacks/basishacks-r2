@@ -1,8 +1,12 @@
 import { randomUUID } from 'crypto'
 import { writeFile, mkdir } from 'node:fs/promises'
 import { join } from 'node:path'
+import { createAsset } from '~~/server/utils/assets'
 
 export default defineEventHandler(async (event) => {
+
+  await requireAdmin(event)
+
   const formData = await readMultipartFormData(event)
   if (!formData || !formData[0]) {
     throw createError({ statusCode: 400, statusMessage: 'No file uploaded' })
@@ -14,17 +18,13 @@ export default defineEventHandler(async (event) => {
   }
 
   const uuid = randomUUID()
-  const assetsDir = join(process.cwd(), 'public', 'assets')
-  const filePath = join(assetsDir, uuid)
+  const extension = file.filename.split('.').pop()?.toLowerCase() || ''
 
-  // Ensure the assets directory exists
-  await mkdir(assetsDir, { recursive: true })
-
-  // Write the file
-  await writeFile(filePath, file.data)
+  await createAsset(`${uuid}.${extension}`, file.data);
+  
 
   // Permalink is the public URL
-  const permalink = `/assets/${uuid}`
+  const permalink = `/assets/${uuid}.${extension}`
 
   return { permalink }
 })

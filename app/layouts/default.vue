@@ -13,5 +13,7 @@
         <slot />
       </UContainer>
     </UMain>
+
+    <Footer></Footer>
   </div>
 </template>
