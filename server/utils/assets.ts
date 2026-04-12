@@ -1,7 +1,9 @@
-import { writeFile, mkdir } from 'node:fs/promises'
+import { rmdir } from 'node:fs'
+import { writeFile, mkdir, rm } from 'node:fs/promises'
 import { join } from 'node:path'
+import fs from "node:fs"
 
-export async function createAsset(name: string, data: Buffer) {
+export async function createAsset(name: string, data: Buffer): Promise<string> {
 
     const assetsDir = join(process.cwd(), 'public', 'assets')
     const filePath = join(assetsDir, name)
@@ -12,5 +14,22 @@ export async function createAsset(name: string, data: Buffer) {
 
     // Write the file
     await writeFile(filePath, data)
+
+    return name
+
+}
+
+export async function removeAsset(name: string | null | undefined) {
+
+    const assetsDir = join(process.cwd(), 'public', 'assets')
+    if (name) {
+        const filePath = join(assetsDir, name)
+        await fs.unlink(filePath, (e) => {
+
+        });
+    }
+    
+    
+    
 
 }

@@ -89,8 +89,35 @@ export const AddTeamMemberRequest = z.object({
 })
 export type AddTeamMemberRequest = z.infer<typeof AddTeamMemberRequest>
 
+const MAX_FILE_SIZE = 10 * 1024 * 1024 // 10MB
+const ACCEPTED_IMAGE_TYPES = ['image/jpeg', 'image/jpg', 'image/png', 'image/webp']
+
+const formatBytes = (bytes: number, decimals = 2) => {
+  if (bytes === 0) return '0 Bytes'
+  const k = 1024
+  const dm = decimals < 0 ? 0 : decimals
+  const sizes = ['Bytes', 'KB', 'MB', 'GB', 'TB', 'PB', 'EB', 'ZB', 'YB']
+  const i = Math.floor(Math.log(bytes) / Math.log(k))
+  return Number.parseFloat((bytes / Math.pow(k, i)).toFixed(dm)) + ' ' + sizes[i]
+}
+
+
+
 export const UpdateUserRequest = z.object({
-  name: z.optional(z.string().max(30)),
+  name: z.optional(z.string().max(30)), 
+  profile_theme_image: z.optional(z
+    .instanceof(File)
+    .refine((file) => file.size <= MAX_FILE_SIZE, 
+      `The image is too large. Please choose an image smaller than ${formatBytes(MAX_FILE_SIZE)}.`
+    )
+    .refine((file) => ACCEPTED_IMAGE_TYPES.includes(file.type), 
+      'Please upload a valid image file (JPEG, PNG, or WebP)'
+    ))
+    .or(
+      z.string().startsWith('data')
+    )
+    
+    
 })
 export type UpdateUserRequest = z.infer<typeof UpdateUserRequest>
 
@@ -103,7 +130,7 @@ export type CreateTeamScoresRequest = z.infer<typeof CreateTeamScoresRequest>
 export const SubmitVoteRequest = z
   .object({
     scores: z.array(z.literal([1, 2, 3, 4, 5])),
-    reasoning: z.string().min(30, 'Please write a bit more').max(2000),
+    reasoning: z.string().min(30, 'Please write a bit more').max(2000, 'You wrote too much!'),
   })
   .refine(
     ({ scores }) => scores.reduce((a, b) => a + b, 0) === 12,

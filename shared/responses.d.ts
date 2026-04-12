@@ -1,9 +1,15 @@
+interface ProfileTheme {
+  mode: "url" | "emoji" | "gradient"
+  value: string | null
+}
+
 interface APIUser {
   id: number
   email: string
   role: UserRole
   name: string | null
   team_id: number | null
+  profile_theme: ProfileTheme | null
 }
 
 interface APITeam {

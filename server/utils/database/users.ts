@@ -4,11 +4,19 @@ export async function getUser(
   event: H3Event,
   userID: number
 ): Promise<User | null> {
-  return await event.context.cloudflare.env.DB.prepare(
+  let select = await event.context.cloudflare.env.DB.prepare(
     'SELECT * FROM users WHERE id = ?'
   )
     .bind(userID)
     .first<User>()
+
+    if (!select) return null
+
+    const profile_theme_mode = select.profile_theme.split("|")[0]
+    const profile_theme_value = select.profile_theme.split("|")[1]
+    select.profile_theme = {mode: profile_theme_mode, value: profile_theme_value}
+
+    return select
 }
 
 export async function getUserByEmail(event: H3Event, email: string) {
@@ -61,6 +69,27 @@ export async function updateUserName(event: H3Event, user: User) {
     'UPDATE users SET name = ? WHERE id = ?'
   )
     .bind(user.name, user.id)
+    .run()
+
+  if (!result.meta.changed_db) {
+    throw createError({
+      status: 404,
+      message: 'User not found',
+    })
+  }
+}
+
+function convertProfileThemeToString(theme: ProfileTheme | null): string {
+  if (theme) 
+  return theme.mode + "|" + theme.value
+  return "null";
+}
+
+export async function updateUserProfileTheme(event: H3Event, user: User) {
+  const result = await event.context.cloudflare.env.DB.prepare(
+    'UPDATE users SET profile_theme = ? WHERE id = ?'
+  )
+    .bind(convertProfileThemeToString(user.profile_theme), user.id)
     .run()
 
   if (!result.meta.changed_db) {
