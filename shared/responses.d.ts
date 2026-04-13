@@ -1,6 +1,6 @@
 interface ProfileTheme {
   mode: "url" | "emoji" | "gradient"
-  value: string | null
+  value: string
 }
 
 interface APIUser {

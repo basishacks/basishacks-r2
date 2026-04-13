@@ -78,15 +78,12 @@ export default defineEventHandler(applyRateLimit(async (event) => {
     const {file, extension, mime} = base64ToFile(profile_theme_image.toString());
     
     const buf = await file.arrayBuffer();
-    await removeAsset(user.profile_theme?.value);
+    await removeAsset(user.profile_theme?.split("|")[1]);
     const uuid = randomUUID()
     const path = await createAsset(uuid + "." + extension, Buffer.from(buf));
 
 
-    user.profile_theme = {
-      mode: 'url',
-      value: path
-    }
+    user.profile_theme = "url|" + path 
     
     await updateUserProfileTheme(event, user)
   }

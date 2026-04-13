@@ -52,7 +52,7 @@ interface User {
   team_id: number | null
   login_code: string | null
   login_expiry: number | null
-  profile_theme: ProfileTheme | null
+  profile_theme: string | null
 }
 
 interface Ballot {

@@ -50,7 +50,7 @@
                     attention to the surroundings while playing, they may discover and reveal a hidden truth of that world
                 </p>
 
-                <div class="mt-4">
+                <div class="mt-4 mb-8">
                     <ResultsProjectLinks
                     githubLink="https://github.com/Rua-You/Syl"
                     demoLink="https://rua-you.itch.io/syl"
@@ -134,12 +134,12 @@
     <div id="team3" ref="team3Ref" class="bg-red-950 text-black min-h-screen flex flex-row max-2xl:flex-col items-center justify-between relative z-0">
       <!--close to MIT color but darker for better visuals-->
       <Transition name="slide-left">
-        <div v-if="team3Visible" class="metallic-bronze team3-background-number select-none transition-content team3-background-number-max-lg">
+        <div v-if="team3Visible" class="metallic-bronze team3-background-number select-none transition-content team3-background-number-max-lg max-sm:hidden">
           #3
         </div>
       </Transition>
       
-      <div class="ml-24 max-w-[50vw] mr-24 max-2xl:my-auto max-2xl:p-16 max-2xl:bg-[#8C1515] rounded-lg">
+      <div class="ml-24 max-sm:max-w-[90vw] sm:max-w-[50vw] mr-24 max-2xl:my-auto max-2xl:p-16 max-2xl:bg-[#8C1515] rounded-lg max-sm:m-1 max-sm:m-16">
         <h3 class="text-3xl bold glow text-white">Dysarthria Speech Classifier</h3>
 
         <p class="text-gray-300 mt-8">
@@ -160,12 +160,12 @@
       </div>
 
       <div class="bg-gray-300 rounded-lg ml-auto mr-48 mb-48 mt-auto max-2xl:mb-20 max-2xl:mx-auto max-sm:hidden">
-        <div class="m-[8px] flex items-center justify-start pr-auto gap-1">
+        <div class="m-2 flex items-center justify-start pr-auto gap-1">
           <UIcon name="i-material-symbols-circle" size="4em" class="text-red-500 h-4 w-4"></UIcon>
           <UIcon name="i-material-symbols-circle" size="4em" class="text-yellow-500 h-4 w-4"></UIcon>
           <UIcon name="i-material-symbols-circle" size="4em" class="text-green-500 h-4 w-4"></UIcon>
         </div>
-        <div class="window-image w-128 h-72 lg:w-196 lg:h-108 rounded-lg mx-[8px] mb-[8px] select-none"></div>
+        <div class="window-image w-lg h-72 lg:w-196 lg:h-108 rounded-lg mx-[8px] mb-[8px] select-none"></div>
 
 
       </div>

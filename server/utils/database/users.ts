@@ -10,13 +10,20 @@ export async function getUser(
     .bind(userID)
     .first<User>()
 
-    if (!select) return null
+    return select;
 
-    const profile_theme_mode = select.profile_theme.split("|")[0]
-    const profile_theme_value = select.profile_theme.split("|")[1]
-    select.profile_theme = {mode: profile_theme_mode, value: profile_theme_value}
-
-    return select
+    // if (!select) return null
+    // if (select.profile_theme instanceof String) {
+    //   const profile_theme_mode = select.profile_theme?.split("|")[0]
+    //   const profile_theme_value = select.profile_theme?.split("|")[1] 
+    //   const parsed = {mode: profile_theme_mode, value: profile_theme_value}
+      
+    //   const current: any = select;
+    //   current.profile_theme = parsed;
+    //   return current;
+    // } else if (select.profile_theme == null) {
+    //   return select;
+    // }
 }
 
 export async function getUserByEmail(event: H3Event, email: string) {
@@ -89,7 +96,7 @@ export async function updateUserProfileTheme(event: H3Event, user: User) {
   const result = await event.context.cloudflare.env.DB.prepare(
     'UPDATE users SET profile_theme = ? WHERE id = ?'
   )
-    .bind(convertProfileThemeToString(user.profile_theme), user.id)
+    .bind(user.profile_theme, user.id)
     .run()
 
   if (!result.meta.changed_db) {

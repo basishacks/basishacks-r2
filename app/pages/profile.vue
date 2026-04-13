@@ -88,7 +88,7 @@ async function onSubmitName(event) {
 
 const profileThemeMode = user.value.profile_theme?.mode
 
-const profileThemeValue = ref(user.value.profile_theme?.value )
+const profileThemeValue = ref(user.value.profile_theme)
 
 const fileUploadRef = ref(null)
 
@@ -96,10 +96,10 @@ const profileLink = "/user/" + userID.value
 
 
 onMounted(() => {
-  console.log(fileUploadRef.value)
+  if (profileThemeValue.value == undefined) return;
+
   if (fileUploadRef.value) {
-    
-    fileUploadRef.value.style = `background-image:url("/assets/${profileThemeValue.value}");`
+    fileUploadRef.value.style = `background-image:url("/assets/${profileThemeValue.value.value}");`
   }
 })
 
