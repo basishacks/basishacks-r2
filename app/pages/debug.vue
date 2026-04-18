@@ -12,6 +12,7 @@
           required
         />
       </div>
+       <USelectMenu v-model="value" :items="items" />
       <button
         type="submit"
         :disabled="!file || uploading"
@@ -38,6 +39,9 @@ const uploading = ref(false)
 const permalink = ref('')
 const error = ref('')
 
+const items = ref(['static', 'user'])
+const value = ref('static')
+
 const handleFileChange = (event: Event) => {
   const target = event.target as HTMLInputElement
   file.value = target.files?.[0] || null
@@ -54,7 +58,7 @@ const uploadFile = async () => {
     const formData = new FormData()
     formData.append('file', file.value)
 
-    const response = await $fetch<{ permalink: string }>('/api/debug/upload', {
+    const response = await $fetch<{ permalink: string }>('/api/debug/upload?mode=' + value.value, {
       method: 'POST',
       body: formData,
     })

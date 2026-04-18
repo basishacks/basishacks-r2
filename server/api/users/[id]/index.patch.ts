@@ -1,6 +1,6 @@
 import { profile } from 'node:console';
 import { randomUUID } from 'node:crypto';
-import { removeAsset } from '~~/server/utils/assets';
+import { createUserAsset, removeAsset, removeUserAsset } from '~~/server/utils/assets';
 import { updateUserProfileTheme } from '~~/server/utils/database/users';
 import { applyRateLimit } from '~~/server/utils/rateLimit'
 import { UpdateUserRequest } from '~~/shared/schemas'
@@ -78,9 +78,9 @@ export default defineEventHandler(applyRateLimit(async (event) => {
     const {file, extension, mime} = base64ToFile(profile_theme_image.toString());
     
     const buf = await file.arrayBuffer();
-    await removeAsset(user.profile_theme?.split("|")[1]);
+    await removeUserAsset(user.profile_theme?.split("|")[1]);
     const uuid = randomUUID()
-    const path = await createAsset(uuid + "." + extension, Buffer.from(buf));
+    const path = await createUserAsset(uuid + "." + extension, Buffer.from(buf));
 
 
     user.profile_theme = "url|" + path 

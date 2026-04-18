@@ -1,9 +1,13 @@
 import { randomUUID } from 'crypto'
 import { writeFile, mkdir } from 'node:fs/promises'
 import { join } from 'node:path'
-import { createAsset } from '~~/server/utils/assets'
+import { useRoute } from 'nuxt/app'
+import { createAsset, createUserAsset } from '~~/server/utils/assets'
 
 export default defineEventHandler(async (event) => {
+
+  const query = getQuery(event);
+
 
   await requireAdmin(event)
 
@@ -20,11 +24,21 @@ export default defineEventHandler(async (event) => {
   const uuid = randomUUID()
   const extension = file.filename.split('.').pop()?.toLowerCase() || ''
 
-  await createAsset(`${uuid}.${extension}`, file.data);
+  if (query.mode == undefined) {
+    throw createError({ statusCode: 400, statusMessage: 'Invalid mode' })
+  }
+
+  if (query.mode == "static") {
+    await createAsset(`${uuid}.${extension}`, file.data);
+  } else if (query.mode == "user") {
+    await createUserAsset(`${uuid}.${extension}`, file.data);
+  } else {
+    throw createError({ statusCode: 400, statusMessage: 'Invalid mode' })
+  }
   
 
   // Permalink is the public URL
-  const permalink = `/assets/${uuid}.${extension}`
+  const permalink = `/${query.mode}}/${uuid}.${extension}`
 
   return { permalink }
 })

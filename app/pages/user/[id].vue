@@ -26,7 +26,7 @@ console.log(user)
 
 onMounted(() => {
     const e: any = backgroundRef.value;
-    e.style = `background-image: url(/assets/${user.value?.profile_theme?.value})`;
+    e.style = `background-image: url(/userast/${user.value?.profile_theme?.value})`;
     
 })
 

@@ -99,7 +99,7 @@ onMounted(() => {
   if (profileThemeValue.value == undefined) return;
 
   if (fileUploadRef.value) {
-    fileUploadRef.value.style = `background-image:url("/assets/${profileThemeValue.value.value}");`
+    fileUploadRef.value.style = `background-image:url("/userast/${profileThemeValue.value.value}");`
   }
 })
 
@@ -132,9 +132,32 @@ onMounted(() => {
 
         <USeparator></USeparator>
 
+        <UFormField name="profile_image" label="Profile Image">
+          <p class="text-muted text-xs">Your... Profile picture?</p>
+          <p class="text-muted text-xs">This setting will affect</p>
+          
+          <div class="w-full mt-4 rounded-md bg-gray-500 rounded-xl bg-center bg-cover bg-no-repeat" ref="fileUploadRef">
+            <UFileUpload
+          label="Click to drop image to upload"
+          description="PNG, JPG or GIF (max. 2MB)"
+          accept="image/jpeg, image/jpg, image/png, image/webp"
+          v-model="state.profile_theme_image"
+          class="z-1"
+          :ui="{
+            base: `min-h-48 bg-white/0`,
+            wrapper: `bg-(--ui-bg)/85 rounded-xl`
+          }"
+          />
+          </div>
+
+          
+        </UFormField>
+
+        <USeparator></USeparator>
+
         <UFormField name="profile_theme_image" label="Profile Theme">
           <p class="text-muted text-xs">Select the theme of your profile.</p>
-          <p class="text-muted text-xs">This setting will reflect the background display of your <ULink :to="profileLink">profile page</ULink> and your <UTooltip text="Test" :delay-duration="0"><span class="underline">profile card</span></UTooltip></p>
+          <p class="text-muted text-xs">This setting will affect the background display of your <ULink :to="profileLink">profile page</ULink> and your <UserPopover user="5"><span class="underline">profile card</span></UserPopover></p>
           
           <div class="w-full mt-4 rounded-md bg-gray-500 rounded-xl bg-center bg-cover bg-no-repeat" ref="fileUploadRef">
             <UFileUpload
@@ -154,6 +177,8 @@ onMounted(() => {
         </UFormField>
 
         <UButton type="submit">Update profile</UButton>
+
+
         
       </UForm>
 
