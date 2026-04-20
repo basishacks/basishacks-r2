@@ -139,7 +139,7 @@
         </div>
       </Transition>
       
-      <div class="ml-24 max-sm:max-w-[90vw] sm:max-w-[50vw] mr-24 max-2xl:my-auto max-2xl:p-16 max-2xl:bg-[#8C1515] rounded-lg max-sm:m-1 max-sm:m-16">
+      <div class="ml-24 max-sm:max-w-[90vw] sm:max-w-[50vw] mr-24 max-2xl:p-16 max-2xl:bg-[#8C1515] rounded-lg max-2xl:my-16">
         <h3 class="text-3xl bold glow text-white">Dysarthria Speech Classifier</h3>
 
         <p class="text-gray-300 mt-8">
@@ -165,7 +165,7 @@
           <UIcon name="i-material-symbols-circle" size="4em" class="text-yellow-500 h-4 w-4"></UIcon>
           <UIcon name="i-material-symbols-circle" size="4em" class="text-green-500 h-4 w-4"></UIcon>
         </div>
-        <div class="window-image w-lg h-72 lg:w-196 lg:h-108 rounded-lg mx-[8px] mb-[8px] select-none"></div>
+        <div class="window-image w-lg h-72 lg:w-196 lg:h-108 rounded-lg mx-2 mb-2 select-none"></div>
 
 
       </div>
