@@ -189,7 +189,8 @@
 <script setup>
 
 definePageMeta({
-  layout: 'fullwidth-nostick'
+  layout: 'fullwidth-nostick',
+  title: `Results | ${WEBSITE_NAME}`,
 })
 
 useHead({

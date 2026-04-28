@@ -34,6 +34,10 @@ const navigateToOAuth2 = () => {
   window.location.href = link.replace("{CURRENT_URL_ORIGIN}", window.location.origin);
 }
 
+const BHnavigateToOAuth2 = () => {
+  window.location.href = `/api/oauth2/authorize?client_id=6898ed05-a2a1-49b5-984d-659c510f6565&response_type=code&redirect_uri=${window.location.origin}/oauth2/callback&scope=openid%20profile%20email`
+}
+
 async function onSendCodeSubmit(event: FormSubmitEvent<SendCodeRequest>) {
   const { email } = event.data
 
@@ -66,7 +70,7 @@ async function onSendCodeSubmit(event: FormSubmitEvent<SendCodeRequest>) {
 </script>
 
 <template>
-  <div class="'mt-4'">
+  <div class="mt-4">
     <h1 class="text-4xl bold mb-4">Log in</h1>
 
     <UForm
@@ -96,10 +100,11 @@ async function onSendCodeSubmit(event: FormSubmitEvent<SendCodeRequest>) {
 
           <br>
 
-          <UButton @click="navigateToOAuth2" disabled class="mt-4">
-            <img src="/assets/microsoft_logo.svg" alt="Microsoft Logo" class="w-5 h-5 mr-2" />
+          <UButton @click="BHnavigateToOAuth2" class="mt-4" color="neutral">
+            <span class="w-5 h-5 mr-2 text-bold glow text-primary">b</span>
             Login with basishacks connect
           </UButton>
+          <p class="text-xs text-muted">(requires basishacks account)</p>
       </UFormField>
 
       
