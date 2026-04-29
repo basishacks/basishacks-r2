@@ -29,7 +29,8 @@ async function doLogout() {
 
 const state = reactive({
   name: user.value.name || '',
-  profile_theme_image: undefined
+  profile_theme_image: undefined,
+  avatar: undefined
 })
 
 const fileToBase64 = function(file) {
@@ -132,25 +133,39 @@ onMounted(() => {
 
         <USeparator></USeparator>
 
-        <UFormField name="profile_image" label="Profile Image">
-          <p class="text-muted text-xs">Your... Profile picture?</p>
-          <p class="text-muted text-xs">This setting will affect</p>
-          
-          <div class="w-full mt-4 rounded-md bg-gray-500 rounded-xl bg-center bg-cover bg-no-repeat" ref="fileUploadRef">
-            <UFileUpload
-          label="Click to drop image to upload"
-          description="PNG, JPG or GIF (max. 2MB)"
-          accept="image/jpeg, image/jpg, image/png, image/webp"
-          v-model="state.profile_theme_image"
-          class="z-1"
-          :ui="{
-            base: `min-h-48 bg-white/0`,
-            wrapper: `bg-(--ui-bg)/85 rounded-xl`
-          }"
-          />
-          </div>
+        <UFormField name="avatar" label="Avatar">
 
-          
+          <p class="text-muted text-xs mb-4">An avatar that shows your cool avatar...</p>
+
+          <UFileUpload v-slot="{ open, removeFile }" v-model="state.avatar" accept="image/*">
+            <div class="flex flex-wrap items-center gap-3">
+              <UAvatar
+                size="lg"
+                :src="state.avatar ? createObjectUrl(state.avatar) : undefined"
+                icon="i-lucide-image"
+              />
+
+              <UButton
+                :label="state.avatar ? 'Change image' : 'Upload image'"
+                color="neutral"
+                variant="outline"
+                @click="open()"
+              />
+            </div>
+
+            <p v-if="state.avatar" class="text-xs text-muted mt-1.5">
+              {{ state.avatar.name }}
+
+              <UButton
+                label="Remove"
+                color="error"
+                variant="link"
+                size="xs"
+                class="p-0"
+                @click="removeFile()"
+              />
+            </p>
+          </UFileUpload>
         </UFormField>
 
         <USeparator></USeparator>
