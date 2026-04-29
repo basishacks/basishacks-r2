@@ -19,7 +19,7 @@ import initializeMSAccessToken from "../server/plugins/microsoft.ts";
 await initializeMSAccessToken();
 const token = await import("../server/plugins/microsoft.ts").then(m => m.getMSAccessToken());
 
-const result_testMicrosoftMeeting = await testMicrosoftMeeting(token, "");
+const result_testMicrosoftMeeting = await testMicrosoftMeeting(token, "G568df9636d54493d987c01444cc5592c@basischina.com");
 console.log("================================")
 console.log("testMicrosoftMeeting: " + (result_testMicrosoftMeeting ? "PASSED" : "FAILED"));
 console.log("================================")
