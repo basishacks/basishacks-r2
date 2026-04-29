@@ -5,6 +5,7 @@
   "scripts": {
     "build": "nuxt build",
     "dev": "nuxt dev",
+    "test": "node --env-file=.env tests/index.js",
     "generate": "nuxt generate",
     "preview": "nuxt preview",
     "postinstall": "nuxt prepare",
