@@ -68,3 +68,12 @@ interface BallotScore {
   project_id: number
   score: 1 | 2 | 3 | 4 | 5 | null
 }
+
+interface OAuth2Application {
+    client_id: string,
+    client_secret: string, 
+    redirect_uris: string | null,
+    permissions: string | null,
+    name: string,
+    description: string | null
+}

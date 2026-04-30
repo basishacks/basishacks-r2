@@ -1,14 +1,39 @@
 <template>
+  <div class="w-full h-full -z-15">
     <canvas class="fixed inset-0 -z-10 w-full h-full" ref="canvas"></canvas>
     <div class="flex flex-col items-center justify-center min-h-screen">
-        <div class="rounded-md bg-[var(--ui-bg)] w-full max-w-md p-8 text-center">
-            <p class="text-xl bold glow text-primary">{{ WEBSITE_NAME }}</p>
+        <div class="rounded-md bg-default w-full max-w-md px-8 text-center">
+            <p class="text-xl bold glow text-primary my-8">{{ WEBSITE_NAME }}</p>
+            <USeparator></USeparator>
+            <div class="w-full h-100 flex flex-row justify-center items-center">
+
+              <Transition name="fade">
+                <LoaderAnimationInline v-if="showLoading"></LoaderAnimationInline>
+              </Transition>
+
+              <Transition name="fade">
+                <div v-if="status == 'error'">
+                  <UIcon name="i-material-symbols-error-rounded" class="w-8 h-8 text-red-400"></UIcon>
+                  <h3 class="text-sm text-red-400">There was a problem during your login</h3>
+                  <p class="mt-4 text-sm">{{ error_description }}</p>
+                </div>
+              </Transition>
+
+            </div>
         </div>
+        
     </div>
+  </div>
+    
 </template>
 
 <script setup lang="ts">
 import { onBeforeUnmount, onMounted, ref } from 'vue'
+
+const showLoading = ref(true)
+const status = ref('load')
+const error_description = ref('')
+const error = ref('')
 
 const canvas = ref<HTMLCanvasElement | null>(null)
 let animationFrameId = 0
@@ -84,10 +109,62 @@ function handleResize() {
   setupCanvas()
 }
 
-onMounted(() => {
+//////////
+
+
+
+
+const delay = (ms: number) => new Promise(resolve => setTimeout(resolve, ms));
+
+async function fade() {
+  showLoading.value = false
+  await delay(600)
+}
+
+async function loginFlowCheck() {
+
+  const route = useRoute()
+
+  const client_id = route.query.client_id;
+  const response_type = route.query.response_type;
+  const scope = route.query.scope;
+  const state = route.query.state;
+  const code_challenge = route.query.code_challenge;
+  const code_challenge_method = route.query.code_challenge_method;
+  const redirect_uri = route.query.redirect_uri;
+
+  // if(!(client_id && response_type && scope && redirect_uri)) {
+  //   await fade();
+  //   status.value = 'error'
+  //   error.value = "invalid_request"
+  //   error_description.value = "Missing one of more of the following parameters: 'client_id', 'response_type', 'scope', 'redirect_uri'"
+    
+  // }
+
+  
+  if (client_id) {
+    const res1: any = await fetch("/api/oauth2/application?client_id=" + client_id + "&scope=" + scope)
+    const js = await res1.json()
+
+    if (res1.status != 200) {
+      await fade();
+      status.value = 'error'
+      error.value = "invalid_request"
+      error_description.value = js.message
+    }
+  }
+  
+  
+}
+
+onMounted(async () => {
   setupCanvas()
   setInterval(() => {animate()}, 33)
   window.addEventListener('resize', handleResize)
+  
+  
+  await loginFlowCheck()
+  
 })
 
 onBeforeUnmount(() => {
@@ -100,3 +177,16 @@ definePageMeta({
   layout: false
 })
 </script>
+
+<style scoped>
+
+.fade-enter-active,
+.fade-leave-active {
+  transition: opacity 0.5s ease;
+}
+
+.fade-enter-from,
+.fade-leave-to {
+  opacity: 0;
+}
+</style>

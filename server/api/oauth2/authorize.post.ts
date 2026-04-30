@@ -8,8 +8,8 @@ export default defineEventHandler(async (event) => {
   const body = await readBody(event)
   const action = body.action
 
-  // Get stored auth request from cookie
-  const authCookie = getCookie(event, 'oauth2_auth')
+  // Get stored auth request from cookie (set by middleware)
+  const authCookie = getCookie(event, 'oauth2_auth_request')
   if (!authCookie) {
     throw createError({
       statusCode: 400,
@@ -29,7 +29,7 @@ export default defineEventHandler(async (event) => {
 
   // User denied
   if (action === 'deny') {
-    deleteCookie(event, 'oauth2_auth')
+    deleteCookie(event, 'oauth2_auth_request')
     const url = new URL(authRequest.redirect_uri)
     url.searchParams.append('error', 'access_denied')
     if (authRequest.state) url.searchParams.append('state', authRequest.state)
@@ -46,7 +46,7 @@ export default defineEventHandler(async (event) => {
       authRequest.scope
     )
 
-    deleteCookie(event, 'oauth2_auth')
+    deleteCookie(event, 'oauth2_auth_request')
 
     // Redirect to callback with code
     const url = new URL(authRequest.redirect_uri)

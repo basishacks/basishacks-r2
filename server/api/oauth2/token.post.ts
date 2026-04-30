@@ -1,5 +1,4 @@
 import { 
-  verifyClient, 
   useAuthCode, 
   createAccessToken, 
   createRefreshToken,

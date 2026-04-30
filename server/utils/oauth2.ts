@@ -5,7 +5,7 @@ export const oauth2Store = {
   // OAuth2 Clients
   clients: [
     {
-      id: 'test-client',
+      id: '6da16c8f-aca0-4032-b28f-973f1ba7a89b',
       secret: 'test-secret',
       name: 'Test Client',
       redirectUris: ['http://localhost:3000/callback'],
@@ -68,23 +68,13 @@ export function generateToken(length: number = 32): string {
 /**
  * Get client by ID
  */
-export function getOAuth2Client(clientId: string) {
-  return oauth2Store.clients.find(c => c.id === clientId)
-}
+
 
 /**
  * Get user by ID
  */
 export function getOAuth2User(userId: number) {
   return oauth2Store.users.find(u => u.id === userId)
-}
-
-/**
- * Verify client credentials
- */
-export function verifyClient(clientId: string, clientSecret: string) {
-  const client = getOAuth2Client(clientId)
-  return client && client.secret === clientSecret ? client : null
 }
 
 /**
