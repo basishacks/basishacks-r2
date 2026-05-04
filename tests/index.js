@@ -19,12 +19,12 @@ import initializeMSAccessToken from "../server/plugins/microsoft.ts";
 await initializeMSAccessToken();
 const token = await import("../server/plugins/microsoft.ts").then(m => m.getMSAccessToken());
 
-const result_testMicrosoftMeeting = await testMicrosoftMeeting(token, "G568df9636d54493d987c01444cc5592c@basischina.com");
-console.log("================================")
-console.log("testMicrosoftMeeting: " + (result_testMicrosoftMeeting ? "PASSED" : "FAILED"));
-console.log("================================")
+// const result_testMicrosoftMeeting = await testMicrosoftMeeting(token, "9a18ec7b-65e1-4cd4-b489-57921e09f739");
+// console.log("================================")
+// console.log("testMicrosoftMeeting: " + (result_testMicrosoftMeeting ? "PASSED" : "FAILED"));
+// console.log("================================")
 
-// const result_testCreateMicrosoftMeeting = await testCreateMicrosoftMeeting(token, "ChunPing.Wong12024-bisz@basischina.com");
-// console.log("================================")
-// console.log("testCreateMicrosoftMeeting: " + (result_testCreateMicrosoftMeeting ? "PASSED" : "FAILED"));
-// console.log("================================")
+const result_testCreateMicrosoftMeeting = await testCreateMicrosoftMeeting(token, "b207a655-d801-4200-8345-5dcc50d6d957");
+console.log("================================")
+console.log("testCreateMicrosoftMeeting: " + (result_testCreateMicrosoftMeeting ? "PASSED" : "FAILED"));
+console.log("================================")
