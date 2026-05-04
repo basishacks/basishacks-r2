@@ -24,7 +24,7 @@ export default defineEventHandler(async (event) => {
   if (!code) {
     throw createError({
       status: 400,
-      statusMessage: 'Login Failed: No valid Microsoft OAuth2 code provided. Please ensure you are redirected here with a valid code, or try using alternative login options.',
+      message: 'Login Failed: No valid Microsoft OAuth2 code provided. Please ensure you are redirected here with a valid code, or try using alternative login options.',
     })
   }
 
@@ -53,7 +53,7 @@ export default defineEventHandler(async (event) => {
       console.error('Token exchange failed:', error)
       throw createError({
         status: 401,
-        statusMessage: 'Failed to exchange authorization code: ' + error.error_description || 'Unknown error',
+        message: 'Failed to exchange authorization code: ' + error.error_description || 'Unknown error',
       })
     }
 
@@ -70,7 +70,7 @@ export default defineEventHandler(async (event) => {
     if (!email) {
       throw createError({
         status: 401,
-        statusMessage: 'Failed to extract user email from token',
+        message: 'Failed to extract user email from token',
       })
     }
 
@@ -83,7 +83,7 @@ export default defineEventHandler(async (event) => {
       if (!user.id) {
         throw createError({
           status: 500,
-          statusMessage: 'Failed to create user',
+          message: 'Failed to create user',
         })
       }
     }
@@ -103,7 +103,7 @@ export default defineEventHandler(async (event) => {
     console.error('OAuth callback error:', error)
     throw createError({
       status: 500,
-      statusMessage: 'Authentication failed: ' + (error instanceof Error ? error.message : String(error)),
+      message: 'Authentication failed: ' + (error instanceof Error ? error.message : String(error)),
     })
   }
 })

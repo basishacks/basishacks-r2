@@ -13,7 +13,7 @@ export default defineEventHandler(async (event) => {
   if (!authCookie) {
     throw createError({
       statusCode: 400,
-      statusMessage: 'Authorization session expired'
+      message: 'Authorization session expired'
     })
   }
 
@@ -23,7 +23,7 @@ export default defineEventHandler(async (event) => {
   } catch {
     throw createError({
       statusCode: 400,
-      statusMessage: 'Invalid authorization session'
+      message: 'Invalid authorization session'
     })
   }
 
@@ -58,6 +58,6 @@ export default defineEventHandler(async (event) => {
 
   throw createError({
     statusCode: 400,
-    statusMessage: 'Invalid action'
+    message: 'Invalid action'
   })
 })

@@ -5,7 +5,7 @@ export default defineEventHandler(async (event) => {
   if (hackathon?.status !== 'voting') {
     throw createError({
       status: 409,
-      statusMessage: 'Peer voting is closed',
+      message: 'Peer voting is closed',
     })
   }
 

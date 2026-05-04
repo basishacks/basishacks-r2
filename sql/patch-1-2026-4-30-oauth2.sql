@@ -5,5 +5,6 @@ CREATE TABLE "oauth2_applications" (
 	"redirect_uris"	TEXT,
 	"name"	TEXT NOT NULL,
 	"description"	TEXT,
+	"proxy_microsoft"	INTEGER NOT NULL DEFAULT 0,
 	PRIMARY KEY("client_id")
 );

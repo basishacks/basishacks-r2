@@ -8,7 +8,6 @@ useHead({
 })
 
 const toast = useToast()
-const { fetch: refreshAuth } = useUserSession()
 
 const isSendingCode = ref(true)
 const isLoading = ref(false)
@@ -35,7 +34,7 @@ const navigateToOAuth2 = () => {
 }
 
 const BHnavigateToOAuth2 = () => {
-  window.location.href = `/api/oauth2/authorize?client_id=6898ed05-a2a1-49b5-984d-659c510f6565&response_type=code&redirect_uri=${window.location.origin}/oauth2/callback&scope=openid%20profile%20email`
+  window.location.href = `/api/oauth2/authorize?client_id=97e435f4-17e8-42ef-9b12-9684fd656de9&response_type=code&redirect_uri=${window.location.origin}/api/auth&scope=openid%20profile%20email`
 }
 
 async function onSendCodeSubmit(event: FormSubmitEvent<SendCodeRequest>) {
