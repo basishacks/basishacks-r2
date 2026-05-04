@@ -3,38 +3,30 @@
 /**
  * OAuth2 getApp Endpoint (GET)
  */
+import { validateOAuth2AuthorizationRequest } from '~/../server/utils/oauth2-validate'
+
 export default defineEventHandler(async (event) => {
   const query = getQuery(event)
 
-  if (!query.client_id) {
+  try {
+    const req: any = await validateOAuth2AuthorizationRequest(
+        event,
+        query.client_id as string,
+        query.scope as string,
+        query.redirect_uri as string | undefined
+    );
+
+    return {
+        client_id: req.app.client_id,
+        name: req.app.name,
+        description: req.app.description
+    };
+  } catch (err: any) {
     throw createError({
-        statusCode: 400,
-        statusMessage: "Parameter 'client_id' is required"
+      statusCode: err.statusCode || 500,
+      message: err.message || 'An error occurred while validating the application'
     })
   }
 
-  if (!query.scope) {
-    throw createError({
-        statusCode: 400,
-        statusMessage: "Parameter 'scope' is required"
-    })
-  }
-
-  const scopes = decodeURI(query.scope.toString()).split(' ')
-  console.log(scopes)
-
-  const app = await getOAuth2Application(event, query.client_id as string);
-
-  if (!app) {
-    throw createError({
-        statusCode: 404,
-        statusMessage: `The client '${query.client_id}' does not exist or is not a valid configured application.`
-    })
-  }
-
-  return {
-    client_id: app.client_id,
-    name: app.name,
-    description: app.description
-  };
+  
 })

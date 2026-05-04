@@ -76,4 +76,5 @@ interface OAuth2Application {
     permissions: string | null,
     name: string,
     description: string | null
+    proxy_microsoft: number
 }

@@ -8,12 +8,12 @@ export default defineEventHandler(async (event) => {
 
   const formData = await readMultipartFormData(event)
   if (!formData || !formData[0]) {
-    throw createError({ statusCode: 400, statusMessage: 'No file uploaded' })
+    throw createError({ statusCode: 400, message: 'No file uploaded' })
   }
 
   const file = formData[0]
   if (!file.data || !file.filename) {
-    throw createError({ statusCode: 400, statusMessage: 'Invalid file' })
+    throw createError({ statusCode: 400, message: 'Invalid file' })
   }
 
   const uuid = randomUUID()
@@ -23,7 +23,7 @@ export default defineEventHandler(async (event) => {
   const fileName = keepName ? file.filename : `${uuid}.${extension}`
 
   if (query.mode == undefined) {
-    throw createError({ statusCode: 400, statusMessage: 'Invalid mode' })
+    throw createError({ statusCode: 400, message: 'Invalid mode' })
   }
 
   if (query.mode == "static") {
@@ -31,7 +31,7 @@ export default defineEventHandler(async (event) => {
   } else if (query.mode == "user") {
     await createUserAsset(fileName, file.data);
   } else {
-    throw createError({ statusCode: 400, statusMessage: 'Invalid mode' })
+    throw createError({ statusCode: 400, message: 'Invalid mode' })
   }
   
 

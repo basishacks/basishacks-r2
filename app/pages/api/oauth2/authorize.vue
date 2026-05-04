@@ -19,6 +19,17 @@
                 </div>
               </Transition>
 
+              <Transition name="fade">
+                <UForm
+                  v-if="status == 'login'"
+                >
+
+                  <UFormField name="email" label="via your School Email">
+                    <UInput type="email" class="w-full" />
+                  </UFormField> 
+                </UForm>
+              </Transition>
+
             </div>
         </div>
         
@@ -151,7 +162,12 @@ async function loginFlowCheck() {
       status.value = 'error'
       error.value = "invalid_request"
       error_description.value = js.message
+    } else {
+      await fade();
+      status.value = 'login'
     }
+
+    
   }
   
   

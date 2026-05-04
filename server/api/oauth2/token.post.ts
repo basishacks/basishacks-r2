@@ -35,7 +35,7 @@ export default defineEventHandler(async (event) => {
   if (!clientId || !clientSecret) {
     throw createError({
       statusCode: 401,
-      statusMessage: 'Unauthorized',
+      message: 'Unauthorized',
       data: { error: 'invalid_client' }
     })
   }
@@ -44,7 +44,7 @@ export default defineEventHandler(async (event) => {
   if (!client) {
     throw createError({
       statusCode: 401,
-      statusMessage: 'Unauthorized',
+      message: 'Unauthorized',
       data: { error: 'invalid_client' }
     })
   }
@@ -57,7 +57,7 @@ export default defineEventHandler(async (event) => {
     if (!code || !redirectUri) {
       throw createError({
         statusCode: 400,
-        statusMessage: 'Bad Request',
+        message: 'Bad Request',
         data: { error: 'invalid_request' }
       })
     }
@@ -67,7 +67,7 @@ export default defineEventHandler(async (event) => {
     if (!authCode) {
       throw createError({
         statusCode: 400,
-        statusMessage: 'Bad Request',
+        message: 'Bad Request',
         data: { error: 'invalid_grant' }
       })
     }
@@ -76,7 +76,7 @@ export default defineEventHandler(async (event) => {
     if (authCode.clientId !== clientId || authCode.redirectUri !== redirectUri) {
       throw createError({
         statusCode: 400,
-        statusMessage: 'Bad Request',
+        message: 'Bad Request',
         data: { error: 'invalid_grant' }
       })
     }
@@ -101,7 +101,7 @@ export default defineEventHandler(async (event) => {
     if (!refreshTokenStr) {
       throw createError({
         statusCode: 400,
-        statusMessage: 'Bad Request',
+        message: 'Bad Request',
         data: { error: 'invalid_request' }
       })
     }
@@ -111,7 +111,7 @@ export default defineEventHandler(async (event) => {
     if (!refreshToken || refreshToken.clientId !== clientId) {
       throw createError({
         statusCode: 400,
-        statusMessage: 'Bad Request',
+        message: 'Bad Request',
         data: { error: 'invalid_grant' }
       })
     }
@@ -130,7 +130,7 @@ export default defineEventHandler(async (event) => {
 
   throw createError({
     statusCode: 400,
-    statusMessage: 'Bad Request',
+    message: 'Bad Request',
     data: { error: 'unsupported_grant_type' }
   })
 })
