@@ -63,7 +63,20 @@ import { createMicrosoftMeeting } from "../server/plugins/microsoft.ts";
 export async function testCreateMicrosoftMeeting(token: string, target: string) {
     console.log("Testing Create Microsoft Meeting...");
 
-    const res = await createMicrosoftMeeting(target, "[BH] Showcase (Team-31)", "<p>Let's eat together!</p>", new Date().toISOString(), new Date(Date.now() + 3600000).toISOString());
+    const description = `<head>
+<style>h1 { color: green;}</style>
+</head>
+<h1>Get Ready for Your Showcase!</h1>
+<p>Dear Team,</p>
+<p>We are excited to invite you to your upcoming showcase event! This is a fantastic opportunity to demonstrate the hard work and creativity you've put into your project. Please find the details of your showcase below:</p>`
+
+    const res = await createMicrosoftMeeting(target, "[BH] Showcase (Team-31)", description, new Date().toISOString(), new Date(Date.now() + 3600000).toISOString(), [
+        "Zhiyu.Jiang90454-bisz@basischina.com",
+        "test-biph@basischina.com",
+        "test3-bisz@basischina.com",
+        "TEST1101-bbsz@basischina.com",
+        "ChunPing.Wong12024-bisz@basischina.com"
+    ]);
 
     console.log(await res.json())
 
