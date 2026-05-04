@@ -1,7 +1,7 @@
 <template>
 
   <div class="flex flex-col items-center">
-    <svg class="infinity w-[10vw] h-[10vh] max-sm:w-[50vw]" viewBox="-1 -1 12 8">
+    <svg class="infinity w-50 h-25 max-sm:w-[50vw]" viewBox="-1 -1 12 8">
   <defs>
       <path id="infinite" d="M5 3C4 2 3.1 1 2 1a2 2 0 000 4c1.1 0 2-1 3-2s1.9-2 3-2a2 2 0 010 4C6.9 5 6 4 5 3"></path>
       <radialGradient id="rgradient" gradientUnits="userSpaceOnUse" cx="5" cy="3" r="3.4">

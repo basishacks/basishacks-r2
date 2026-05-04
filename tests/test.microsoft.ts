@@ -58,7 +58,7 @@ export async function testMicrosoftMeeting(token: string, target: string) {
     return false;
 }
 
-import { createMicrosoftMeeting } from "../server/plugins/microsoft.ts";
+import { createMicrosoftMeeting, initializeDummyUserAccessToken } from "../server/plugins/microsoft.ts";
 
 export async function testCreateMicrosoftMeeting(token: string, target: string) {
     console.log("Testing Create Microsoft Meeting...");
@@ -71,14 +71,22 @@ export async function testCreateMicrosoftMeeting(token: string, target: string) 
 <p>We are excited to invite you to your upcoming showcase event! This is a fantastic opportunity to demonstrate the hard work and creativity you've put into your project. Please find the details of your showcase below:</p>`
 
     const res = await createMicrosoftMeeting(target, "[BH] Showcase (Team-31)", description, new Date().toISOString(), new Date(Date.now() + 3600000).toISOString(), [
-        "Zhiyu.Jiang90454-bisz@basischina.com",
-        "test-biph@basischina.com",
-        "test3-bisz@basischina.com",
-        "TEST1101-bbsz@basischina.com",
+        // "Zhiyu.Jiang90454-bisz@basischina.com",
+        // "test-biph@basischina.com",
+        // "test3-bisz@basischina.com",
+        // "TEST1101-bbsz@basischina.com",
         "ChunPing.Wong12024-bisz@basischina.com"
     ]);
 
     console.log(await res.json())
 
     return res.status / 100 == 2;
+}
+
+export async function testInitializeDummyUserAccessToken() {
+    console.log("Testing Initialize Dummy User Access Token...");  
+    const token = await initializeDummyUserAccessToken();
+    console.log("Dummy User Access Token initialized: " + token);
+
+    return !!token;
 }

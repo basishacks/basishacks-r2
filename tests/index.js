@@ -13,7 +13,7 @@ console.log("================================")
 console.log("testOAuth2: " + (result_testOAuth2 ? "PASSED" : "FAILED"));
 console.log("================================")
 
-import { testMicrosoftMeeting, testCreateMicrosoftMeeting } from "./test.microsoft.ts";
+import { testMicrosoftMeeting, testCreateMicrosoftMeeting, testInitializeDummyUserAccessToken } from "./test.microsoft.ts";
 import initializeMSAccessToken from "../server/plugins/microsoft.ts";
 
 await initializeMSAccessToken();
@@ -24,7 +24,13 @@ const token = await import("../server/plugins/microsoft.ts").then(m => m.getMSAc
 // console.log("testMicrosoftMeeting: " + (result_testMicrosoftMeeting ? "PASSED" : "FAILED"));
 // console.log("================================")
 
-const result_testCreateMicrosoftMeeting = await testCreateMicrosoftMeeting(token, "b207a655-d801-4200-8345-5dcc50d6d957");
+const result_testCreateMicrosoftMeeting = await testCreateMicrosoftMeeting(token, "devclub-bisz@basischina.com");
 console.log("================================")
 console.log("testCreateMicrosoftMeeting: " + (result_testCreateMicrosoftMeeting ? "PASSED" : "FAILED"));
 console.log("================================")
+
+// This will not work unless admins approve 
+// const result_testCreateMicrosoftMeeting = await testInitializeDummyUserAccessToken();
+// console.log("================================")
+// console.log("testCreateMicrosoftMeeting: " + (result_testCreateMicrosoftMeeting ? "PASSED" : "FAILED"));
+// console.log("================================")
