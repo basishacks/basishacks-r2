@@ -1,6 +1,6 @@
 <template>
   <div class="w-full h-full -z-15">
-    <canvas class="fixed inset-0 -z-10 w-full h-full" ref="canvas"></canvas>
+    <canvas class="fixed inset-0 -z-10 w-full h-full bg-black" ref="canvas"></canvas>
     <div class="flex flex-col items-center justify-center min-h-screen">
         <div class="rounded-md bg-default w-full max-w-md px-8 text-center">
             <p class="text-xl bold glow text-primary my-8">{{ WEBSITE_NAME }}</p>
@@ -87,6 +87,26 @@
                 </div>
               </Transition>
 
+              <Transition name="fade">
+                <div v-if="status == 'sensitive_consent' && showPlaceholders" class="my-auto">
+                  <div class="flex gap-4">
+                    <div v-if="!userAvatarLoaded" class="w-[48px] h-[48px]">
+                      <USkeleton class="w-full h-full rounded-full" />
+                    </div>
+                    <UAvatar v-else size="3xl" :src="userAvatarUrl"></UAvatar>
+                    
+                    <div v-if="!applicationAvatarLoaded" class="w-[48px] h-[48px]">
+                      <USkeleton class="w-full h-full rounded-full" />
+                    </div>
+                    <UAvatar v-else size="3xl" :src="applicationAvatarUrl"></UAvatar>
+                  </div>
+                </div>
+              </Transition>
+              
+              <Transition name="fade">
+                <LoaderAnimationInline v-if="status == 'sensitive_consent' && !showPlaceholders" class="my-auto"></LoaderAnimationInline>
+              </Transition>
+
             </div>
         </div>
         
@@ -97,7 +117,7 @@
 
 <script setup lang="ts">
 import type { FormSubmitEvent } from '@nuxt/ui'
-import { onBeforeUnmount, onMounted, ref } from 'vue'
+import { computed, onBeforeUnmount, onMounted, reactive, ref } from 'vue'
 
 
 const showLoading = ref(true)
@@ -105,6 +125,23 @@ const status = ref('load')
 const error_description = ref('')
 const error = ref('')
 const isLoading = ref(false) // basically making all buttons uninteractable
+const userId = ref<number | null>(null)
+const route = useRoute()
+
+const queryString = (value: unknown) => {
+  if (typeof value === 'string') return value
+  if (Array.isArray(value) && value.length > 0) return value[0]
+  return ''
+}
+
+const userAvatarUrl = computed(() =>
+  `/api/users/${userId.value}/profile_picture`
+)
+
+const applicationAvatarUrl = computed(() => {
+  const clientId = queryString(route.query.client_id)
+  return clientId ? `/api/applications/${clientId}/profile_picture` : ''
+})
 
 const state = reactive({
   email: ''
@@ -134,6 +171,38 @@ const animatedChange = async (newStatus: string) => {
   isLoading.value = true
   status.value = "none"
   await delay(600)
+  
+  if (newStatus === 'sensitive_consent') {
+    // Reset loading states
+    userAvatarLoaded.value = false
+    applicationAvatarLoaded.value = false
+    showPlaceholders.value = false
+    
+    // Start preloading images
+    const preloadPromises = [
+      preloadImage(userAvatarUrl.value).then(() => {
+        userAvatarLoaded.value = true
+      }),
+      preloadImage(applicationAvatarUrl.value).then(() => {
+        applicationAvatarLoaded.value = true
+      }),
+    ]
+    
+    // Set timeout to show placeholders after 1 second
+    const timeoutPromise = new Promise<void>((resolve) => {
+      setTimeout(() => {
+        showPlaceholders.value = true
+        resolve()
+      }, 1000)
+    })
+    
+    // Wait for either all images to load or timeout
+    await Promise.race([
+      Promise.all(preloadPromises),
+      timeoutPromise
+    ])
+  }
+  
   status.value = newStatus
   isLoading.value = false
 }
@@ -175,11 +244,12 @@ async function submitCode(code: number[]) {
 
   try {
     await withLoadingIndicator(async () => {
-      const res = await $fetch('/api/auth/login', {
+      const res: any = await $fetch('/api/auth/login', {
         method: 'POST',
         body: { email: stateLogin.email, code },
       })
-
+      userId.value = res.id
+      animatedChange('sensitive_consent')
     })
   } catch (e) {
     toast.add({
@@ -215,6 +285,24 @@ let columnCount = 0
 let width = 0
 let height = 0
 let ctx: CanvasRenderingContext2D | null = null
+
+const userAvatarLoaded = ref(false)
+const applicationAvatarLoaded = ref(false)
+const avatarsReady = computed(() => userAvatarLoaded.value && applicationAvatarLoaded.value)
+const showPlaceholders = ref(false)
+
+const preloadImage = (url: string): Promise<void> => {
+  return new Promise((resolve) => {
+    if (!url) {
+      resolve()
+      return
+    }
+    const img = new Image()
+    img.onload = () => resolve()
+    img.onerror = () => resolve()
+    img.src = url
+  })
+}
 
 const matrixCharacters = '01ABCDEFGHIJKLMNOPQRSTUVWXYZｱｲｳｴｵｶｷｸｹｺｻｼｽｾｿﾀﾁﾂﾃﾄﾅﾆﾇﾈﾉﾊﾋﾌﾍﾎﾏﾐﾑﾒﾓﾔﾕﾖﾗﾘﾙﾚﾛﾜｦﾝ'
 
@@ -294,16 +382,13 @@ async function fade() {
 }
 
 async function loginFlowCheck() {
-
-  const route = useRoute()
-
-  const client_id = route.query.client_id;
-  const response_type = route.query.response_type;
-  const scope = route.query.scope;
-  const state = route.query.state;
-  const code_challenge = route.query.code_challenge;
-  const code_challenge_method = route.query.code_challenge_method;
-  const redirect_uri = route.query.redirect_uri;
+  const client_id = queryString(route.query.client_id)
+  const response_type = queryString(route.query.response_type)
+  const scope = queryString(route.query.scope)
+  const state = queryString(route.query.state)
+  const code_challenge = queryString(route.query.code_challenge)
+  const code_challenge_method = queryString(route.query.code_challenge_method)
+  const redirect_uri = queryString(route.query.redirect_uri)
 
   // if(!(client_id && response_type && scope && redirect_uri)) {
   //   await fade();
@@ -315,7 +400,7 @@ async function loginFlowCheck() {
 
   
   if (client_id) {
-    const res1: any = await fetch("/api/oauth2/application?client_id=" + client_id + "&scope=" + scope)
+    const res1: any = await fetch("/api/applications/" + client_id + "?scope=" + scope)
     const js = await res1.json()
 
     if (res1.status != 200) {

@@ -8,16 +8,18 @@ import { validateOAuth2AuthorizationRequest } from '~/../server/utils/oauth2-val
 export default defineEventHandler(async (event) => {
   const query = getQuery(event)
 
+  const client_id = getRouterParam(event, 'id') as string // id is client_id
+
   try {
     const req: any = await validateOAuth2AuthorizationRequest(
         event,
-        query.client_id as string,
+        client_id,
         query.scope as string,
-        query.redirect_uri as string | undefined
+        query.redirect_uri as string
     );
 
     return {
-        client_id: req.app.client_id,
+        client_id: client_id,
         name: req.app.name,
         description: req.app.description
     };
