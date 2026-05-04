@@ -37,7 +37,7 @@ export type SendCodeRequest = z.infer<typeof SendCodeRequest>
 
 export const LoginRequest = z.object({
   email: BasisEmail,
-  code: z.string().max(10),
+  code: z.array(z.number().max(9).min(0)).length(6, "Code must be 6 digits"),
 })
 export type LoginRequest = z.infer<typeof LoginRequest>
 

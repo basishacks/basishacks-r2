@@ -5,14 +5,14 @@
         <div class="rounded-md bg-default w-full max-w-md px-8 text-center">
             <p class="text-xl bold glow text-primary my-8">{{ WEBSITE_NAME }}</p>
             <USeparator></USeparator>
-            <div class="w-full h-100 flex flex-row justify-center items-center">
+            <div class="w-full h-80 flex flex-row justify-center items-start my-8">
 
               <Transition name="fade">
-                <LoaderAnimationInline v-if="showLoading"></LoaderAnimationInline>
+                <LoaderAnimationInline v-if="showLoading" class="my-auto"></LoaderAnimationInline>
               </Transition>
 
               <Transition name="fade">
-                <div v-if="status == 'error'">
+                <div v-if="status == 'error'" class="my-auto">
                   <UIcon name="i-material-symbols-error-rounded" class="w-8 h-8 text-red-400"></UIcon>
                   <h3 class="text-sm text-red-400">There was a problem during your login</h3>
                   <p class="mt-4 text-sm">{{ error_description }}</p>
@@ -20,14 +20,71 @@
               </Transition>
 
               <Transition name="fade">
-                <UForm
-                  v-if="status == 'login'"
-                >
 
-                  <UFormField name="email" label="via your School Email">
-                    <UInput type="email" class="w-full" />
-                  </UFormField> 
-                </UForm>
+                <div class="w-full flex flex-col gap-4 items-start justify-start" v-if="status == 'login'">
+
+                  <h3 class="text-xl bold">Sign in</h3>
+                  <UForm
+                    :state="state"
+                    :schema="SendCodeRequest"
+                    class="flex flex-col w-full items-start gap-4 text-left"
+                    @submit="onSendCodeSubmit"
+                    
+                  >
+                    <UFormField name="email" label="via your School Email" class="w-full">
+                      <UInput v-model="state.email" type="email" class="w-full" />
+                    </UFormField>
+
+                    <UButton :disabled="isLoading" type="submit"
+                      >Send verification code</UButton
+                    >
+                  </UForm>
+
+                  <USeparator class="w-full"></USeparator>
+
+                  <UForm class="w-full flex flex-col items-start gap-4 text-left">
+                    
+
+                      <UFormField name="email" label="or use the following...">
+                        <UButton @click="navigateToOAuth2" :disabled="isLoading"> 
+                          <img src="/assets/microsoft_logo.svg" alt="Microsoft Logo" class="w-5 h-5 mr-2" />
+                          Login with Microsoft
+                        </UButton>
+                      </UFormField>
+                  </UForm>
+                </div>
+              </Transition>
+
+              <Transition name="fade">
+                <div v-if="status == 'code_sent'" class="w-full flex flex-col gap-4 items-start justify-start">
+                  
+                  <UForm
+                    :state="stateLogin"
+                    :schema="LoginRequest"
+                    class="flex flex-col w-full items-start gap-4 text-left"
+                    @submit="onSendCodeLoginSubmit"
+                    
+                  >
+                    <h3 class="text-xl bold">Enter a code...</h3>
+                    <span class="text-sm">A <span class="text-primary bold">6-digit</span> verification code has been sent to your 
+                      <ULink class="text-primary bold inline" href="https://teams.microsoft.com" target="_blank">
+                        Teams Chat
+                        <UIcon name="i-material-symbols-link-2" class="w-4 h-4"></UIcon>
+                      </ULink>
+                      
+                       (not email).</span>
+                    <UFormField name="code" label="Enter verification code" class="w-full">
+                      <UPinInput size="xl" v-model="stateLogin.code" type="number" class="w-full" :disabled="isLoading" :length="6" @complete="codeInputComplete"/>
+                    </UFormField>
+
+                    <div class="flex flex-row items-start gap-4">
+                      <UButton :disabled="isLoading" type="submit">Log In</UButton>
+                      <UButton color="neutral" :disabled="isLoading" @click="animatedChange('login')">
+                        <UIcon name="i-material-symbols-arrow-back" class="w-4 h-4 mr-1"></UIcon>
+                        Back</UButton>
+                    </div>
+                  </UForm>
+                </div>
               </Transition>
 
             </div>
@@ -39,12 +96,116 @@
 </template>
 
 <script setup lang="ts">
+import type { FormSubmitEvent } from '@nuxt/ui'
 import { onBeforeUnmount, onMounted, ref } from 'vue'
+
 
 const showLoading = ref(true)
 const status = ref('load')
 const error_description = ref('')
 const error = ref('')
+const isLoading = ref(false) // basically making all buttons uninteractable
+
+const state = reactive({
+  email: ''
+})
+
+const stateLogin = reactive({
+  email: '',
+  code: [] as number[]
+})
+
+import oAuth2Config from '~~/shared/oauth2'
+import { LoginRequest, SendCodeRequest } from '~~/shared/schemas'
+const link = `https://login.microsoftonline.com/
+${oAuth2Config.tenant}/
+oauth2/v2.0/authorize?
+client_id=${oAuth2Config.clientId}
+&response_type=${oAuth2Config.responseType}
+&redirect_uri={CURRENT_URL_ORIGIN}${oAuth2Config.redirectUri}
+&response_mode=query
+&scope=${oAuth2Config.scope.replaceAll(' ', '%20')}`
+const navigateToOAuth2 = () => {
+  isLoading.value = true
+  window.location.href = link.replace("{CURRENT_URL_ORIGIN}", window.location.origin);
+}
+
+const animatedChange = async (newStatus: string) => {
+  isLoading.value = true
+  status.value = "none"
+  await delay(600)
+  status.value = newStatus
+  isLoading.value = false
+}
+
+const toast = useToast()
+
+async function onSendCodeSubmit(event: FormSubmitEvent<SendCodeRequest>) {
+  const { email } = event.data
+
+  isLoading.value = true
+
+  try {
+    await withLoadingIndicator(async () => {
+      const res = await $fetch('/api/auth/code', {
+        method: 'POST',
+        body: { email },
+      })
+      stateLogin.email = email
+      // console.log(1)
+      status.value = 'none'
+      await delay(600)
+      // console.log(2)
+      status.value = 'code_sent'
+      isLoading.value = false
+    })
+  } catch (e) {
+    toast.add({
+      color: 'error',
+      title: 'Failed to send verification code',
+      description: getErrorMessage(e),
+    })
+  } finally {
+    isLoading.value = false
+  }
+}
+
+async function submitCode(code: number[]) {
+  isLoading.value = true
+
+  try {
+    await withLoadingIndicator(async () => {
+      const res = await $fetch('/api/auth/login', {
+        method: 'POST',
+        body: { email: stateLogin.email, code },
+      })
+
+    })
+  } catch (e) {
+    toast.add({
+      color: 'error',
+      title: 'Failed to log in',
+      description: getErrorMessage(e),
+    })
+  } finally {
+    isLoading.value = false
+  }
+}
+
+async function onSendCodeLoginSubmit(event: FormSubmitEvent<LoginRequest>) {
+  const { code } = event.data
+
+  await submitCode(code)
+}
+
+const codeInputComplete = () => {
+  if (stateLogin.code.length == 6) {
+    submitCode(stateLogin.code)
+  }
+}
+
+
+//////// MATRIX PAINT JOB
 
 const canvas = ref<HTMLCanvasElement | null>(null)
 let animationFrameId = 0

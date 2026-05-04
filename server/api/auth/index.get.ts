@@ -2,6 +2,7 @@
 
 import oAuth2Config from '~~/shared/oauth2';
 
+
 function decodeJWT(token: string) {
   try {
     const parts = token.split('.')
@@ -9,6 +10,7 @@ function decodeJWT(token: string) {
       throw new Error('Invalid JWT format')
     }
     const payload = parts[1]
+    //@ts-ignore Lol.
     const decoded = Buffer.from(payload, 'base64').toString('utf-8')
     return JSON.parse(decoded)
   } catch (error) {

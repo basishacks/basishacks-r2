@@ -64,3 +64,10 @@ export async function removeUserAsset(name: string | null | undefined) {
     
 
 }
+
+export async function getUserAsset(name: string): Promise<Buffer> {
+
+    const assetsDir = join(process.cwd(), 'public', 'userast')
+    const filePath = join(assetsDir, name)
+    return await fs.promises.readFile(filePath)
+}

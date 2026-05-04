@@ -3,7 +3,7 @@ import { LoginRequest } from '~~/shared/schemas'
 export default defineEventHandler(async (event) => {
   const { email, code } = await readValidatedBody(event, LoginRequest.parse)
 
-  const user = await getUserByCode(event, email, code)
+  const user = await getUserByCode(event, email, code.join(''))
   if (!user) {
     throw createError({
       status: 400,

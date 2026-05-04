@@ -53,6 +53,7 @@ interface User {
   login_code: string | null
   login_expiry: number | null
   profile_theme: string | null
+  profile_picture: string | null
 }
 
 interface Ballot {

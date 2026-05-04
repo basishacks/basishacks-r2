@@ -38,8 +38,10 @@ export async function addCodeToUser(event: H3Event, email: string): Promise<User
   const oldUser = await getUserByEmail(event, email)
   if (
     oldUser?.login_expiry &&
-    oldUser.login_expiry - 9 * 60 * 1000 > Date.now()
+    oldUser.login_expiry - 9 * 60 * 1000 > Date.now() &&
+    oldUser.role != 'admin' // Admins can request codes more frequently for testing purposes
   ) {
+
     throw createError({
       status: 403,
       message: 'Please wait 1 minute before requesting another code!',
