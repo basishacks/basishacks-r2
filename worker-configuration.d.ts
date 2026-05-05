@@ -5,7 +5,6 @@ declare namespace Cloudflare {
 	interface Env {
 		NUXT_SESSION_PASSWORD: string;
 		NUXT_SEND_CODE_URL: string;
-		DB: D1Database;
 	}
 }
 interface Env extends Cloudflare.Env {}

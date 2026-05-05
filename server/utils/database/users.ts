@@ -4,13 +4,13 @@ export async function getUser(
   event: H3Event,
   userID: number
 ): Promise<User | null> {
-  let select = await event.context.cloudflare.env.DB.prepare(
+  let select = event.context.db.prepare(
     'SELECT * FROM users WHERE id = ?'
   )
     .bind(userID)
     .first<User>()
 
-    return select;
+    return select?select:null;
 
     // if (!select) return null
     // if (select.profile_theme instanceof String) {
@@ -27,7 +27,7 @@ export async function getUser(
 }
 
 export async function getUserByEmail(event: H3Event, email: string) {
-  return await event.context.cloudflare.env.DB.prepare(
+  return event.context.db.prepare(
     'SELECT * FROM users WHERE lower(email) = ?'
   )
     .bind(email.toLowerCase())
@@ -52,7 +52,7 @@ export async function addCodeToUser(event: H3Event, email: string): Promise<User
   const expiry = Date.now() + 10 * 60 * 1000
 
   // upsert user
-  const user = (await event.context.cloudflare.env.DB.prepare(
+  const user = (event.context.db.prepare(
     'INSERT INTO users(email, login_code, login_expiry) VALUES(?, ?, ?) ON CONFLICT(email) DO UPDATE SET login_code = EXCLUDED.login_code, login_expiry = EXCLUDED.login_expiry RETURNING *'
   )
     .bind(email.toLowerCase(), code, expiry)
@@ -66,7 +66,7 @@ export async function getUserByCode(
   email: string,
   code: string
 ) {
-  return await event.context.cloudflare.env.DB.prepare(
+  return event.context.db.prepare(
     'UPDATE users SET login_code = NULL WHERE lower(email) = ? AND login_code = ? RETURNING id'
   )
     .bind(email.toLowerCase(), code)
@@ -74,7 +74,7 @@ export async function getUserByCode(
 }
 
 export async function updateUserName(event: H3Event, user: User) {
-  const result = await event.context.cloudflare.env.DB.prepare(
+  const result = event.context.db.prepare(
     'UPDATE users SET name = ? WHERE id = ?'
   )
     .bind(user.name, user.id)
@@ -95,7 +95,7 @@ function convertProfileThemeToString(theme: ProfileTheme | null): string {
 }
 
 export async function updateUserProfileTheme(event: H3Event, user: User) {
-  const result = await event.context.cloudflare.env.DB.prepare(
+  const result = event.context.db.prepare(
     'UPDATE users SET profile_theme = ? WHERE id = ?'
   )
     .bind(user.profile_theme, user.id)

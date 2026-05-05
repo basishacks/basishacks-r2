@@ -28,3 +28,6 @@ logs
 # User uploaded database files
 
 public/userast
+
+# database
+database

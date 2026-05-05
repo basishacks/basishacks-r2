@@ -1,7 +1,7 @@
 import type { H3Event } from 'h3'
 
 export async function createBallot(event: H3Event, userID: number) {
-  return (await event.context.cloudflare.env.DB.prepare(
+  return (event.context.db.prepare(
     'INSERT INTO ballots(user_id) VALUES(?) RETURNING *',
   )
     .bind(userID)
@@ -9,7 +9,7 @@ export async function createBallot(event: H3Event, userID: number) {
 }
 
 export async function getBallotByUser(event: H3Event, userID: number) {
-  return await event.context.cloudflare.env.DB.prepare(
+  return event.context.db.prepare(
     'SELECT * FROM ballots WHERE user_id = ?',
   )
     .bind(userID)
@@ -17,7 +17,7 @@ export async function getBallotByUser(event: H3Event, userID: number) {
 }
 
 export async function updateBallot(event: H3Event, ballot: Ballot) {
-  await event.context.cloudflare.env.DB.prepare(
+  event.context.db.prepare(
     'UPDATE ballots SET reasoning = ?, submitted = ? WHERE id = ?',
   )
     .bind(ballot.reasoning, ballot.submitted, ballot.id)
@@ -29,7 +29,7 @@ export async function createBallotScore(
   ballotID: number,
   projectID: number,
 ) {
-  return (await event.context.cloudflare.env.DB.prepare(
+  return (event.context.db.prepare(
     'INSERT INTO ballot_scores(ballot_id, project_id) VALUES(?, ?) RETURNING *',
   )
     .bind(ballotID, projectID)
@@ -38,7 +38,7 @@ export async function createBallotScore(
 
 export async function getBallotScores(event: H3Event, ballotID: number) {
   return (
-    await event.context.cloudflare.env.DB.prepare(
+    event.context.db.prepare(
       'SELECT * FROM ballot_scores WHERE ballot_id = ?',
     )
       .bind(ballotID)
@@ -48,7 +48,7 @@ export async function getBallotScores(event: H3Event, ballotID: number) {
 
 export async function getBallotScoresByTeamID(event: H3Event, teamID: number) {
   return (
-    await event.context.cloudflare.env.DB.prepare(
+    event.context.db.prepare(
       'SELECT * FROM ballot_scores WHERE project_id = ?',
     )
       .bind(teamID)
@@ -57,7 +57,7 @@ export async function getBallotScoresByTeamID(event: H3Event, teamID: number) {
 }
 
 export async function updateBallotScore(event: H3Event, score: BallotScore) {
-  await event.context.cloudflare.env.DB.prepare(
+  event.context.db.prepare(
     'UPDATE ballot_scores SET score = ? WHERE id = ?',
   )
     .bind(score.score, score.id)

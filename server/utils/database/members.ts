@@ -1,7 +1,7 @@
 import type { H3Event } from 'h3'
 
 export async function getTeamMembers(event: H3Event, teamID: number) {
-  const result = await event.context.cloudflare.env.DB.prepare(
+  const result = event.context.db.prepare(
     'SELECT * FROM users WHERE team_id = ?'
   )
     .bind(teamID)
@@ -14,7 +14,7 @@ export async function removeTeamMember(
   teamID: number,
   userID: number
 ) {
-  const result = await event.context.cloudflare.env.DB.prepare(
+  const result = event.context.db.prepare(
     'UPDATE users SET team_id = NULL WHERE id = ? AND team_id = ?'
   )
     .bind(userID, teamID)
@@ -33,7 +33,7 @@ export async function addTeamMember(
   teamID: number,
   userID: number
 ) {
-  const result = await event.context.cloudflare.env.DB.prepare(
+  const result = event.context.db.prepare(
     'UPDATE users SET team_id = ? WHERE id = ? AND team_id IS NULL'
   )
     .bind(teamID, userID)

@@ -1,7 +1,7 @@
 import type { H3Event } from 'h3'
 
 export async function getTeam(event: H3Event, teamID: number) {
-  return await event.context.cloudflare.env.DB.prepare(
+  return event.context.db.prepare(
     'SELECT * FROM teams WHERE id = ?',
   )
     .bind(teamID)
@@ -10,7 +10,7 @@ export async function getTeam(event: H3Event, teamID: number) {
 
 export async function getAllTeams(event: H3Event) {
   return (
-    await event.context.cloudflare.env.DB.prepare(
+    event.context.db.prepare(
       'SELECT * FROM teams',
     ).all<Team>()
   ).results
@@ -21,7 +21,7 @@ export async function getSubmittedUnjudgedTeams(
   judgeUserID: number,
 ) {
   return (
-    await event.context.cloudflare.env.DB.prepare(
+    event.context.db.prepare(
       'SELECT * FROM teams t WHERE project_submitted = 1 AND NOT EXISTS (SELECT 1 FROM team_scores ts WHERE ts.team_id = t.id AND ts.judge_user_id = ?)',
     )
       .bind(judgeUserID)
@@ -31,14 +31,14 @@ export async function getSubmittedUnjudgedTeams(
 
 export async function getSubmittedTeams(event: H3Event) {
   return (
-    await event.context.cloudflare.env.DB.prepare(
+    event.context.db.prepare(
       'SELECT * FROM teams WHERE project_submitted = 1',
     ).all<Team>()
   ).results
 }
 
 export async function createTeam(event: H3Event, teamName: string) {
-  const team = (await event.context.cloudflare.env.DB.prepare(
+  const team = (event.context.db.prepare(
     'INSERT INTO teams(name) VALUES(?) RETURNING *',
   )
     .bind(teamName)
@@ -47,7 +47,7 @@ export async function createTeam(event: H3Event, teamName: string) {
 }
 
 export async function updateTeam(event: H3Event, team: Team) {
-  const result = await event.context.cloudflare.env.DB.prepare(
+  const result = event.context.db.prepare(
     'UPDATE teams SET name = ?, pathway = ?, score = ?, rank = ?, project_name = ?, project_description = ?, project_demo_url = ?, project_repo_url = ?, project_submitted = ? WHERE id = ?',
   )
     .bind(
