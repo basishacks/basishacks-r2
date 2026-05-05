@@ -7,3 +7,4 @@ const oAuth2Config = {
 }
 
 export default oAuth2Config;
+

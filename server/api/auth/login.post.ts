@@ -1,12 +1,13 @@
 import { LoginRequest } from '~~/shared/schemas'
 
 export default defineEventHandler(async (event) => {
+
   const { email, code } = await readValidatedBody(event, LoginRequest.parse)
 
-  const user = await getUserByCode(event, email, code)
+  const user = await getUserByCode(event, email, code.join(''))
   if (!user) {
     throw createError({
-      status: 400,
+      status: 400,  
       message: 'The given email & code combination is incorrect',
     })
   }
@@ -15,5 +16,5 @@ export default defineEventHandler(async (event) => {
     user: { id: user.id },
   })
 
-  return { message: 'You are logged in!' }
+  return user
 })

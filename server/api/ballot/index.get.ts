@@ -3,7 +3,7 @@ export default defineEventHandler(async (event) => {
   if (hackathon?.status !== 'voting') {
     throw createError({
       status: 409,
-      statusMessage: 'Peer voting is closed',
+      message: 'Peer voting is closed',
     })
   }
 
@@ -11,14 +11,14 @@ export default defineEventHandler(async (event) => {
   if (!user.team_id) {
     throw createError({
       status: 403,
-      statusMessage: 'Only participants can vote',
+      message: 'Only participants can vote',
     })
   }
   const userTeam = await getTeam(event, user.team_id)
   if (!userTeam?.project_submitted) {
     throw createError({
       status: 403,
-      statusMessage: 'Only participants with submitted projects can vote',
+      message: 'Only participants with submitted projects can vote',
     })
   }
 

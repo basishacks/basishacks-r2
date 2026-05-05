@@ -21,6 +21,7 @@ export default defineEventHandler(async (event) => {
     body: JSON.stringify({ email, code: user.login_code! }),
   })
   const data = await res.json<
+  //@ts-ignore Lol.
     { success: true; name: string } | { success: false; error: string }
   >()
   if (!data.success) {

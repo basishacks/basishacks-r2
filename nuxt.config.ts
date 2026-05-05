@@ -25,6 +25,11 @@ export default defineNuxtConfig({
   devServer: {
     port: 24598,
   },
+  icon: {
+    customCollections: [
+
+    ]
+  },
   fonts: {
     provider: 'local',
   },

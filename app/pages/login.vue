@@ -8,7 +8,6 @@ useHead({
 })
 
 const toast = useToast()
-const { fetch: refreshAuth } = useUserSession()
 
 const isSendingCode = ref(true)
 const isLoading = ref(false)
@@ -32,6 +31,10 @@ const state = reactive({
 
 const navigateToOAuth2 = () => {
   window.location.href = link.replace("{CURRENT_URL_ORIGIN}", window.location.origin);
+}
+
+const BHnavigateToOAuth2 = () => {
+  window.location.href = `/api/oauth2/authorize?client_id=97e435f4-17e8-42ef-9b12-9684fd656de9&response_type=code&redirect_uri=${window.location.origin}/api/auth&scope=openid%20profile%20email`
 }
 
 async function onSendCodeSubmit(event: FormSubmitEvent<SendCodeRequest>) {
@@ -66,7 +69,7 @@ async function onSendCodeSubmit(event: FormSubmitEvent<SendCodeRequest>) {
 </script>
 
 <template>
-  <div class="'mt-4'">
+  <div class="mt-4">
     <h1 class="text-4xl bold mb-4">Log in</h1>
 
     <UForm
@@ -87,12 +90,20 @@ async function onSendCodeSubmit(event: FormSubmitEvent<SendCodeRequest>) {
 
 
 
-    <UForm class="mt-5">
-      <UFormField name="email" label="or use Microsoft Login">
-          <UButton @click="navigateToOAuth2">
+    <UForm class="mt-5 max-w-[600px]">
+      <UFormField name="email" label="or use the following...">
+          <UButton @click="navigateToOAuth2" class=""> 
             <img src="/assets/microsoft_logo.svg" alt="Microsoft Logo" class="w-5 h-5 mr-2" />
             Login with Microsoft
           </UButton>
+
+          <br>
+
+          <UButton @click="BHnavigateToOAuth2" class="mt-4" color="neutral">
+            <span class="w-5 h-5 mr-2 text-bold glow text-primary">b</span>
+            Login with basishacks connect
+          </UButton>
+          <p class="text-xs text-muted">(requires basishacks account)</p>
       </UFormField>
 
       

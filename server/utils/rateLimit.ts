@@ -26,7 +26,7 @@ export async function getClientIdentifier(event: H3Event): Promise<string> {
 
   // Fall back to IP address for unauthenticated requests
   const ip =
-    getHeader(event, 'x-forwarded-for')?.split(',')[0].trim() ||
+    getHeader(event, 'x-forwarded-for')?.split(',')[0]?.trim() ||
     getHeader(event, 'cf-connecting-ip') ||
     getHeader(event, 'x-real-ip') ||
     'unknown'
@@ -53,6 +53,7 @@ export function applyRateLimit(
     // Check if rate limit exceeded
     if (history.length >= finalConfig.maxRequests) {
       const oldestRequest = history[0]
+      if (!oldestRequest) return;
       const resetTime = new Date(oldestRequest + finalConfig.windowMs)
       const retryAfter = Math.ceil(
         (oldestRequest + finalConfig.windowMs - now) / 1000

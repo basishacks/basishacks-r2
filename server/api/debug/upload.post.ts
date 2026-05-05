@@ -1,30 +1,42 @@
 import { randomUUID } from 'crypto'
-import { writeFile, mkdir } from 'node:fs/promises'
-import { join } from 'node:path'
+import { createAsset, createUserAsset } from '~~/server/utils/assets'
 
 export default defineEventHandler(async (event) => {
+  const query = getQuery(event)
+
+  await requireAdmin(event)
+
   const formData = await readMultipartFormData(event)
   if (!formData || !formData[0]) {
-    throw createError({ statusCode: 400, statusMessage: 'No file uploaded' })
+    throw createError({ statusCode: 400, message: 'No file uploaded' })
   }
 
   const file = formData[0]
   if (!file.data || !file.filename) {
-    throw createError({ statusCode: 400, statusMessage: 'Invalid file' })
+    throw createError({ statusCode: 400, message: 'Invalid file' })
   }
 
   const uuid = randomUUID()
-  const assetsDir = join(process.cwd(), 'public', 'assets')
-  const filePath = join(assetsDir, uuid)
+  const extension = file.filename.split('.').pop()?.toLowerCase() || ''
+  
+  const keepName = query.keepName === 'true'
+  const fileName = keepName ? file.filename : `${uuid}.${extension}`
 
-  // Ensure the assets directory exists
-  await mkdir(assetsDir, { recursive: true })
+  if (query.mode == undefined) {
+    throw createError({ statusCode: 400, message: 'Invalid mode' })
+  }
 
-  // Write the file
-  await writeFile(filePath, file.data)
+  if (query.mode == "static") {
+    await createAsset(fileName, file.data);
+  } else if (query.mode == "user") {
+    await createUserAsset(fileName, file.data);
+  } else {
+    throw createError({ statusCode: 400, message: 'Invalid mode' })
+  }
+  
 
   // Permalink is the public URL
-  const permalink = `/assets/${uuid}`
+  const permalink = `/${query.mode == "static" ? "assets" : "userast"}/${fileName}`
 
   return { permalink }
 })
