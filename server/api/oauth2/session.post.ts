@@ -2,7 +2,6 @@
 
 /**
  * OAuth2 getApp Endpoint (GET)
- * deprecated
  */
 import { validateOAuth2AuthorizationRequest } from '~/../server/utils/oauth2-validate'
 

@@ -1,3 +1,4 @@
+import { randomBytes } from 'node:crypto'
 import { LoginRequest } from '~~/shared/schemas'
 
 export default defineEventHandler(async (event) => {
@@ -13,8 +14,12 @@ export default defineEventHandler(async (event) => {
   }
 
   await setUserSession(event, {
-    user: { id: user.id },
+    user: { id: user.id }
   })
 
-  return user
+  return {
+    user,
+    code: randomBytes(128).toString("base64url"),
+    time: Date.now()
+  }
 })

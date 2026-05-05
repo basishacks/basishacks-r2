@@ -1,6 +1,29 @@
 <template>
   <div class="p-4">
-    <h1 class="text-2xl font-bold mb-4">Debug File Upload</h1>
+    <div class="flex gap-4 mb-6">
+      <button
+        @click="activeTab = 'upload'"
+        :class="[
+          'px-4 py-2 rounded font-medium',
+          activeTab === 'upload' ? 'bg-primary text-white' : 'bg-gray-200 text-gray-800'
+        ]"
+      >
+        File Upload
+      </button>
+      <button
+        @click="activeTab = 'deepseek'"
+        :class="[
+          'px-4 py-2 rounded font-medium',
+          activeTab === 'deepseek' ? 'bg-primary text-white' : 'bg-gray-200 text-gray-800'
+        ]"
+      >
+        DeepSeek Chat
+      </button>
+    </div>
+
+    <!-- File Upload Tab -->
+    <div v-if="activeTab === 'upload'">
+      <h1 class="text-2xl font-bold mb-4">Debug File Upload</h1>
     <form @submit.prevent="uploadFile" class="space-y-4">
       <div>
         <label for="file" class="block text-sm font-medium">Select File</label>
@@ -72,13 +95,96 @@
           </ul>
         </div>
       </div>
-    </section>
+      </section>
+    </div>
+
+    <!-- DeepSeek Chat Tab -->
+    <div v-if="activeTab === 'deepseek'">
+      <h1 class="text-2xl font-bold mb-4">DeepSeek Chat Test</h1>
+      
+      <!-- Create Session -->
+      <div class="mb-6 p-4 border border-gray-300 rounded">
+        <h2 class="text-xl font-semibold mb-3">Create New Session</h2>
+        <div class="flex gap-2">
+          <input
+            v-model="newSessionName"
+            type="text"
+            placeholder="Enter session name"
+            class="flex-1 px-3 py-2 border border-gray-300 rounded"
+          />
+          <button
+            @click="createSession"
+            :disabled="!newSessionName || creatingSession"
+            class="bg-primary text-white px-4 py-2 rounded disabled:opacity-50"
+          >
+            {{ creatingSession ? 'Creating...' : 'Create Session' }}
+          </button>
+        </div>
+      </div>
+
+      <!-- Sessions List -->
+      <div class="mb-6">
+        <h2 class="text-xl font-semibold mb-3">Active Sessions</h2>
+        <div v-if="sessions.length === 0" class="text-gray-500">No active sessions</div>
+        <div v-for="session in sessions" :key="session.id" class="mb-4 p-4 border border-gray-300 rounded">
+          <div class="flex justify-between items-center mb-3">
+            <div>
+              <h3 class="font-semibold">{{ session.sessionName }}</h3>
+              <p class="text-sm text-gray-500">ID: {{ session.id }} | Messages: {{ session.messages.length }}</p>
+            </div>
+            <button
+              @click="deleteSession(session.id)"
+              :disabled="deletingSessionId === session.id"
+              class="bg-red-500 text-white px-3 py-1 rounded text-sm disabled:opacity-50"
+            >
+              {{ deletingSessionId === session.id ? 'Deleting...' : 'Delete' }}
+            </button>
+          </div>
+
+          <!-- Chat Messages -->
+          <div class="bg-gray-50 p-3 rounded mb-3 max-h-64 overflow-y-auto border border-gray-200">
+            <div v-if="session.messages.length === 0" class="text-gray-500 text-sm">No messages yet</div>
+            <div v-for="(msg, idx) in session.messages" :key="idx" class="mb-2">
+              <p :class="msg.role === 'user' ? 'font-semibold text-blue-600' : 'text-gray-700'">
+                {{ msg.role === 'user' ? 'You' : 'Mickey' }}:
+              </p>
+              <p class="text-sm text-gray-700 ml-2">{{ msg.content }}</p>
+            </div>
+          </div>
+
+          <!-- Send Message -->
+          <div class="flex gap-2">
+            <input
+              v-model="sessionMessages[session.id]"
+              type="text"
+              placeholder="Type a message..."
+              class="flex-1 px-3 py-2 border border-gray-300 rounded"
+              @keyup.enter="sendMessage(session.id)"
+            />
+            <USelectMenu v-model="roleValue" :items="roleValues">
+
+            </USelectMenu>
+            <button
+              @click="sendMessage(session.id)"
+              :disabled="!sessionMessages[session.id] || sendingSessionId === session.id"
+              class="bg-blue-500 text-white px-4 py-2 rounded disabled:opacity-50"
+            >
+              {{ sendingSessionId === session.id ? 'Sending...' : 'Send' }}
+            </button>
+          </div>
+        </div>
+      </div>
+    </div>
   </div>
 </template>
 
 <script setup lang="ts">
 import { onMounted } from 'vue'
 
+// Tab management
+const activeTab = ref<'upload' | 'deepseek'>('upload')
+
+// File upload state
 const file = ref<File | null>(null)
 const uploading = ref(false)
 const permalink = ref('')
@@ -90,6 +196,24 @@ const items = ref(['static', 'user'])
 const value = ref('static')
 const keepOriginalName = ref(false)
 
+// DeepSeek state
+const newSessionName = ref('')
+const creatingSession = ref(false)
+const sessions = ref<Array<{
+  id: number
+  sessionName: string
+  createdAt: number
+  messages: Array<{ role: 'user' | 'assistant' | 'tool'; content: string }>
+}>>([])
+const sessionMessages = ref<Record<number, string>>({})
+const toolCallId = ref<string>("")
+const sendingSessionId = ref<number | null>(null)
+const deletingSessionId = ref<number | null>(null)
+
+const roleValue = ref('user')
+const roleValues = ref(["user", "tool"])
+
+// File upload functions
 const loadFiles = async () => {
   loadingFiles.value = true
   try {
@@ -134,6 +258,86 @@ const uploadFile = async () => {
     error.value = err.message || 'Upload failed'
   } finally {
     uploading.value = false
+  }
+}
+
+// DeepSeek functions
+const createSession = async () => {
+  if (!newSessionName.value) return
+
+  creatingSession.value = true
+  try {
+    const session = await $fetch<{
+      id: number
+      sessionName: string
+      createdAt: number
+      messages: Array<{ role: 'user' | 'assistant' | 'tool'; content: string }>
+    }>('/api/debug/deepseek/sessions', {
+      method: 'POST',
+      body: {
+        sessionName: newSessionName.value,
+      },
+    })
+
+    sessions.value.push(session)
+    sessionMessages.value[session.id] = ''
+    newSessionName.value = ''
+  } catch (err: any) {
+    error.value = `Failed to create session: ${err.message || 'Unknown error'}`
+  } finally {
+    creatingSession.value = false
+  }
+}
+
+const sendMessage = async (sessionId: number) => {
+  const message = sessionMessages.value[sessionId]
+
+  if (!message) return
+
+  sendingSessionId.value = sessionId
+  try {
+    const response = await $fetch<{
+      sessionId: number
+      userMessage: string
+      assistantMessage: string
+      allMessages: Array<{ role: 'user' | 'assistant' | 'tool'; content: string }>
+    }>(`/api/debug/deepseek/sessions/${sessionId}/message`, {
+      method: 'POST',
+      body: {
+        message,
+        role: roleValue.value,
+        toolId: toolCallId.value
+      },
+    })
+
+    // Update session with new messages
+    const sessionIndex = sessions.value.findIndex((s) => s.id === sessionId)
+    if (sessionIndex != -1) {
+      sessions.value[sessionIndex].messages = response.allMessages
+    }
+
+    sessionMessages.value[sessionId] = ''
+  } catch (err: any) {
+    error.value = `Failed to send message: ${err.message || 'Unknown error'}`
+    console.log(err.message)
+  } finally {
+    sendingSessionId.value = null
+  }
+}
+
+const deleteSession = async (sessionId: number) => {
+  deletingSessionId.value = sessionId
+  try {
+    await $fetch(`/api/debug/deepseek/sessions/${sessionId}`, {
+      method: 'DELETE',
+    })
+
+    sessions.value = sessions.value.filter((s) => s.id !== sessionId)
+    delete sessionMessages.value[sessionId]
+  } catch (err: any) {
+    error.value = `Failed to delete session: ${err.message || 'Unknown error'}`
+  } finally {
+    deletingSessionId.value = null
   }
 }
 

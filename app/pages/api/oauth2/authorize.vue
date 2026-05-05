@@ -88,23 +88,38 @@
               </Transition>
 
               <Transition name="fade">
-                <div v-if="status == 'sensitive_consent' && showPlaceholders" class="my-auto">
-                  <div class="flex gap-4">
+                <div v-if="status == 'sensitive_consent' && showPlaceholders" class="my-auto flex flex-col items-center gap-4">
+                  <div class="flex flex-row items-center gap-4">
                     <div v-if="!userAvatarLoaded" class="w-[48px] h-[48px]">
                       <USkeleton class="w-full h-full rounded-full" />
                     </div>
                     <UAvatar v-else size="3xl" :src="userAvatarUrl"></UAvatar>
+
+                    <UIcon name="i-material-symbols-link" class="text-primary size-10"></UIcon>
                     
                     <div v-if="!applicationAvatarLoaded" class="w-[48px] h-[48px]">
                       <USkeleton class="w-full h-full rounded-full" />
                     </div>
                     <UAvatar v-else size="3xl" :src="applicationAvatarUrl"></UAvatar>
                   </div>
+
+                  <div>
+                    <h3 class="text-mx">Allow <span class="bold">{{ applicationName }}</span> to...</h3>
+                    <p v-if="usedScopes.includes('openid') || usedScopes.includes('profile') || usedScopes.includes('email')" class="flex flex-row items-center justify-center gap-2">
+                      <UIcon name="i-material-symbols-check" class="text-primary"></UIcon>
+                      <span class="text-sm">View your profile information</span>
+                    </p>
+                  </div>
+
+                  <div class="flex flex-row gap-4">
+                    <UButton @click="returnToApp({ result: 'success', code: 'example_code' })">
+                      Sure
+                    </UButton>
+                    <UButton color="neutral" @click="returnToApp({ result: 'error', error: 'access_denied', error_description: 'User denied consent' })">
+                      Nope
+                    </UButton>
+                  </div>
                 </div>
-              </Transition>
-              
-              <Transition name="fade">
-                <LoaderAnimationInline v-if="status == 'sensitive_consent' && !showPlaceholders" class="my-auto"></LoaderAnimationInline>
               </Transition>
 
             </div>
@@ -126,7 +141,28 @@ const error_description = ref('')
 const error = ref('')
 const isLoading = ref(false) // basically making all buttons uninteractable
 const userId = ref<number | null>(null)
+const applicationName = ref('')
+const usedScopes: Ref<string[]> = ref([])
 const route = useRoute()
+const app: Ref<OAuth2Application | null> = ref(null)
+
+const returnToApp = (options: any) => {
+
+  isLoading.value = true
+
+  if (options.result == "error") {
+    const url = new URL(route.query.redirect_uri as string)
+    url.searchParams.set('error', options.error)
+    url.searchParams.set('error_description', options.error_description)
+    window.location.href = url.toString()
+  } else if (options.result == "success") {
+    const url = new URL(route.query.redirect_uri as string)
+    url.searchParams.set('code', options.code)
+    url.searchParams.set('state', route.query.state as string)
+    window.location.href = url.toString()
+  }
+
+}
 
 const queryString = (value: unknown) => {
   if (typeof value === 'string') return value
@@ -249,7 +285,12 @@ async function submitCode(code: number[]) {
         body: { email: stateLogin.email, code },
       })
       userId.value = res.id
-      animatedChange('sensitive_consent')
+      
+      if (app.value?.type == "first") {
+        returnToApp({ result: 'success', code: res.code})
+      } else {
+        animatedChange('sensitive_consent')
+      }
     })
   } catch (e) {
     toast.add({
@@ -382,6 +423,7 @@ async function fade() {
 }
 
 async function loginFlowCheck() {
+
   const client_id = queryString(route.query.client_id)
   const response_type = queryString(route.query.response_type)
   const scope = queryString(route.query.scope)
@@ -389,6 +431,8 @@ async function loginFlowCheck() {
   const code_challenge = queryString(route.query.code_challenge)
   const code_challenge_method = queryString(route.query.code_challenge_method)
   const redirect_uri = queryString(route.query.redirect_uri)
+  
+  usedScopes.value = decodeURI(scope).split(" ")
 
   // if(!(client_id && response_type && scope && redirect_uri)) {
   //   await fade();
@@ -400,7 +444,7 @@ async function loginFlowCheck() {
 
   
   if (client_id) {
-    const res1: any = await fetch("/api/applications/" + client_id + "?scope=" + scope)
+    const res1: any = await fetch("/api/oauth2/session?client_id=" + client_id + "&scope=" + scope)
     const js = await res1.json()
 
     if (res1.status != 200) {
@@ -410,10 +454,11 @@ async function loginFlowCheck() {
       error_description.value = js.message
     } else {
       await fade();
+      applicationName.value = js.name
+      app.value = js
       status.value = 'login'
+      
     }
-
-    
   }
   
   

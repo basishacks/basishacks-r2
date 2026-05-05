@@ -79,4 +79,5 @@ interface OAuth2Application {
     description: string | null
     proxy_microsoft: number
     profile_picture: string | null
+    type: "first" | "third"
 }

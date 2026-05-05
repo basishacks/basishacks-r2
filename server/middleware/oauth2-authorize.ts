@@ -1,4 +1,5 @@
 import { defineEventHandler } from 'h3'
+import { randomBytes } from 'node:crypto'
 import { validateOAuth2AuthorizationRequest } from '~/../server/utils/oauth2-validate'
 
 /**
@@ -26,8 +27,17 @@ export default defineEventHandler(async (event) => {
         redirect_uri
     )
 
-    // Store validated request in context for use by handlers
-  event.context.oauth2_auth_request = validatedRequest
+    const login_session = randomBytes(64).toString('base64url')
+
+    event.context.oauth = {
+      client_id,
+      scope,
+      redirect_uri,
+      login_session
+    }
+    
+
+    
   } catch (err) {
     console.log("User requested faulty oauth link: " + err)
   }

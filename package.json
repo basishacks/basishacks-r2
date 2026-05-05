@@ -21,6 +21,7 @@
     "eslint": "^9.0.0",
     "jdenticon": "^3.3.0",
     "nitro-cloudflare-dev": "^0.2.2",
+    "node-html-markdown": "^2.0.0",
     "nuxt": "latest",
     "nuxt-auth-utils": "0.5.25",
     "openai": "^6.36.0",
