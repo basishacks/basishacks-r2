@@ -1,48 +1,48 @@
 import type { H3Event } from 'h3'
 
-export async function getTeam(event: H3Event, teamID: number) {
+export async function getTeam(event: H3Event, teamID: number): Promise<Team | null> {
   return event.context.db.prepare(
     'SELECT * FROM teams WHERE id = ?',
   )
     .bind(teamID)
-    .first<Team>()
+    .first() as Team | null
 }
 
-export async function getAllTeams(event: H3Event) {
+export async function getAllTeams(event: H3Event): Promise<Team[]> {
   return (
     event.context.db.prepare(
       'SELECT * FROM teams',
-    ).all<Team>()
+    ).all() as { results: Team[] }
   ).results
 }
 
 export async function getSubmittedUnjudgedTeams(
   event: H3Event,
   judgeUserID: number,
-) {
+): Promise<Team[]> {
   return (
     event.context.db.prepare(
       'SELECT * FROM teams t WHERE project_submitted = 1 AND NOT EXISTS (SELECT 1 FROM team_scores ts WHERE ts.team_id = t.id AND ts.judge_user_id = ?)',
     )
       .bind(judgeUserID)
-      .all<Team>()
+      .all() as { results: Team[] }
   ).results
 }
 
-export async function getSubmittedTeams(event: H3Event) {
+export async function getSubmittedTeams(event: H3Event): Promise<Team[]> {
   return (
     event.context.db.prepare(
       'SELECT * FROM teams WHERE project_submitted = 1',
-    ).all<Team>()
+    ).all() as { results: Team[] }
   ).results
 }
 
-export async function createTeam(event: H3Event, teamName: string) {
+export async function createTeam(event: H3Event, teamName: string): Promise<Team> {
   const team = (event.context.db.prepare(
     'INSERT INTO teams(name) VALUES(?) RETURNING *',
   )
     .bind(teamName)
-    .first<Team>())!
+    .first() as Team)!
   return team
 }
 

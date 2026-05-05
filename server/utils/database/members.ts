@@ -1,11 +1,11 @@
 import type { H3Event } from 'h3'
 
-export async function getTeamMembers(event: H3Event, teamID: number) {
+export async function getTeamMembers(event: H3Event, teamID: number): Promise<User[]> {
   const result = event.context.db.prepare(
     'SELECT * FROM users WHERE team_id = ?'
   )
     .bind(teamID)
-    .all<User>()
+    .all() as { results: User[] }
   return result.results
 }
 

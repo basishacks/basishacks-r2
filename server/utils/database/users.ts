@@ -8,7 +8,7 @@ export async function getUser(
     'SELECT * FROM users WHERE id = ?'
   )
     .bind(userID)
-    .first<User>()
+    .first() as User | null
 
     return select?select:null;
 
@@ -26,12 +26,12 @@ export async function getUser(
     // }
 }
 
-export async function getUserByEmail(event: H3Event, email: string) {
+export async function getUserByEmail(event: H3Event, email: string): Promise<User | null> {
   return event.context.db.prepare(
     'SELECT * FROM users WHERE lower(email) = ?'
   )
     .bind(email.toLowerCase())
-    .first<User>()
+    .first() as User | null
 }
 
 export async function addCodeToUser(event: H3Event, email: string): Promise<User> {
@@ -56,7 +56,7 @@ export async function addCodeToUser(event: H3Event, email: string): Promise<User
     'INSERT INTO users(email, login_code, login_expiry) VALUES(?, ?, ?) ON CONFLICT(email) DO UPDATE SET login_code = EXCLUDED.login_code, login_expiry = EXCLUDED.login_expiry RETURNING *'
   )
     .bind(email.toLowerCase(), code, expiry)
-    .first<User>())!
+    .first() as User)!
 
   return user
 }
@@ -65,12 +65,12 @@ export async function getUserByCode(
   event: H3Event,
   email: string,
   code: string
-) {
+): Promise<Pick<User, 'id'> | null> {
   return event.context.db.prepare(
     'UPDATE users SET login_code = NULL WHERE lower(email) = ? AND login_code = ? RETURNING id'
   )
     .bind(email.toLowerCase(), code)
-    .first<Pick<User, 'id'>>()
+    .first() as Pick<User, 'id'> | null
 }
 
 export async function updateUserName(event: H3Event, user: User) {
