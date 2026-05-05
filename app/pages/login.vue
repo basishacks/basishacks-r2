@@ -93,7 +93,7 @@ async function onSendCodeSubmit(event: FormSubmitEvent<SendCodeRequest>) {
     <UForm class="mt-5 max-w-[600px]">
       <UFormField name="email" label="or use the following...">
           <UButton @click="navigateToOAuth2" class=""> 
-            <img src="/assets/microsoft_logo.svg" alt="Microsoft Logo" class="w-5 h-5 mr-2" />
+            <img src="/assets/Microsoft_logo.svg" alt="Microsoft Logo" class="w-5 h-5 mr-2" />
             Login with Microsoft
           </UButton>
 
