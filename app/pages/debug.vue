@@ -157,7 +157,7 @@
             <input
               v-model="sessionMessages[session.id]"
               type="text"
-              placeholder="Type a message..."
+              placeholder="Type a message... (yes i can read webpages and stuff, or ask me the time...)"
               class="flex-1 px-3 py-2 border border-gray-300 rounded"
               @keyup.enter="sendMessage(session.id)"
             />
