@@ -1,0 +1,37 @@
+@import 'tailwindcss';
+@import '@nuxt/ui';
+
+@theme {
+  --font-mono: Monaspace Neon;
+  --font-mono--font-variation-settings: "wdth" 100;
+  /* disable the dot inside the "0" glyph */
+  --font-mono--font-feature-settings: "cv01" 1;
+
+  --font-sans: var(--font-mono);
+  --font-sans--font-variation-settings: "wdth" 100;
+  --font-sans--font-feature-settings: "cv01" 1;
+}
+
+.bold {
+  font-variation-settings: "wdth" 100, "wght" var(--font-weight-bold);
+}
+
+.glow {
+  text-shadow: 0 0 0.05em color-mix(in srgb, currentColor 75%, var(--background-color-default) 25%), 0 0 0.1em color-mix(in srgb, currentColor 75%, var(--background-color-default) 25%);
+}
+
+.glow-sm {
+  text-shadow: 0 0 0.03em color-mix(in srgb, currentColor 75%, var(--background-color-default) 25%), 0 0 0.07em color-mix(in srgb, currentColor 75%, var(--background-color-default) 25%);
+}
+
+code {
+  background: var(--background-color-accented);
+  padding: 0.25em 0.5em;
+  border-radius: 8px;
+}
+
+button:disabled {
+  filter: grayscale(1);
+}
+
+
