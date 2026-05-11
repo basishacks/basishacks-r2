@@ -1,4 +1,4 @@
-// nuxt.config.ts
+// https://nuxt.com/docs/api/configuration/nuxt-config
 export default defineNuxtConfig({
   compatibilityDate: '2025-07-15',
   devtools: { enabled: true },
@@ -35,14 +35,16 @@ export default defineNuxtConfig({
       allowedHosts: true,
     },
     build: {
-      target: 'es2015',
+      target: 'es2020',
       minify: 'esbuild',
       sourcemap: false,
       rollupOptions: {
         onwarn(warning, warn) {
           if (warning.message.includes('Sourcemap is likely to be incorrect')) return
-          if (warning.message.includes('/* #__PURE__ */')) return
+          if (warning.code === 'TOLERATED_TRANSFORM') return
+          if (warning.code === 'PLUGIN_TIMINGS') return
           if (warning.code === 'CIRCULAR_DEPENDENCY') return
+          if (warning.message.includes('/* #__PURE__ */')) return
           warn(warning)
         }
       }
@@ -55,6 +57,7 @@ export default defineNuxtConfig({
     },
     rollupConfig: {
       onwarn(warning, warn) {
+        if (warning.code === 'UNRESOLVED_IMPORT') return
         if (warning.code === 'CIRCULAR_DEPENDENCY') return
         if (warning.message.includes('/* #__PURE__ */')) return
         warn(warning)
