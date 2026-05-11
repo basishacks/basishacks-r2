@@ -1,7 +1,7 @@
 import { profile } from 'node:console';
 import { randomUUID } from 'node:crypto';
 import { createUserAsset, removeAsset, removeUserAsset } from '~~/server/utils/assets';
-import { updateUserProfileTheme } from '~~/server/utils/database/users';
+import { updateUserProfileTheme } from '~~/server/utils/database';
 import { applyRateLimit } from '~~/server/utils/rateLimit'
 import { UpdateUserRequest } from '~~/shared/schemas'
 
