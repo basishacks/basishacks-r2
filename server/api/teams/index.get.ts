@@ -1,4 +1,4 @@
-import { getAllTeams } from '~~/server/utils/database/teams'
+import { getAllTeams } from '~~/server/utils/database'
 
 export default defineEventHandler(async (event) => {
   const query = getQuery(event)
