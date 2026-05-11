@@ -1,4 +1,4 @@
-// https://nuxt.com/docs/api/configuration/nuxt-config
+// nuxt.config.ts
 export default defineNuxtConfig({
   compatibilityDate: '2025-07-15',
   devtools: { enabled: true },
@@ -42,22 +42,23 @@ export default defineNuxtConfig({
         onwarn(warning, warn) {
           if (warning.message.includes('Sourcemap is likely to be incorrect')) return
           if (warning.message.includes('/* #__PURE__ */')) return
+          if (warning.code === 'CIRCULAR_DEPENDENCY') return
           warn(warning)
         }
       }
     }
   },
-
   nitro: {
     preset: 'bun',
     externals: {
-      external: ['better-sqlite3']
+      trace: false,
     },
     rollupConfig: {
       onwarn(warning, warn) {
+        if (warning.code === 'CIRCULAR_DEPENDENCY') return
         if (warning.message.includes('/* #__PURE__ */')) return
         warn(warning)
       }
     }
-  },
+  }
 })
