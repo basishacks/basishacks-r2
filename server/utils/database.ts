@@ -1,23 +1,23 @@
-import Database from 'better-sqlite3'
+import { Database, Statement as BunStatement } from 'bun:sqlite'
 import path from 'path'
 import { fileURLToPath } from 'url'
 
 const __filename = fileURLToPath(import.meta.url)
 const __dirname = path.dirname(__filename)
 
-let dbInstance: Database.Database | null = null
+let dbInstance: Database | null = null
 
 /**
  * Initialize the database globally (call once at startup)
  */
-export function initializeDatabase(): Database.Database {
+export function initializeDatabase(): Database {
   if (!dbInstance) {
     const dbPath = path.resolve(__dirname, '../../database/basishacks.sqlite')
     console.log(`[DB] Initializing database at: ${dbPath}`)
-    dbInstance = new Database(dbPath)
+    dbInstance = new Database(dbPath, { create: true })
     // Enable foreign keys and WAL mode
-    dbInstance.pragma('journal_mode = WAL')
-    dbInstance.pragma('foreign_keys = ON')
+    dbInstance.run('PRAGMA journal_mode = WAL')
+    dbInstance.run('PRAGMA foreign_keys = ON')
     console.log('[DB] Database initialized successfully')
   }
   return dbInstance
@@ -26,7 +26,7 @@ export function initializeDatabase(): Database.Database {
 /**
  * Get or initialize the SQLite database instance
  */
-export function getDatabase(): Database.Database {
+export function getDatabase(): Database {
   if (!dbInstance) {
     return initializeDatabase()
   }
@@ -37,10 +37,10 @@ export function getDatabase(): Database.Database {
  * SQLite Statement wrapper that mimics D1's Statement interface
  */
 class SQLiteStatement {
-  private statement: Database.Statement
+  private statement: BunStatement
   private bindings: any[] = []
 
-  constructor(statement: Database.Statement) {
+  constructor(statement: BunStatement) {
     this.statement = statement
   }
 
@@ -57,8 +57,8 @@ class SQLiteStatement {
    */
   first<T = any>(): T | undefined {
     try {
-      const result = this.statement.all(...this.bindings)
-      return (result[0] as T) || undefined
+      const result = this.statement.get(...this.bindings) as T | undefined
+      return result
     } catch (error) {
       console.error('SQLite error in first():', error)
       throw error
@@ -100,9 +100,9 @@ class SQLiteStatement {
  * SQLite Database wrapper that mimics D1Database interface
  */
 export class SQLiteDatabase {
-  private db: Database.Database
+  private db: Database
 
-  constructor(db: Database.Database) {
+  constructor(db: Database) {
     this.db = db
   }
 
@@ -150,7 +150,7 @@ export class SQLiteDatabase {
    */
   exec(sql: string): any {
     try {
-      return this.db.exec(sql)
+      this.db.run(sql)
     } catch (error) {
       console.error('SQLite error in exec():', error)
       throw error
