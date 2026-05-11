@@ -3,12 +3,12 @@
   "type": "module",
   "private": true,
   "scripts": {
-    "start": "NODE_ENV=production bun .output/server/index.mjs",
-    "build": "nuxt build",
-    "dev": "nuxt dev",
+    "start": "cross-env NODE_OPTIONS=--no-deprecation NODE_ENV=production bun .output/server/index.mjs",
+    "build": "cross-env NODE_OPTIONS=--no-deprecation nuxt build",
+    "dev": "cross-env NODE_OPTIONS=--no-deprecation nuxt dev",
     "test": "node --env-file=.env tests/index.js",
     "generate": "nuxt generate",
-    "preview": "nuxt preview -p 24598",
+    "preview": "cross-env NODE_OPTIONS=--no-deprecation nuxt preview -p 24598",
     "postinstall": "nuxt prepare",
     "cf-types": "wrangler types"
   },
@@ -40,6 +40,7 @@
     "@iconify-json/material-symbols": "^1.2.71",
     "@types/canvas-confetti": "^1.9.0",
     "@types/node": "^24.12.3",
+    "cross-env": "^10.1.0",
     "wrangler": "^4.90.0"
   }
 }

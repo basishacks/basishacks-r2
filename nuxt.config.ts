@@ -31,22 +31,30 @@ export default defineNuxtConfig({
     provider: 'local',
   },
   vite: {
+    server: {
+      allowedHosts: true,
+    },
     build: {
       target: 'es2015',
       minify: 'esbuild',
       sourcemap: false,
       rollupOptions: {
         onwarn(warning, warn) {
+          if (warning.message.includes('Sourcemap is likely to be incorrect')) return
           if (warning.message.includes('/* #__PURE__ */')) return
           warn(warning)
         }
       }
-    },
-    server: {
-      allowedHosts: true,
-    },
+    }
   },
+
   nitro: {
     preset: 'node-server',
+    rollupConfig: {
+      onwarn(warning, warn) {
+        if (warning.message.includes('/* #__PURE__ */')) return
+        warn(warning)
+      }
+    }
   },
 })
