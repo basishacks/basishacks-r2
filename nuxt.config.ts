@@ -49,7 +49,7 @@ export default defineNuxtConfig({
   },
 
   nitro: {
-    preset: 'node-server',
+    preset: 'bun',
     rollupConfig: {
       onwarn(warning, warn) {
         if (warning.message.includes('/* #__PURE__ */')) return
