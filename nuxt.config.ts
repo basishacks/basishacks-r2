@@ -33,6 +33,10 @@ export default defineNuxtConfig({
     provider: 'local',
   },
   vite: {
+    build: {
+      target: 'es2015',
+      minify: 'esbuild',
+    },
     server: {
       allowedHosts: true,
     },
