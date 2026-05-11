@@ -1,14 +1,13 @@
 <script setup lang="ts">
-import { NOTFOUND } from 'dns';
 
 const backgroundRef = ref(null)
 
 setPageLayout("fullwidth")
 
 const route = useRoute()
-const userID = route.params.id;
+const userID = route.params.id as string;
 
-const { data, error, refresh } = await useFetch(
+const { data, error, refresh } = await useFetch<APIUser>(
   () => `/api/users/${userID}`
 )
 if (error.value) {
@@ -20,14 +19,15 @@ if (error.value) {
   )
 }
 
-const user = computed<APIUser>(() => data.value)
+const user = computed(() => data.value as APIUser)
 
-console.log(user)
+console.log(user.value)
 
 onMounted(() => {
-    const e: any = backgroundRef.value;
-    e.style = `background-image: url(/userast/${user.value?.profile_theme?.value})`;
-    
+  const e: any = backgroundRef.value;
+  if (e && user.value?.profile_theme?.value) {
+    e.style = `background-image: url(/userast/${user.value.profile_theme.value})`;
+  }
 })
 
 </script>
@@ -35,7 +35,7 @@ onMounted(() => {
 <template>
   <div ref="backgroundRef" class="bg-center bg-cover">
     <UContainer class="h-[calc(100vh-var(--ui-header-height))] bg-default pt-4">
-      
+
     </UContainer>
-</div>
+  </div>
 </template>

@@ -9,9 +9,6 @@
 </template>
 
 <script setup lang="ts">
-import { user } from '#build/ui';
-import { queryObjects } from 'v8';
-
 
 const props = defineProps({
     user: Number
@@ -19,22 +16,21 @@ const props = defineProps({
 
 const popover = ref(null)
 
-const userdata = ref(null)
+const userdata = ref<APIUser | null>(null)
 
 const handleHover = async (event: boolean) => {
     if (!event) return;
     if (userdata.value != null) return;
 
-    const { data, error, refresh } = await useFetch(
+    const { data, error, refresh } = await useFetch<APIUser>(
         () => `/api/users/${props.user}`
     )
     if (error.value) {  
         throw error.value
     }
 
-    userdata.value = data.value
+    userdata.value = data.value as APIUser
 
     console.log(userdata.value)
-
 };
 </script>
