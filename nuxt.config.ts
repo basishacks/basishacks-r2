@@ -50,6 +50,9 @@ export default defineNuxtConfig({
 
   nitro: {
     preset: 'bun',
+    externals: {
+      external: ['better-sqlite3']
+    },
     rollupConfig: {
       onwarn(warning, warn) {
         if (warning.message.includes('/* #__PURE__ */')) return
