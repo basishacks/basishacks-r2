@@ -25,9 +25,7 @@ export default defineNuxtConfig({
     port: 24598,
   },
   icon: {
-    customCollections: [
-
-    ]
+    customCollections: [],
   },
   fonts: {
     provider: 'local',
@@ -36,6 +34,13 @@ export default defineNuxtConfig({
     build: {
       target: 'es2015',
       minify: 'esbuild',
+      sourcemap: false,
+      rollupOptions: {
+        onwarn(warning, warn) {
+          if (warning.message.includes('/* #__PURE__ */')) return
+          warn(warning)
+        }
+      }
     },
     server: {
       allowedHosts: true,
