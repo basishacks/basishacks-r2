@@ -27,14 +27,14 @@ export default async function initializeMSAccessToken() {
 
     const code = req.status;
     const data: any = await req.json();
-    console.log("Response from MS Token Endpoint: " + code);
+    console.log("[MS Graph] Response from MS Token Endpoint: " + code);
 
     return metadata.access_token = data.access_token;
 }
 
 export function getMSAccessToken() {
     if (!metadata.access_token) {
-        throw new Error("MS Access Token not initialized")
+        throw new Error("[MS Graph] MS Access Token not initialized")
     }
     return metadata.access_token;
 }

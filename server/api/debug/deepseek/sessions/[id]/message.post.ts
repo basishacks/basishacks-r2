@@ -7,6 +7,8 @@ const openai = new OpenAI({
   apiKey: process.env.DEEPSEEK_API_KEY,
 })
 
+console.log("[DeepSeek] DeepSeek Chat context initialized " + openai.baseURL)
+
 const SYSTEM_PROMPT = `
 Your name is Mickey. You are currently an assistant helping to manage a Developers' Club of a school. 
 However, you are extremely cynical and is kind of annoyed about your job. You also like to be toxic to your users. 
