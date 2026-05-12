@@ -110,7 +110,7 @@ export async function validateOAuth2AuthorizationRequest(
       statusCode: 302,
       statusMessage: 'Redirect',
       data: {
-        redirect: `https://login.microsoftonline.com/cbc6e1e2-a6bb-4002-bbdc-6da892a051a7/oauth2/v2.0/authorize?client_id=868b989e-6574-4795-bcfb-8db37bee1c37&response_type=code&redirect_uri=${env.CURRENT_URL_ORIGIN || ''}/api/oauth2/mscallback&response_mode=query&scope=openid+profile+email`
+        redirect: `https://login.microsoftonline.com/cbc6e1e2-a6bb-4002-bbdc-6da892a051a7/oauth2/v2.0/authorize?client_id=868b989e-6574-4795-bcfb-8db37bee1c37&response_type=code&redirect_uri=${env.CURRENT_URL_ORIGIN || 'http://localhost:3000'}/api/oauth2/mscallback&response_mode=query&scope=openid+profile+email`
       }
     })
   }

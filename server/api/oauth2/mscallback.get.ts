@@ -67,7 +67,7 @@ export default defineEventHandler(async (event) => {
           code: code,
           client_secret: process.env.MICROSOFT_CLIENT_SECRET || '',
           code_verifier: session.ms_verifier || '',
-          redirect_uri: process.env.CURRENT_URL_ORIGIN + oAuth2Config.redirectUri,
+          redirect_uri: (process.env.CURRENT_URL_ORIGIN || 'http://localhost:3000') + oAuth2Config.redirectUri,
           grant_type: 'authorization_code',
           scope: oAuth2Config.scope,
         }).toString(),
