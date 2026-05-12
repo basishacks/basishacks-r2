@@ -33,11 +33,6 @@ const navigateToOAuth2 = () => {
   window.location.href = link.replace("{CURRENT_URL_ORIGIN}", window.location.origin);
 }
 
-const BHnavigateToOAuth2 = () => {
-  const state = "StateWillBeFromAnApplicationAPI"
-  window.location.href = `/api/oauth2/authorize?client_id=97e435f4-17e8-42ef-9b12-9684fd656de9&response_type=code&redirect_uri=${window.location.origin}/api/auth&scope=openid%20profile%20email&state=` + state
-}
-
 async function onSendCodeSubmit(event: FormSubmitEvent<SendCodeRequest>) {
   const { email } = event.data
 
@@ -100,7 +95,7 @@ async function onSendCodeSubmit(event: FormSubmitEvent<SendCodeRequest>) {
 
           <br>
 
-          <UButton @click="BHnavigateToOAuth2" class="mt-4" color="neutral">
+          <UButton @click="navigateToOAuth2" class="mt-4" color="neutral">
             <span class="w-5 h-5 mr-2 text-bold glow text-primary">b</span>
             Login with basishacks connect
           </UButton>
