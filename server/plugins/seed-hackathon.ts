@@ -56,5 +56,20 @@ export default defineNitroPlugin(async () => {
       results_open_timestamp = excluded.results_open_timestamp
   `)
 
+  db.run(`
+    INSERT OR IGNORE INTO oauth2_applications (client_id, client_secret, permissions, redirect_uris, name, description, proxy_microsoft, type, profile_picture)
+    VALUES (
+      '97e435f4-17e8-42ef-9b12-9684fd656de9',
+      'local-dev-secret',
+      'openid profile email',
+      'http://localhost:3000/api/auth',
+      'basishacks connect',
+      'BIBS-C Network internal OAuth2 application for hackathon login',
+      0,
+      'first',
+      NULL
+    )
+  `)
+
   console.log('[seed-hackathon] Timestamps seeded successfully')
 })
