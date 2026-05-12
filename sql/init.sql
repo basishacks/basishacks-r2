@@ -44,6 +44,8 @@ CREATE TABLE IF NOT EXISTS users (
     team_id INTEGER,
     login_code TEXT,
     login_expiry INTEGER,
+    profile_theme TEXT,
+    profile_picture TEXT,
     FOREIGN KEY (team_id) REFERENCES teams(id)
 );
 CREATE INDEX IF NOT EXISTS idx_users_email ON users (email);
@@ -71,3 +73,16 @@ CREATE TABLE IF NOT EXISTS ballot_scores (
 CREATE INDEX IF NOT EXISTS idx_ballot_scores_project_id ON ballot_scores (project_id);
 CREATE INDEX IF NOT EXISTS idx_ballot_scores_ballot_id ON ballot_scores (ballot_id);
 CREATE UNIQUE INDEX IF NOT EXISTS idx_unique_ballot_project ON ballot_scores (ballot_id, project_id);
+
+CREATE TABLE IF NOT EXISTS oauth2_applications (
+    client_id TEXT NOT NULL UNIQUE,
+    client_secret TEXT NOT NULL,
+    permissions TEXT,
+    redirect_uris TEXT,
+    name TEXT NOT NULL,
+    description TEXT,
+    proxy_microsoft INTEGER NOT NULL DEFAULT 0,
+    type TEXT,
+    profile_picture TEXT,
+    PRIMARY KEY(client_id)
+);

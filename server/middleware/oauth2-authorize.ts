@@ -17,14 +17,15 @@ export default defineEventHandler(async (event) => {
   const client_id = query.client_id as string
   const scope = query.scope as string
   const redirect_uri = query.redirect_uri as string | undefined
+  const state = query.state as string | undefined
 
-  // Validate the authorization request
   try {
     const validatedRequest = await validateOAuth2AuthorizationRequest(
         event,
-        client_id,
-        scope,
-        redirect_uri
+        client_id || '',
+        scope || '',
+        redirect_uri || '',
+        state || ''
     )
 
     const login_session = randomBytes(64).toString('base64url')

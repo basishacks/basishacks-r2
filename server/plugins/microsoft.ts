@@ -25,11 +25,13 @@ export default async function initializeMSAccessToken() {
         )
     })
 
-    const code = req.status;
-    const data: any = await req.json();
-    console.log("[MS Graph] Response from MS Token Endpoint: " + code);
-
-    return metadata.access_token = data.access_token;
+    const code = req.status
+    if (code !== 200) {
+      console.warn(`[MS Graph] MS Token Endpoint returned ${code} - Microsoft Graph features will be unavailable`)
+      return null
+    }
+    const data: any = await req.json()
+    return metadata.access_token = data.access_token
 }
 
 export function getMSAccessToken() {

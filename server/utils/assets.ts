@@ -1,73 +1,37 @@
-import { rmdir } from 'node:fs'
-import { writeFile, mkdir, rm } from 'node:fs/promises'
+import { writeFile, mkdir, readFile, unlink } from 'node:fs/promises'
 import { join } from 'node:path'
-import fs from "node:fs"
 
 export async function createAsset(name: string, data: Buffer): Promise<string> {
-
-    const assetsDir = join(process.cwd(), 'public', 'assets')
-    const filePath = join(assetsDir, name)
-    
-
-    // Ensure the assets directory exists
-    await mkdir(assetsDir, { recursive: true })
-
-    // Write the file
-    await writeFile(filePath, data)
-
-    return name
-
+  const assetsDir = join(process.cwd(), 'public', 'assets')
+  const filePath = join(assetsDir, name)
+  await mkdir(assetsDir, { recursive: true })
+  await writeFile(filePath, data)
+  return name
 }
 
 export async function createUserAsset(name: string, data: Buffer): Promise<string> {
-
-    const assetsDir = join(process.cwd(), 'public', 'userast')
-    const filePath = join(assetsDir, name)
-    
-
-    // Ensure the assets directory exists
-    await mkdir(assetsDir, { recursive: true })
-
-    // Write the file
-    await writeFile(filePath, data)
-
-    return name
-
+  const assetsDir = join(process.cwd(), 'public', 'userast')
+  const filePath = join(assetsDir, name)
+  await mkdir(assetsDir, { recursive: true })
+  await writeFile(filePath, data)
+  return name
 }
 
 export async function removeAsset(name: string | null | undefined) {
-
-    const assetsDir = join(process.cwd(), 'public', 'assets')
-    if (name) {
-        const filePath = join(assetsDir, name)
-        await fs.unlink(filePath, (e) => {
-
-        });
-    }
-    
-    
-    
-
+  if (name) {
+    const filePath = join(process.cwd(), 'public', 'assets', name)
+    await unlink(filePath).catch(() => {})
+  }
 }
 
 export async function removeUserAsset(name: string | null | undefined) {
-
-    const assetsDir = join(process.cwd(), 'public', 'userast')
-    if (name) {
-        const filePath = join(assetsDir, name)
-        await fs.unlink(filePath, (e) => {
-
-        });
-    }
-    
-    
-    
-
+  if (name) {
+    const filePath = join(process.cwd(), 'public', 'userast', name)
+    await unlink(filePath).catch(() => {})
+  }
 }
 
 export async function getUserAsset(name: string): Promise<Buffer> {
-
-    const assetsDir = join(process.cwd(), 'public', 'userast')
-    const filePath = join(assetsDir, name)
-    return await fs.promises.readFile(filePath)
+  const filePath = join(process.cwd(), 'public', 'userast', name)
+  return Buffer.from(await readFile(filePath))
 }
