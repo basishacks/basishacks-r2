@@ -68,7 +68,13 @@ export function generateToken(length: number = 32): string {
 /**
  * Get client by ID
  */
+export function verifyClient(clientId: string, clientSecret: string) {
+  return oauth2Store.clients.find(c => c.id === clientId && c.secret === clientSecret) || null
+}
 
+export function getOAuth2Client(clientId: string) {
+  return oauth2Store.clients.find(c => c.id === clientId) || null
+}
 
 /**
  * Get user by ID

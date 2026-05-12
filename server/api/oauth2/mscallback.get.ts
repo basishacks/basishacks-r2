@@ -53,6 +53,14 @@ export default defineEventHandler(async (event) => {
   const hashed = createHash("sha256").update(session.ms_verifier || "").digest("base64url")
   console.log("[Authorize -> MSCallBack] Requested Redeeming MS Code: T:" + token.substring(0, 16) + "... Verif:" + session?.ms_verifier?.substring(0, 16) + "... SHA256:" + hashed.substring(0, 16) + "...")
 
+  const msClientSecret = process.env.MICROSOFT_CLIENT_SECRET
+  if (!msClientSecret) {
+    throw createError({
+      status: 500,
+      message: 'Server configuration error: MICROSOFT_CLIENT_SECRET is not set. Please configure it in .env to enable Microsoft OAuth2 login.',
+    })
+  }
+
   try {
 
     const tokenResponse = await fetch(
@@ -65,7 +73,7 @@ export default defineEventHandler(async (event) => {
         body: new URLSearchParams({
           client_id: oAuth2Config.clientId,
           code: code,
-          client_secret: process.env.MICROSOFT_CLIENT_SECRET || '',
+          client_secret: msClientSecret,
           code_verifier: session.ms_verifier || '',
           redirect_uri: (process.env.CURRENT_URL_ORIGIN || 'http://localhost:3000') + oAuth2Config.redirectUri,
           grant_type: 'authorization_code',
