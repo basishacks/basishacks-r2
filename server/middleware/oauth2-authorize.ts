@@ -39,8 +39,12 @@ export default defineEventHandler(async (event) => {
     
 
     
-  } catch (err) {
-    console.log("User requested faulty oauth link: " + err)
+  } catch (err: any) {
+    console.warn("User requested faulty oauth link:", err.message || err)
+    throw createError({
+      statusCode: err.statusCode || 400,
+      message: err.message || 'Invalid OAuth2 authorization request',
+    })
   }
 
   

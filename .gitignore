@@ -32,7 +32,7 @@ logs
 public/userast
 
 # database
-database
+/database
 # Logs
 logs
 *.log

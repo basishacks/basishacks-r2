@@ -1,10 +1,7 @@
 import { getUserAsset } from "~~/server/utils/assets"
-
 import { toPng } from 'jdenticon'
 import { sendStream } from "h3"
 import { Readable } from "stream"
-
-const sleep = (ms: number) => new Promise((resolve) => setTimeout(resolve, ms));
 
 export default defineEventHandler(async (event) => {
   const currentUser = await getUserSession(event)
@@ -21,12 +18,8 @@ export default defineEventHandler(async (event) => {
   }
   if (user.profile_picture) {
     return sendStream(event, Readable.from(await getUserAsset(user.profile_picture)))
-  } else {
-    // Generate a default profile picture using jdenticon
-    await sleep(5000); // debug only
-    const png = toPng(user.email.toString(), 200)
-    return Readable.from(png)
   }
-
+  const png = toPng(user.email.toString(), 200)
+  return Readable.from(png)
 })
 

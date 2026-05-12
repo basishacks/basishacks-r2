@@ -15,8 +15,9 @@ export default defineEventHandler(async (event) => {
     const req: any = await validateOAuth2AuthorizationRequest(
         event,
         client_id,
-        query.scope as string,
-        query.redirect_uri as string
+        query.scope as string || '',
+        query.redirect_uri as string || '',
+        query.state as string || ''
     );
 
     return {

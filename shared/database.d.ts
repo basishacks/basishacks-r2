@@ -12,8 +12,15 @@ type UserRole = 'participant' | 'judge' | 'admin'
 type TeamPathway = 'junior' | 'senior'
 
 interface Hackathon {
-  id: 1 // lol
+  id: 1
   status: HackathonStatus
+  voting_enabled: number
+  results_published: number
+  submitted_count: number
+  max_votes_per_user: number
+  judging_open: number
+  schedule_start: string | null
+  schedule_end: string | null
   start_timestamp: number
   end_timestamp: number
   voting_start_timestamp: number

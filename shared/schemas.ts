@@ -13,13 +13,13 @@ const TeamName = z
   .min(2, 'Team name must be at least 2 characters')
   .max(30, 'Team name cannot be longer than 30 characters')
 
-const TeamPathway = z.literal(['junior', 'senior'])
+const TeamPathway = z.enum(['junior', 'senior'])
 
 const BooleanString = z
-  .literal(['true', 'false'])
+  .enum(['true', 'false'])
   .transform((s) => s === 'true')
 
-const ZeroToFive = z.literal([0, 1, 2, 3, 4, 5])
+const ZeroToFive = z.number().int().min(0).max(5)
 const ScoreValues = z.object(
   Object.keys(rubrics['junior']).reduce(
     (obj, key) => ({
@@ -136,7 +136,7 @@ export type CreateTeamScoresRequest = z.infer<typeof CreateTeamScoresRequest>
 
 export const SubmitVoteRequest = z
   .object({
-    scores: z.array(z.literal([1, 2, 3, 4, 5])),
+    scores: z.array(z.number().int().min(1).max(5)),
     reasoning: z.string().min(30, 'Please write a bit more').max(2000, 'You wrote too much!'),
   })
   .refine(

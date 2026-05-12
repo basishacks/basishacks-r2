@@ -41,7 +41,7 @@ export default defineEventHandler(async (event) => {
     // Create authorization code
     const code = createAuthCode(
       authRequest.client_id,
-      body.user_id || 1,
+      body.user_id,
       authRequest.redirect_uri,
       authRequest.scope
     )

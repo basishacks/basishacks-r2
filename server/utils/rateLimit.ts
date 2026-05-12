@@ -80,7 +80,7 @@ export function applyRateLimit(
     if (Math.random() < 0.01) {
       const oneHourAgo = now - 60 * 60 * 1000
       for (const [key, times] of requestHistory.entries()) {
-        const recentTimes = times.filter((t) => now - t < oneHourAgo)
+        const recentTimes = times.filter((t) => t > oneHourAgo)
         if (recentTimes.length === 0) {
           requestHistory.delete(key)
         } else {

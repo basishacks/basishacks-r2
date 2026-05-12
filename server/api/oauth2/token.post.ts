@@ -1,24 +1,17 @@
-import { 
-  useAuthCode, 
-  createAccessToken, 
+import {
+  useAuthCode,
+  createAccessToken,
   createRefreshToken,
-  getRefreshToken
+  getRefreshToken,
 } from '~/../server/utils/oauth2'
 
-/**
- * OAuth2 Token Endpoint
- * Exchange authorization code for access token
- * Or refresh access token using refresh token
- */
 export default defineEventHandler(async (event) => {
   const body = await readBody(event)
   const grantType = body.grant_type
 
-  // Get client credentials from Authorization header or body
   let clientId = body.client_id
   let clientSecret = body.client_secret
 
-  // Try to parse Basic Auth header
   const authHeader = getHeader(event, 'authorization')
   if (authHeader && authHeader.startsWith('Basic ')) {
     try {
@@ -27,25 +20,23 @@ export default defineEventHandler(async (event) => {
       clientId = id
       clientSecret = secret
     } catch {
-      // Ignore, use body params
     }
   }
 
-  // Validate client
   if (!clientId || !clientSecret) {
     throw createError({
       statusCode: 401,
       message: 'Unauthorized',
-      data: { error: 'invalid_client' }
+      data: { error: 'invalid_client' },
     })
   }
 
-  const client = verifyClient(clientId, clientSecret)
-  if (!client) {
+  const app = await getOAuth2Application(event, clientId)
+  if (!app || app.client_secret !== clientSecret) {
     throw createError({
       statusCode: 401,
       message: 'Unauthorized',
-      data: { error: 'invalid_client' }
+      data: { error: 'invalid_client' },
     })
   }
 

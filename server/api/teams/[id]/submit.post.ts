@@ -16,7 +16,7 @@ export default defineEventHandler(async (event) => {
   }
 
   const hackathon = await getHackathon(event)
-  if (hackathon?.status !== 'in_progress') {
+  if (hackathon?.status !== 'in_progress' && hackathon?.status !== 'not_started') {
     throw createError({
       status: 403,
       message: 'Cannot submit project when hackathon is finished',

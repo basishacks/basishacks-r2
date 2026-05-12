@@ -92,10 +92,10 @@ export default defineEventHandler(async (event) => {
     }
 
     const tokenData = await tokenResponse.json()
+    const idToken = tokenData.id_token
     const accessToken = tokenData.access_token
 
-
-    const decodedToken = decodeJWT(accessToken)
+    const decodedToken = decodeJWT(idToken)
     const email = decodedToken.mail || decodedToken.email || decodedToken.upn || decodedToken.preferred_username
     const name = decodedToken.name
 

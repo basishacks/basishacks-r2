@@ -24,7 +24,7 @@ export default defineEventHandler(async (event) => {
           ballotTotal += ballot.score
         }
       }
-      const peerScore = (5 * ballotTotal) / ballotCount
+      const peerScore = ballotCount > 0 ? (5 * ballotTotal) / ballotCount : 0
 
       // judges = 75%
       const judgeScores = await getTeamScoresByTeamID(event, project.id)
@@ -35,7 +35,7 @@ export default defineEventHandler(async (event) => {
           judgeTotal += (scores[category] * weight) / 5
         }
       }
-      const judgeScore = (judgeTotal / judgeScores.length) * 0.75
+      const judgeScore = judgeScores.length > 0 ? (judgeTotal / judgeScores.length) * 0.75 : 0
 
       const totalScore = Math.round((peerScore + judgeScore) * 10)
       project.score = totalScore

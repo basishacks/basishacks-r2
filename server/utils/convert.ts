@@ -12,17 +12,14 @@ function parseProfileTheme(input?: string): ProfileTheme {
   return { mode, value }
 }
 
-export function convertUserToPublic(user: User): APIUser | null {
-
-  if (user.profile_theme?.split("|").length != 2) return null;
-
+export function convertUserToPublic(user: User): APIUser {
   return {
     id: user.id,
     email: user.email,
     role: user.role,
     name: user.name,
     team_id: user.team_id,
-    profile_theme: parseProfileTheme(user.profile_theme)
+    profile_theme: parseProfileTheme(user.profile_theme ?? undefined),
   }
 }
 
