@@ -2,7 +2,6 @@
 import type { FormSubmitEvent } from '@nuxt/ui'
 import { LoginRequest, SendCodeRequest } from '~~/shared/schemas'
 import oAuth2Config from '~~/shared/oauth2'
-import { randomBytes } from 'node:crypto'
 
 useHead({
   title: `Login | ${WEBSITE_NAME}`,

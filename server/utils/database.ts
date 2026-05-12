@@ -7,15 +7,6 @@ const __dirname = path.dirname(__filename)
 
 let dbInstance: Database | null = null
 
-export function updateUserProfileTheme(userId: string, theme: string) {
-  const db = createDatabaseWrapper()
-  db.prepare('UPDATE users SET theme = ? WHERE id = ?').bind(theme, userId).run()
-}
-export function getAllTeams(event: any) {
-  const db = createDatabaseWrapper();
-  const result = db.prepare('SELECT * FROM teams').all();
-  return result.results;
-}
 /**
  * Initialize the database globally (call once at startup)
  */

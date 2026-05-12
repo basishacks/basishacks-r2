@@ -59,6 +59,7 @@ export default defineNuxtConfig({
       onwarn(warning, warn) {
         if (warning.code === 'UNRESOLVED_IMPORT') return
         if (warning.code === 'CIRCULAR_DEPENDENCY') return
+        if (warning.code === 'PLUGIN_TIMINGS') return
         if (warning.message.includes('/* #__PURE__ */')) return
         warn(warning)
       }
