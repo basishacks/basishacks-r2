@@ -45,7 +45,7 @@ export async function testDeepSeek() {
                 content: "bro wtf why is ur club full????"
             }
         ],
-        model: "deepseek-v4-pro",
+        model: "deepseek-v4-flash",
     } as any);
 
     console.log(completion.choices[0].message.content);
