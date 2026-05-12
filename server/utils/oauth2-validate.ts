@@ -14,7 +14,10 @@ export async function validateOAuth2AuthorizationRequest(
   event: H3Event,
   clientId: string,
   scope: string,
-  redirectUri?: string
+  
+  redirectUri: string,
+  state: string,
+  
 ) {
   // Validate required parameters
   if (!clientId) {
@@ -28,6 +31,13 @@ export async function validateOAuth2AuthorizationRequest(
     throw createError({
       statusCode: 400,
       message: "Parameter 'scope' is required"
+    })
+  }
+
+  if (!state) {
+    throw createError({
+      statusCode: 400,
+      message: "Parameter 'state' is required"
     })
   }
 

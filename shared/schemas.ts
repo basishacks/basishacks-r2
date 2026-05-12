@@ -32,14 +32,21 @@ const ScoreValues = z.object(
 
 export const SendCodeRequest = z.object({
   email: BasisEmail,
+  token: z.string()
 })
 export type SendCodeRequest = z.infer<typeof SendCodeRequest>
 
 export const LoginRequest = z.object({
   email: BasisEmail,
   code: z.array(z.number().max(9).min(0)).length(6, "Code must be 6 digits"),
+  token: z.string()
 })
 export type LoginRequest = z.infer<typeof LoginRequest>
+
+export const MicrosoftRedirectRequest = z.object({
+  token: z.string()
+})
+export type MicrosoftRedirectRequest = z.infer<typeof MicrosoftRedirectRequest>
 
 export const CreateTeamQuery = z.object({
   add: BooleanString.optional(),

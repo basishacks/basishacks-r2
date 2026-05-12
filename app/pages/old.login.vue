@@ -2,6 +2,7 @@
 import type { FormSubmitEvent } from '@nuxt/ui'
 import { LoginRequest, SendCodeRequest } from '~~/shared/schemas'
 import oAuth2Config from '~~/shared/oauth2'
+import { randomBytes } from 'node:crypto'
 
 useHead({
   title: `Login | ${WEBSITE_NAME}`,
@@ -34,7 +35,8 @@ const navigateToOAuth2 = () => {
 }
 
 const BHnavigateToOAuth2 = () => {
-  window.location.href = `/api/oauth2/authorize?client_id=97e435f4-17e8-42ef-9b12-9684fd656de9&response_type=code&redirect_uri=${window.location.origin}/api/auth&scope=openid%20profile%20email`
+  const state = "StateWillBeFromAnApplicationAPI"
+  window.location.href = `/api/oauth2/authorize?client_id=97e435f4-17e8-42ef-9b12-9684fd656de9&response_type=code&redirect_uri=${window.location.origin}/api/auth&scope=openid%20profile%20email&state=` + state
 }
 
 async function onSendCodeSubmit(event: FormSubmitEvent<SendCodeRequest>) {

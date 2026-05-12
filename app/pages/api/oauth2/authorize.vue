@@ -16,6 +16,8 @@
                   <UIcon name="i-material-symbols-error-rounded" class="w-8 h-8 text-red-400"></UIcon>
                   <h3 class="text-sm text-red-400">There was a problem during your login</h3>
                   <p class="mt-4 text-sm">{{ error_description }}</p>
+
+                  <UButton v-if="!error_description_initial" color="neutral" class="mt-8" @click="restartLoginProcess" :disabled="isLoading">Try Again</UButton>
                 </div>
               </Transition>
 
@@ -79,7 +81,7 @@
 
                     <div class="flex flex-row items-start gap-4">
                       <UButton :disabled="isLoading" type="submit">Log In</UButton>
-                      <UButton color="neutral" :disabled="isLoading" @click="animatedChange('login')">
+                      <UButton color="neutral" :disabled="isLoading" @click="restartLoginProcess">
                         <UIcon name="i-material-symbols-arrow-back" class="w-4 h-4 mr-1"></UIcon>
                         Back</UButton>
                     </div>
@@ -138,6 +140,7 @@ import { computed, onBeforeUnmount, onMounted, reactive, ref } from 'vue'
 const showLoading = ref(true)
 const status = ref('load')
 const error_description = ref('')
+const error_description_initial = ref(true)
 const error = ref('')
 const isLoading = ref(false) // basically making all buttons uninteractable
 const userId = ref<number | null>(null)
@@ -180,13 +183,27 @@ const applicationAvatarUrl = computed(() => {
 })
 
 const state = reactive({
-  email: ''
+  email: '',
+  token: ''
 })
 
 const stateLogin = reactive({
   email: '',
-  code: [] as number[]
+  code: [] as number[],
+  token: ''
 })
+
+const restartLoginProcess = async () => {
+  state.email = ""
+  state.token = ""
+  stateLogin.email = ""
+  stateLogin.code = []
+  stateLogin.token = ""
+  isLoading.value = true
+  status.value = "none"
+  await loginFlowCheck()
+  animatedChange("login")
+}
 
 import oAuth2Config from '~~/shared/oauth2'
 import { LoginRequest, SendCodeRequest } from '~~/shared/schemas'
@@ -198,9 +215,37 @@ client_id=${oAuth2Config.clientId}
 &redirect_uri={CURRENT_URL_ORIGIN}${oAuth2Config.redirectUri}
 &response_mode=query
 &scope=${oAuth2Config.scope.replaceAll(' ', '%20')}`
-const navigateToOAuth2 = () => {
+const navigateToOAuth2 = async () => {
   isLoading.value = true
-  window.location.href = link.replace("{CURRENT_URL_ORIGIN}", window.location.origin);
+
+  try {
+    const res: any = await $fetch('/api/oauth2/to_microsoft', {
+      method: 'POST',
+      body: { token: sessionStorage.getItem("oauth2_token") || ""},
+    })
+    const js = res
+    const url = js.redirect_to
+    if (!url) {
+      toast.add({
+        title: "Login Failed",
+        description: js.message,
+        color: "error"
+      })
+      return
+    }
+    await navigateTo(url, {external:true})
+  } catch (e: any) {
+    if (getErrorMessage(e) == "session_expired") {
+      await showLoginError(e)
+    } else {
+      toast.add({
+        title: "Login Failed",
+        description: getErrorMessage(e),
+        color: "error"
+      })
+    }
+    
+  }
 }
 
 const animatedChange = async (newStatus: string) => {
@@ -254,7 +299,7 @@ async function onSendCodeSubmit(event: FormSubmitEvent<SendCodeRequest>) {
     await withLoadingIndicator(async () => {
       const res = await $fetch('/api/auth/code', {
         method: 'POST',
-        body: { email },
+        body: { email, token: sessionStorage.getItem("oauth2_token") || ""},
       })
       stateLogin.email = email
       // console.log(1)
@@ -264,12 +309,17 @@ async function onSendCodeSubmit(event: FormSubmitEvent<SendCodeRequest>) {
       status.value = 'code_sent'
       isLoading.value = false
     })
-  } catch (e) {
-    toast.add({
-      color: 'error',
-      title: 'Failed to send verification code',
-      description: getErrorMessage(e),
-    })
+  } catch (e: any) {
+    if (getErrorMessage(e) == "session_expired") {
+      await showLoginError(e)
+    } else {
+      toast.add({
+        title: "Login Failed",
+        description: getErrorMessage(e),
+        color: "error"
+      })
+    }
+    
   } finally {
     isLoading.value = false
   }
@@ -282,25 +332,37 @@ async function submitCode(code: number[]) {
     await withLoadingIndicator(async () => {
       const res: any = await $fetch('/api/auth/login', {
         method: 'POST',
-        body: { email: stateLogin.email, code },
+        body: { email: stateLogin.email, code, token: sessionStorage.getItem("oauth2_token") || "" },
       })
       userId.value = res.id
       
       if (app.value?.type == "first") {
+        await animatedChange("none")
+        showLoading.value = true
         returnToApp({ result: 'success', code: res.code})
       } else {
         animatedChange('sensitive_consent')
       }
     })
-  } catch (e) {
-    toast.add({
-      color: 'error',
-      title: 'Failed to log in',
-      description: getErrorMessage(e),
-    })
+  } catch (e: any) {
+    if (getErrorMessage(e) == "session_expired") {
+      await showLoginError(e)
+    } else {
+      toast.add({
+        title: "Login Failed",
+        description: getErrorMessage(e),
+        color: "error"
+      })
+    }
   } finally {
     isLoading.value = false
   }
+}
+
+async function showLoginError(error: any, allow_back: boolean = true) {
+  error_description.value = getErrorMessage(error)
+  error_description_initial.value = !allow_back
+  animatedChange("error")
 }
 
 async function onSendCodeLoginSubmit(event: FormSubmitEvent<LoginRequest>) {
@@ -314,6 +376,79 @@ const codeInputComplete = () => {
     submitCode(stateLogin.code)
   }
 }
+
+
+const delay = (ms: number) => new Promise(resolve => setTimeout(resolve, ms));
+
+async function fade() {
+  showLoading.value = false
+  await delay(600)
+}
+
+async function loginFlowCheck() {
+
+  const client_id = queryString(route.query.client_id)
+  const response_type = queryString(route.query.response_type)
+  const scope = queryString(route.query.scope)
+  const state = queryString(route.query.state)
+  const code_challenge = queryString(route.query.code_challenge)
+  const code_challenge_method = queryString(route.query.code_challenge_method)
+  const redirect_uri = queryString(route.query.redirect_uri)
+  
+  usedScopes.value = decodeURI(scope).split(" ")
+
+  // if(!(client_id && response_type && scope && redirect_uri)) {
+  //   await fade();
+  //   status.value = 'error'
+  //   error.value = "invalid_request"
+  //   error_description.value = "Missing one of more of the following parameters: 'client_id', 'response_type', 'scope', 'redirect_uri'"
+    
+  // }
+
+  
+  if (client_id) {
+    const res1: any = await fetch("/api/oauth2/session", {
+      method: "POST",
+      headers: {
+        "content-type": "application/json"
+      },
+      body: JSON.stringify({
+        client_id: client_id,
+        scope: scope,
+        state: state
+      })
+    })
+    const js = await res1.json()
+
+    if (res1.status != 200) {
+      // bad
+      await fade();
+      status.value = 'error'
+      error.value = "invalid_request"
+      error_description.value = js.message
+    } else {
+      // 做的好 ！！！！
+      await fade();
+      applicationName.value = js.name
+      app.value = js
+      status.value = 'login'
+      
+      sessionStorage.setItem("oauth2_token", js.session)
+    }
+  }
+  
+  
+}
+
+
+
+
+
+
+
+
+
+
 
 
 //////// MATRIX PAINT JOB
@@ -415,54 +550,7 @@ function handleResize() {
 
 
 
-const delay = (ms: number) => new Promise(resolve => setTimeout(resolve, ms));
 
-async function fade() {
-  showLoading.value = false
-  await delay(600)
-}
-
-async function loginFlowCheck() {
-
-  const client_id = queryString(route.query.client_id)
-  const response_type = queryString(route.query.response_type)
-  const scope = queryString(route.query.scope)
-  const state = queryString(route.query.state)
-  const code_challenge = queryString(route.query.code_challenge)
-  const code_challenge_method = queryString(route.query.code_challenge_method)
-  const redirect_uri = queryString(route.query.redirect_uri)
-  
-  usedScopes.value = decodeURI(scope).split(" ")
-
-  // if(!(client_id && response_type && scope && redirect_uri)) {
-  //   await fade();
-  //   status.value = 'error'
-  //   error.value = "invalid_request"
-  //   error_description.value = "Missing one of more of the following parameters: 'client_id', 'response_type', 'scope', 'redirect_uri'"
-    
-  // }
-
-  
-  if (client_id) {
-    const res1: any = await fetch("/api/oauth2/session?client_id=" + client_id + "&scope=" + scope)
-    const js = await res1.json()
-
-    if (res1.status != 200) {
-      await fade();
-      status.value = 'error'
-      error.value = "invalid_request"
-      error_description.value = js.message
-    } else {
-      await fade();
-      applicationName.value = js.name
-      app.value = js
-      status.value = 'login'
-      
-    }
-  }
-  
-  
-}
 
 onMounted(async () => {
   setupCanvas()
