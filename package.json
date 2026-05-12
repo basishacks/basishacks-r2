@@ -10,7 +10,13 @@
     "generate": "nuxt generate",
     "preview": "cross-env NODE_OPTIONS=--no-deprecation nuxt preview -p 24598",
     "postinstall": "nuxt prepare",
-    "cf-types": "wrangler types"
+    "cf-types": "wrangler types",
+    "format": "prettier --write .",
+    "format:check": "prettier --check .",
+    "format:js": "prettier --write \"**/*.{js,jsx,ts,tsx}\"",
+    "format:html": "prettier --write \"**/*.html\"",
+    "format:css": "prettier --write \"**/*.css\"",
+    "format:json": "prettier --write \"**/*.json\""
   },
   "dependencies": {
     "@iconify/utils": "^3.1.3",
@@ -41,6 +47,7 @@
     "@types/canvas-confetti": "^1.9.0",
     "@types/node": "^24.12.3",
     "cross-env": "^10.1.0",
+    "prettier": "^3.8.3",
     "wrangler": "^4.90.0"
   },
   "overrides": {
