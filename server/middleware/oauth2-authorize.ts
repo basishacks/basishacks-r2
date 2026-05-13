@@ -1,6 +1,8 @@
 import { defineEventHandler } from 'h3'
 import { randomBytes } from 'node:crypto'
 import { validateOAuth2AuthorizationRequest } from '~/../server/utils/oauth2-validate'
+import { addAuthorizeSession, attachAuthorizeSessionCookie, AuthorizeSession, constructSession } from '../api/oauth2/session.post'
+import { generateMicrosoftOAuth2Link } from '../api/oauth2/to_microsoft.post'
 
 /**
  * OAuth2 Authorization Middleware
@@ -22,19 +24,28 @@ export default defineEventHandler(async (event) => {
   try {
     const validatedRequest = await validateOAuth2AuthorizationRequest(
         event,
-        client_id || '',
-        scope || '',
+        client_id,
+        scope,
         redirect_uri || '',
-        state || ''
+        query.state as string,
+        query.response_type as string,
+        query.code_challenge as string,
+        query.code_challenge_method as string
     )
 
-    const login_session = randomBytes(64).toString('base64url')
+    const app: OAuth2Application = validatedRequest?.app as OAuth2Application
+    
+    const session: AuthorizeSession = constructSession(redirect_uri || '', app, query.state as string, query.code_challenge as string, query.code_challenge_method as string)
+    
+    addAuthorizeSession(session)
 
-    event.context.oauth = {
-      client_id,
-      scope,
-      redirect_uri,
-      login_session
+    attachAuthorizeSessionCookie(session, event)
+
+    if (app.proxy_microsoft) {
+      // instant redirect mode, skip basishacks login
+      const link = generateMicrosoftOAuth2Link(session)
+
+      
     }
     
 

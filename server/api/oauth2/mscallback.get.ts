@@ -1,7 +1,7 @@
 
 
 import oAuth2Config from '~~/shared/oauth2';
-import { getAuthorizeSession } from './session.post';
+import { generateExchangeCode, getAuthorizeSession } from './session.post';
 import { createHash } from 'crypto';
 
 
@@ -83,7 +83,7 @@ export default defineEventHandler(async (event) => {
     )
 
     if (!tokenResponse.ok) {
-      const error = await tokenResponse.json()
+      const error: any = await tokenResponse.json()
       console.error('[Authorize -> MSCallBack] Token exchange failed:', error.error, error.error_description)
       throw createError({
         status: 401,
@@ -91,11 +91,10 @@ export default defineEventHandler(async (event) => {
       })
     }
 
-    const tokenData = await tokenResponse.json()
-    const idToken = tokenData.id_token
+    const tokenData: any = await tokenResponse.json()
     const accessToken = tokenData.access_token
 
-    const decodedToken = decodeJWT(idToken)
+    const decodedToken = decodeJWT(accessToken)
     const email = decodedToken.mail || decodedToken.email || decodedToken.upn || decodedToken.preferred_username
     const name = decodedToken.name
 
@@ -132,7 +131,11 @@ export default defineEventHandler(async (event) => {
       },
     })
 
-    return sendRedirect(event, '/dashboard')
+    generateExchangeCode(session)
+
+    console.log(session.redirect_uri + "?code=" + session.code)
+
+    return sendRedirect(event, session.redirect_uri + "?code=" + session.code)
   } catch (error) {
     console.error('OAuth callback error:', error)
     throw createError({

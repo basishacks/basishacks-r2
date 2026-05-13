@@ -153,17 +153,7 @@ const returnToApp = (options: any) => {
 
   isLoading.value = true
 
-  if (options.result == "error") {
-    const url = new URL(route.query.redirect_uri as string)
-    url.searchParams.set('error', options.error)
-    url.searchParams.set('error_description', options.error_description)
-    window.location.href = url.toString()
-  } else if (options.result == "success") {
-    const url = new URL(route.query.redirect_uri as string)
-    url.searchParams.set('code', options.code)
-    url.searchParams.set('state', route.query.state as string)
-    window.location.href = url.toString()
-  }
+  window.location.href = options.redirect_to
 
 }
 
@@ -339,7 +329,7 @@ async function submitCode(code: number[]) {
       if (app.value?.type == "first") {
         await animatedChange("none")
         showLoading.value = true
-        returnToApp({ result: 'success', code: res.code})
+        returnToApp(res)
       } else {
         animatedChange('sensitive_consent')
       }
@@ -360,7 +350,7 @@ async function submitCode(code: number[]) {
 }
 
 async function showLoginError(error: any, allow_back: boolean = true) {
-  error_description.value = getErrorMessage(error)
+  error_description.value = getErrorMessage(error) == "session_expired" ? "Your login session has expired. Please restart the login process." : getErrorMessage(error)
   error_description_initial.value = !allow_back
   animatedChange("error")
 }
@@ -408,15 +398,7 @@ async function loginFlowCheck() {
   
   if (client_id) {
     const res1: any = await fetch("/api/oauth2/session", {
-      method: "POST",
-      headers: {
-        "content-type": "application/json"
-      },
-      body: JSON.stringify({
-        client_id: client_id,
-        scope: scope,
-        state: state
-      })
+      method: "GET"
     })
     const js = await res1.json()
 
