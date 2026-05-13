@@ -17,8 +17,14 @@ export async function validateOAuth2AuthorizationRequest(
   
   redirectUri: string,
   state: string,
+  response_type: string,
+  code_challenge: string,
+  code_challenge_type: string
   
 ) {
+
+  let protocol: number = 3; // 2.1
+
   // Validate required parameters
   if (!clientId) {
     throw createError({
@@ -39,6 +45,19 @@ export async function validateOAuth2AuthorizationRequest(
       statusCode: 400,
       message: "Parameter 'state' is required"
     })
+  }
+
+  if (!redirectUri) {
+    throw createError({
+      statusCode: 400,
+      message: "Parameter 'redirect_uri' is required"
+    })
+  }
+
+  if (!code_challenge || !code_challenge_type) {
+    // 2.0
+    protocol = 2 // 2.0
+    console.log("[Authorization -> OAuth2] Request uses legacy 2.0 protocol " + clientId)
   }
 
   // Decode and parse requested scopes

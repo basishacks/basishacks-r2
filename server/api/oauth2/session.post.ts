@@ -5,24 +5,33 @@
  * 
  * Btw, not going to use pushed authorization requests yet. currently just building a demo.
  * will work on this when other apps r done.
+ * 
+ * This page is DEPRECATED. The user no longer uses POST to create a session when authorizing.
+ * Instead the session is generated in the middleware
+ * 
  */
 import { randomBytes } from 'crypto';
 import { validateOAuth2AuthorizationRequest } from '~/../server/utils/oauth2-validate'
 
-interface AuthorizeSession {
+export interface AuthorizeSession {
   ms_verifier: string | null;
   ms_state: string | null;
   token: string,
+  redirect_uri: string,
   granted_time: number,
   expire_time: number,
-  application: any,
+  application: OAuth2Application,
   user: User | null,
-  teams_code: string | null
+  teams_code: string | null,
+  bh_state: string,
+  bh_verifier_challenge: string,
+  bh_verifier_challenge_method: string,
+  code: string | null
 }
 
 const AUTHORIZE_SESSION_STORE: Record<string, AuthorizeSession> = {}
 
-function addAuthorizeSession(session: AuthorizeSession) {
+export function addAuthorizeSession(session: AuthorizeSession) {
   AUTHORIZE_SESSION_STORE[session.token] = session
 }
 
@@ -40,12 +49,61 @@ export function completeAuthorizeSession(token: string) {
   delete AUTHORIZE_SESSION_STORE[token]
 }
 
+export function generateExchangeCode(session: AuthorizeSession) {
+  const code = randomBytes(128).toString("base64url")
+  session.code = code
+}
 
+export function constructSession(redirect_uri: string, app: OAuth2Application, state: string, code_challenge: string, code_challenge_method: string): AuthorizeSession {
+  const sessid = randomBytes(128).toString("base64url")
 
+  const session: AuthorizeSession = {
+    token: sessid,
+    granted_time: Date.now(),
+    expire_time: Date.now() + (10 * 60 * 1000), // 10 minutes
+    redirect_uri: redirect_uri,
+    application: app,
+    user: null,
+    teams_code: null,
+    ms_state: null,
+    ms_verifier: null,
+    bh_state: state,
+    bh_verifier_challenge: code_challenge,
+    bh_verifier_challenge_method: code_challenge_method,
+    code: null
+  }
+
+  return session
+}
+
+export function removeIfSessionExpired(session: AuthorizeSession) {
+  if (Date.now() > session.expire_time) {
+    completeAuthorizeSession(session.token)
+    return true;
+  }
+  return false
+}
+
+export function attachAuthorizeSessionCookie(session: AuthorizeSession, event: any) {
+  setCookie(event, 'bridge_id', session.token, {
+    maxAge: 10 * 60, // 10 mins
+    httpOnly: true,
+    secure: true,
+    sameSite: 'lax'
+  })
+}
+// Used for session refreshes only
 export default defineEventHandler(async (event) => {
+
+  // throw createError({
+  //   statusCode: 410,
+  //   message: "Deprecated. Use GET /api/oauth2/session"
+  // })
 
 
   const body = await readBody(event)
+
+  
 
 
   try {
@@ -54,38 +112,25 @@ export default defineEventHandler(async (event) => {
         body.client_id as string,
         body.scope as string,
         body.redirect_uri as string,
-        body.state as string
+        body.state as string,
+        body.response_type as string,
+        body.code_challenge as string,
+        body.code_challenge_method as string
     );
 
-    const sessid = randomBytes(128).toString("base64url")
-
-    const session: AuthorizeSession = {
-      token: sessid,
-      granted_time: Date.now(),
-      expire_time: Date.now() + (10 * 60 * 1000), // 10 minutes
-      application: req.app,
-      user: null,
-      teams_code: null,
-      ms_state: null,
-      ms_verifier: null
-    }
+    const session: AuthorizeSession = constructSession(body.redirect_uri, req.app, body.state, body.code_challenge, body.code_challenge_method)
 
     addAuthorizeSession(session)
 
-
-    setCookie(event, 'bridge_id', sessid, {
-      maxAge: 10 * 60, // 10 mins
-      httpOnly: true,
-      secure: true,
-      sameSite: 'lax'
-    })
+    attachAuthorizeSessionCookie(session, event)
+    
 
     return {
         client_id: req.app.client_id,
         name: req.app.name,
         description: req.app.description,
         type: req.app.type,
-        session: sessid
+        session: session.token
     };
 
     
