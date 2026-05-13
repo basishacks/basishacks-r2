@@ -10,6 +10,16 @@ export const oauth2Store = {
       name: 'Test Client',
       redirectUris: ['http://localhost:3000/callback'],
       allowedScopes: ['openid', 'profile', 'email']
+    },
+    {
+      id: '97e435f4-17e8-42ef-9b12-9684fd656de9',
+      secret: process.env.NUXT_SESSION_PASSWORD || 'fallback-secret',
+      name: 'BasisHacks Connect',
+      redirectUris: [
+        'https://nethack.biszweb.club/api/auth',
+        'http://localhost:3000/api/auth'
+      ],
+      allowedScopes: ['openid', 'profile', 'email']
     }
   ],
 
@@ -62,7 +72,7 @@ export const oauth2Store = {
  */
 export function generateToken(length: number = 32): string {
   return Math.random().toString(36).substring(2, length + 2) +
-         Math.random().toString(36).substring(2, length + 2)
+    Math.random().toString(36).substring(2, length + 2)
 }
 
 /**
@@ -108,7 +118,7 @@ export function createAuthCode(clientId: string, userId: number, redirectUri: st
  */
 export function getAuthCode(code: string) {
   const authCode = oauth2Store.authorizationCodes.get(code)
-  
+
   if (!authCode) return null
   if (authCode.expiresAt < Date.now()) {
     oauth2Store.authorizationCodes.delete(code)
@@ -134,7 +144,7 @@ export function useAuthCode(code: string) {
  */
 export function createAccessToken(clientId: string, userId: number, scope: string) {
   const token = generateToken()
-  const expiresAt = Date.now() + 60 * 60 * 1000 // 1 hour
+  const expiresAt = Date.now() + 60 * 60 * 1000
 
   oauth2Store.accessTokens.set(token, {
     token,
@@ -152,7 +162,7 @@ export function createAccessToken(clientId: string, userId: number, scope: strin
  */
 export function getAccessToken(token: string) {
   const accessToken = oauth2Store.accessTokens.get(token)
-  
+
   if (!accessToken) return null
   if (accessToken.expiresAt < Date.now()) {
     oauth2Store.accessTokens.delete(token)
@@ -185,7 +195,7 @@ export function createRefreshToken(clientId: string, userId: number, scope: stri
  */
 export function getRefreshToken(token: string) {
   const refreshToken = oauth2Store.refreshTokens.get(token)
-  
+
   if (!refreshToken) return null
   if (refreshToken.expiresAt < Date.now()) {
     oauth2Store.refreshTokens.delete(token)
