@@ -109,7 +109,7 @@ const items = ref<NavigationMenuItem[][]>([
           <h3 class="text-2xl bold glow ">June 2026</h3>
           <span class="metallic-gold uppercase bold">#{{ THEME_NAME }}</span>
           <USeparator class="my-4" size="sm"></USeparator>
-          <ULink class="text-xs" href="/theme/june2026">See event details <UIcon name="i-lucide-arrow-right"></UIcon></ULink>
+          <ULink class="text-xs" href="/theme/june-2026">See event details <UIcon name="i-lucide-arrow-right"></UIcon></ULink>
         </template>
       </UCard>
       <UNavigationMenu orientation="vertical" :items="items" class="data-[orientation=vertical]:w-48 mt-12" trailing-icon="none"/>

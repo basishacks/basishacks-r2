@@ -1,6 +1,7 @@
 import { defineEventHandler } from 'h3'
 import { randomBytes } from 'node:crypto'
 import { validateOAuth2AuthorizationRequest } from '~/../server/utils/oauth2-validate'
+import { addAuthorizeSession, attachAuthorizeSessionCookie, AuthorizeSession, constructSession } from '../api/oauth2/session.post'
 
 /**
  * OAuth2 Authorization Middleware
@@ -24,17 +25,20 @@ export default defineEventHandler(async (event) => {
         event,
         client_id,
         scope,
-        redirect_uri
+        redirect_uri || '',
+        query.state as string,
+        query.response_type as string,
+        query.code_challenge as string,
+        query.code_challenge_method as string
     )
 
-    const login_session = randomBytes(64).toString('base64url')
+    const app: OAuth2Application = validatedRequest?.app as OAuth2Application
+    
+    const session: AuthorizeSession = constructSession(redirect_uri || '', app, query.state as string, query.code_challenge as string, query.code_challenge_method as string)
+    
+    addAuthorizeSession(session)
 
-    event.context.oauth = {
-      client_id,
-      scope,
-      redirect_uri,
-      login_session
-    }
+    attachAuthorizeSessionCookie(session, event)
     
 
     

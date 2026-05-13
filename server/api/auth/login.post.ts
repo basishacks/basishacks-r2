@@ -1,6 +1,6 @@
 import { randomBytes } from 'node:crypto'
 import { LoginRequest } from '~~/shared/schemas'
-import { completeAuthorizeSession, getAuthorizeSession } from '../oauth2/session.post'
+import { completeAuthorizeSession, generateExchangeCode, getAuthorizeSession } from '../oauth2/session.post'
 
 export default defineEventHandler(async (event) => {
 
@@ -33,9 +33,11 @@ export default defineEventHandler(async (event) => {
   */
   completeAuthorizeSession(token)
 
+  generateExchangeCode(session)
+
   return {
     user,
-    code: randomBytes(128).toString("base64url"),
+    redirect_to: session.redirect_uri + "?code=" + session.code + "&state=" + session.bh_state,
     time: Date.now()
   }
 })
