@@ -18,5 +18,6 @@ export function structureLink(state: string, code_challenge: string) {
     + "&state=" + state
     + "&code_challenge=" + code_challenge 
     + "&code_challenge_method=S256"
+    
 }
 

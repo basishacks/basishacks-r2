@@ -197,14 +197,6 @@ const restartLoginProcess = async () => {
 
 import oAuth2Config from '~~/shared/oauth2'
 import { LoginRequest, SendCodeRequest } from '~~/shared/schemas'
-const link = `https://login.microsoftonline.com/
-${oAuth2Config.tenant}/
-oauth2/v2.0/authorize?
-client_id=${oAuth2Config.clientId}
-&response_type=${oAuth2Config.responseType}
-&redirect_uri={CURRENT_URL_ORIGIN}${oAuth2Config.redirectUri}
-&response_mode=query
-&scope=${oAuth2Config.scope.replaceAll(' ', '%20')}`
 const navigateToOAuth2 = async () => {
   isLoading.value = true
 
