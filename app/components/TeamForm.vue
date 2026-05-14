@@ -152,7 +152,7 @@ async function onSubmit(
           <UForm
             :state="nameState"
             :schema="UpdateTeamRequest"
-            class="space-y-2 max-w-[600px]"
+            class="space-y-2 max-w-[600px] mx-auto"
             @submit="onNameSubmit($event, close)"
           >
             <UFormField name="name" label="New name">
@@ -177,7 +177,7 @@ async function onSubmit(
           <UForm
             :state="state"
             :schema="AddTeamMemberRequest"
-            class="space-y-2 max-w-[600px]"
+            class="space-y-2 max-w-[600px] mx-auto"
             @submit="onSubmit($event, close)"
           >
             <UFormField name="email" label="New member email">

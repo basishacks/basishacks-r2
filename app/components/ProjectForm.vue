@@ -106,7 +106,7 @@ async function onSubmit(
     :state="state"
     :schema="intent === 'save' ? UpdateTeamRequest : SubmitTeamRequest"
     :disabled="disabled"
-    class="max-w-[600px] space-y-4 mb-4"
+    class="max-w-[600px] space-y-4 mb-4 mx-auto"
     @submit="onSubmit"
   >
     <UFormField

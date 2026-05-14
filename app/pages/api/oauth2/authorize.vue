@@ -3,7 +3,10 @@
     <canvas class="fixed inset-0 -z-10 w-full h-full bg-black" ref="canvas"></canvas>
     <div class="flex flex-col items-center justify-center min-h-screen">
         <div class="rounded-md bg-default w-full max-w-md px-8 text-center">
-            <p class="text-xl bold glow text-primary my-8">{{ WEBSITE_NAME }}</p>
+            <div class="relative flex items-center justify-center my-8">
+              <UIcon name="i-material-symbols-arrow-back" class="absolute left-0 w-6 h-6 cursor-pointer hover:opacity-80 transition-opacity" @click="dummyFunction" />
+              <p class="text-xl bold glow text-primary">{{ WEBSITE_NAME }}</p>
+            </div>
             <USeparator></USeparator>
             <div class="w-full h-80 flex flex-row justify-center items-start my-8">
 
@@ -148,6 +151,10 @@ const applicationName = ref('')
 const usedScopes: Ref<string[]> = ref([])
 const route = useRoute()
 const app: Ref<OAuth2Application | null> = ref(null)
+
+const dummyFunction = () => {
+  // TODO: implement
+}
 
 const returnToApp = (options: any) => {
 

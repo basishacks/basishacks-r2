@@ -233,7 +233,7 @@ onUnmounted(() => {
 
         <h2 class="text-3xl bold mb-4">Your project</h2>
 
-        <div v-if="data.team.rank" class="mb-4 max-w-[600px] border border-gray-200 dark:border-gray-800 rounded-lg p-6 bg-white dark:bg-gray-900">
+        <div v-if="data.team.rank" class="mb-4 max-w-[600px] mx-auto border border-gray-200 dark:border-gray-800 rounded-lg p-6 bg-white dark:bg-gray-900">
 
           <p class="mb-2"><strong>April 2026</strong><span style="color:var(--ui-text-muted)"> - </span>Cyberpunk</p>
 

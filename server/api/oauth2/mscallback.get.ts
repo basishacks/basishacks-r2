@@ -21,7 +21,7 @@ function decodeJWT(token: string) {
   }
 }
 
-export default defineEventHandler(async (event) => {
+export default defineEventHandler(async (event: any) => {
   const query = getQuery(event)
   const code = query.code as string
   const token = getCookie(event, "bridge_id") // sessid
@@ -124,7 +124,7 @@ export default defineEventHandler(async (event) => {
 
     generateExchangeCode(session)
 
-    const redir = session.redirect_uri + "?code=" + session.code
+    const redir = session.redirect_uri + "?code=" + session.code + "&state=" + session.bh_state
 
     console.log("[Authorization -> OAuth2] MS Token Exchange sucess " + session.redirect_uri)
 
