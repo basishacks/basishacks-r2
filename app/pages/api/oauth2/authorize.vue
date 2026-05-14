@@ -194,7 +194,7 @@ const restartLoginProcess = async () => {
   stateLogin.token = ""
   isLoading.value = true
   status.value = "none"
-  await loginFlowCheck()
+  await loginFlowCheck(true)
   animatedChange("login")
 }
 const navigateToOAuth2 = async () => {
@@ -362,12 +362,32 @@ const codeInputComplete = () => {
 
 const delay = (ms: number) => new Promise(resolve => setTimeout(resolve, ms));
 
-async function fade() {
+async function fade(duration: number = 700) {
   showLoading.value = false
-  await delay(600)
+  await delay(duration)
 }
 
-async function loginFlowCheck() {
+async function submitNewSession(client_id: string, response_type: string, scope: string, code_challenge: string, code_challenge_method: string, redirect_uri: string) {
+  const js: any = await $fetch("/api/oauth2/session", {
+    method: "POST",
+    body: {
+      client_id, response_type, scope, state, code_challenge, code_challenge_method, redirect_uri
+    }
+  })
+}
+
+async function loginFlowCheck(reattempt: boolean = false) {
+
+  const err = useCookie("bridge_error")
+  if (err.value) {
+    const json: any = JSON.parse(atob(err.value as string))
+    await fade()
+    status.value = 'error'
+    error.value = "invalid_request"
+    error_description.value = json.message
+    err.value = undefined
+    return
+  }
 
   const client_id = queryString(route.query.client_id)
   const response_type = queryString(route.query.response_type)
@@ -396,10 +416,15 @@ async function loginFlowCheck() {
 
     if (res1.status != 200) {
       // bad
-      await fade();
-      status.value = 'error'
-      error.value = "invalid_request"
-      error_description.value = js.message
+      if (reattempt) {
+        await submitNewSession(client_id, response_type, scope, code_challenge, code_challenge_method, redirect_uri)
+      } else {
+        await fade();
+        status.value = 'error'
+        error.value = "invalid_request"
+        error_description.value = js.message
+      }
+      
     } else {
       // 做的好 ！！！！
       await fade();

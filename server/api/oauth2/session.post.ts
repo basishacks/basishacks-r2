@@ -6,11 +6,11 @@
  * Btw, not going to use pushed authorization requests yet. currently just building a demo.
  * will work on this when other apps r done.
  * 
- * This page is DEPRECATED. The user no longer uses POST to create a session when authorizing.
- * Instead the session is generated in the middleware
+ * This page is used to refresh sessions
  * 
  */
 import { randomBytes } from 'crypto';
+import { SignJWT } from 'jose';
 import { validateOAuth2AuthorizationRequest } from '~/../server/utils/oauth2-validate'
 
 export interface AuthorizeSession {
@@ -52,6 +52,47 @@ export function completeAuthorizeSession(token: string) {
 export function generateExchangeCode(session: AuthorizeSession) {
   const code = randomBytes(128).toString("base64url")
   session.code = code
+}
+
+export async function exchangeAuthorizationCode(code: string): Promise<string> {
+  const secret = process.env.NUXT_OAUTH2_JWT_SECRET
+  if (!secret) {
+    throw new Error('NUXT_OAUTH2_JWT_SECRET is not set')
+  }
+
+  const key = new TextEncoder().encode(secret)
+
+  for (const token in AUTHORIZE_SESSION_STORE) {
+    const session = AUTHORIZE_SESSION_STORE[token]
+    if (!session) continue
+
+    if (session.code === code) {
+      if (Date.now() > session.expire_time) {
+        delete AUTHORIZE_SESSION_STORE[token]
+        throw new Error('Authorization code has expired')
+      }
+
+      if (!session.user) {
+        throw new Error('No user attached to session')
+      }
+
+      const jwt = await new SignJWT({
+        sub: String(session.user.id),
+        user_id: session.user.id,
+        client_id: session.application.client_id,
+        redirect_uri: session.redirect_uri,
+      })
+        .setProtectedHeader({ alg: 'HS256' })
+        .setIssuedAt()
+        .setExpirationTime('1h')
+        .sign(key)
+
+      delete AUTHORIZE_SESSION_STORE[token]
+      return jwt
+    }
+  }
+
+  throw new Error('Invalid authorization code')
 }
 
 export function constructSession(redirect_uri: string, app: OAuth2Application, state: string, code_challenge: string, code_challenge_method: string): AuthorizeSession {

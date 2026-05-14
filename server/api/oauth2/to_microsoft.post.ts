@@ -18,7 +18,14 @@ export function generateMicrosoftOAuth2Link(session: AuthorizeSession) {
 }
 
 export default defineEventHandler(async (event) => {
-  const { token } = await readValidatedBody(event, MicrosoftRedirectRequest.parse)
+  const token = getCookie(event, "bridge_id")
+
+  if (!token) {
+    throw createError({
+      status: 400,
+      message: "Header 'bridge_id' is required"
+    })
+  }
 
   const session = getAuthorizeSession(token)
 

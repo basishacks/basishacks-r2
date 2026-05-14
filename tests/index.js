@@ -1,4 +1,4 @@
-import testOAuth2 from "./test.oauth2.js";
+console.log("Running tests...");
 
 import { testMicrosoftMeeting, testCreateMicrosoftMeeting, testInitializeDummyUserAccessToken } from "./test.microsoft.ts";
 import initializeMSAccessToken from "../server/plugins/microsoft.ts";

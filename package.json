@@ -27,6 +27,7 @@
     "@vueuse/core": "^14.3.0",
     "@vueuse/shared": "^14.3.0",
     "canvas-confetti": "^1.9.4",
+    "jose": "^6.2.3",
     "eslint": "^9.39.4",
     "jdenticon": "^3.3.0",
     "nitro-cloudflare-dev": "^0.2.2",
