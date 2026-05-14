@@ -6,7 +6,7 @@
 
   <div>
     
-    <RoleHeader></RoleHeader>
+    <RoleHeader/>
 
     <UMain class="bg-red-100">
       <UContainer>
@@ -14,6 +14,6 @@
       </UContainer>
     </UMain>
 
-    <Footer></Footer>
+    <Footer/>
   </div>
 </template>

@@ -34,8 +34,6 @@ onMounted(() => {
 
 <template>
   <div ref="backgroundRef" class="bg-center bg-cover">
-    <UContainer class="h-[calc(100vh-var(--ui-header-height))] bg-default pt-4">
-
-    </UContainer>
+    <UContainer class="h-[calc(100vh-var(--ui-header-height))] bg-default pt-4"/>
   </div>
 </template>

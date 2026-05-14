@@ -1,6 +1,6 @@
 <template>
 
-    <USeparator></USeparator>
+    <USeparator/>
 
     
 

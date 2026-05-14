@@ -131,7 +131,7 @@ onMounted(() => {
           >
         </div>
 
-        <USeparator></USeparator>
+        <USeparator/>
 
         <UFormField name="avatar" label="Avatar">
 
@@ -168,18 +168,18 @@ onMounted(() => {
           </UFileUpload>
         </UFormField>
 
-        <USeparator></USeparator>
+        <USeparator/>
 
         <UFormField name="profile_theme_image" label="Profile Theme">
           <p class="text-muted text-xs">Select the theme of your profile.</p>
           <p class="text-muted text-xs">This setting will affect the background display of your <ULink :to="profileLink">profile page</ULink> and your <UserPopover user="5"><span class="underline">profile card</span></UserPopover></p>
           
-          <div class="w-full mt-4 rounded-md bg-gray-500 rounded-xl bg-center bg-cover bg-no-repeat" ref="fileUploadRef">
+          <div ref="fileUploadRef" class="w-full mt-4 rounded-md bg-gray-500 rounded-xl bg-center bg-cover bg-no-repeat">
             <UFileUpload
+          v-model="state.profile_theme_image"
           label="Click to drop image to upload"
           description="PNG, JPG or GIF (max. 2MB)"
           accept="image/jpeg, image/jpg, image/png, image/webp"
-          v-model="state.profile_theme_image"
           class="z-1"
           :ui="{
             base: `min-h-48 bg-white/0`,

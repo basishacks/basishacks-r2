@@ -2,23 +2,23 @@
 
     <Transition name="fade">
 
-        <div class="fixed top-0 left-0 w-full h-full flex flex-col items-center justify-center z-999 bg-(--ui-bg)" v-if="show">
+        <div v-if="show" class="fixed top-0 left-0 w-full h-full flex flex-col items-center justify-center z-999 bg-(--ui-bg)">
 
             <svg class="infinity w-[10vw] h-[10vh] max-sm:w-[50vw]" viewBox="-1 -1 12 8">
             <defs>
-                <path id="infinite" d="M5 3C4 2 3.1 1 2 1a2 2 0 000 4c1.1 0 2-1 3-2s1.9-2 3-2a2 2 0 010 4C6.9 5 6 4 5 3"></path>
+                <path id="infinite" d="M5 3C4 2 3.1 1 2 1a2 2 0 000 4c1.1 0 2-1 3-2s1.9-2 3-2a2 2 0 010 4C6.9 5 6 4 5 3"/>
                 <radialGradient id="rgradient" gradientUnits="userSpaceOnUse" cx="5" cy="3" r="3.4">
-                <stop offset=".25" stop-color="#000"></stop>
-                <stop offset=".9" stop-color="#000" stop-opacity="0"></stop>
+                <stop offset=".25" stop-color="#000"/>
+                <stop offset=".9" stop-color="#000" stop-opacity="0"/>
                 </radialGradient>
-                <path id="shadow1" class="clip-shadow" d="M4.5 2.5C3.7 1.7 2.9 1 2 1m6 4c-1 0-1.7-.7-2.5-1.5"></path>
+                <path id="shadow1" class="clip-shadow" d="M4.5 2.5C3.7 1.7 2.9 1 2 1m6 4c-1 0-1.7-.7-2.5-1.5"/>
             </defs>
-            <use href="#infinite" class="outside"></use>
-            <use href="#shadow1" class="shadow"></use>
+            <use href="#infinite" class="outside"/>
+            <use href="#shadow1" class="shadow"/>
             <g class="shadow odd">
                 <use href="#shadow1" transform="translate(0 6) scale(1, -1)" />
             </g>
-            <use href="#infinite" class="inside"></use>
+            <use href="#infinite" class="inside"/>
             </svg>
 
             <h3>Just a moment</h3>

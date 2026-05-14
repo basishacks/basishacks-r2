@@ -79,7 +79,7 @@ async function onSubmit(event: FormSubmitEvent<CreateTeamScoresRequest>) {
       </UTooltip>
     </div>
 
-    <hr class="text-neutral-500 my-4" />
+    <hr class="text-neutral-500 my-4" >
 
     <h3 class="bold text-xl mb-2">Your scores</h3>
 

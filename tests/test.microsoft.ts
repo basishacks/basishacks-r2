@@ -1,3 +1,5 @@
+import { createMicrosoftMeeting, initializeDummyUserAccessToken } from "../server/plugins/microsoft.ts";
+
 export async function testMicrosoftMeeting(token: string, target: string) {
     console.log("Testing Microsoft Meeting...");
 
@@ -57,8 +59,6 @@ export async function testMicrosoftMeeting(token: string, target: string) {
 
     return false;
 }
-
-import { createMicrosoftMeeting, initializeDummyUserAccessToken } from "../server/plugins/microsoft.ts";
 
 export async function testCreateMicrosoftMeeting(token: string, target: string) {
     console.log("Testing Create Microsoft Meeting...");

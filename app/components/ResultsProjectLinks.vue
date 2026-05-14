@@ -14,22 +14,6 @@ const videoText = computed(() => videoLink ? 'View presentation video' : 'Video 
 
 </script>
 
-<style>
-.fluent--video-clip-32-filled {
-  display: inline-block;
-  width: 32px;
-  height: 32px;
-  --svg: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Cpath fill='%23000' d='M6.5 4A4.5 4.5 0 0 0 2 8.5v15A4.5 4.5 0 0 0 6.5 28h19a4.5 4.5 0 0 0 4.5-4.5v-15A4.5 4.5 0 0 0 25.5 4zm5.5 8.001a1 1 0 0 1 1.47-.882l7.498 3.999a1 1 0 0 1 0 1.764l-7.497 3.999A1 1 0 0 1 12 19.999z'/%3E%3C/svg%3E");
-  background-color: currentColor;
-  -webkit-mask-image: var(--svg);
-  mask-image: var(--svg);
-  -webkit-mask-repeat: no-repeat;
-  mask-repeat: no-repeat;
-  -webkit-mask-size: 100% 100%;
-  mask-size: 100% 100%;
-}</style>
-
-
 <template >
 
     <UTooltip :text="githubText" :delay-duration="0">
@@ -48,10 +32,26 @@ const videoText = computed(() => videoLink ? 'View presentation video' : 'Video 
                 <svg class="w-10 h-10 fill-neutral-400"  xmlns="http://www.w3.org/2000/svg" width="32" height="32" viewBox="0 0 32 32"><path d="M6.5 4A4.5 4.5 0 0 0 2 8.5v15A4.5 4.5 0 0 0 6.5 28h19a4.5 4.5 0 0 0 4.5-4.5v-15A4.5 4.5 0 0 0 25.5 4zm5.5 8.001a1 1 0 0 1 1.47-.882l7.498 3.999a1 1 0 0 1 0 1.764l-7.497 3.999A1 1 0 0 1 12 19.999z"/></svg>
             </template>
 
-            <video v-if="videoLink" :src="videoLink" controls autoplay class="w-[50vw] h-auto"></video>
+            <video v-if="videoLink" :src="videoLink" controls autoplay class="w-[50vw] h-auto"/>
 
         </PopupMediaBrowser>
     </UTooltip>
 
 
 </template>
+
+
+<style>
+.fluent--video-clip-32-filled {
+  display: inline-block;
+  width: 32px;
+  height: 32px;
+  --svg: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Cpath fill='%23000' d='M6.5 4A4.5 4.5 0 0 0 2 8.5v15A4.5 4.5 0 0 0 6.5 28h19a4.5 4.5 0 0 0 4.5-4.5v-15A4.5 4.5 0 0 0 25.5 4zm5.5 8.001a1 1 0 0 1 1.47-.882l7.498 3.999a1 1 0 0 1 0 1.764l-7.497 3.999A1 1 0 0 1 12 19.999z'/%3E%3C/svg%3E");
+  background-color: currentColor;
+  -webkit-mask-image: var(--svg);
+  mask-image: var(--svg);
+  -webkit-mask-repeat: no-repeat;
+  mask-repeat: no-repeat;
+  -webkit-mask-size: 100% 100%;
+  mask-size: 100% 100%;
+}</style>

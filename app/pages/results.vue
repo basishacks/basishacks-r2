@@ -1,7 +1,7 @@
 <template >
 
-  <GoBackUp></GoBackUp>
-  <LoaderAnimation :show="dirtyLoading"></LoaderAnimation>
+  <GoBackUp/>
+  <LoaderAnimation :show="dirtyLoading"/>
 
     <Transition name="fade">
       <div v-show="showScrollText" class="fixed bottom-4 left-1/2 transform -translate-x-1/2 text-white text-center flex flex-col items-center gap-4 z-30">
@@ -27,8 +27,8 @@
 
       <div ref="team1DescriptionWrapper" class="team1-description-wrapper mx-8 lg:ml-48 lg:pl-16 relative overflow-visible max-lg:flex-2" @mousemove="updateTeam1Cursor" @mouseleave="resetTeam1Cursor">
 
-          <div class="team1-background-number hidden lg:block" ref="team1NumberRef" :style="team1NumberStyle">#1</div>
-          <div v-if="cursorAuraVisible" class="team1-cursor-aura" :style="team1AuraStyle"></div>
+          <div ref="team1NumberRef" class="team1-background-number hidden lg:block" :style="team1NumberStyle">#1</div>
+          <div v-if="cursorAuraVisible" class="team1-cursor-aura" :style="team1AuraStyle"/>
           <Transition name="slide-right">
               <div v-if="team1showDescriptionRef" class="team1-description transition-content">
 
@@ -52,9 +52,9 @@
 
                 <div class="mt-4 mb-8">
                     <ResultsProjectLinks
-                    githubLink="https://github.com/Rua-You/Syl"
-                    demoLink="https://rua-you.itch.io/syl"
-                    videoLink="/assets/ee2c39cc-c590-4c36-a73e-43d335c76a86.mp4"></ResultsProjectLinks>
+                    github-link="https://github.com/Rua-You/Syl"
+                    demo-link="https://rua-you.itch.io/syl"
+                    video-link="/assets/ee2c39cc-c590-4c36-a73e-43d335c76a86.mp4"/>
                 </div>
                   
               </div>
@@ -63,7 +63,7 @@
           
       </div>
         
-      <video ref="videoRef" src="/assets/8a214d32-c43d-4141-b534-5225722a4d2b" muted preload="metadata" class="lg:ml-auto h-auto w-[50vw] max-lg:w-[75vw] max-lg:-order-1 max-lg:flex-1"></video>
+      <video ref="videoRef" src="/assets/8a214d32-c43d-4141-b534-5225722a4d2b" muted preload="metadata" class="lg:ml-auto h-auto w-[50vw] max-lg:w-[75vw] max-lg:-order-1 max-lg:flex-1"/>
         <!-- text -->
     </div >
       
@@ -98,9 +98,10 @@
               is able to recognize learned faces and colors,
               and provide personalized reactions</p>
 
-              <div class="mt-12 text-black fill-black z-3"><ResultsProjectLinks color="fill-gray-400" class="z-3"
-                  githubLink="https://github.com/zhizhizhi00/visual-recognition-robotic-head"
-                  videoLink="/assets/b1aee7a2-33fa-4681-bdbe-1fef3a481f0e"></ResultsProjectLinks></div>
+              <div class="mt-12 text-black fill-black z-3"><ResultsProjectLinks
+color="fill-gray-400" class="z-3"
+                  github-link="https://github.com/zhizhizhi00/visual-recognition-robotic-head"
+                  video-link="/assets/b1aee7a2-33fa-4681-bdbe-1fef3a481f0e"/></div>
           </div>
 
           <!-- <div class="flex-1 mx-auto">
@@ -152,20 +153,21 @@
         </p>
 
         <div class="z-0 mt-8">
-          <ResultsProjectLinks color="fill-gray-400" 
-                  githubLink="https://github.com/FYC23/dysarthric-voice-command-classifier"
-                  demoLink="https://huggingface.co/spaces/DNE58293/dysarthric-voice-cmds"
-                  videoLink="/assets/3f9cbe2c-c8ea-42f4-94f6-4a4a0cb01549"></ResultsProjectLinks>
+          <ResultsProjectLinks
+color="fill-gray-400" 
+                  github-link="https://github.com/FYC23/dysarthric-voice-command-classifier"
+                  demo-link="https://huggingface.co/spaces/DNE58293/dysarthric-voice-cmds"
+                  video-link="/assets/3f9cbe2c-c8ea-42f4-94f6-4a4a0cb01549"/>
         </div>
       </div>
 
       <div class="bg-gray-300 rounded-lg ml-auto mr-48 mb-48 mt-auto max-2xl:mb-20 max-2xl:mx-auto max-sm:hidden">
         <div class="m-2 flex items-center justify-start pr-auto gap-1">
-          <UIcon name="i-material-symbols-circle" size="4em" class="text-red-500 h-4 w-4"></UIcon>
-          <UIcon name="i-material-symbols-circle" size="4em" class="text-yellow-500 h-4 w-4"></UIcon>
-          <UIcon name="i-material-symbols-circle" size="4em" class="text-green-500 h-4 w-4"></UIcon>
+          <UIcon name="i-material-symbols-circle" size="4em" class="text-red-500 h-4 w-4"/>
+          <UIcon name="i-material-symbols-circle" size="4em" class="text-yellow-500 h-4 w-4"/>
+          <UIcon name="i-material-symbols-circle" size="4em" class="text-green-500 h-4 w-4"/>
         </div>
-        <div class="window-image w-lg h-72 lg:w-196 lg:h-108 rounded-lg mx-2 mb-2 select-none"></div>
+        <div class="window-image w-lg h-72 lg:w-196 lg:h-108 rounded-lg mx-2 mb-2 select-none"/>
 
 
       </div>
@@ -175,14 +177,12 @@
     
 
 
-    <UMarquee>
-      
-    </UMarquee>
+    <UMarquee/>
 
 
 
     <div>
-        <p class="py-500"></p>
+        <p class="py-500"/>
     </div>
 
 </template> 

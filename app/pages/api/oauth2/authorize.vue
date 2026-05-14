@@ -1,29 +1,29 @@
 <template>
   <div class="w-full h-full -z-15">
-    <canvas class="fixed inset-0 -z-10 w-full h-full bg-black" ref="canvas"></canvas>
+    <canvas ref="canvas" class="fixed inset-0 -z-10 w-full h-full bg-black"/>
     <div class="flex flex-col items-center justify-center min-h-screen">
         <div class="rounded-md bg-default w-full max-w-md px-8 text-center">
             <p class="text-xl bold glow text-primary my-8">{{ WEBSITE_NAME }}</p>
-            <USeparator></USeparator>
+            <USeparator/>
             <div class="w-full h-80 flex flex-row justify-center items-start my-8">
 
               <Transition name="fade">
-                <LoaderAnimationInline v-if="showLoading" class="my-auto"></LoaderAnimationInline>
+                <LoaderAnimationInline v-if="showLoading" class="my-auto"/>
               </Transition>
 
               <Transition name="fade">
                 <div v-if="status == 'error'" class="my-auto">
-                  <UIcon name="i-material-symbols-error-rounded" class="w-8 h-8 text-red-400"></UIcon>
+                  <UIcon name="i-material-symbols-error-rounded" class="w-8 h-8 text-red-400"/>
                   <h3 class="text-sm text-red-400">There was a problem during your login</h3>
                   <p class="mt-4 text-sm">{{ error_description }}</p>
 
-                  <UButton v-if="!error_description_initial" color="neutral" class="mt-8" @click="restartLoginProcess" :disabled="isLoading">Try Again</UButton>
+                  <UButton v-if="!error_description_initial" color="neutral" class="mt-8" :disabled="isLoading" @click="restartLoginProcess">Try Again</UButton>
                 </div>
               </Transition>
 
               <Transition name="fade">
 
-                <div class="w-full flex flex-col gap-4 items-start justify-start" v-if="status == 'login'">
+                <div v-if="status == 'login'" class="w-full flex flex-col gap-4 items-start justify-start">
 
                   <h3 class="text-xl bold">Sign in</h3>
                   <UForm
@@ -42,14 +42,14 @@
                     >
                   </UForm>
 
-                  <USeparator class="w-full"></USeparator>
+                  <USeparator class="w-full"/>
 
                   <UForm class="w-full flex flex-col items-start gap-4 text-left">
                     
 
                       <UFormField name="email" label="or use the following...">
-                        <UButton @click="navigateToOAuth2" :disabled="isLoading"> 
-                          <img src="/assets/Microsoft_logo.svg" alt="Microsoft Logo" class="w-5 h-5 mr-2" />
+                        <UButton :disabled="isLoading" @click="navigateToOAuth2"> 
+                          <img src="/assets/Microsoft_logo.svg" alt="Microsoft Logo" class="w-5 h-5 mr-2" >
                           Login with Microsoft
                         </UButton>
                       </UFormField>
@@ -71,18 +71,18 @@
                     <span class="text-sm">A <span class="text-primary bold">6-digit</span> verification code has been sent to your 
                       <ULink class="text-primary bold inline" href="https://teams.microsoft.com" target="_blank">
                         Teams Chat
-                        <UIcon name="i-material-symbols-link-2" class="w-4 h-4"></UIcon>
+                        <UIcon name="i-material-symbols-link-2" class="w-4 h-4"/>
                       </ULink>
                       
                        (not email).</span>
                     <UFormField name="code" label="Enter verification code" class="w-full">
-                      <UPinInput size="xl" v-model="stateLogin.code" type="number" class="w-full" :disabled="isLoading" :length="6" @complete="codeInputComplete"/>
+                      <UPinInput v-model="stateLogin.code" size="xl" type="number" class="w-full" :disabled="isLoading" :length="6" @complete="codeInputComplete"/>
                     </UFormField>
 
                     <div class="flex flex-row items-start gap-4">
                       <UButton :disabled="isLoading" type="submit">Log In</UButton>
                       <UButton color="neutral" :disabled="isLoading" @click="restartLoginProcess">
-                        <UIcon name="i-material-symbols-arrow-back" class="w-4 h-4 mr-1"></UIcon>
+                        <UIcon name="i-material-symbols-arrow-back" class="w-4 h-4 mr-1"/>
                         Back</UButton>
                     </div>
                   </UForm>
@@ -95,20 +95,20 @@
                     <div v-if="!userAvatarLoaded" class="w-[48px] h-[48px]">
                       <USkeleton class="w-full h-full rounded-full" />
                     </div>
-                    <UAvatar v-else size="3xl" :src="userAvatarUrl"></UAvatar>
+                    <UAvatar v-else size="3xl" :src="userAvatarUrl"/>
 
-                    <UIcon name="i-material-symbols-link" class="text-primary size-10"></UIcon>
+                    <UIcon name="i-material-symbols-link" class="text-primary size-10"/>
                     
                     <div v-if="!applicationAvatarLoaded" class="w-[48px] h-[48px]">
                       <USkeleton class="w-full h-full rounded-full" />
                     </div>
-                    <UAvatar v-else size="3xl" :src="applicationAvatarUrl"></UAvatar>
+                    <UAvatar v-else size="3xl" :src="applicationAvatarUrl"/>
                   </div>
 
                   <div>
                     <h3 class="text-mx">Allow <span class="bold">{{ applicationName }}</span> to...</h3>
                     <p v-if="usedScopes.includes('openid') || usedScopes.includes('profile') || usedScopes.includes('email')" class="flex flex-row items-center justify-center gap-2">
-                      <UIcon name="i-material-symbols-check" class="text-primary"></UIcon>
+                      <UIcon name="i-material-symbols-check" class="text-primary"/>
                       <span class="text-sm">View your profile information</span>
                     </p>
                   </div>
@@ -135,6 +135,9 @@
 <script setup lang="ts">
 import type { FormSubmitEvent } from '@nuxt/ui'
 import { computed, onBeforeUnmount, onMounted, reactive, ref } from 'vue'
+
+import oAuth2Config from '~~/shared/oauth2'
+import { LoginRequest, SendCodeRequest } from '~~/shared/schemas'
 
 
 const showLoading = ref(true)
@@ -194,9 +197,6 @@ const restartLoginProcess = async () => {
   await loginFlowCheck()
   animatedChange("login")
 }
-
-import oAuth2Config from '~~/shared/oauth2'
-import { LoginRequest, SendCodeRequest } from '~~/shared/schemas'
 const navigateToOAuth2 = async () => {
   isLoading.value = true
 
@@ -428,9 +428,9 @@ async function loginFlowCheck() {
 //////// MATRIX PAINT JOB
 
 const canvas = ref<HTMLCanvasElement | null>(null)
-let animationFrameId = 0
+const animationFrameId = 0
 let drops: Array<number> = []
-let fontSize = 18
+const fontSize = 18
 let columnCount = 0
 let width = 0
 let height = 0

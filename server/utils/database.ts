@@ -1,4 +1,5 @@
-import { Database, Statement as BunStatement } from 'bun:sqlite'
+import type { Statement as BunStatement } from 'bun:sqlite';
+import { Database } from 'bun:sqlite'
 import path from 'path'
 import { fileURLToPath } from 'url'
 

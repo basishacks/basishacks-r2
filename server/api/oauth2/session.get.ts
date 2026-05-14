@@ -7,7 +7,8 @@
  * will work on this when other apps r done.
  */
 
-import { AuthorizeSession, getAuthorizeSession, removeIfSessionExpired } from "./session.post"
+import type { AuthorizeSession} from "./session.post";
+import { getAuthorizeSession, removeIfSessionExpired } from "./session.post"
 
 
 export default defineEventHandler(async (event) => {

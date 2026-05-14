@@ -1,7 +1,8 @@
 import { defineEventHandler } from 'h3'
 import { randomBytes } from 'node:crypto'
 import { validateOAuth2AuthorizationRequest } from '~/../server/utils/oauth2-validate'
-import { addAuthorizeSession, attachAuthorizeSessionCookie, AuthorizeSession, constructSession } from '../api/oauth2/session.post'
+import type { AuthorizeSession} from '../api/oauth2/session.post';
+import { addAuthorizeSession, attachAuthorizeSessionCookie, constructSession } from '../api/oauth2/session.post'
 import { generateMicrosoftOAuth2Link } from '../api/oauth2/to_microsoft.post'
 
 /**
