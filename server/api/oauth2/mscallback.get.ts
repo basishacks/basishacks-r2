@@ -97,9 +97,6 @@ export default defineEventHandler(async (event) => {
     const decodedToken = decodeJWT(accessToken)
     const email = decodedToken.mail || decodedToken.email || decodedToken.upn || decodedToken.preferred_username
     const name = decodedToken.name
-
-    console.log(email, name)
-
     if (!email) {
       throw createError({
         status: 401,
@@ -123,19 +120,15 @@ export default defineEventHandler(async (event) => {
 
     user.name = name || user.name
     await updateUserName(event, user);
-
-    // Step 4: Set user session with nuxt-auth-utils
-    await setUserSession(event, {
-      user: {
-        id: user.id,
-      },
-    })
+    
 
     generateExchangeCode(session)
 
-    console.log(session.redirect_uri + "?code=" + session.code)
+    const redir = session.redirect_uri + "?code=" + session.code
 
-    return sendRedirect(event, session.redirect_uri + "?code=" + session.code)
+    console.log("[Authorization -> OAuth2] MS Token Exchange sucess " + session.redirect_uri)
+
+    return sendRedirect(event, redir)
   } catch (error) {
     console.error('OAuth callback error:', error)
     throw createError({

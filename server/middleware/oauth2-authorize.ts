@@ -45,17 +45,32 @@ export default defineEventHandler(async (event) => {
       // instant redirect mode, skip basishacks login
       const link = generateMicrosoftOAuth2Link(session)
 
-      
+      console.log("[Authorization -> OAuth2] Microsoft proxy application " + app.client_id)
+
+      return sendRedirect(event, link)
     }
     
 
     
   } catch (err: any) {
-    console.warn("User requested faulty oauth link:", err.message || err)
-    throw createError({
-      statusCode: err.statusCode || 400,
-      message: err.message || 'Invalid OAuth2 authorization request',
+    console.warn("[Authorization -> OAuth2] User requested faulty oauth link:", err.message || err)
+    // throw createError({
+    //   statusCode: err.statusCode || 400,
+    //   message: err.message || 'Invalid OAuth2 authorization request',
+    // })
+    // Not throwing any error here, because it will show the default error page but
+    // not the one in OAuth login
+
+    const payload = {
+      message: err.message
+    }
+
+    return setCookie(event, "bridge_error", Buffer.from(JSON.stringify(payload)).toString("base64url"), {
+      maxAge: 10 * 60, // 10 mins
+      secure: true,
+      sameSite: 'lax'
     })
+
   }
 
   

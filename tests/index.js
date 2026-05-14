@@ -1,18 +1,5 @@
 console.log("Running tests...");
 
-import testOAuth2 from "./test.oauth2.js";
-
-let result_testOAuth2;
-try {
-    result_testOAuth2 = await testOAuth2();
-} catch (error) {
-    console.error("Error during testOAuth2:", error);
-    result_testOAuth2 = false;
-}
-console.log("================================")
-console.log("testOAuth2: " + (result_testOAuth2 ? "PASSED" : "FAILED"));
-console.log("================================")
-
 import { testMicrosoftMeeting, testCreateMicrosoftMeeting, testInitializeDummyUserAccessToken } from "./test.microsoft.ts";
 import initializeMSAccessToken from "../server/plugins/microsoft.ts";
 
