@@ -94,10 +94,11 @@ const links_noteam = ref<ButtonProps[]>([
 
 <template>
 
-  <div class="mt-12"></div>
+  <div class="mt-12"/>
 
     <div v-if="data?.team == null && hackathon?.status !== 'not_started'" class="mx-auto">
-        <UPageCTA class="mx-32"
+        <UPageCTA
+class="mx-32"
             :links="links_noteam"
             title="You don't have a team yet!"
             description="You need to create a team before you can edit your project! Well... you can still create a solo team if you want to work alone :)"
@@ -130,7 +131,8 @@ const links_noteam = ref<ButtonProps[]>([
       
 
       <div v-else="hackathon?.status == 'not_started'" class="mx-auto">
-        <UPageCTA class="mx-32"
+        <UPageCTA
+class="mx-32"
         :links="links"
     title="Hackathon not started yet!"
     description="Stay tuned for news and check out the schedule!"

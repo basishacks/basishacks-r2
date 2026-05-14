@@ -1,9 +1,9 @@
 <template>
 
 <UModal>
-    <slot></slot>
+    <slot/>
     <template #body>
-        <slot name="content"></slot>
+        <slot name="content"/>
         
     </template>
     

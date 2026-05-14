@@ -1,5 +1,6 @@
 import { MicrosoftRedirectRequest } from "~~/shared/schemas"
-import { AuthorizeSession, getAuthorizeSession } from "./session.post"
+import type { AuthorizeSession} from "./session.post";
+import { getAuthorizeSession } from "./session.post"
 import { createHash, randomBytes } from "crypto"
 import { structureLink } from "~~/shared/oauth2"
 

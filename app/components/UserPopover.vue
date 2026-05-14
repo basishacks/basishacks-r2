@@ -1,6 +1,6 @@
 <template>
-    <UPopover mode="hover" @update:open="handleHover" ref="popover">
-        <slot></slot>
+    <UPopover ref="popover" mode="hover" @update:open="handleHover">
+        <slot/>
 
         <template #content>
             <Placeholder class="size-48 m-4 inline-flex" />

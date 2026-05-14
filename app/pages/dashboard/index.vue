@@ -47,7 +47,7 @@ const rankMetallicClass = computed(() => {
 })
 
 function confettiPride(confetti: any, color: Array<string>) {
-var end = Date.now() + (1 * 1000);
+const end = Date.now() + (1 * 1000);
 (function frame() {
   confetti({
     particleCount: 3,
@@ -71,22 +71,22 @@ var end = Date.now() + (1 * 1000);
 }
 
 function confettiFireworks(confetti: any, color: Array<string>) {
-  var duration = 3 * 1000;
-var animationEnd = Date.now() + duration;
-var defaults = { startVelocity: 20, spread: 360, ticks: 60, zIndex: 0, colors: color };
+  const duration = 3 * 1000;
+const animationEnd = Date.now() + duration;
+const defaults = { startVelocity: 20, spread: 360, ticks: 60, zIndex: 0, colors: color };
 
 function randomInRange(min: number, max: number) {
   return Math.random() * (max - min) + min;
 }
 
 var interval = setInterval(function() {
-  var timeLeft = animationEnd - Date.now();
+  const timeLeft = animationEnd - Date.now();
 
   if (timeLeft <= 0) {
     return clearInterval(interval);
   }
 
-  var particleCount = 100;
+  const particleCount = 100;
   // since particles fall down, start a bit higher than random
   confetti({ ...defaults, particleCount, origin: { x: randomInRange(0.1, 0.9), y: randomInRange(0.2, 0.9)} });
   //confetti({ ...defaults, particleCount, origin: { x: randomInRange(0.7, 0.9), y: Math.random() - 0.2 } });
@@ -248,7 +248,7 @@ onUnmounted(() => {
             </div>
 
             <!-- Divider -->
-            <div class="w-0.5 h-24 bg-gray-300 dark:bg-gray-600"></div>
+            <div class="w-0.5 h-24 bg-gray-300 dark:bg-gray-600"/>
 
             <!-- Rank Section -->
             <div class="flex-1">

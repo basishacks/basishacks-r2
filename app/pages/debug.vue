@@ -2,20 +2,20 @@
   <div class="p-4">
     <div class="flex gap-4 mb-6">
       <button
-        @click="activeTab = 'upload'"
         :class="[
           'px-4 py-2 rounded font-medium',
           activeTab === 'upload' ? 'bg-primary text-white' : 'bg-gray-200 text-gray-800'
         ]"
+        @click="activeTab = 'upload'"
       >
         File Upload
       </button>
       <button
-        @click="activeTab = 'deepseek'"
         :class="[
           'px-4 py-2 rounded font-medium',
           activeTab === 'deepseek' ? 'bg-primary text-white' : 'bg-gray-200 text-gray-800'
         ]"
+        @click="activeTab = 'deepseek'"
       >
         DeepSeek Chat
       </button>
@@ -24,25 +24,25 @@
     <!-- File Upload Tab -->
     <div v-if="activeTab === 'upload'">
       <h1 class="text-2xl font-bold mb-4">Debug File Upload</h1>
-    <form @submit.prevent="uploadFile" class="space-y-4">
+    <form class="space-y-4" @submit.prevent="uploadFile">
       <div>
         <label for="file" class="block text-sm font-medium">Select File</label>
         <input
           id="file"
           type="file"
-          @change="handleFileChange"
           class="mt-1 block w-full"
           required
-        />
+          @change="handleFileChange"
+        >
       </div>
        <USelectMenu v-model="value" :items="items" />
       <div class="flex items-center">
         <input
           id="keepName"
-          type="checkbox"
           v-model="keepOriginalName"
+          type="checkbox"
           class="w-4 h-4"
-        />
+        >
         <label for="keepName" class="ml-2 text-sm font-medium">Keep original file name</label>
       </div>
       <button
@@ -64,9 +64,9 @@
       <div class="flex items-center justify-between mb-4">
         <h2 class="text-2xl font-bold">Uploaded Asset Files</h2>
         <button
-          @click="loadFiles"
           type="button"
           class="bg-secondary text-white px-3 py-2 rounded"
+          @click="loadFiles"
         >
           Refresh
         </button>
@@ -111,11 +111,11 @@
             type="text"
             placeholder="Enter session name"
             class="flex-1 px-3 py-2 border border-gray-300 rounded"
-          />
+          >
           <button
-            @click="createSession"
             :disabled="!newSessionName || creatingSession"
             class="bg-primary text-white px-4 py-2 rounded disabled:opacity-50"
+            @click="createSession"
           >
             {{ creatingSession ? 'Creating...' : 'Create Session' }}
           </button>
@@ -133,9 +133,9 @@
               <p class="text-sm text-gray-500">ID: {{ session.id }} | Messages: {{ session.messages.length }}</p>
             </div>
             <button
-              @click="deleteSession(session.id)"
               :disabled="deletingSessionId === session.id"
               class="bg-red-500 text-white px-3 py-1 rounded text-sm disabled:opacity-50"
+              @click="deleteSession(session.id)"
             >
               {{ deletingSessionId === session.id ? 'Deleting...' : 'Delete' }}
             </button>
@@ -160,14 +160,12 @@
               placeholder="Type a message... (yes i can read webpages and stuff, or ask me the time...)"
               class="flex-1 px-3 py-2 border border-gray-300 rounded"
               @keyup.enter="sendMessage(session.id)"
-            />
-            <USelectMenu v-model="roleValue" :items="roleValues">
-
-            </USelectMenu>
+            >
+            <USelectMenu v-model="roleValue" :items="roleValues"/>
             <button
-              @click="sendMessage(session.id)"
               :disabled="!sessionMessages[session.id] || sendingSessionId === session.id"
               class="bg-blue-500 text-white px-4 py-2 rounded disabled:opacity-50"
+              @click="sendMessage(session.id)"
             >
               {{ sendingSessionId === session.id ? 'Sending...' : 'Send' }}
             </button>

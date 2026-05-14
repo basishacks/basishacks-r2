@@ -2,6 +2,8 @@ import { getDeepSeekSession, addMessage, getMessages } from '~~/server/utils/dee
 import { requireAdmin } from '~~/server/utils/auth'
 import OpenAI from 'openai'
 
+import { NodeHtmlMarkdown } from "node-html-markdown"
+
 const openai = new OpenAI({
   baseURL: 'https://api.deepseek.com',
   apiKey: process.env.DEEPSEEK_API_KEY,
@@ -192,8 +194,6 @@ async function fetchUrlHtml(url: string) {
     return `Error: ${error.message}`;
   }
 }
-
-import { NodeHtmlMarkdown } from "node-html-markdown"
 
 // Tool execution functions
 async function executeTool(toolName: string, toolArgs: Record<string, any>): Promise<string> {

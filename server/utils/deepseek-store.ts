@@ -3,7 +3,7 @@
  * Supports full tool calling loops with proper message management
  */
 
-import { ChatCompletionMessage } from 'openai/resources/index.mjs'
+import type { ChatCompletionMessage } from 'openai/resources/index.mjs'
 
 interface ChatSession {
   id: number

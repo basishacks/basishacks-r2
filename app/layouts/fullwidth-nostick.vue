@@ -2,12 +2,12 @@
 
 <template>
   <div>
-    <RoleHeader class="relative"></RoleHeader>
+    <RoleHeader class="relative"/>
 
     <UMain>
       <slot />
     </UMain>
 
-    <Footer></Footer>
+    <Footer/>
   </div>
 </template>

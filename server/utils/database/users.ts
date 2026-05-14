@@ -4,7 +4,7 @@ export async function getUser(
   event: H3Event,
   userID: number
 ): Promise<User | null> {
-  let select = event.context.db.prepare(
+  const select = event.context.db.prepare(
     'SELECT * FROM users WHERE id = ?'
   )
     .bind(userID)
