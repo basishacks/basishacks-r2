@@ -157,8 +157,18 @@ const usedScopes: Ref<string[]> = ref([])
 const route = useRoute()
 const app: Ref<OAuth2Application | null> = ref(null)
 
-const dummyFunction = () => {
-  // TODO: implement
+const dummyFunction = async () => {
+
+  isLoading.value = true
+
+  const res = await $fetch("/api/oauth2/session", {
+    method: "DELETE"
+  })
+
+  if (res.redirect_to) {
+    window.location.href = res.redirect_to
+  }
+
 }
 
 const returnToApp = (options: any) => {
@@ -389,6 +399,7 @@ async function loginFlowCheck(reattempt: boolean = false) {
 
   const err = useCookie("bridge_error")
   if (err.value) {
+    // Dont proceed to normal login if detected error
     const json: any = JSON.parse(atob(err.value as string))
     await fade()
     status.value = 'error'
