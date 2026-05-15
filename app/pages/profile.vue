@@ -117,7 +117,7 @@ onMounted(() => {
       <UForm
         :state="state"
         :schema="UpdateUserRequest"
-        class="max-w-[600px] space-y-4 my-8 mx-auto"
+        class="max-w-[600px] space-y-4 my-8"
         @submit="onSubmitName"
       >
         <UFormField name="name" label="Edit your name">
