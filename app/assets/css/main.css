@@ -7,7 +7,7 @@
   /* disable the dot inside the "0" glyph */
   --font-mono--font-feature-settings: "cv01" 1;
 
-  --font-sans: var(--font-mono);
+  --font-sans: Noto Sans;
   --font-sans--font-variation-settings: "wdth" 100;
   --font-sans--font-feature-settings: "cv01" 1;
 }
