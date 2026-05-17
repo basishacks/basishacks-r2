@@ -6,14 +6,25 @@ const items: NavigationMenuItem[][] = [[{
   icon: 'i-lucide-house',
   to: "/developers",
 }, {
+  label: 'Users',
+  icon: 'i-lucide-user',
+  to: "/developers/users"
+}, {
+  label: 'Teams',
+  icon: 'i-lucide-users',
+  to: "/developers/teams"
+}, {
   label: 'Applications',
   icon: 'i-lucide-app-window',
-  //badge: '4'
   to: "/developers/applications"
-},
-{
-    label: "Testing",
-    icon: "i-lucide-bug"
+}, {
+  label: 'DeepSeek',
+  icon: 'i-lucide-message-square',
+  to: "/developers/deepseek"
+}, {
+  label: 'Debug',
+  icon: 'i-lucide-bug',
+  to: "/developers/debug"
 }
 ], [{
   label: 'Feedback',
@@ -33,7 +44,8 @@ const items: NavigationMenuItem[][] = [[{
   <UDashboardGroup>
     <UDashboardSidebar collapsible resizable :ui="{ footer: 'border-t border-default' }">
     <template #header="{ collapsed }">
-      <h3 class="bold glow text-primary mx-auto">{{ WEBSITE_NAME }}<span class="text-secondary"> devs</span></h3>
+      <h3 v-if="!collapsed" class="bold glow text-primary mx-auto">{{ WEBSITE_NAME }}<span class="text-secondary"> devs</span></h3>
+      <h3 v-else-if="collapsed" class="bold glow text-primary mx-auto">b</h3>
     </template>
 
     <template #default="{ collapsed }">
@@ -83,7 +95,7 @@ const items: NavigationMenuItem[][] = [[{
     </template>
   </UDashboardSidebar>
 
-  <slot/>
+  <slot></slot>
 
   </UDashboardGroup>
 </template>

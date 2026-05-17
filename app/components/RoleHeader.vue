@@ -36,6 +36,7 @@
 
 <script setup lang="ts">
 import type { NavigationMenuItem } from '@nuxt/ui'
+import { hasPermission } from '~~/shared/permissions'
 
 const emit = defineEmits<{
   toggleDrawer: []
@@ -106,7 +107,7 @@ const navItems = computed<NavigationMenuItem[]>(() => {
     },
   ]
   if (
-    (user.value?.role === 'judge' || user.value?.role === 'admin') &&
+    (hasPermission(user.value?.role, 'judge') || hasPermission(user.value?.role, 'admin')) &&
     hackathon.value?.status === 'voting'
   ) {
     links.push({
@@ -116,8 +117,8 @@ const navItems = computed<NavigationMenuItem[]>(() => {
     })
   }
   if (
-    user.value?.role === 'participant' &&
-    user.value.team_id &&
+    hasPermission(user.value?.role, 'participant') &&
+    user.value?.team_id &&
     hackathon.value?.status === 'voting'
   ) {
     links.push({

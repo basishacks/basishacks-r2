@@ -1,4 +1,6 @@
 <script setup lang="ts">
+import { hasPermission } from '~~/shared/permissions'
+
 definePageMeta({
   middleware: ['auth'],
 })
@@ -17,7 +19,7 @@ const { data: userData, error: userError } = await useFetch<GetUserResponse>(
 if (userError.value) {
   throw userError.value
 }
-if (userData.value?.role !== 'admin' && userData.value?.role !== 'judge') {
+if (!hasPermission(userData.value?.role, 'admin') && !hasPermission(userData.value?.role, 'judge')) {
   throw await navigateTo('/')
 }
 

@@ -1,37 +1,17 @@
-
-
-/**
- * OAuth2 getApp Endpoint (GET)
- * deprecated
- */
-import { validateOAuth2AuthorizationRequest } from '~/../server/utils/oauth2-validate'
+import { DevPermissions } from '~~/shared/permissions'
 
 export default defineEventHandler(async (event) => {
-  const query = getQuery(event)
+  await requirePermission(event, DevPermissions.APPLICATIONS)
 
-  const client_id = getRouterParam(event, 'id') as string // id is client_id
+  const clientID = getRouterParam(event, 'id')!
+  const app = await getOAuth2Application(event, clientID)
 
-  try {
-    const req: any = await validateOAuth2AuthorizationRequest(
-        event,
-        client_id,
-        query.scope as string || '',
-        query.redirect_uri as string || '',
-        query.state as string || ''
-    );
-
-    return {
-        client_id: client_id,
-        name: req.app.name,
-        description: req.app.description,
-        type: req.app.type
-    };
-  } catch (err: any) {
+  if (!app) {
     throw createError({
-      statusCode: err.statusCode || 500,
-      message: err.message || 'An error occurred while validating the application'
+      status: 404,
+      message: 'Application not found'
     })
   }
 
-  
+  return app
 })

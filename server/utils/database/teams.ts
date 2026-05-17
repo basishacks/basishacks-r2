@@ -70,3 +70,23 @@ export async function updateTeam(event: H3Event, team: Team) {
     })
   }
 }
+
+export async function deleteTeams(event: H3Event, teamIDs: number[]) {
+  for (const id of teamIDs) {
+    event.context.db.prepare(
+      'DELETE FROM ballot_scores WHERE project_id = ?'
+    ).bind(id).run()
+
+    event.context.db.prepare(
+      'DELETE FROM team_scores WHERE team_id = ?'
+    ).bind(id).run()
+
+    event.context.db.prepare(
+      'UPDATE users SET team_id = NULL WHERE team_id = ?'
+    ).bind(id).run()
+
+    event.context.db.prepare(
+      'DELETE FROM teams WHERE id = ?'
+    ).bind(id).run()
+  }
+}

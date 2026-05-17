@@ -49,7 +49,7 @@ CREATE TABLE IF NOT EXISTS team_scores (
 CREATE TABLE IF NOT EXISTS users (
     id INTEGER PRIMARY KEY AUTOINCREMENT,
     email TEXT NOT NULL UNIQUE,
-    role TEXT NOT NULL CHECK (role IN ('participant', 'judge', 'admin')) DEFAULT 'participant',
+    role TEXT NOT NULL DEFAULT 'participant',
     name TEXT,
     team_id INTEGER,
     login_code TEXT,

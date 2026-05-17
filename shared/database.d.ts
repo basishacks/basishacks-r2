@@ -7,8 +7,6 @@ type HackathonStatus =
   | 'finished' // event completed
   | 'paused' // event paused for maintenance, etc.
 
-type UserRole = 'participant' | 'judge' | 'admin'
-
 type TeamPathway = 'junior' | 'senior'
 
 interface Hackathon {
@@ -54,7 +52,7 @@ interface TeamScores {
 interface User {
   id: number
   email: string
-  role: UserRole
+  role: string
   name: string | null
   team_id: number | null
   login_code: string | null

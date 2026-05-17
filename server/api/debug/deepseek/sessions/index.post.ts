@@ -1,8 +1,9 @@
 import { createSession } from '~~/server/utils/deepseek-store'
-import { requireAdmin } from '~~/server/utils/auth'
+import { requirePermission } from '~~/server/utils/auth'
+import { DevPermissions } from '~~/shared/permissions'
 
 export default defineEventHandler(async (event) => {
-//   await requireAdmin(event)
+  await requirePermission(event, DevPermissions.DEEPSEEK)
 
   const body = await readBody(event)
   const { sessionName } = body

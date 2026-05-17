@@ -1,6 +1,7 @@
 import { join } from 'node:path'
 import { readdir } from 'node:fs/promises'
-import { requireAdmin } from '~~/server/utils/auth'
+import { requirePermission } from '~~/server/utils/auth'
+import { DevPermissions } from '~~/shared/permissions'
 
 const readDirectoryFiles = async (dir: string) => {
   try {
@@ -12,7 +13,7 @@ const readDirectoryFiles = async (dir: string) => {
 }
 
 export default defineEventHandler(async (event) => {
-  await requireAdmin(event)
+  await requirePermission(event, DevPermissions.DEBUG)
 
   const assetsDir = join(process.cwd(), 'public', 'assets')
   const userAstDir = join(process.cwd(), 'public', 'userast')
