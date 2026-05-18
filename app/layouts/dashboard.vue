@@ -112,7 +112,7 @@ const items = ref<NavigationMenuItem[][]>([
           <ULink class="text-xs" href="/theme/june-2026">See event details <UIcon name="i-lucide-arrow-right"/></ULink>
         </template>
       </UCard>
-      <UNavigationMenu orientation="vertical" :items="items" class="data-[orientation=vertical]:w-48 mt-12" trailing-icon="none"/>
+      <UNavigationMenu orientation="vertical" :items="items" class="data-[orientation=vertical]:w-48 mt-12"/>
     </div>
 
     <UBanner
