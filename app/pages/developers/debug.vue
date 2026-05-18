@@ -78,7 +78,7 @@ onMounted(loadFiles)
 <template>
   <UDashboardPanel id="debug">
     <template #header>
-      <UDashboardNavbar title="Debug">
+      <UDashboardNavbar title="Files">
         <template #leading>
           <UDashboardSidebarCollapse />
         </template>

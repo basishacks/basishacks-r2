@@ -29,8 +29,8 @@ const items: NavigationMenuItem[][] = [[{
   icon: 'i-lucide-message-square',
   to: "/developers/deepseek"
 }, {
-  label: 'Debug',
-  icon: 'i-lucide-bug',
+  label: 'Files',
+  icon: 'i-lucide-files',
   to: "/developers/debug"
 }
 ], [{
@@ -97,13 +97,14 @@ const profile = ref('')
 
         <UButton
         :avatar="{
-          src: 'https://github.com/benjamincanac.png',
+          alt: name,
           loading: 'lazy' as const
         }"
         :label="collapsed ? undefined : name"
         color="neutral"
         variant="ghost"
         class="w-full"
+        @click="navigateTo('/profile')"
         :block="collapsed"
       />
       <UColorModeButton :class="collapsed ? 'hidden' : 'block'" />
