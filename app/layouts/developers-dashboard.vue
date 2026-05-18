@@ -16,7 +16,14 @@ const items: NavigationMenuItem[][] = [[{
 }, {
   label: 'Applications',
   icon: 'i-lucide-app-window',
-  to: "/developers/applications"
+  to: "/developers/applications/",
+  children: [
+    {
+      label: "Create New",
+      icon: "i-lucide-plus",
+      to: "/developers/applications/create"
+    }
+  ]
 }, {
   label: 'DeepSeek',
   icon: 'i-lucide-message-square',
@@ -38,14 +45,20 @@ const items: NavigationMenuItem[][] = [[{
   target: '_blank'
 }]]
 
+const { loggedIn, session, user, clear, fetch } = useUserSession(); 
+
+console.log(loggedIn, session, user, clear, fetch)
+
+const res = $fetch("/api/users/:id")
+
 </script>
 
 <template>
   <UDashboardGroup>
     <UDashboardSidebar collapsible resizable :ui="{ footer: 'border-t border-default' }">
     <template #header="{ collapsed }">
-      <h3 v-if="!collapsed" class="bold glow text-primary mx-auto">{{ WEBSITE_NAME }}<span class="text-secondary"> devs</span></h3>
-      <h3 v-else-if="collapsed" class="bold glow text-primary mx-auto">b</h3>
+      <ULink v-if="!collapsed" class="bold glow text-primary mx-auto" to="/">{{ WEBSITE_NAME }}<span class="text-secondary bold"> devs</span></ULink>
+      <UButton variant="ghost" v-else-if="collapsed" class="bold glow text-primary mx-auto" @click="navigateTo('/')">b</UButton>
     </template>
 
     <template #default="{ collapsed }">
@@ -79,8 +92,9 @@ const items: NavigationMenuItem[][] = [[{
       />
     </template>
 
-    <template #footer="{ collapsed }">
-      <UButton
+    <template #footer="{ collapsed }" class="flex flex-row justify-end">
+
+        <UButton
         :avatar="{
           src: 'https://github.com/benjamincanac.png',
           loading: 'lazy' as const
@@ -91,7 +105,8 @@ const items: NavigationMenuItem[][] = [[{
         class="w-full"
         :block="collapsed"
       />
-      <UColorModeButton />
+      <UColorModeButton :class="collapsed ? 'hidden' : 'block'" />
+
     </template>
   </UDashboardSidebar>
 

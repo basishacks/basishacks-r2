@@ -26,6 +26,7 @@ export default defineEventHandler(async (event) => {
     await setUserSession(event, {
         user: {
             id: userId,
+            token: payload
         },
     })
 

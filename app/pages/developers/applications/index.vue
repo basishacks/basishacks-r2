@@ -194,6 +194,15 @@ const pagination = ref({
     </template>
 
     <template #body>
+
+      <!--Actions-->
+      <div class="flex flex-wrap items-center justify-start gap-1.5">
+        <UButton @click="navigateTo('/developers/applications/create')">
+          <UIcon name="i-lucide-plus"></UIcon>
+          
+          Create Application</UButton>
+      </div>
+
       <div class="flex flex-wrap items-center justify-between gap-1.5">
         <UInput
           v-model="nameFilter"
