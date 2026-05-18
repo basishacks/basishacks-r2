@@ -120,7 +120,9 @@ id="hoverdashnotif" color="neutral" class="z-0 mt-4 nopanel text-xs text-muted r
     title="You can also expand the dashboard tab to see more options"
     close/>
     
-    <slot />
+    <div class="mt-12">
+      <slot />
+    </div>
   </UContainer>
 
   

@@ -67,7 +67,7 @@ async function onSubmit(event: FormSubmitEvent<CreateTeamRequest>) {
 </script>
 
 <template>
-  <div v-if="data?.team == null" class="mt-12">
+  <div v-if="data?.team == null">
     <h1 class="text-4xl bold glow mb-4">Create a team</h1>
 
     <p class="mb-4">Please fill out this super long form to create a team!</p>
@@ -88,7 +88,7 @@ async function onSubmit(event: FormSubmitEvent<CreateTeamRequest>) {
     </UForm>
   </div>
 
-  <div v-else class="mt-12">
+  <div v-else>
     <div>
         <TeamForm
           :team="data.team"
