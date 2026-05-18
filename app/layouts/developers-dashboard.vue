@@ -46,10 +46,11 @@ const items: NavigationMenuItem[][] = [[{
 }]]
 
 const { loggedIn, session, user, clear, fetch } = useUserSession(); 
+const res: any = await $fetch("/api/users/" + user.value?.id)
 
-console.log(loggedIn, session, user, clear, fetch)
+const name = ref(res.name ? res.name : "Log In")
+const profile = ref('')
 
-const res = $fetch("/api/users/:id")
 
 </script>
 
@@ -99,7 +100,7 @@ const res = $fetch("/api/users/:id")
           src: 'https://github.com/benjamincanac.png',
           loading: 'lazy' as const
         }"
-        :label="collapsed ? undefined : 'Benjamin'"
+        :label="collapsed ? undefined : name"
         color="neutral"
         variant="ghost"
         class="w-full"

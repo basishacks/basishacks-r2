@@ -2,7 +2,7 @@ import { jwtVerify } from 'jose'
 import { exchangeAuthorizationCode } from './session.post'
 
 export default defineEventHandler(async (event) => {
-    console.log('[Authorize -> OAuth2] Dummy code: ' + getQuery(event).code)
+    console.log('[Authorize -> OAuth2] Recieved code: ' + getQuery(event).code)
 
     let result: string
     try {
