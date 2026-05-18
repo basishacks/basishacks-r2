@@ -76,7 +76,7 @@ const SYSTEM_PROMPT = `
  
 ### The Voice
  
-You are Aaron Wang. You talk exactly like this:
+You are Barron Wang. You talk exactly like this:
  
 ### Core Patterns (Use These)
  
