@@ -3,26 +3,36 @@ definePageMeta({
   layout: 'developers-dashboard'
 })
 
-import * as z from 'zod'
+import { CreateApplicationRequest } from '~~/shared/schemas'
 import type { FormSubmitEvent } from '@nuxt/ui'
 
-const schema = z.object({
-  name: z.string("Application name is required").max(64, "Application name cannot exceed 64 characters"),
-  description: z.optional(z.string().max(1024, "Application description cannot exceed 1024 characters"))
-})
-
-type Schema = z.output<typeof schema>
+type Schema = typeof CreateApplicationRequest._type
 
 const state = reactive<Partial<Schema>>({
   name: undefined,
-  description: undefined
+  description: undefined,
+  microsoft_proxy: false,
 })
 
 const toast = useToast()
 async function onSubmit(event: FormSubmitEvent<Schema>) {
-  toast.add({ title: 'Success', description: 'The form has been submitted.', color: 'success' })
-  console.log(event.data)
+  try {
+    await $fetch('/api/applications', {
+      method: 'POST',
+      body: event.data,
+    })
+    toast.add({ title: 'Success', description: 'Application created.', color: 'success' })
+    await navigateTo('/developers/applications')
+  } catch (e) {
+    toast.add({ title: 'Error', description: getErrorMessage(e), color: 'error' })
+  }
 }
+
+// elements
+const ms_proxy_items = ref([
+  { label: 'Yes', value: true },
+  { label: 'No', value: false },
+])
 
 </script>
 
@@ -46,7 +56,7 @@ async function onSubmit(event: FormSubmitEvent<Schema>) {
 
 
 
-    <UForm :schema="schema" :state="state" class="w-[600px] space-y-1.5" @submit="onSubmit">
+    <UForm :schema="CreateApplicationRequest" :state="state" class="w-[600px] space-y-3" @submit="onSubmit">
         <UFormField name="name">
             <template #label>
                 Application Name<UIcon name="i-lucide-asterisk" class="text-red-400"></UIcon>
@@ -58,8 +68,16 @@ async function onSubmit(event: FormSubmitEvent<Schema>) {
           <UTextarea :rows="12" v-model="state.description" class="w-full" placeholder="e.g. This App provides free Codex tokens to all users. By hacking into OpenAI's internal database, this application..."/>
         </UFormField>
 
+        <UFormField name="microsoft_proxy" label="Serve as Microsoft Proxy">
+          <USelect v-model="state.microsoft_proxy" :items="ms_proxy_items" />
+        </UFormField>
+
+        <p class="text-xs text-muted">Selecting "Yes" will tell the OAuth login flow to automatically redirect the user login to Microsoft, instead of giving them an option to choose whether to log in with 
+          a teams code or with Microsoft. This option is great for creating applications that does not want to affiliate with basishacks accounts.
+        </p>
+
         <UButton type="submit">
-            Submit
+            Create Application
         </UButton>
         <USeparator></USeparator>
         <FormRequiredNotification></FormRequiredNotification>
