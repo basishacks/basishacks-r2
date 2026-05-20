@@ -8,7 +8,7 @@ definePageMeta({
 
 // Client-side permission guard
 const { data: me } = await useFetch<GetUserResponse>(() => '/api/users/' + useUserSession().user.value?.id)
-if (!hasPermission(me.value?.role, DevPermissions.DEBUG) && !hasPermission(me.value?.role, 'admin')) {
+if (!hasPermission(me.value?.role, DevPermissions.PORTAL_DEBUG_VIEW) && !hasPermission(me.value?.role, 'admin')) {
   await navigateTo('/developers')
   useToast().add({ title: 'Access denied', description: 'You do not have permission to view debug tools.', color: 'error' })
 }

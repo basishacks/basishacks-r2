@@ -29,7 +29,7 @@ const { data, status, refresh } = await useFetch<Team[]>('/api/admin/teams', {
 
 // Client-side permission guard
 const { data: me } = await useFetch<GetUserResponse>(() => '/api/users/' + useUserSession().user.value?.id)
-if (!hasPermission(me.value?.role, DevPermissions.TEAMS) && !hasPermission(me.value?.role, 'admin')) {
+if (!hasPermission(me.value?.role, DevPermissions.PORTAL_TEAMS_VIEW) && !hasPermission(me.value?.role, 'admin')) {
   await navigateTo('/developers')
   useToast().add({ title: 'Access denied', description: 'You do not have permission to view teams.', color: 'error' })
 }

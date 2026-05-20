@@ -146,7 +146,7 @@ export const SubmitVoteRequest = z
 export type SubmitVoteRequest = z.infer<typeof SubmitVoteRequest>
 
 export const CreateApplicationRequest = z.object({
-  name: z.string().min(1, 'Application name is required').max(64, 'Application name cannot exceed 64 characters'),
+  name: z.string("Application name is required").min(1, 'Application name is required').max(64, 'Application name cannot exceed 64 characters'),
   description: z.string().max(1024, 'Application description cannot exceed 1024 characters').optional(),
   proxy_microsoft: z.boolean(),
 })

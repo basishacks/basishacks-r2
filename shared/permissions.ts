@@ -4,6 +4,13 @@ export const DevPermissions = {
   APPLICATIONS: 'dev_applications',
   DEBUG: 'dev_debug',
   DEEPSEEK: 'dev_deepseek',
+  PORTAL_USERS_VIEW: "portal.users.view",
+  PORTAL_DEBUG_VIEW: "portal.debug.view",
+  PORTAL_TEAMS_VIEW: "portal.teams.view", // used for all access for teams
+  PORTAL_DEEPSEEK_VIEW: "portal.deepseek.view",
+  PORTAL_APPLICATIONS_VIEW: "portal.applications.view",
+  PORTAL_APPLICATIONS_CREATE: "portal.applications.create",
+  PORTAL_APPLICATIONS_DELETE: "portal.applications.delete",
 } as const
 
 export function parsePermissions(role: string | null | undefined): string[] {

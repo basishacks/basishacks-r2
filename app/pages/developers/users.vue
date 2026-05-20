@@ -30,7 +30,7 @@ const { data, status, refresh } = await useFetch<User[]>('/api/users', {
 
 // Client-side permission guard
 const { data: me } = await useFetch<GetUserResponse>(() => '/api/users/' + useUserSession().user.value?.id)
-if (!hasPermission(me.value?.role, DevPermissions.USERS) && !hasPermission(me.value?.role, 'admin')) {
+if (!hasPermission(me.value?.role, DevPermissions.PORTAL_USERS_VIEW) && !hasPermission(me.value?.role, 'admin')) {
   await navigateTo('/developers')
   useToast().add({ title: 'Access denied', description: 'You do not have permission to view users.', color: 'error' })
 }

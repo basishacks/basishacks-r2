@@ -30,7 +30,7 @@ const { data, status, refresh } = await useFetch<OAuth2Application[]>('/api/appl
 
 // Client-side permission guard
 const { data: me } = await useFetch<GetUserResponse>(() => '/api/users/' + useUserSession().user.value?.id)
-if (!hasPermission(me.value?.role, DevPermissions.APPLICATIONS) && !hasPermission(me.value?.role, 'admin')) {
+if (!hasPermission(me.value?.role, DevPermissions.PORTAL_APPLICATIONS_VIEW) && !hasPermission(me.value?.role, 'admin')) {
   await navigateTo('/developers')
   useToast().add({ title: 'Access denied', description: 'You do not have permission to view applications.', color: 'error' })
 }
@@ -181,6 +181,14 @@ const pagination = ref({
   pageIndex: 0,
   pageSize: 10
 })
+
+
+const apiContent = await useApiUser()
+const user = apiContent.user
+
+const create_authorized = computed(() => {
+  return hasPermission(user.value?.role, DevPermissions.PORTAL_APPLICATIONS_CREATE) || hasPermission(user.value?.role, 'admin')
+})
 </script>
 
 <template>
@@ -197,10 +205,7 @@ const pagination = ref({
 
       <!--Actions-->
       <div class="flex flex-wrap items-center justify-start gap-1.5">
-        <UButton @click="navigateTo('/developers/applications/create')">
-          <UIcon name="i-lucide-plus"></UIcon>
-          
-          Create Application</UButton>
+        <UButton @click="navigateTo('/developers/applications/create')" icon="i-lucide-plus" label="Create Application" :disabled="!create_authorized" />
       </div>
 
       <div class="flex flex-wrap items-center justify-between gap-1.5">

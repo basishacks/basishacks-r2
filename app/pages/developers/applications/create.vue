@@ -5,17 +5,18 @@ definePageMeta({
 
 import { CreateApplicationRequest } from '~~/shared/schemas'
 import type { FormSubmitEvent } from '@nuxt/ui'
+import { DevPermissions, hasPermission } from '~~/shared/permissions'
 
-type Schema = typeof CreateApplicationRequest._type
 
-const state = reactive<Partial<Schema>>({
+
+const state = reactive<Partial<CreateApplicationRequest>>({
   name: undefined,
   description: undefined,
-  microsoft_proxy: false,
+  proxy_microsoft: false,
 })
 
 const toast = useToast()
-async function onSubmit(event: FormSubmitEvent<Schema>) {
+async function onSubmit(event: FormSubmitEvent<CreateApplicationRequest>) {
   try {
     await $fetch('/api/applications', {
       method: 'POST',
@@ -33,6 +34,12 @@ const ms_proxy_items = ref([
   { label: 'Yes', value: true },
   { label: 'No', value: false },
 ])
+
+const { user, refresh, clear } = await useApiUser()
+
+const authorized = computed(() => {
+  return hasPermission(user.value?.role, DevPermissions.PORTAL_APPLICATIONS_CREATE) || hasPermission(user.value?.role, 'admin')
+})
 
 </script>
 
@@ -90,15 +97,15 @@ const ms_proxy_items = ref([
           </UTextarea>
         </UFormField>
 
-        <UFormField name="microsoft_proxy" label="Serve as Microsoft Proxy">
-          <USelect v-model="state.microsoft_proxy" :items="ms_proxy_items" />
+        <UFormField name="proxy_microsoft" label="Serve as Microsoft Proxy">
+          <USelect v-model="state.proxy_microsoft" :items="ms_proxy_items" />
         </UFormField>
 
         <p class="text-xs text-muted">Selecting "Yes" will tell the OAuth login flow to automatically redirect the user login to Microsoft, instead of giving them an option to choose whether to log in with 
           a teams code or with Microsoft. This option is great for creating applications that does not want to affiliate with basishacks accounts.
         </p>
 
-        <UButton type="submit">
+        <UButton type="submit" :disabled="!authorized">
             Create Application
         </UButton>
         <USeparator></USeparator>

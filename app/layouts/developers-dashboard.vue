@@ -1,5 +1,18 @@
 <script setup lang="ts">
 import type { NavigationMenuItem } from '@nuxt/ui';
+import { DevPermissions, hasPermission } from '~~/shared/permissions';
+
+const { user: userRef, clear } = useUserSession()
+const userID = computed(() => userRef.value?.id ?? 0)
+
+const { data, error, refresh } = await useFetch(
+  () => `/api/users/${userID.value}`
+)
+if (error.value) {
+  throw error.value
+}
+
+const user = computed(() => data.value)
 
 const items: NavigationMenuItem[][] = [[{
   label: 'Home',
@@ -8,30 +21,36 @@ const items: NavigationMenuItem[][] = [[{
 }, {
   label: 'Users',
   icon: 'i-lucide-user',
-  to: "/developers/users"
+  to: "/developers/users",
+  disabled: !hasPermission(user.value?.role, DevPermissions.PORTAL_USERS_VIEW) && !hasPermission(user.value?.role, 'admin')
 }, {
   label: 'Teams',
   icon: 'i-lucide-users',
-  to: "/developers/teams"
+  to: "/developers/teams",
+  disabled: !hasPermission(user.value?.role, DevPermissions.PORTAL_TEAMS_VIEW) && !hasPermission(user.value?.role, 'admin')
 }, {
   label: 'Applications',
   icon: 'i-lucide-app-window',
   to: "/developers/applications/",
+  disabled: !hasPermission(user.value?.role, DevPermissions.PORTAL_APPLICATIONS_VIEW) && !hasPermission(user.value?.role, 'admin'),
   children: [
     {
       label: "Create New",
       icon: "i-lucide-plus",
-      to: "/developers/applications/create"
+      to: "/developers/applications/create",
+      disabled: !hasPermission(user.value?.role, DevPermissions.PORTAL_APPLICATIONS_CREATE) && !hasPermission(user.value?.role, 'admin')
     }
   ]
 }, {
   label: 'DeepSeek',
   icon: 'i-lucide-message-square',
-  to: "/developers/deepseek"
+  to: "/developers/deepseek",
+  disabled: !hasPermission(user.value?.role, DevPermissions.PORTAL_DEEPSEEK_VIEW) && !hasPermission(user.value?.role, 'admin')
 }, {
   label: 'Files',
   icon: 'i-lucide-files',
-  to: "/developers/debug"
+  to: "/developers/debug",
+  disabled: !hasPermission(user.value?.role, DevPermissions.PORTAL_DEBUG_VIEW) && !hasPermission(user.value?.role, 'admin')
 }
 ], [{
   label: 'Feedback',
@@ -45,10 +64,10 @@ const items: NavigationMenuItem[][] = [[{
   target: '_blank'
 }]]
 
-const { loggedIn, session, user, clear, fetch } = useUserSession(); 
-const res: any = await $fetch("/api/users/" + user.value?.id)
 
-const name = ref(res.name ? res.name : "Log In")
+
+
+const name = ref(user.value?.name || "Log In")
 const profile = ref('')
 
 
@@ -63,6 +82,21 @@ const profile = ref('')
     </template>
 
     <template #default="{ collapsed }">
+      <UButton
+        :label="collapsed ? undefined : 'Search...'"
+        icon="i-lucide-search"
+        color="neutral"
+        variant="outline"
+        block
+        :square="collapsed"
+      >
+        <template v-if="!collapsed" #trailing>
+          <div class="flex items-center gap-0.5 ms-auto">
+            <UKbd value="meta" variant="subtle" />
+            <UKbd value="K" variant="subtle" />
+          </div>
+        </template>
+      </UButton>
 
       <UNavigationMenu
         :collapsed="collapsed"

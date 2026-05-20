@@ -13,7 +13,7 @@ const readDirectoryFiles = async (dir: string) => {
 }
 
 export default defineEventHandler(async (event) => {
-  await requirePermission(event, DevPermissions.DEBUG)
+  await requirePermission(event, DevPermissions.PORTAL_DEBUG_VIEW)
 
   const assetsDir = join(process.cwd(), 'public', 'assets')
   const userAstDir = join(process.cwd(), 'public', 'userast')

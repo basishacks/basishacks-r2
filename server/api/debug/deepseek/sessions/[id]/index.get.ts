@@ -3,7 +3,7 @@ import { requirePermission } from '~~/server/utils/auth'
 import { DevPermissions } from '~~/shared/permissions'
 
 export default defineEventHandler(async (event) => {
-  await requirePermission(event, DevPermissions.DEEPSEEK)
+  await requirePermission(event, DevPermissions.PORTAL_DEEPSEEK_VIEW)
 
   const sessionId = getRouterParam(event, 'id')
 
