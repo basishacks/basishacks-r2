@@ -51,11 +51,33 @@ async function onSubmit(event: FormSubmitEvent<Schema>) {
             <template #label>
                 Application Name<UIcon name="i-lucide-asterisk" class="text-red-400"></UIcon>
             </template>
-            <UInput v-model="state.name" class="w-full" placeholder='e.g. "FreeCodex, Aaron Assistant, ...'/>
+            <UInput :maxlength='64' v-model="state.name" class="w-full" placeholder='e.g. "FreeCodex, Aaron Assistant, ...'>
+              <template #trailing>
+                <div
+                  id="character-count"
+                  class="text-xs text-muted tabular-nums"
+                  aria-live="polite"
+                  role="status"
+                >
+                  {{ 64 - (state.name ? state.name.length : 0) }}
+                </div>
+              </template>
+            </UInput>
         </UFormField>
 
         <UFormField label="Application Description" name="description">
-          <UTextarea :rows="12" v-model="state.description" class="w-full" placeholder="e.g. This App provides free Codex tokens to all users. By hacking into OpenAI's internal database, this application..."/>
+          <UTextarea :maxlength="1024" :rows="12" v-model="state.description" class="w-full" placeholder="e.g. This App provides free Codex tokens to all users. By hacking into OpenAI's internal database, this application...">
+            <template #trailing>
+              <div
+                id="character-count"
+                class="text-xs text-muted tabular-nums"
+                aria-live="polite"
+                role="status"
+              >
+                {{ 1024 - (state.description ? state.description.length : 0) }}
+              </div>
+            </template>
+          </UTextarea>
         </UFormField>
 
         <UButton type="submit">
