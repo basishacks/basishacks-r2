@@ -29,7 +29,7 @@ const { data, status, refresh } = await useFetch<OAuth2Application[]>('/api/appl
 })
 
 // Client-side permission guard
-const { data: me } = await useFetch<GetUserResponse>(() => '/api/users/' + useUserSession().user.value?.id)
+const { user: me } = await useApiUser()
 if (!hasPermission(me.value?.role, DevPermissions.PORTAL_APPLICATIONS_VIEW) && !hasPermission(me.value?.role, 'admin')) {
   await navigateTo('/developers')
   useToast().add({ title: 'Access denied', description: 'You do not have permission to view applications.', color: 'error' })

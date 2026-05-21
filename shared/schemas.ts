@@ -149,5 +149,6 @@ export const CreateApplicationRequest = z.object({
   name: z.string("Application name is required").min(1, 'Application name is required').max(64, 'Application name cannot exceed 64 characters'),
   description: z.string().max(1024, 'Application description cannot exceed 1024 characters').optional(),
   proxy_microsoft: z.boolean(),
+  type: z.enum(['first', 'third']).optional(),
 })
 export type CreateApplicationRequest = z.infer<typeof CreateApplicationRequest>

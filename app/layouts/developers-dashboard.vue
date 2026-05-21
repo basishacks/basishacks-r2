@@ -2,17 +2,11 @@
 import type { NavigationMenuItem } from '@nuxt/ui';
 import { DevPermissions, hasPermission } from '~~/shared/permissions';
 
-const { user: userRef, clear } = useUserSession()
-const userID = computed(() => userRef.value?.id ?? 0)
+const { user: sessionUser, clear } = useUserSession()
 
-const { data, error, refresh } = await useFetch(
-  () => `/api/users/${userID.value}`
+const { data: user } = await useFetch<GetUserResponse>(
+  () => sessionUser.value?.id ? `/api/users/${sessionUser.value.id}` : ``
 )
-if (error.value) {
-  throw error.value
-}
-
-const user = computed(() => data.value)
 
 const items: NavigationMenuItem[][] = [[{
   label: 'Home',
@@ -64,10 +58,7 @@ const items: NavigationMenuItem[][] = [[{
   target: '_blank'
 }]]
 
-
-
-
-const name = ref(user.value?.name || "Log In")
+const name = computed(() => user.value?.name || 'Log In')
 const profile = ref('')
 
 
@@ -135,9 +126,3 @@ const profile = ref('')
 
   </UDashboardGroup>
 </template>
-
-<style>
-body {
-  font-family: var(--font-mono)
-}
-</style>

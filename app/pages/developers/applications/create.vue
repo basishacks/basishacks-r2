@@ -13,6 +13,7 @@ const state = reactive<Partial<CreateApplicationRequest>>({
   name: undefined,
   description: undefined,
   proxy_microsoft: false,
+  type: 'third',
 })
 
 const toast = useToast()
@@ -35,10 +36,19 @@ const ms_proxy_items = ref([
   { label: 'No', value: false },
 ])
 
-const { user, refresh, clear } = await useApiUser()
+const type_items = ref([
+  { label: 'First Party', value: 'first' },
+  { label: 'Third Party', value: 'third' },
+])
+
+const { user, refresh, clear }: any = await useApiUser()
 
 const authorized = computed(() => {
   return hasPermission(user.value?.role, DevPermissions.PORTAL_APPLICATIONS_CREATE) || hasPermission(user.value?.role, 'admin')
+})
+
+const canCreateFirstParty = computed(() => {
+  return hasPermission(user.value?.role, DevPermissions.PORTAL_APPLICATIONS_CREATE_FIRST_PARTY) || hasPermission(user.value?.role, 'admin')
 })
 
 </script>
@@ -97,6 +107,12 @@ const authorized = computed(() => {
           </UTextarea>
         </UFormField>
 
+        <UFormField name="type" label="Application Type">
+          <USelect v-model="state.type" :items="type_items" :disabled="!canCreateFirstParty" />
+        </UFormField>
+
+        <p class="text-xs text-muted">First-party applications are trusted internal applications. Third-party applications are external integrations. Admin consent is required to create a first-party application.</p>
+
         <UFormField name="proxy_microsoft" label="Serve as Microsoft Proxy">
           <USelect v-model="state.proxy_microsoft" :items="ms_proxy_items" />
         </UFormField>
@@ -108,6 +124,9 @@ const authorized = computed(() => {
         <UButton type="submit" :disabled="!authorized">
             Create Application
         </UButton>
+
+        <p class="text-xs text-muted">API keys, secrets, and permissions can be configured after the creation of this app.</p>
+
         <USeparator></USeparator>
         <FormRequiredNotification></FormRequiredNotification>
     </UForm>

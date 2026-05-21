@@ -1,19 +1,31 @@
 import type { H3Event } from 'h3'
 import { randomBytes } from 'node:crypto'
 
+const MAX_APPLICATIONS_PER_USER = 2
+
+export async function getOAuth2ApplicationCountByOwner(event: H3Event, ownerId: number): Promise<number> {
+  const result = event.context.db.prepare(
+    'SELECT COUNT(*) as count FROM oauth2_applications WHERE owner_id = ?'
+  ).bind(ownerId).first() as { count: number } | null
+
+  return result?.count ?? 0
+}
+
 export async function createOAuth2Application(
   event: H3Event,
+  ownerId: number,
   name: string,
   description: string | null,
-  proxyMicrosoft: boolean
+  proxyMicrosoft: boolean,
+  type: 'first' | 'third' = 'third'
 ): Promise<OAuth2Application> {
   const client_id = crypto.randomUUID()
   const client_secret = randomBytes(32).toString('hex')
 
   event.context.db.prepare(
-    `INSERT INTO oauth2_applications (client_id, client_secret, name, description, proxy_microsoft, type)
-     VALUES (?, ?, ?, ?, ?, ?)`
-  ).bind(client_id, client_secret, name, description, proxyMicrosoft ? 1 : 0, 'third').run()
+    `INSERT INTO oauth2_applications (client_id, client_secret, name, description, proxy_microsoft, type, owner_id)
+     VALUES (?, ?, ?, ?, ?, ?, ?)`
+  ).bind(client_id, client_secret, name, description, proxyMicrosoft ? 1 : 0, type, ownerId).run()
 
   return {
     client_id,
@@ -21,10 +33,11 @@ export async function createOAuth2Application(
     name,
     description,
     proxy_microsoft: proxyMicrosoft ? 1 : 0,
-    type: 'third',
+    type,
     redirect_uris: null,
     permissions: null,
     profile_picture: null,
+    owner_id: ownerId,
   }
 }
 
@@ -53,3 +66,5 @@ export async function deleteOAuth2Applications(event: H3Event, clientIDs: string
     ).bind(id).run()
   }
 }
+
+export { MAX_APPLICATIONS_PER_USER }

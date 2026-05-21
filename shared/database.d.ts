@@ -85,4 +85,5 @@ interface OAuth2Application {
     proxy_microsoft: number
     type: "first" | "third"
     profile_picture: string | null
+    owner_id: number | null
 }

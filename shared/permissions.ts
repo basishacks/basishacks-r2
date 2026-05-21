@@ -10,6 +10,7 @@ export const DevPermissions = {
   PORTAL_DEEPSEEK_VIEW: "portal.deepseek.view",
   PORTAL_APPLICATIONS_VIEW: "portal.applications.view",
   PORTAL_APPLICATIONS_CREATE: "portal.applications.create",
+  PORTAL_APPLICATIONS_CREATE_FIRST_PARTY: "portal.applications.create.firstParty",
   PORTAL_APPLICATIONS_DELETE: "portal.applications.delete",
 } as const
 
