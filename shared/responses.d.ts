@@ -10,6 +10,7 @@ interface APIUser {
   name: string | null
   team_id: number | null
   profile_theme: ProfileTheme | null
+  profile_picture: string | null
 }
 
 interface APITeam {

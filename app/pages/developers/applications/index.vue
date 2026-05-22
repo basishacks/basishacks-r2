@@ -29,7 +29,7 @@ const { data, status, refresh } = await useFetch<OAuth2Application[]>('/api/appl
 })
 
 // Client-side permission guard
-const { user: me } = await useApiUser()
+const { user: me }: any = await useApiUser()
 if (!hasPermission(me.value?.role, DevPermissions.PORTAL_APPLICATIONS_VIEW) && !hasPermission(me.value?.role, 'admin')) {
   await navigateTo('/developers')
   useToast().add({ title: 'Access denied', description: 'You do not have permission to view applications.', color: 'error' })
@@ -160,7 +160,7 @@ const columns: TableColumn<OAuth2Application>[] = [
               icon: 'i-lucide-arrow-right',
               color: 'neutral',
               variant: 'ghost',
-              label: 'View'
+              label: 'Edit'
             })
         )
       )
@@ -183,11 +183,8 @@ const pagination = ref({
 })
 
 
-const apiContent = await useApiUser()
-const user = apiContent.user
-
 const create_authorized = computed(() => {
-  return hasPermission(user.value?.role, DevPermissions.PORTAL_APPLICATIONS_CREATE) || hasPermission(user.value?.role, 'admin')
+  return hasPermission(me.value?.role, DevPermissions.PORTAL_APPLICATIONS_CREATE) || hasPermission(me.value?.role, 'admin')
 })
 </script>
 

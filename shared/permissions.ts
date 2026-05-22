@@ -1,7 +1,6 @@
 export const DevPermissions = {
   USERS: 'dev_users',
   TEAMS: 'dev_teams',
-  APPLICATIONS: 'dev_applications',
   DEBUG: 'dev_debug',
   DEEPSEEK: 'dev_deepseek',
   PORTAL_USERS_VIEW: "portal.users.view",
@@ -10,8 +9,9 @@ export const DevPermissions = {
   PORTAL_DEEPSEEK_VIEW: "portal.deepseek.view",
   PORTAL_APPLICATIONS_VIEW: "portal.applications.view",
   PORTAL_APPLICATIONS_CREATE: "portal.applications.create",
-  PORTAL_APPLICATIONS_CREATE_FIRST_PARTY: "portal.applications.create.firstParty",
+  PORTAL_APPLICATIONS_CREATE_FIRST_PARTY: "portal.applications.create.firstparty",
   PORTAL_APPLICATIONS_DELETE: "portal.applications.delete",
+  PORTAL_APPLICATIONS_VIEW_ALL: "portal.applications.view.all",
 } as const
 
 export function parsePermissions(role: string | null | undefined): string[] {

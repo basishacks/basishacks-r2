@@ -20,6 +20,7 @@ export function convertUserToPublic(user: User): APIUser {
     name: user.name,
     team_id: user.team_id,
     profile_theme: parseProfileTheme(user.profile_theme ?? undefined),
+    profile_picture: user.profile_picture,
   }
 }
 

@@ -102,7 +102,7 @@ const columns: TableColumn<User>[] = [
       const name = row.original.name ?? 'Unknown'
       return h('div', { class: 'flex items-center gap-3' }, [
         h(UAvatar, {
-          src: row.original.profile_picture ?? undefined,
+          src: row.original.profile_picture ? `/userast/${row.original.profile_picture}` : undefined,
           alt: name,
           size: 'lg'
         }),

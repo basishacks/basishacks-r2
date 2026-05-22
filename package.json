@@ -43,6 +43,7 @@
     "zod": "^4.4.3"
   },
   "devDependencies": {
+    "@iconify-json/fluent": "^1.2.47",
     "@iconify-json/lucide": "^1.2.106",
     "@iconify-json/material-symbols": "^1.2.71",
     "@iconify-json/simple-icons": "^1.2.81",

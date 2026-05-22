@@ -33,6 +33,19 @@ const state = reactive({
   avatar: undefined
 })
 
+const avatarPreviewUrl = ref(undefined)
+
+watch(() => state.avatar, (newVal, oldVal) => {
+  if (avatarPreviewUrl.value?.startsWith('blob:')) {
+    URL.revokeObjectURL(avatarPreviewUrl.value)
+  }
+  if (newVal instanceof File) {
+    avatarPreviewUrl.value = URL.createObjectURL(newVal)
+  } else {
+    avatarPreviewUrl.value = undefined
+  }
+})
+
 const fileToBase64 = function(file) {
   return new Promise((resolve, reject) => {
     const reader = new FileReader();
@@ -48,16 +61,70 @@ const fileToBase64 = function(file) {
   });
 };
 
+async function removeAvatar() {
+  try {
+    const { message } = await withLoadingIndicator(async () => {
+      return $fetch(`/api/users/${userID.value}`, {
+        method: 'PATCH',
+        body: { avatar: null },
+      })
+    })
+    toast.add({
+      color: 'success',
+      title: message,
+    })
+    await refresh()
+  } catch (e) {
+    toast.add({
+      color: 'error',
+      title: 'Failed to remove avatar',
+      description: getErrorMessage(e),
+    })
+  }
+}
+
+async function removeProfileTheme() {
+  try {
+    const { message } = await withLoadingIndicator(async () => {
+      return $fetch(`/api/users/${userID.value}`, {
+        method: 'PATCH',
+        body: { profile_theme_image: null },
+      })
+    })
+    toast.add({
+      color: 'success',
+      title: message,
+    })
+    await refresh()
+    if (fileUploadRef.value) {
+      fileUploadRef.value.style = ''
+    }
+  } catch (e) {
+    toast.add({
+      color: 'error',
+      title: 'Failed to remove profile theme',
+      description: getErrorMessage(e),
+    })
+  }
+}
+
 async function onSubmitName(event) {
   try {
     
-    let result;
+    let themeResult;
+    let avatarResult;
 
     if (event.data.profile_theme_image != undefined && event.data.profile_theme_image instanceof File) {
-      result = await fileToBase64(event.data.profile_theme_image);
-      if (result)
-      event.data.profile_theme_image = result.toString()
+      themeResult = await fileToBase64(event.data.profile_theme_image);
+      if (themeResult)
+      event.data.profile_theme_image = themeResult.toString()
     } 
+
+    if (event.data.avatar != undefined && event.data.avatar instanceof File) {
+      avatarResult = await fileToBase64(event.data.avatar);
+      if (avatarResult)
+      event.data.avatar = avatarResult.toString()
+    }
 
     const { message } = await withLoadingIndicator(async () => {
       return $fetch(`/api/users/${userID.value}`, {
@@ -73,9 +140,13 @@ async function onSubmitName(event) {
     })
     await refresh()
     
-    if (result) {
+    if (themeResult) {
       state.profile_theme_image = undefined;
-      fileUploadRef.value.style = `background-image:url("${result}");`
+      fileUploadRef.value.style = `background-image:url("${themeResult}");`
+    }
+
+    if (avatarResult) {
+      state.avatar = undefined;
     }
     
   } catch (e) {
@@ -141,7 +212,8 @@ onMounted(() => {
             <div class="flex flex-wrap items-center gap-3">
               <UAvatar
                 size="lg"
-                :src="state.avatar ? createObjectUrl(state.avatar) : undefined"
+                :src="avatarPreviewUrl || (user.profile_picture ? `/userast/${user.profile_picture}` : undefined)"
+                :alt="user.name || user.email || 'User'"
                 icon="i-lucide-image"
               />
 
@@ -166,6 +238,17 @@ onMounted(() => {
               />
             </p>
           </UFileUpload>
+
+          <div class="flex gap-3 mt-4">
+            <UButton type="submit">Update profile</UButton>
+            <UButton
+              v-if="user.profile_picture"
+              label="Remove avatar"
+              color="error"
+              variant="outline"
+              @click="removeAvatar"
+            />
+          </div>
         </UFormField>
 
         <USeparator/>
@@ -187,11 +270,24 @@ onMounted(() => {
           }"
           />
           </div>
-
           
+          <div class="flex gap-3 mt-4">
+            <UButton type="submit">Update profile</UButton>
+            <UButton
+              v-if="user.profile_theme?.mode === 'url'"
+              label="Remove theme"
+              color="error"
+              variant="outline"
+              @click="removeProfileTheme"
+            />
+          </div>
+
+          <div class="flex gap-3 mt-4">
+            
+          </div>
         </UFormField>
 
-        <UButton type="submit">Update profile</UButton>
+        
 
 
         

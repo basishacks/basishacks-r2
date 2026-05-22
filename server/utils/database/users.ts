@@ -104,6 +104,21 @@ export async function updateUserProfileTheme(event: H3Event, user: User) {
   }
 }
 
+export async function updateUserProfilePicture(event: H3Event, user: User) {
+  const result = event.context.db.prepare(
+    'UPDATE users SET profile_picture = ? WHERE id = ?'
+  )
+    .bind(user.profile_picture, user.id)
+    .run()
+
+  if (!result.meta.changed_db) {
+    throw createError({
+      status: 404,
+      message: 'User not found',
+    })
+  }
+}
+
 export async function updateUserRole(event: H3Event, userID: number, role: string) {
   const result = event.context.db.prepare(
     'UPDATE users SET role = ? WHERE id = ?'

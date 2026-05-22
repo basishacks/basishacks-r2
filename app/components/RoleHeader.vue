@@ -16,11 +16,19 @@
         />
         <UColorModeButton />
         <UButton
-          icon="i-material-symbols-account-circle-full"
           variant="ghost"
           :class="profileIconColor"
           href="/profile"
-        />
+        >
+          <template v-if="userRef">
+            <UAvatar
+              :src="user?.profile_picture ? `/userast/${user.profile_picture}` : undefined"
+              :alt="user?.name || user?.email || 'User'"
+              size="sm"
+            />
+          </template>
+          <UIcon v-else name="i-material-symbols-account-circle-full" class="text-xl" />
+        </UButton>
       </template>
 
       <template #body>
@@ -79,7 +87,7 @@ const dashboardContent: NavigationMenuItem[] = [
 
     {
           label: 'Presentation',
-          icon: 'i-majesticons-presentation-play',
+          icon: 'i-material-symbols-present-to-all',
           to: '/dashboard/presentation',
           chip: true
     },

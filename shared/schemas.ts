@@ -111,20 +111,29 @@ const formatBytes = (bytes: number, decimals = 2) => {
 
 
 export const UpdateUserRequest = z.object({
-  name: z.optional(z.string().max(30)), 
-  profile_theme_image: z.optional(z
-    .instanceof(File)
-    .refine((file) => file.size <= MAX_FILE_SIZE, 
-      `The image is too large. Please choose an image smaller than ${formatBytes(MAX_FILE_SIZE)}.`
-    )
-    .refine((file) => ACCEPTED_IMAGE_TYPES.includes(file.type), 
-      'Please upload a valid image file (JPEG, PNG, or WebP)'
-    ))
-    .or(
-      z.string().startsWith('data')
-    )
-    
-    
+  name: z.optional(z.string().max(30)),
+  profile_theme_image: z.union([
+    z.instanceof(File)
+      .refine((file) => file.size <= MAX_FILE_SIZE,
+        `The image is too large. Please choose an image smaller than ${formatBytes(MAX_FILE_SIZE)}.`
+      )
+      .refine((file) => ACCEPTED_IMAGE_TYPES.includes(file.type),
+        'Please upload a valid image file (JPEG, PNG, or WebP)'
+      ),
+    z.string().startsWith('data'),
+    z.null(),
+  ]).optional(),
+  avatar: z.union([
+    z.instanceof(File)
+      .refine((file) => file.size <= MAX_FILE_SIZE,
+        `The image is too large. Please choose an image smaller than ${formatBytes(MAX_FILE_SIZE)}.`
+      )
+      .refine((file) => ACCEPTED_IMAGE_TYPES.includes(file.type),
+        'Please upload a valid image file (JPEG, PNG, or WebP)'
+      ),
+    z.string().startsWith('data'),
+    z.null(),
+  ]).optional()
 })
 export type UpdateUserRequest = z.infer<typeof UpdateUserRequest>
 

@@ -107,6 +107,7 @@ const profile = ref('')
 
         <UButton
         :avatar="{
+          src: user?.profile_picture ? `/userast/${user.profile_picture}` : undefined,
           alt: name,
           loading: 'lazy' as const
         }"
