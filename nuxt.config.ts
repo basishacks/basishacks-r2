@@ -53,7 +53,8 @@ export default defineNuxtConfig({
   nitro: {
     preset: 'bun',
     externals: {
-      trace: false,
+      // trace: true
+      trace: false
     },
     rollupConfig: {
       onwarn(warning, warn) {
