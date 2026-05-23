@@ -75,7 +75,7 @@ const name = computed(() => user.value?.name || 'Log In')
     <UDashboardSidebar collapsible resizable :ui="{ footer: 'border-t border-default' }">
     <template #header="{ collapsed }">
       <ULink v-if="!collapsed" class="bold glow text-primary mx-auto" to="/">{{ WEBSITE_NAME }}<span class="text-secondary bold"> devs</span></ULink>
-      <UButton variant="ghost" v-else-if="collapsed" class="bold glow text-primary mx-auto" @click="navigateTo('/')">b</UButton>
+      <UButton v-else-if="collapsed" variant="ghost" class="bold glow text-primary mx-auto" @click="navigateTo('/')">b</UButton>
     </template>
 
     <template #default="{ collapsed }">
@@ -121,15 +121,15 @@ const name = computed(() => user.value?.name || 'Log In')
         color="neutral"
         variant="ghost"
         class="w-full"
-        @click="navigateTo('/profile')"
         :block="collapsed"
+        @click="navigateTo('/profile')"
       />
 
 
     </template>
   </UDashboardSidebar>
 
-  <slot></slot>
+  <slot/>
 
   </UDashboardGroup>
 </template>

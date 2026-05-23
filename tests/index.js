@@ -1,5 +1,3 @@
-console.log("Running tests...");
-
 import { testMicrosoftMeeting, testCreateMicrosoftMeeting, testInitializeDummyUserAccessToken } from "./test.microsoft.ts";
 import initializeMSAccessToken from "../server/plugins/microsoft.ts";
 
@@ -42,6 +40,8 @@ import initializeMSAccessToken from "../server/plugins/microsoft.ts";
 // console.log("================================")
 
 import { testSearch } from "./test.search.ts"
+
+console.log("Running tests...");
 const result_testSearch = await testSearch();
 console.log("================================")
 console.log("testSearch: " + (result_testSearch ? "PASSED" : "FAILED"));

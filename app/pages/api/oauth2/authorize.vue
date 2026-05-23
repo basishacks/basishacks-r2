@@ -8,7 +8,7 @@
               <UIcon name="i-material-symbols-arrow-back" class="absolute left-0 w-6 h-6 cursor-pointer hover:opacity-80 transition-opacity" @click="dummyFunction" />
               <p class="text-xl bold glow text-primary">{{ WEBSITE_NAME }}</p>
             </div>
-            <USeparator></USeparator>
+            <USeparator/>
 
             <div class="w-full h-80 flex flex-row justify-center items-start my-8">
 

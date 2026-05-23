@@ -150,7 +150,7 @@ const navItems = computed<NavigationMenuItem[]>(() => [
             <template #header>
               <h3 class="text-lg font-semibold">Authorization (DevConnect)</h3>
             </template>
-            <p></p>
+            <p/>
           </UCard>
         </div>
       </div>

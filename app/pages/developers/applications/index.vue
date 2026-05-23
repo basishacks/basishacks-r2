@@ -202,7 +202,7 @@ const create_authorized = computed(() => {
 
       <!--Actions-->
       <div class="flex flex-wrap items-center justify-start gap-1.5">
-        <UButton @click="navigateTo('/developers/applications/create')" icon="i-lucide-plus" label="Create Application" :disabled="!create_authorized" />
+        <UButton icon="i-lucide-plus" label="Create Application" :disabled="!create_authorized" @click="navigateTo('/developers/applications/create')" />
       </div>
 
       <div class="flex flex-wrap items-center justify-between gap-1.5">

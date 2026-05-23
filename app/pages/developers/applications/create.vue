@@ -62,7 +62,7 @@ const canCreateFirstParty = computed(() => {
       <UDashboardNavbar>
         <template #title>
             <ULink raw class="hover:underline" to="/developers/applications">Applications</ULink>
-            <UIcon name="i-lucide-arrow-right"></UIcon>
+            <UIcon name="i-lucide-arrow-right"/>
             Create
         </template>
         <template #leading>
@@ -78,9 +78,9 @@ const canCreateFirstParty = computed(() => {
     <UForm :schema="CreateApplicationRequest" :state="state" class="w-[600px] space-y-3" @submit="onSubmit">
         <UFormField name="name">
             <template #label>
-                Application Name<UIcon name="i-lucide-asterisk" class="text-red-400"></UIcon>
+                Application Name<UIcon name="i-lucide-asterisk" class="text-red-400"/>
             </template>
-            <UInput :maxlength='64' v-model="state.name" class="w-full" placeholder='e.g. "FreeCodex, Aaron Assistant, ...'>
+            <UInput v-model="state.name" :maxlength='64' class="w-full" placeholder='e.g. "FreeCodex, Aaron Assistant, ...'>
               <template #trailing>
                 <div
                   id="character-count"
@@ -95,7 +95,7 @@ const canCreateFirstParty = computed(() => {
         </UFormField>
 
         <UFormField label="Application Description" name="description">
-          <UTextarea :maxlength="1024" :rows="12" v-model="state.description" class="w-full" placeholder="e.g. This App provides free Codex tokens to all users. By hacking into OpenAI's internal database, this application...">
+          <UTextarea v-model="state.description" :maxlength="1024" :rows="12" class="w-full" placeholder="e.g. This App provides free Codex tokens to all users. By hacking into OpenAI's internal database, this application...">
             <template #trailing>
               <div
                 id="character-count"
@@ -129,8 +129,8 @@ const canCreateFirstParty = computed(() => {
 
         <p class="text-xs text-muted">API keys, secrets, and permissions can be configured after the creation of this app.</p>
 
-        <USeparator></USeparator>
-        <FormRequiredNotification></FormRequiredNotification>
+        <USeparator/>
+        <FormRequiredNotification/>
     </UForm>
 
     </template>
