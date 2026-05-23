@@ -7,7 +7,7 @@ export default defineNitroPlugin(async () => {
   const userColumns = (db.prepare("PRAGMA table_info('users')").all() as { name: string }[]).map(c => c.name)
   for (const col of ['profile_theme', 'profile_picture']) {
     if (!userColumns.includes(col)) {
-      db.run(`ALTER TABLE users ADD COLUMN ${col} TEXT`)
+      db.exec(`ALTER TABLE users ADD COLUMN ${col} TEXT`)
     }
   }
 
@@ -31,11 +31,11 @@ export default defineNitroPlugin(async () => {
 
   for (const col of requiredColumns) {
     if (!columnNames.includes(col)) {
-      db.run(`ALTER TABLE hackathon ADD COLUMN "${col}" ${col.includes('timestamp') || col.includes('schedule') ? 'TEXT' : 'INTEGER NOT NULL DEFAULT 0'}`)
+      db.exec(`ALTER TABLE hackathon ADD COLUMN "${col}" ${col.includes('timestamp') || col.includes('schedule') ? 'TEXT' : 'INTEGER NOT NULL DEFAULT 0'}`)
     }
   }
 
-  db.run(`
+  db.exec(`
     INSERT INTO hackathon (
       id, status, voting_enabled, results_published, submitted_count, max_votes_per_user, judging_open,
       schedule_start, schedule_end,
@@ -56,7 +56,7 @@ export default defineNitroPlugin(async () => {
       results_open_timestamp = excluded.results_open_timestamp
   `)
 
-  db.run(`
+  db.exec(`
     INSERT OR IGNORE INTO oauth2_applications (client_id, client_secret, permissions, redirect_uris, name, description, proxy_microsoft, type, profile_picture)
     VALUES (
       '97e435f4-17e8-42ef-9b12-9684fd656de9',

@@ -2,13 +2,20 @@
 import type { NavigationMenuItem } from '@nuxt/ui';
 import { DevPermissions, hasPermission } from '~~/shared/permissions';
 
-const { user: sessionUser, clear } = useUserSession()
+const { user: sessionUser } = useUserSession()
 
-const { data: user } = await useFetch<GetUserResponse>(
+
+
+const { data: user } = useFetch<GetUserResponse>(
   () => sessionUser.value?.id ? `/api/users/${sessionUser.value.id}` : ``
 )
 
-const items: NavigationMenuItem[][] = [[{
+// console.log(user.value)
+
+// console.log(hasPermission(user.value?.role, DevPermissions.PORTAL_APPLICATIONS_VIEW))
+//console.log(hasPermission(user.value?.role, DevPermissions.PORTAL_APPLICATIONS_VIEW))
+
+const items = computed<NavigationMenuItem[][]>(() => [[{
   label: 'Home',
   icon: 'i-lucide-house',
   to: "/developers",
@@ -56,10 +63,9 @@ const items: NavigationMenuItem[][] = [[{
   icon: 'i-lucide-info',
   to: 'https://github.com/nuxt/ui',
   target: '_blank'
-}]]
+}]])
 
 const name = computed(() => user.value?.name || 'Log In')
-const profile = ref('')
 
 
 </script>
@@ -103,7 +109,7 @@ const profile = ref('')
       />
     </template>
 
-    <template #footer="{ collapsed }" class="flex flex-row justify-end">
+    <template #footer="{ collapsed }">
 
         <UButton
         :avatar="{
@@ -118,7 +124,7 @@ const profile = ref('')
         @click="navigateTo('/profile')"
         :block="collapsed"
       />
-      <UColorModeButton :class="collapsed ? 'hidden' : 'block'" />
+
 
     </template>
   </UDashboardSidebar>

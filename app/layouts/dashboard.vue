@@ -1,10 +1,6 @@
 <script setup lang="ts">
 import type { NavigationMenuItem } from '@nuxt/ui'
 
-definePageMeta({
-  layout: 'dashboard',
-})
-
 const items = ref<NavigationMenuItem[][]>([
   [
     
@@ -71,7 +67,7 @@ const items = ref<NavigationMenuItem[][]>([
 
     {
           label: 'Presentation',
-          icon: 'i-majesticons-presentation-play',
+          icon: 'i-lucide-presentation',
           to: '/dashboard/presentation',
           chip: true
     },
@@ -95,7 +91,8 @@ const items = ref<NavigationMenuItem[][]>([
     <div class="bg-white-100 p-64"></div>
   </div> -->
 
-  <RoleHeader/>
+  <div>
+    <RoleHeader/>
 
   
 
@@ -124,6 +121,7 @@ id="hoverdashnotif" color="neutral" class="z-0 mt-4 nopanel text-xs text-muted r
       <slot />
     </div>
   </UContainer>
+  </div>
 
   
 </template>

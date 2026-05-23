@@ -3,11 +3,11 @@ export async function useApiUser() {
   const userID = computed(() => sessionUser.value?.id ?? 0)
 
   const { data, refresh } = await useFetch<GetUserResponse>(
-    () => userID.value ? `/api/users/${userID.value}` : null
+    () => userID.value ? `/api/users/${userID.value}` : ``
   )
 
   return {
-    user: data,
+    user: data as Ref<APIUser | null | undefined>,
     refresh,
     clear,
   }

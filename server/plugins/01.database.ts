@@ -102,7 +102,7 @@ export default defineNitroPlugin((nitroApp) => {
 
   const tables = (db.prepare("SELECT name FROM sqlite_master WHERE type='table'").all() as { name: string }[]).map(r => r.name)
   if (tables.length === 0) {
-    db.run(SCHEMA_SQL)
+    db.exec(SCHEMA_SQL)
     console.log('[Nitro] Database schema initialized')
   }
 

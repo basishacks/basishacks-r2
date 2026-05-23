@@ -52,10 +52,11 @@ const emit = defineEmits<{
 
 const { user: userRef } = useUserSession()
 // this is honestly ugly asf but i can't think of a clean solution
-const { data: user } = await useFetch<GetUserResponse>(
+const { data: user } = useFetch<GetUserResponse>(
   () => `/api/users/${userRef.value?.id}`,
+  { lazy: true }
 )
-const { data: hackathon } = await useFetch('/api/hackathon')
+const { data: hackathon } = useFetch('/api/hackathon', { lazy: true })
 
 const profileIconColor = computed(() => {
   return userRef.value ? 'text-primary' : 'text-ui-muted'

@@ -1,11 +1,13 @@
 <script lang="ts" setup>
+import { CreateApplicationRequest } from '~~/shared/schemas'
+import type { FormSubmitEvent } from '@nuxt/ui'
+import { DevPermissions, hasPermission } from '~~/shared/permissions'
+
 definePageMeta({
   layout: 'developers-dashboard'
 })
 
-import { CreateApplicationRequest } from '~~/shared/schemas'
-import type { FormSubmitEvent } from '@nuxt/ui'
-import { DevPermissions, hasPermission } from '~~/shared/permissions'
+
 
 
 
@@ -41,14 +43,14 @@ const type_items = ref([
   { label: 'Third Party', value: 'third' },
 ])
 
-const { user, refresh, clear }: any = await useApiUser()
+const { user } : { user: Ref<APIUser | null | undefined>} = await useApiUser()
 
 const authorized = computed(() => {
-  return hasPermission(user.value?.role, DevPermissions.PORTAL_APPLICATIONS_CREATE) || hasPermission(user.value?.role, 'admin')
+  return hasPermission(user?.value?.role, DevPermissions.PORTAL_APPLICATIONS_CREATE) || hasPermission(user.value?.role, 'admin')
 })
 
 const canCreateFirstParty = computed(() => {
-  return hasPermission(user.value?.role, DevPermissions.PORTAL_APPLICATIONS_CREATE_FIRST_PARTY) || hasPermission(user.value?.role, 'admin')
+  return hasPermission(user?.value?.role, DevPermissions.PORTAL_APPLICATIONS_CREATE_FIRST_PARTY) || hasPermission(user.value?.role, 'admin')
 })
 
 </script>
