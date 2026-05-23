@@ -24,5 +24,7 @@ export default defineEventHandler(async (event) => {
     })
   }
 
-  return app
+  // Never expose client_secret in API responses
+  const { client_secret: _, ...safeApp } = app
+  return safeApp
 })

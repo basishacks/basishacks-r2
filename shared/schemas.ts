@@ -161,3 +161,14 @@ export const CreateApplicationRequest = z.object({
   type: z.enum(['first', 'third']).optional(),
 })
 export type CreateApplicationRequest = z.infer<typeof CreateApplicationRequest>
+
+export const ManageRedirectUriRequest = z.object({
+  uri: z.string()
+    .min(1, 'Redirect URI is required')
+    .url('Invalid URL format')
+    .refine(
+      (val) => val.startsWith('https://') || val.startsWith('http://localhost'),
+      'Redirect URIs must start with http://localhost or https://'
+    ),
+})
+export type ManageRedirectUriRequest = z.infer<typeof ManageRedirectUriRequest>

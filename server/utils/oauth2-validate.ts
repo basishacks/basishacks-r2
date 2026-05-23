@@ -84,7 +84,7 @@ export async function validateOAuth2AuthorizationRequest(
   if (!app) {
     throw createError({
       statusCode: 404,
-      message: `The client '${clientId}' does not exist or is not a valid configured application.`
+      message: `No matching application found for client_id '${clientId}'`
     })
   }
 
@@ -113,7 +113,7 @@ export async function validateOAuth2AuthorizationRequest(
       if (!allowedRedirectUris.includes(redirectUri)) {
         throw createError({
           statusCode: 403,
-          message: `Invalid redirect_uri. The provided redirect_uri is not registered for this application.`
+          message: `Application '${app.name}' does not allow redirect_uri '${redirectUri}'`
         })
       }
     } else {

@@ -54,7 +54,7 @@ export function generateExchangeCode(session: AuthorizeSession) {
   session.code = code
 }
 
-export async function exchangeAuthorizationCode(code: string): Promise<string> {
+export async function exchangeAuthorizationCode(code: string, clientId?: string, redirectUri?: string): Promise<string> {
 
   const secret = process.env.NUXT_OAUTH2_JWT_SECRET
   if (!secret) {
@@ -75,6 +75,14 @@ export async function exchangeAuthorizationCode(code: string): Promise<string> {
 
       if (!session.user) {
         throw new Error('No user attached to session')
+      }
+
+      if (clientId && session.application.client_id !== clientId) {
+        throw new Error('client_id mismatch')
+      }
+
+      if (redirectUri && session.redirect_uri !== redirectUri) {
+        throw new Error('redirect_uri mismatch')
       }
 
       const jwt = await new SignJWT({
