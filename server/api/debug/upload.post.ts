@@ -1,10 +1,11 @@
 import { randomUUID } from 'crypto'
 import { createAsset, createUserAsset } from '~~/server/utils/assets'
+import { DevPermissions } from '~~/shared/permissions'
 
 export default defineEventHandler(async (event) => {
   const query = getQuery(event)
 
-  await requireAdmin(event)
+  await requirePermission(event, DevPermissions.DEBUG)
 
   const formData = await readMultipartFormData(event)
   if (!formData || !formData[0]) {

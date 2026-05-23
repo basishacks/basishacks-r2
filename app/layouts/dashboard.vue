@@ -1,10 +1,6 @@
 <script setup lang="ts">
 import type { NavigationMenuItem } from '@nuxt/ui'
 
-definePageMeta({
-  layout: 'dashboard',
-})
-
 const items = ref<NavigationMenuItem[][]>([
   [
     
@@ -71,7 +67,7 @@ const items = ref<NavigationMenuItem[][]>([
 
     {
           label: 'Presentation',
-          icon: 'i-majesticons-presentation-play',
+          icon: 'i-lucide-presentation',
           to: '/dashboard/presentation',
           chip: true
     },
@@ -95,7 +91,8 @@ const items = ref<NavigationMenuItem[][]>([
     <div class="bg-white-100 p-64"></div>
   </div> -->
 
-  <RoleHeader/>
+  <div>
+    <RoleHeader/>
 
   
 
@@ -112,7 +109,7 @@ const items = ref<NavigationMenuItem[][]>([
           <ULink class="text-xs" href="/theme/june-2026">See event details <UIcon name="i-lucide-arrow-right"/></ULink>
         </template>
       </UCard>
-      <UNavigationMenu orientation="vertical" :items="items" class="data-[orientation=vertical]:w-48 mt-12" trailing-icon="none"/>
+      <UNavigationMenu orientation="vertical" :items="items" class="data-[orientation=vertical]:w-48 mt-12"/>
     </div>
 
     <UBanner
@@ -120,8 +117,11 @@ id="hoverdashnotif" color="neutral" class="z-0 mt-4 nopanel text-xs text-muted r
     title="You can also expand the dashboard tab to see more options"
     close/>
     
-    <slot />
+    <div class="mt-12">
+      <slot />
+    </div>
   </UContainer>
+  </div>
 
   
 </template>

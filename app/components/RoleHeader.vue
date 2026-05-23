@@ -16,11 +16,19 @@
         />
         <UColorModeButton />
         <UButton
-          icon="i-material-symbols-account-circle-full"
           variant="ghost"
           :class="profileIconColor"
           href="/profile"
-        />
+        >
+          <template v-if="userRef">
+            <UAvatar
+              :src="user?.profile_picture ? `/userast/${user.profile_picture}` : undefined"
+              :alt="user?.name || user?.email || 'User'"
+              size="sm"
+            />
+          </template>
+          <UIcon v-else name="i-material-symbols-account-circle-full" class="text-xl" />
+        </UButton>
       </template>
 
       <template #body>
@@ -36,6 +44,7 @@
 
 <script setup lang="ts">
 import type { NavigationMenuItem } from '@nuxt/ui'
+import { hasPermission } from '~~/shared/permissions'
 
 const emit = defineEmits<{
   toggleDrawer: []
@@ -43,10 +52,11 @@ const emit = defineEmits<{
 
 const { user: userRef } = useUserSession()
 // this is honestly ugly asf but i can't think of a clean solution
-const { data: user } = await useFetch<GetUserResponse>(
+const { data: user } = useFetch<GetUserResponse>(
   () => `/api/users/${userRef.value?.id}`,
+  { lazy: true }
 )
-const { data: hackathon } = await useFetch('/api/hackathon')
+const { data: hackathon } = useFetch('/api/hackathon', { lazy: true })
 
 const profileIconColor = computed(() => {
   return userRef.value ? 'text-primary' : 'text-ui-muted'
@@ -78,7 +88,7 @@ const dashboardContent: NavigationMenuItem[] = [
 
     {
           label: 'Presentation',
-          icon: 'i-majesticons-presentation-play',
+          icon: 'i-material-symbols-present-to-all',
           to: '/dashboard/presentation',
           chip: true
     },
@@ -106,7 +116,7 @@ const navItems = computed<NavigationMenuItem[]>(() => {
     },
   ]
   if (
-    (user.value?.role === 'judge' || user.value?.role === 'admin') &&
+    (hasPermission(user.value?.role, 'judge') || hasPermission(user.value?.role, 'admin')) &&
     hackathon.value?.status === 'voting'
   ) {
     links.push({
@@ -116,8 +126,8 @@ const navItems = computed<NavigationMenuItem[]>(() => {
     })
   }
   if (
-    user.value?.role === 'participant' &&
-    user.value.team_id &&
+    hasPermission(user.value?.role, 'participant') &&
+    user.value?.team_id &&
     hackathon.value?.status === 'voting'
   ) {
     links.push({

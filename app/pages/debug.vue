@@ -146,7 +146,7 @@
             <div v-if="session.messages.length === 0" class="text-gray-500 text-sm">No messages yet</div>
             <div v-for="(msg, idx) in session.messages" :key="idx" class="mb-2">
               <p :class="msg.role === 'user' ? 'font-semibold text-blue-600' : 'text-gray-700'">
-                {{ msg.role === 'user' ? 'You' : 'Mickey' }}:
+                {{ msg.role === 'user' ? 'You' : 'Barron' }}:
               </p>
               <p class="text-sm text-gray-700 ml-2">{{ msg.content }}</p>
             </div>

@@ -6,10 +6,11 @@ interface ProfileTheme {
 interface APIUser {
   id: number
   email: string
-  role: UserRole
+  role: string
   name: string | null
   team_id: number | null
   profile_theme: ProfileTheme | null
+  profile_picture: string | null
 }
 
 interface APITeam {

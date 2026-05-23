@@ -1,24 +1,24 @@
-import type { Statement as BunStatement } from 'bun:sqlite';
-import { Database } from 'bun:sqlite'
+import Database from 'better-sqlite3'
+import type { Statement } from 'better-sqlite3'
 import path from 'path'
 import { fileURLToPath } from 'url'
 
 const __filename = fileURLToPath(import.meta.url)
 const __dirname = path.dirname(__filename)
 
-let dbInstance: Database | null = null
+let dbInstance: any = null
 
 /**
  * Initialize the database globally (call once at startup)
  */
-export function initializeDatabase(): Database {
+export function initializeDatabase(): any {
   if (!dbInstance) {
     const dbPath = path.resolve(__dirname, '../../database/basishacks.sqlite')
     console.log(`[DB] Initializing database at: ${dbPath}`)
-    dbInstance = new Database(dbPath, { create: true })
+    dbInstance = new Database(dbPath)
     // Enable foreign keys and WAL mode
-    dbInstance.run('PRAGMA journal_mode = WAL')
-    dbInstance.run('PRAGMA foreign_keys = ON')
+    dbInstance.pragma('journal_mode = WAL')
+    dbInstance.pragma('foreign_keys = ON')
     console.log('[DB] Database initialized successfully')
   }
   return dbInstance
@@ -27,7 +27,7 @@ export function initializeDatabase(): Database {
 /**
  * Get or initialize the SQLite database instance
  */
-export function getDatabase(): Database {
+export function getDatabase(): any {
   if (!dbInstance) {
     return initializeDatabase()
   }
@@ -38,10 +38,10 @@ export function getDatabase(): Database {
  * SQLite Statement wrapper that mimics D1's Statement interface
  */
 class SQLiteStatement {
-  private statement: BunStatement
+  private statement: Statement
   private bindings: any[] = []
 
-  constructor(statement: BunStatement) {
+  constructor(statement: Statement) {
     this.statement = statement
   }
 
@@ -101,9 +101,9 @@ class SQLiteStatement {
  * SQLite Database wrapper that mimics D1Database interface
  */
 export class SQLiteDatabase {
-  private db: Database
+  private db: any
 
-  constructor(db: Database) {
+  constructor(db: any) {
     this.db = db
   }
 
@@ -151,7 +151,7 @@ export class SQLiteDatabase {
    */
   exec(sql: string): any {
     try {
-      this.db.run(sql)
+      this.db.exec(sql)
     } catch (error) {
       console.error('SQLite error in exec():', error)
       throw error

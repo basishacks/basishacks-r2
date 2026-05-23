@@ -1,6 +1,6 @@
 <template>
 
-<div class="mt-12">
+<div>
     <h1 class="text-4xl font-bold glow">Presentation!</h1>
     <p class="mt-8"><span class="text-primary ">{{ WEBSITE_NAME }}</span> events after April 2026 will feature an additional presentation event.</p>
     <p class="mt-8">Teams scoring top 10 will be invited to present their projects in front of judges and students!</p>

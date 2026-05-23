@@ -111,20 +111,29 @@ const formatBytes = (bytes: number, decimals = 2) => {
 
 
 export const UpdateUserRequest = z.object({
-  name: z.optional(z.string().max(30)), 
-  profile_theme_image: z.optional(z
-    .instanceof(File)
-    .refine((file) => file.size <= MAX_FILE_SIZE, 
-      `The image is too large. Please choose an image smaller than ${formatBytes(MAX_FILE_SIZE)}.`
-    )
-    .refine((file) => ACCEPTED_IMAGE_TYPES.includes(file.type), 
-      'Please upload a valid image file (JPEG, PNG, or WebP)'
-    ))
-    .or(
-      z.string().startsWith('data')
-    )
-    
-    
+  name: z.optional(z.string().max(30)),
+  profile_theme_image: z.union([
+    z.instanceof(File)
+      .refine((file) => file.size <= MAX_FILE_SIZE,
+        `The image is too large. Please choose an image smaller than ${formatBytes(MAX_FILE_SIZE)}.`
+      )
+      .refine((file) => ACCEPTED_IMAGE_TYPES.includes(file.type),
+        'Please upload a valid image file (JPEG, PNG, or WebP)'
+      ),
+    z.string().startsWith('data'),
+    z.null(),
+  ]).optional(),
+  avatar: z.union([
+    z.instanceof(File)
+      .refine((file) => file.size <= MAX_FILE_SIZE,
+        `The image is too large. Please choose an image smaller than ${formatBytes(MAX_FILE_SIZE)}.`
+      )
+      .refine((file) => ACCEPTED_IMAGE_TYPES.includes(file.type),
+        'Please upload a valid image file (JPEG, PNG, or WebP)'
+      ),
+    z.string().startsWith('data'),
+    z.null(),
+  ]).optional()
 })
 export type UpdateUserRequest = z.infer<typeof UpdateUserRequest>
 
@@ -144,3 +153,11 @@ export const SubmitVoteRequest = z
     'Stars must sum to 12'
   )
 export type SubmitVoteRequest = z.infer<typeof SubmitVoteRequest>
+
+export const CreateApplicationRequest = z.object({
+  name: z.string("Application name is required").min(1, 'Application name is required').max(64, 'Application name cannot exceed 64 characters'),
+  description: z.string().max(1024, 'Application description cannot exceed 1024 characters').optional(),
+  proxy_microsoft: z.boolean(),
+  type: z.enum(['first', 'third']).optional(),
+})
+export type CreateApplicationRequest = z.infer<typeof CreateApplicationRequest>

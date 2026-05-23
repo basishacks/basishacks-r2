@@ -26,11 +26,14 @@
     "@vue/shared": "^3.5.34",
     "@vueuse/core": "^14.3.0",
     "@vueuse/shared": "^14.3.0",
+    "better-sqlite3": "^12.10.0",
     "canvas-confetti": "^1.9.4",
-    "jose": "^6.2.3",
     "eslint": "^9.39.4",
+    "https-proxy-agent": "^9.0.0",
     "jdenticon": "^3.3.0",
+    "jose": "^6.2.3",
     "nitro-cloudflare-dev": "^0.2.2",
+    "node-fetch": "^3.3.2",
     "node-html-markdown": "^2.0.0",
     "nuxt": "^4.4.5",
     "nuxt-auth-utils": "0.5.25",
@@ -41,15 +44,16 @@
     "zod": "^4.4.3"
   },
   "devDependencies": {
+    "@iconify-json/fluent": "^1.2.47",
     "@iconify-json/lucide": "^1.2.106",
     "@iconify-json/material-symbols": "^1.2.71",
     "@iconify-json/simple-icons": "^1.2.81",
+    "@types/better-sqlite3": "^7.6.13",
     "@types/bun": "^1.3.13",
     "@types/canvas-confetti": "^1.9.0",
     "@types/node": "^24.12.3",
     "cross-env": "^10.1.0",
-    "prettier": "^3.8.3",
-    "wrangler": "^4.90.0"
+    "prettier": "^3.8.3"
   },
   "overrides": {
     "vite": "8.0.12"

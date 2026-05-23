@@ -49,7 +49,7 @@ CREATE TABLE IF NOT EXISTS team_scores (
 CREATE TABLE IF NOT EXISTS users (
     id INTEGER PRIMARY KEY AUTOINCREMENT,
     email TEXT NOT NULL UNIQUE,
-    role TEXT NOT NULL CHECK (role IN ('participant', 'judge', 'admin')) DEFAULT 'participant',
+    role TEXT NOT NULL DEFAULT 'participant',
     name TEXT,
     team_id INTEGER,
     login_code TEXT,
@@ -102,7 +102,7 @@ export default defineNitroPlugin((nitroApp) => {
 
   const tables = (db.prepare("SELECT name FROM sqlite_master WHERE type='table'").all() as { name: string }[]).map(r => r.name)
   if (tables.length === 0) {
-    db.run(SCHEMA_SQL)
+    db.exec(SCHEMA_SQL)
     console.log('[Nitro] Database schema initialized')
   }
 

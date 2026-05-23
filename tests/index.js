@@ -19,24 +19,30 @@ import initializeMSAccessToken from "../server/plugins/microsoft.ts";
 // console.log("testCreateMicrosoftMeeting: " + (result_testCreateMicrosoftMeeting ? "PASSED" : "FAILED"));
 // console.log("================================")
 
-import { testDeepSeek } from "./test.deepseek.ts";
+// import { testDeepSeek } from "./test.deepseek.ts";
 
-console.log("Running tests...");
+// console.log("Running tests...");
 
-let result_testOAuth2;
-try {
-    result_testOAuth2 = await testOAuth2();
-} catch (error) {
-    console.error("Error during testOAuth2:", error);
-    result_testOAuth2 = false;
-}
-console.log("================================")
-console.log("testOAuth2: " + (result_testOAuth2 ? "PASSED" : "FAILED"));
-console.log("================================")
+// let result_testOAuth2;
+// try {
+//     result_testOAuth2 = await testOAuth2();
+// } catch (error) {
+//     console.error("Error during testOAuth2:", error);
+//     result_testOAuth2 = false;
+// }
+// console.log("================================")
+// console.log("testOAuth2: " + (result_testOAuth2 ? "PASSED" : "FAILED"));
+// console.log("================================")
 
-await initializeMSAccessToken();
-const token = await import("../server/plugins/microsoft.ts").then(m => m.getMSAccessToken());
-const result_testDeepSeek = await testDeepSeek();
+// await initializeMSAccessToken();
+// const token = await import("../server/plugins/microsoft.ts").then(m => m.getMSAccessToken());
+// const result_testDeepSeek = await testDeepSeek();
+// console.log("================================")
+// console.log("testDeepSeek: " + (result_testDeepSeek ? "PASSED" : "FAILED"));
+// console.log("================================")
+
+import { testSearch } from "./test.search.ts"
+const result_testSearch = await testSearch();
 console.log("================================")
-console.log("testDeepSeek: " + (result_testDeepSeek ? "PASSED" : "FAILED"));
+console.log("testSearch: " + (result_testSearch ? "PASSED" : "FAILED"));
 console.log("================================")

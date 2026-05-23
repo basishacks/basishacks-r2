@@ -1,4 +1,5 @@
 import type { H3Event } from 'h3'
+import { hasPermission } from '~~/shared/permissions'
 
 export async function getUser(
   event: H3Event,
@@ -39,7 +40,7 @@ export async function addCodeToUser(event: H3Event, email: string): Promise<User
   if (
     oldUser?.login_expiry &&
     oldUser.login_expiry - 9 * 60 * 1000 > Date.now() &&
-    oldUser.role != 'admin' // Admins can request codes more frequently for testing purposes
+    !hasPermission(oldUser.role, 'admin') // Admins can request codes more frequently for testing purposes
   ) {
 
     throw createError({
@@ -100,5 +101,52 @@ export async function updateUserProfileTheme(event: H3Event, user: User) {
       status: 404,
       message: 'User not found',
     })
+  }
+}
+
+export async function updateUserProfilePicture(event: H3Event, user: User) {
+  const result = event.context.db.prepare(
+    'UPDATE users SET profile_picture = ? WHERE id = ?'
+  )
+    .bind(user.profile_picture, user.id)
+    .run()
+
+  if (!result.meta.changed_db) {
+    throw createError({
+      status: 404,
+      message: 'User not found',
+    })
+  }
+}
+
+export async function updateUserRole(event: H3Event, userID: number, role: string) {
+  const result = event.context.db.prepare(
+    'UPDATE users SET role = ? WHERE id = ?'
+  )
+    .bind(role, userID)
+    .run()
+
+  if (!result.meta.changed_db) {
+    throw createError({
+      status: 404,
+      message: 'User not found',
+    })
+  }
+}
+
+export async function deleteUsers(event: H3Event, userIDs: number[]) {
+  for (const id of userIDs) {
+    // Remove related records first to avoid FK violations
+    event.context.db.prepare(
+      'DELETE FROM team_scores WHERE judge_user_id = ?'
+    ).bind(id).run()
+
+    event.context.db.prepare(
+      'DELETE FROM ballots WHERE user_id = ?'
+    ).bind(id).run()
+
+    event.context.db.prepare(
+      'DELETE FROM users WHERE id = ?'
+    ).bind(id).run()
   }
 }

@@ -185,7 +185,7 @@ onUnmounted(() => {
 </script>
 
 <template>
-  <div class="mt-12">
+  <div>
 
     <div v-if="!data?.team">
       <p class="mb-4">

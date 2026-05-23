@@ -138,6 +138,7 @@ export default defineEventHandler(async (event: any) => {
 
     session.user = user
     //console.log("[Authorization -> OAuth2] Attached connect MS User")
+
     
 
     generateExchangeCode(session)

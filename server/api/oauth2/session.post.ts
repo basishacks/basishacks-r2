@@ -55,6 +55,7 @@ export function generateExchangeCode(session: AuthorizeSession) {
 }
 
 export async function exchangeAuthorizationCode(code: string): Promise<string> {
+
   const secret = process.env.NUXT_OAUTH2_JWT_SECRET
   if (!secret) {
     throw new Error('NUXT_OAUTH2_JWT_SECRET is not set')

@@ -3,11 +3,15 @@ import { env } from "node:process";
 import { structureLink } from "~~/shared/oauth2";
 
 const metadata = {
-    access_token: null,
-    user_access_token: null
+    access_token: null as string | null,
+    user_access_token: null as string | null
 }
 
+let initPromise: Promise<string | null> | null = null
+
 export default async function initializeMSAccessToken() {
+
+    console.log("[MSGraph] Initializing MS Access Token...")
 
     if (metadata.access_token) {
         console.log("MS Access Token already initialized")
@@ -31,16 +35,22 @@ export default async function initializeMSAccessToken() {
     if (code !== 200) {
       console.warn(`[MS Graph] MS Token Endpoint returned ${code} - Microsoft Graph features will be unavailable`)
       return null
+    } else {
+        console.log("[MSGraph] API Endpoint response: " + code)
     }
     const data: any = await req.json()
     return metadata.access_token = data.access_token
 }
 
-export function getMSAccessToken() {
-    if (!metadata.access_token) {
+export async function getMSAccessToken() {
+    if (!initPromise) {
+        initPromise = initializeMSAccessToken()
+    }
+    const token = await initPromise
+    if (!token) {
         throw new Error("[MS Graph] MS Access Token not initialized")
     }
-    return metadata.access_token;
+    return token;
 }
 
 /*
@@ -54,7 +64,7 @@ async function requestMicrosoft(endpoint: string, method: string = "GET", body: 
         method,
         headers: {
             "Content-Type": "application/json",
-            "Authorization": "Bearer " + getMSAccessToken()
+            "Authorization": "Bearer " + await getMSAccessToken()
         },
         body
     });
