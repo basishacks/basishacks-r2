@@ -2,35 +2,43 @@
  * OAuth2 Token Endpoint
  *
  * Exchanges an authorization code for a JWT access token.
- * Supports application/x-www-form-urlencoded and JSON request bodies.
+ * Accepts application/x-www-form-urlencoded (standard) and JSON request bodies.
  */
 import { exchangeAuthorizationCode } from './session.post'
 import { getOAuth2Application, validateOAuth2ApplicationSecret } from '~~/server/utils/database/oauth2_applications'
+import { OAuth2TokenRequest } from '~~/shared/schemas'
 
 export default defineEventHandler(async (event) => {
-  const body = await readBody(event)
 
-  const grantType = body.grant_type
-  const code = body.code
-  const clientId = body.client_id
-  const clientSecret = body.client_secret
-  const redirectUri = body.redirect_uri
+  console.log("[Authorize -> OAuth2] Token endpoint hit")
 
-  if (grantType !== 'authorization_code') {
-    throw createError({
-      statusCode: 400,
-      statusMessage: 'unsupported_grant_type',
-      message: 'Only authorization_code grant type is supported'
-    })
+  const contentType = getRequestHeader(event, 'content-type') || ''
+
+  let rawBody: any
+  if (contentType.includes('application/x-www-form-urlencoded')) {
+    const text = await readRawBody(event)
+    rawBody = Object.fromEntries(new URLSearchParams(text))
+  } else {
+    rawBody = await readBody(event)
   }
 
-  if (!code || !clientId || !clientSecret) {
+
+
+  let body: OAuth2TokenRequest
+  try {
+    console.log(rawBody)
+    body = await OAuth2TokenRequest.parseAsync(rawBody)
+  } catch (err: any) {
+    const issues = err.issues?.map((i: any) => i.message).join(', ')
+    const message = issues || err.message || 'Invalid request'
     throw createError({
       statusCode: 400,
       statusMessage: 'invalid_request',
-      message: 'code, client_id, and client_secret are required'
+      message
     })
   }
+
+  const { code, client_id: clientId, client_secret: clientSecret, redirect_uri: redirectUri, code_verifier: codeVerifier } = body
 
   const app = await getOAuth2Application(event, clientId)
   if (!app) {
@@ -71,7 +79,9 @@ export default defineEventHandler(async (event) => {
   }
 
   try {
-    const jwt = await exchangeAuthorizationCode(code, clientId, redirectUri)
+    const jwt = await exchangeAuthorizationCode(code, clientId, redirectUri, app.permissions || '', codeVerifier)
+
+    console.log("[Authorize -> OAuth2] Token redeemed for client_id: " + clientId + ", issued JWT: " + jwt.substring(0, 16) + "...")
 
     return {
       access_token: jwt,
