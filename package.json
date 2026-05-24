@@ -5,6 +5,7 @@
   "scripts": {
     "start": "cross-env NODE_ENV=production bun start-fix.mjs",
     "build": "cross-env NODE_OPTIONS=--no-deprecation nuxt build",
+    "build:bun": "node scripts/build-bun.mjs",
     "dev": "cross-env NODE_OPTIONS=--no-deprecation nuxt dev",
     "test": "node --env-file=.env tests/index.js",
     "generate": "nuxt generate",

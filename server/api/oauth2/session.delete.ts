@@ -6,6 +6,7 @@ export default defineEventHandler(async (event) => {
   const sessid = getCookie(event, "bridge_id")
 
   if (!sessid) {
+    // No session ID found in cookies
     throw createError({
         statusCode: 400,
         message: "Cookie 'bridge_id' is required"

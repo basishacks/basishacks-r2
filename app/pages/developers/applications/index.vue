@@ -135,16 +135,7 @@ const columns: TableColumn<OAuth2Application>[] = [
       }, () => (proxy ? 'Yes' : 'No'))
     }
   },
-  {
-    accessorKey: 'redirect_uris',
-    header: 'Redirect URIs',
-    cell: ({ row }) => row.original.redirect_uris ?? '-'
-  },
-  {
-    accessorKey: 'permissions',
-    header: 'Permissions',
-    cell: ({ row }) => row.original.permissions ?? '-'
-  },
+
   {
     id: 'actions',
     header: '',

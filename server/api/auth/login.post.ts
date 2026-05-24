@@ -31,7 +31,7 @@ export default defineEventHandler(async (event) => {
     as a result even a code is generated, basishacks doesnt need to redeem it.
     HOWEVER, for external apps, this code will be used to grant an access token for operations.
   */
-  completeAuthorizeSession(token)
+  // completeAuthorizeSession(token) Removed becuase session is removed after dccallback
 
   generateExchangeCode(session)
 

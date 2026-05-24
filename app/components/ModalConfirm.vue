@@ -32,6 +32,6 @@ const props = defineProps({
   
 })
 
-console.log(props.click)
+//console.log(props.click)
 
 </script>
