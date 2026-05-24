@@ -1,134 +1,143 @@
 <script setup lang="ts">
-import { hasPermission, DevPermissions } from '~~/shared/permissions'
+import { hasPermission, DevPermissions } from '~~/shared/permissions';
 
 definePageMeta({
-  layout: 'developers-dashboard'
-})
+  layout: 'developers-dashboard',
+});
 
 // Client-side permission guard
-const { user: me } = await useApiUser()
-if (!hasPermission(me.value?.role, DevPermissions.PORTAL_DEEPSEEK_VIEW) && !hasPermission(me.value?.role, 'admin')) {
-  await navigateTo('/developers')
-  useToast().add({ title: 'Access denied', description: 'You do not have permission to view DeepSeek.', color: 'error' })
+const { user: me } = await useApiUser();
+if (
+  !hasPermission(me.value?.role, DevPermissions.PORTAL_DEEPSEEK_VIEW) &&
+  !hasPermission(me.value?.role, 'admin')
+) {
+  await navigateTo('/developers');
+  useToast().add({
+    title: 'Access denied',
+    description: 'You do not have permission to view DeepSeek.',
+    color: 'error',
+  });
 }
 
-const toast = useToast()
+const toast = useToast();
 
 // DeepSeek state
-const newSessionName = ref('')
-const creatingSession = ref(false)
-const sessions = ref<Array<{
-  id: number
-  sessionName: string
-  createdAt: number
-  messages: Array<{ role: 'user' | 'assistant' | 'tool'; content: string }>
-}>>([])
-const sessionMessages = ref<Record<number, string>>({})
-const toolCallId = ref<string>('')
-const sendingSessionId = ref<number | null>(null)
-const deletingSessionId = ref<number | null>(null)
+const newSessionName = ref('');
+const creatingSession = ref(false);
+const sessions = ref<
+  Array<{
+    id: number;
+    sessionName: string;
+    createdAt: number;
+    messages: Array<{ role: 'user' | 'assistant' | 'tool'; content: string }>;
+  }>
+>([]);
+const sessionMessages = ref<Record<number, string>>({});
+const toolCallId = ref<string>('');
+const sendingSessionId = ref<number | null>(null);
+const deletingSessionId = ref<number | null>(null);
 
-const roleValue = ref('user')
-const roleValues = ref(['user', 'tool'])
+const roleValue = ref('user');
+const roleValues = ref(['user', 'tool']);
 
 const createSession = async () => {
-  if (!newSessionName.value) return
+  if (!newSessionName.value) return;
 
-  creatingSession.value = true
+  creatingSession.value = true;
   try {
     const session = await $fetch<{
-      id: number
-      sessionName: string
-      createdAt: number
-      messages: Array<{ role: 'user' | 'assistant' | 'tool'; content: string }>
+      id: number;
+      sessionName: string;
+      createdAt: number;
+      messages: Array<{ role: 'user' | 'assistant' | 'tool'; content: string }>;
     }>('/api/debug/deepseek/sessions', {
       method: 'POST',
       body: {
         sessionName: newSessionName.value,
       },
-    })
+    });
 
-    sessions.value.push(session)
-    sessionMessages.value[session.id] = ''
-    newSessionName.value = ''
+    sessions.value.push(session);
+    sessionMessages.value[session.id] = '';
+    newSessionName.value = '';
 
     toast.add({
       title: 'Session created',
       description: `"${session.sessionName}" is ready.`,
-      color: 'success'
-    })
+      color: 'success',
+    });
   } catch (err: any) {
     toast.add({
       title: 'Error',
       description: err.message || 'Failed to create session',
-      color: 'error'
-    })
+      color: 'error',
+    });
   } finally {
-    creatingSession.value = false
+    creatingSession.value = false;
   }
-}
+};
 
 const sendMessage = async (sessionId: number) => {
-  const message = sessionMessages.value[sessionId]
-  if (!message) return
+  const message = sessionMessages.value[sessionId];
+  if (!message) return;
 
-  sendingSessionId.value = sessionId
+  sendingSessionId.value = sessionId;
   try {
     const response = await $fetch<{
-      sessionId: number
-      userMessage: string
-      assistantMessage: string
-      allMessages: Array<{ role: 'user' | 'assistant' | 'tool'; content: string }>
+      sessionId: number;
+      userMessage: string;
+      assistantMessage: string;
+      allMessages: Array<{ role: 'user' | 'assistant' | 'tool'; content: string }>;
     }>(`/api/debug/deepseek/sessions/${sessionId}/message`, {
       method: 'POST',
       body: {
         message,
         role: roleValue.value,
-        toolId: toolCallId.value
+        toolId: toolCallId.value,
       },
-    })
+    });
 
-    const sessionIndex = sessions.value.findIndex((s) => s.id === sessionId)
+    const sessionIndex = sessions.value.findIndex((s) => s.id === sessionId);
     if (sessionIndex != -1) {
-      sessions.value[sessionIndex]!.messages = response.allMessages
+      sessions.value[sessionIndex]!.messages = response.allMessages;
     }
 
-    sessionMessages.value[sessionId] = ''
+    sessionMessages.value[sessionId] = '';
   } catch (err: any) {
     toast.add({
       title: 'Error',
       description: err.message || 'Failed to send message',
-      color: 'error'
-    })
+      color: 'error',
+    });
   } finally {
-    sendingSessionId.value = null
+    sendingSessionId.value = null;
   }
-}
+};
 
 const deleteSession = async (sessionId: number) => {
-  deletingSessionId.value = sessionId
+  deletingSessionId.value = sessionId;
   try {
     await $fetch(`/api/debug/deepseek/sessions/${sessionId}`, {
       method: 'DELETE',
-    })
+    });
 
-    sessions.value = sessions.value.filter((s) => s.id !== sessionId)
-    delete sessionMessages.value[sessionId]
+    sessions.value = sessions.value.filter((s) => s.id !== sessionId);
+    delete sessionMessages.value[sessionId];
 
     toast.add({
       title: 'Session deleted',
-      color: 'success'
-    })
+      color: 'success',
+    });
   } catch (err: any) {
     toast.add({
       title: 'Error',
       description: err.message || 'Failed to delete session',
-      color: 'error'
-    })
+      color: 'error',
+    });
   } finally {
-    deletingSessionId.value = null
+    deletingSessionId.value = null;
   }
-}
+};
 </script>
 
 <template>
@@ -148,11 +157,7 @@ const deleteSession = async (sessionId: number) => {
         </template>
 
         <div class="flex gap-2">
-          <UInput
-            v-model="newSessionName"
-            placeholder="Enter session name"
-            class="flex-1"
-          />
+          <UInput v-model="newSessionName" placeholder="Enter session name" class="flex-1" />
           <UButton
             label="Create Session"
             :loading="creatingSession"
@@ -171,7 +176,9 @@ const deleteSession = async (sessionId: number) => {
             <div class="flex justify-between items-center">
               <div>
                 <h3 class="font-semibold">{{ session.sessionName }}</h3>
-                <p class="text-sm text-muted">ID: {{ session.id }} | Messages: {{ session.messages.length }}</p>
+                <p class="text-sm text-muted">
+                  ID: {{ session.id }} | Messages: {{ session.messages.length }}
+                </p>
               </div>
               <UButton
                 color="error"
@@ -184,8 +191,12 @@ const deleteSession = async (sessionId: number) => {
             </div>
           </template>
 
-          <div class="bg-elevated/50 p-3 rounded-lg mb-3 max-h-64 overflow-y-auto border border-default">
-            <div v-if="session.messages.length === 0" class="text-muted text-sm">No messages yet</div>
+          <div
+            class="bg-elevated/50 p-3 rounded-lg mb-3 max-h-64 overflow-y-auto border border-default"
+          >
+            <div v-if="session.messages.length === 0" class="text-muted text-sm">
+              No messages yet
+            </div>
             <div v-for="(msg, idx) in session.messages" :key="idx" class="mb-2">
               <p :class="msg.role === 'user' ? 'font-semibold text-primary' : 'text-highlighted'">
                 {{ msg.role === 'user' ? 'You' : 'Barron' }}:

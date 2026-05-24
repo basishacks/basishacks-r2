@@ -2,11 +2,7 @@
 export default defineNuxtConfig({
   compatibilityDate: '2025-07-15',
   devtools: { enabled: true },
-  modules: [
-    '@nuxt/eslint',
-    '@nuxt/ui',
-    'nuxt-auth-utils',
-  ],
+  modules: ['@nuxt/eslint', '@nuxt/ui', 'nuxt-auth-utils'],
   css: ['~/assets/css/main.css'],
   runtimeConfig: {
     sendCodeURL: '',
@@ -40,30 +36,30 @@ export default defineNuxtConfig({
       sourcemap: false,
       rollupOptions: {
         onwarn(warning, warn) {
-          if (warning.message.includes('Sourcemap is likely to be incorrect')) return
-          if (warning.code === 'TOLERATED_TRANSFORM') return
-          if (warning.code === 'PLUGIN_TIMINGS') return
-          if (warning.code === 'CIRCULAR_DEPENDENCY') return
-          if (warning.message.includes('/* #__PURE__ */')) return
-          warn(warning)
-        }
-      }
-    }
+          if (warning.message.includes('Sourcemap is likely to be incorrect')) return;
+          if (warning.code === 'TOLERATED_TRANSFORM') return;
+          if (warning.code === 'PLUGIN_TIMINGS') return;
+          if (warning.code === 'CIRCULAR_DEPENDENCY') return;
+          if (warning.message.includes('/* #__PURE__ */')) return;
+          warn(warning);
+        },
+      },
+    },
   },
   nitro: {
     preset: 'bun',
     externals: {
       // trace: true
-      trace: false
+      trace: false,
     },
     rollupConfig: {
       onwarn(warning, warn) {
-        if (warning.code === 'UNRESOLVED_IMPORT') return
-        if (warning.code === 'CIRCULAR_DEPENDENCY') return
-        if (warning.code === 'PLUGIN_TIMINGS') return
-        if (warning.message.includes('/* #__PURE__ */')) return
-        warn(warning)
-      }
-    }
-  }
-})
+        if (warning.code === 'UNRESOLVED_IMPORT') return;
+        if (warning.code === 'CIRCULAR_DEPENDENCY') return;
+        if (warning.code === 'PLUGIN_TIMINGS') return;
+        if (warning.message.includes('/* #__PURE__ */')) return;
+        warn(warning);
+      },
+    },
+  },
+});

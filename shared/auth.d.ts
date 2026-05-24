@@ -1,7 +1,7 @@
 declare module '#auth-utils' {
   interface User {
-    id: number
+    id: number;
   }
 }
 
-export {}
+export {};

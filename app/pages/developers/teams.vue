@@ -1,73 +1,80 @@
 <script setup lang="ts">
-import type { TableColumn } from '@nuxt/ui'
-import { upperFirst } from 'scule'
-import { getPaginationRowModel } from '@tanstack/table-core'
-import { hasPermission, DevPermissions } from '~~/shared/permissions'
+import type { TableColumn } from '@nuxt/ui';
+import { upperFirst } from 'scule';
+import { getPaginationRowModel } from '@tanstack/table-core';
+import { hasPermission, DevPermissions } from '~~/shared/permissions';
 
 definePageMeta({
-  layout: 'developers-dashboard'
-})
+  layout: 'developers-dashboard',
+});
 
-const UButton = resolveComponent('UButton')
-const UBadge = resolveComponent('UBadge')
-const UCheckbox = resolveComponent('UCheckbox')
+const UButton = resolveComponent('UButton');
+const UBadge = resolveComponent('UBadge');
+const UCheckbox = resolveComponent('UCheckbox');
 
-const toast = useToast()
-const table = useTemplateRef<any>('table')
-const modalOpen = ref(false)
+const toast = useToast();
+const table = useTemplateRef<any>('table');
+const modalOpen = ref(false);
 
-const columnFilters = ref([{
-  id: 'name',
-  value: ''
-}])
-const columnVisibility = ref()
-const rowSelection = ref<Record<string, boolean>>({})
+const columnFilters = ref([
+  {
+    id: 'name',
+    value: '',
+  },
+]);
+const columnVisibility = ref();
+const rowSelection = ref<Record<string, boolean>>({});
 
 const { data, status, refresh } = await useFetch<Team[]>('/api/admin/teams', {
-  lazy: true
-})
+  lazy: true,
+});
 
 // Client-side permission guard
-const { user: me } = await useApiUser()
-if (!hasPermission(me.value?.role, DevPermissions.PORTAL_TEAMS_VIEW) && !hasPermission(me.value?.role, 'admin')) {
-  await navigateTo('/developers')
-  useToast().add({ title: 'Access denied', description: 'You do not have permission to view teams.', color: 'error' })
+const { user: me } = await useApiUser();
+if (
+  !hasPermission(me.value?.role, DevPermissions.PORTAL_TEAMS_VIEW) &&
+  !hasPermission(me.value?.role, 'admin')
+) {
+  await navigateTo('/developers');
+  useToast().add({
+    title: 'Access denied',
+    description: 'You do not have permission to view teams.',
+    color: 'error',
+  });
 }
 
 const selectedRows = computed<any[]>(() => {
-  if (!table.value?.tableApi) return []
-  return table.value.tableApi.getFilteredSelectedRowModel().rows
-})
+  if (!table.value?.tableApi) return [];
+  return table.value.tableApi.getFilteredSelectedRowModel().rows;
+});
 
-const selectedIds = computed(() =>
-  selectedRows.value.map((row: any) => row.original.id as number)
-)
+const selectedIds = computed(() => selectedRows.value.map((row: any) => row.original.id as number));
 
 async function onDelete() {
-  if (selectedIds.value.length === 0) return
+  if (selectedIds.value.length === 0) return;
 
   try {
     await $fetch('/api/admin/teams', {
       method: 'DELETE',
-      body: { ids: selectedIds.value }
-    })
+      body: { ids: selectedIds.value },
+    });
 
     toast.add({
       title: 'Teams deleted',
       description: `Successfully deleted ${selectedIds.value.length} team(s).`,
-      color: 'success'
-    })
+      color: 'success',
+    });
 
-    rowSelection.value = {}
-    await refresh()
+    rowSelection.value = {};
+    await refresh();
   } catch (e: any) {
     toast.add({
       title: 'Error',
       description: e?.data?.message || e?.message || 'Failed to delete teams.',
-      color: 'error'
-    })
+      color: 'error',
+    });
   } finally {
-    modalOpen.value = false
+    modalOpen.value = false;
   }
 }
 
@@ -76,28 +83,28 @@ const columns: TableColumn<Team>[] = [
     id: 'select',
     header: ({ table }) =>
       h(UCheckbox, {
-        'modelValue': table.getIsSomePageRowsSelected()
+        modelValue: table.getIsSomePageRowsSelected()
           ? 'indeterminate'
           : table.getIsAllPageRowsSelected(),
         'onUpdate:modelValue': (value: boolean | 'indeterminate') =>
           table.toggleAllPageRowsSelected(!!value),
-        'ariaLabel': 'Select all'
+        ariaLabel: 'Select all',
       }),
     cell: ({ row }) =>
       h(UCheckbox, {
-        'modelValue': row.getIsSelected(),
+        modelValue: row.getIsSelected(),
         'onUpdate:modelValue': (value: boolean | 'indeterminate') => row.toggleSelected(!!value),
-        'ariaLabel': 'Select row'
-      })
+        ariaLabel: 'Select row',
+      }),
   },
   {
     accessorKey: 'id',
-    header: 'ID'
+    header: 'ID',
   },
   {
     accessorKey: 'name',
     header: ({ column }) => {
-      const isSorted = column.getIsSorted()
+      const isSorted = column.getIsSorted();
 
       return h(UButton, {
         color: 'neutral',
@@ -109,61 +116,65 @@ const columns: TableColumn<Team>[] = [
             : 'i-lucide-arrow-down-wide-narrow'
           : 'i-lucide-arrow-up-down',
         class: '-mx-2.5',
-        onClick: () => column.toggleSorting(column.getIsSorted() === 'asc')
-      })
-    }
+        onClick: () => column.toggleSorting(column.getIsSorted() === 'asc'),
+      });
+    },
   },
   {
     accessorKey: 'pathway',
     header: 'Pathway',
     cell: ({ row }) => {
-      const pathway = row.original.pathway
-      if (!pathway) return '-'
-      const color = pathway === 'senior' ? 'warning' : 'primary'
-      return h(UBadge, { class: 'capitalize', variant: 'subtle', color }, () => pathway)
-    }
+      const pathway = row.original.pathway;
+      if (!pathway) return '-';
+      const color = pathway === 'senior' ? 'warning' : 'primary';
+      return h(UBadge, { class: 'capitalize', variant: 'subtle', color }, () => pathway);
+    },
   },
   {
     accessorKey: 'score',
     header: 'Score',
-    cell: ({ row }) => row.original.score ?? '-'
+    cell: ({ row }) => row.original.score ?? '-',
   },
   {
     accessorKey: 'rank',
     header: 'Rank',
-    cell: ({ row }) => row.original.rank ?? '-'
+    cell: ({ row }) => row.original.rank ?? '-',
   },
   {
     accessorKey: 'project_name',
-    header: 'Project'
+    header: 'Project',
   },
   {
     accessorKey: 'project_submitted',
     header: 'Submitted',
     cell: ({ row }) => {
-      const submitted = row.original.project_submitted
-      return h(UBadge, {
-        class: 'capitalize',
-        variant: 'subtle',
-        color: submitted ? 'success' : 'neutral'
-      }, () => (submitted ? 'Yes' : 'No'))
-    }
-  }
-]
+      const submitted = row.original.project_submitted;
+      return h(
+        UBadge,
+        {
+          class: 'capitalize',
+          variant: 'subtle',
+          color: submitted ? 'success' : 'neutral',
+        },
+        () => (submitted ? 'Yes' : 'No'),
+      );
+    },
+  },
+];
 
 const nameFilter = computed({
   get: (): string => {
-    return (table.value?.tableApi?.getColumn('name')?.getFilterValue() as string) || ''
+    return (table.value?.tableApi?.getColumn('name')?.getFilterValue() as string) || '';
   },
   set: (value: string) => {
-    table.value?.tableApi?.getColumn('name')?.setFilterValue(value || undefined)
-  }
-})
+    table.value?.tableApi?.getColumn('name')?.setFilterValue(value || undefined);
+  },
+});
 
 const pagination = ref({
   pageIndex: 0,
-  pageSize: 10
-})
+  pageSize: 10,
+});
 </script>
 
 <template>
@@ -209,11 +220,11 @@ const pagination = ref({
                   type: 'checkbox' as const,
                   checked: column.getIsVisible(),
                   onUpdateChecked(checked: boolean) {
-                    table?.tableApi?.getColumn(column.id)?.toggleVisibility(!!checked)
+                    table?.tableApi?.getColumn(column.id)?.toggleVisibility(!!checked);
                   },
                   onSelect(e?: Event) {
-                    e?.preventDefault()
-                  }
+                    e?.preventDefault();
+                  },
                 }))
             "
             :content="{ align: 'end' }"
@@ -235,7 +246,7 @@ const pagination = ref({
         v-model:row-selection="rowSelection"
         v-model:pagination="pagination"
         :pagination-options="{
-          getPaginationRowModel: getPaginationRowModel()
+          getPaginationRowModel: getPaginationRowModel(),
         }"
         class="shrink-0"
         :data="data"
@@ -247,7 +258,7 @@ const pagination = ref({
           tbody: '[&>tr]:last:[&>td]:border-b-0',
           th: 'py-2 first:rounded-l-lg last:rounded-r-lg border-y border-default first:border-l last:border-r',
           td: 'border-b border-default',
-          separator: 'h-0'
+          separator: 'h-0',
         }"
       />
 
@@ -280,18 +291,15 @@ const pagination = ref({
         </template>
 
         <p class="text-muted">
-          Are you sure you want to delete <strong>{{ selectedRows.length }}</strong> selected team(s)?
-          This action cannot be undone.
+          Are you sure you want to delete
+          <strong>{{ selectedRows.length }}</strong>
+          selected team(s)? This action cannot be undone.
         </p>
 
         <template #footer>
           <div class="flex justify-end gap-2">
-            <UButton color="neutral" variant="outline" @click="modalOpen = false">
-              Cancel
-            </UButton>
-            <UButton color="error" @click="onDelete">
-              Delete
-            </UButton>
+            <UButton color="neutral" variant="outline" @click="modalOpen = false">Cancel</UButton>
+            <UButton color="error" @click="onDelete">Delete</UButton>
           </div>
         </template>
       </UCard>

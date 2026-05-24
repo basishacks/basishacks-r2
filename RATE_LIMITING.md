@@ -1,9 +1,11 @@
 # Rate Limiting Guide
 
 ## Overview
+
 Rate limiting has been added to prevent abuse while allowing normal usage.
 
 ### Configuration
+
 - **Default: 60 requests per minute** per user/IP
 - This allows ~1 request/second, suitable for:
   - Normal voting/judging operations
@@ -16,13 +18,13 @@ Rate limiting has been added to prevent abuse while allowing normal usage.
 ### Apply to a single endpoint:
 
 ```typescript
-import { applyRateLimit } from '~/server/utils/rateLimit'
+import { applyRateLimit } from '~/server/utils/rateLimit';
 
 export default defineEventHandler(
   applyRateLimit(async (event) => {
     // Your handler code
-  })
-)
+  }),
+);
 ```
 
 ### Apply with custom limits:
@@ -33,9 +35,9 @@ export default defineEventHandler(
     async (event) => {
       // Your handler code
     },
-    { maxRequests: 30, windowMs: 60 * 1000 } // 30 per minute
-  )
-)
+    { maxRequests: 30, windowMs: 60 * 1000 }, // 30 per minute
+  ),
+);
 ```
 
 ## How It Works

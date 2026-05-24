@@ -1,47 +1,46 @@
 <script setup lang="ts">
-import type { FormSubmitEvent } from '@nuxt/ui'
-import { CreateTeamRequest } from '~~/shared/schemas'
+import type { FormSubmitEvent } from '@nuxt/ui';
+import { CreateTeamRequest } from '~~/shared/schemas';
 
 definePageMeta({
   layout: 'dashboard',
   middleware: 'auth',
-})
+});
 useHead({
   title: `New Team | ${WEBSITE_NAME}`,
-})
+});
 
-const toast = useToast()
+const toast = useToast();
 
 const state = reactive({
   name: '',
-})
+});
 
-const { user: userRef } = useUserSession()
-const user = computed(() => userRef.value!)
+const { user: userRef } = useUserSession();
+const user = computed(() => userRef.value!);
 
 const { data, error, refresh } = await useFetch<GetUserResponse>(
   () => `/api/users/${user.value.id}`,
-)
-const { data: hackathon, error: hackathonError } =
-  await useFetch('/api/hackathon')
+);
+const { data: hackathon, error: hackathonError } = await useFetch('/api/hackathon');
 if (hackathonError.value) {
-  throw hackathonError.value
+  throw hackathonError.value;
 }
 if (error.value) {
-  throw error.value
+  throw error.value;
 }
 
-const isDirty = ref(false)
+const isDirty = ref(false);
 
 async function refreshData() {
   await withLoadingIndicator(async () => {
-    await refresh()
-  })
-  isDirty.value = false
+    await refresh();
+  });
+  isDirty.value = false;
 }
 
 async function onSubmit(event: FormSubmitEvent<CreateTeamRequest>) {
-  const { name } = event.data
+  const { name } = event.data;
 
   try {
     await withLoadingIndicator(async () => {
@@ -49,19 +48,19 @@ async function onSubmit(event: FormSubmitEvent<CreateTeamRequest>) {
         method: 'POST',
         body: { name },
         query: { add: true },
-      })
+      });
       toast.add({
         color: 'success',
         title: 'Your team is created',
-      })
-    })
-    await navigateTo('/dashboard')
+      });
+    });
+    await navigateTo('/dashboard');
   } catch (e) {
     toast.add({
       color: 'error',
       title: 'Failed to create team',
       description: getErrorMessage(e),
-    })
+    });
   }
 }
 </script>
@@ -90,15 +89,14 @@ async function onSubmit(event: FormSubmitEvent<CreateTeamRequest>) {
 
   <div v-else>
     <div>
-        <TeamForm
-          :team="data.team"
-          :disabled="
-            (hackathon?.status !== 'in_progress' &&
-              hackathon?.status !== 'not_started') ||
-            data.team.project.submitted
-          "
-          @refresh="refreshData"
-        />
-      </div>
+      <TeamForm
+        :team="data.team"
+        :disabled="
+          (hackathon?.status !== 'in_progress' && hackathon?.status !== 'not_started') ||
+          data.team.project.submitted
+        "
+        @refresh="refreshData"
+      />
+    </div>
   </div>
 </template>

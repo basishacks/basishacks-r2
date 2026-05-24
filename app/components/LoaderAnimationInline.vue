@@ -1,30 +1,34 @@
 <template>
-
   <div class="flex flex-col items-center">
     <svg class="infinity w-50 h-25 max-sm:w-[50vw]" viewBox="-1 -1 12 8">
-  <defs>
-      <path id="infinite" d="M5 3C4 2 3.1 1 2 1a2 2 0 000 4c1.1 0 2-1 3-2s1.9-2 3-2a2 2 0 010 4C6.9 5 6 4 5 3"/>
-      <radialGradient id="rgradient" gradientUnits="userSpaceOnUse" cx="5" cy="3" r="3.4">
-      <stop offset=".25" stop-color="#000"/>
-      <stop offset=".9" stop-color="#000" stop-opacity="0"/>
-      </radialGradient>
-      <path id="shadow1" class="clip-shadow" d="M4.5 2.5C3.7 1.7 2.9 1 2 1m6 4c-1 0-1.7-.7-2.5-1.5"/>
-  </defs>
-  <use href="#infinite" class="outside"/>
-  <use href="#shadow1" class="shadow"/>
-  <g class="shadow odd">
-      <use href="#shadow1" transform="translate(0 6) scale(1, -1)" />
-  </g>
-  <use href="#infinite" class="inside"/>
-  </svg>
+      <defs>
+        <path
+          id="infinite"
+          d="M5 3C4 2 3.1 1 2 1a2 2 0 000 4c1.1 0 2-1 3-2s1.9-2 3-2a2 2 0 010 4C6.9 5 6 4 5 3"
+        />
+        <radialGradient id="rgradient" gradientUnits="userSpaceOnUse" cx="5" cy="3" r="3.4">
+          <stop offset=".25" stop-color="#000" />
+          <stop offset=".9" stop-color="#000" stop-opacity="0" />
+        </radialGradient>
+        <path
+          id="shadow1"
+          class="clip-shadow"
+          d="M4.5 2.5C3.7 1.7 2.9 1 2 1m6 4c-1 0-1.7-.7-2.5-1.5"
+        />
+      </defs>
+      <use href="#infinite" class="outside" />
+      <use href="#shadow1" class="shadow" />
+      <g class="shadow odd">
+        <use href="#shadow1" transform="translate(0 6) scale(1, -1)" />
+      </g>
+      <use href="#infinite" class="inside" />
+    </svg>
 
-  <h3>Just a moment</h3>
+    <h3>Just a moment</h3>
   </div>
-
 </template>
 
 <style scoped>
-
 svg {
   display: block;
 }
@@ -63,15 +67,18 @@ svg {
 }
 
 @keyframes raise {
-  0%, 20% {
+  0%,
+  20% {
     opacity: 1;
   }
 
-  30%, 70% {
+  30%,
+  70% {
     opacity: 0;
   }
 
-  80%, 100% {
+  80%,
+  100% {
     opacity: 1;
   }
 }
@@ -97,5 +104,4 @@ svg {
 #rgradient stop {
   stop-color: #2345;
 }
-
 </style>

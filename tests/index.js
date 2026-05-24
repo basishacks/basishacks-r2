@@ -1,5 +1,9 @@
-import { testMicrosoftMeeting, testCreateMicrosoftMeeting, testInitializeDummyUserAccessToken } from "./test.microsoft.ts";
-import initializeMSAccessToken from "../server/plugins/microsoft.ts";
+import {
+  testMicrosoftMeeting,
+  testCreateMicrosoftMeeting,
+  testInitializeDummyUserAccessToken,
+} from './test.microsoft.ts';
+import initializeMSAccessToken from '../server/plugins/microsoft.ts';
 
 // const result_testMicrosoftMeeting = await testMicrosoftMeeting(token, "9a18ec7b-65e1-4cd4-b489-57921e09f739");
 // console.log("================================")
@@ -11,7 +15,7 @@ import initializeMSAccessToken from "../server/plugins/microsoft.ts";
 // console.log("testCreateMicrosoftMeeting: " + (result_testCreateMicrosoftMeeting ? "PASSED" : "FAILED"));
 // console.log("================================")
 
-// This will not work unless admins approve 
+// This will not work unless admins approve
 // const result_testCreateMicrosoftMeeting = await testInitializeDummyUserAccessToken();
 // console.log("================================")
 // console.log("testCreateMicrosoftMeeting: " + (result_testCreateMicrosoftMeeting ? "PASSED" : "FAILED"));
@@ -39,10 +43,10 @@ import initializeMSAccessToken from "../server/plugins/microsoft.ts";
 // console.log("testDeepSeek: " + (result_testDeepSeek ? "PASSED" : "FAILED"));
 // console.log("================================")
 
-import { testSearch } from "./test.search.ts"
+import { testSearch } from './test.search.ts';
 
-console.log("Running tests...");
+console.log('Running tests...');
 const result_testSearch = await testSearch();
-console.log("================================")
-console.log("testSearch: " + (result_testSearch ? "PASSED" : "FAILED"));
-console.log("================================")
+console.log('================================');
+console.log('testSearch: ' + (result_testSearch ? 'PASSED' : 'FAILED'));
+console.log('================================');

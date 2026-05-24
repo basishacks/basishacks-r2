@@ -1,51 +1,49 @@
 <script setup lang="ts">
-import type { FormSubmitEvent } from '@nuxt/ui'
-import rubrics from '~~/shared/rubric'
-import { CreateTeamScoresRequest } from '~~/shared/schemas'
+import type { FormSubmitEvent } from '@nuxt/ui';
+import rubrics from '~~/shared/rubric';
+import { CreateTeamScoresRequest } from '~~/shared/schemas';
 
 const { team } = defineProps<{
-  team: APITeam
-}>()
+  team: APITeam;
+}>();
 const emit = defineEmits<{
-  scored: []
-}>()
+  scored: [];
+}>();
 
-const toast = useToast()
+const toast = useToast();
 
 const state = reactive<CreateTeamScoresRequest>({
   reasoning: '',
   scores: Object.keys(rubrics[team.pathway!]).reduce(
     (obj, key) => ({ ...obj, [key]: 0 }),
-    {} as Record<keyof (typeof rubrics)['junior'], 0 | 1 | 2 | 3 | 4 | 5>
+    {} as Record<keyof (typeof rubrics)['junior'], 0 | 1 | 2 | 3 | 4 | 5>,
   ),
-})
+});
 
 async function onSubmit(event: FormSubmitEvent<CreateTeamScoresRequest>) {
   if (
-    !confirm(
-      'Are you sure you want to submit these scores? You cannot edit them after submission.'
-    )
+    !confirm('Are you sure you want to submit these scores? You cannot edit them after submission.')
   )
-    return
+    return;
 
   try {
     await withLoadingIndicator(async () => {
       const res = await $fetch(`/api/teams/${team.id}/scores`, {
         method: 'POST',
         body: event.data,
-      })
+      });
       toast.add({
         color: 'success',
         title: res.message,
-      })
-    })
-    emit('scored')
+      });
+    });
+    emit('scored');
   } catch (e) {
     toast.add({
       color: 'error',
       title: 'Failed to score project',
       description: getErrorMessage(e),
-    })
+    });
   }
 }
 </script>
@@ -64,8 +62,9 @@ async function onSubmit(event: FormSubmitEvent<CreateTeamScoresRequest>) {
           :href="team.project.repo_url!"
           external
           target="_blank"
-          >Repo</UButton
         >
+          Repo
+        </UButton>
       </UTooltip>
       <UTooltip :text="team.project.demo_url!">
         <UButton
@@ -74,19 +73,20 @@ async function onSubmit(event: FormSubmitEvent<CreateTeamScoresRequest>) {
           :href="team.project.demo_url!"
           external
           target="_blank"
-          >Demo</UButton
         >
+          Demo
+        </UButton>
       </UTooltip>
     </div>
 
-    <hr class="text-neutral-500 my-4" >
+    <hr class="text-neutral-500 my-4" />
 
     <h3 class="bold text-xl mb-2">Your scores</h3>
 
     <UForm :schema="CreateTeamScoresRequest" :state="state" @submit="onSubmit">
       <ul class="mb-4">
         <li
-          v-for="[key, rubric] in (Object.entries(rubrics[team.pathway!]))"
+          v-for="[key, rubric] in Object.entries(rubrics[team.pathway!])"
           :key="key"
           class="flex items-center gap-4 mb-2"
         >
@@ -96,7 +96,12 @@ async function onSubmit(event: FormSubmitEvent<CreateTeamScoresRequest>) {
           </UTooltip>
           <URadioGroup
             v-model="state.scores[key as keyof typeof state.scores]"
-            :items="[0, 1, 2, 3, 4, 5].map((v) => ({ label: `${v}`, value: v as 0|1|2|3|4|5 }))"
+            :items="
+              [0, 1, 2, 3, 4, 5].map((v) => ({
+                label: `${v}`,
+                value: v as 0 | 1 | 2 | 3 | 4 | 5,
+              }))
+            "
             variant="table"
             orientation="horizontal"
           />

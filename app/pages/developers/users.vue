@@ -1,74 +1,81 @@
 <script setup lang="ts">
-import type { TableColumn } from '@nuxt/ui'
-import { upperFirst } from 'scule'
-import { getPaginationRowModel } from '@tanstack/table-core'
-import { hasPermission, DevPermissions, parsePermissions } from '~~/shared/permissions'
+import type { TableColumn } from '@nuxt/ui';
+import { upperFirst } from 'scule';
+import { getPaginationRowModel } from '@tanstack/table-core';
+import { hasPermission, DevPermissions, parsePermissions } from '~~/shared/permissions';
 
 definePageMeta({
-  layout: 'developers-dashboard'
-})
+  layout: 'developers-dashboard',
+});
 
-const UAvatar = resolveComponent('UAvatar')
-const UButton = resolveComponent('UButton')
-const UBadge = resolveComponent('UBadge')
-const UCheckbox = resolveComponent('UCheckbox')
+const UAvatar = resolveComponent('UAvatar');
+const UButton = resolveComponent('UButton');
+const UBadge = resolveComponent('UBadge');
+const UCheckbox = resolveComponent('UCheckbox');
 
-const toast = useToast()
-const table = useTemplateRef<any>('table')
-const modalOpen = ref(false)
+const toast = useToast();
+const table = useTemplateRef<any>('table');
+const modalOpen = ref(false);
 
-const columnFilters = ref([{
-  id: 'email',
-  value: ''
-}])
-const columnVisibility = ref()
-const rowSelection = ref<Record<string, boolean>>({})
+const columnFilters = ref([
+  {
+    id: 'email',
+    value: '',
+  },
+]);
+const columnVisibility = ref();
+const rowSelection = ref<Record<string, boolean>>({});
 
 const { data, status, refresh } = await useFetch<User[]>('/api/users', {
-  lazy: true
-})
+  lazy: true,
+});
 
 // Client-side permission guard
-const { user: me } = await useApiUser()
-if (!hasPermission(me.value?.role, DevPermissions.PORTAL_USERS_VIEW) && !hasPermission(me.value?.role, 'admin')) {
-  await navigateTo('/developers')
-  useToast().add({ title: 'Access denied', description: 'You do not have permission to view users.', color: 'error' })
+const { user: me } = await useApiUser();
+if (
+  !hasPermission(me.value?.role, DevPermissions.PORTAL_USERS_VIEW) &&
+  !hasPermission(me.value?.role, 'admin')
+) {
+  await navigateTo('/developers');
+  useToast().add({
+    title: 'Access denied',
+    description: 'You do not have permission to view users.',
+    color: 'error',
+  });
 }
 
 const selectedRows = computed<any[]>(() => {
-  if (!table.value?.tableApi) return []
-  return table.value.tableApi.getFilteredSelectedRowModel().rows
-})
+  if (!table.value?.tableApi) return [];
+  return table.value.tableApi.getFilteredSelectedRowModel().rows;
+});
 
-const selectedIds = computed(() =>
-  selectedRows.value.map((row: any) => row.original.id as number)
-)
+const selectedIds = computed(() => selectedRows.value.map((row: any) => row.original.id as number));
 
 async function onDelete() {
-  if (selectedIds.value.length === 0) return
+  if (selectedIds.value.length === 0) return;
 
   try {
     await $fetch('/api/users', {
       method: 'DELETE',
-      body: { ids: selectedIds.value }
-    })
+      body: { ids: selectedIds.value },
+    });
 
     toast.add({
       title: 'Users deleted',
       description: `Successfully deleted ${selectedIds.value.length} user(s).`,
-      color: 'success'
-    })
+      color: 'success',
+    });
 
-    rowSelection.value = {}
-    await refresh()
+    rowSelection.value = {};
+    await refresh();
   } catch (e: any) {
     toast.add({
       title: 'Error',
       description: e?.data?.message || e?.message || 'Failed to delete users.',
-      color: 'error'
-    })
+      color: 'error',
+    });
   } finally {
-    modalOpen.value = false
+    modalOpen.value = false;
   }
 }
 
@@ -77,43 +84,45 @@ const columns: TableColumn<User>[] = [
     id: 'select',
     header: ({ table }) =>
       h(UCheckbox, {
-        'modelValue': table.getIsSomePageRowsSelected()
+        modelValue: table.getIsSomePageRowsSelected()
           ? 'indeterminate'
           : table.getIsAllPageRowsSelected(),
         'onUpdate:modelValue': (value: boolean | 'indeterminate') =>
           table.toggleAllPageRowsSelected(!!value),
-        'ariaLabel': 'Select all'
+        ariaLabel: 'Select all',
       }),
     cell: ({ row }) =>
       h(UCheckbox, {
-        'modelValue': row.getIsSelected(),
+        modelValue: row.getIsSelected(),
         'onUpdate:modelValue': (value: boolean | 'indeterminate') => row.toggleSelected(!!value),
-        'ariaLabel': 'Select row'
-      })
+        ariaLabel: 'Select row',
+      }),
   },
   {
     accessorKey: 'id',
-    header: 'ID'
+    header: 'ID',
   },
   {
     accessorKey: 'name',
     header: 'Name',
     cell: ({ row }) => {
-      const name = row.original.name ?? 'Unknown'
+      const name = row.original.name ?? 'Unknown';
       return h('div', { class: 'flex items-center gap-3' }, [
         h(UAvatar, {
-          src: row.original.profile_picture ? `/userast/${row.original.profile_picture}` : undefined,
+          src: row.original.profile_picture
+            ? `/userast/${row.original.profile_picture}`
+            : undefined,
           alt: name,
-          size: 'lg'
+          size: 'lg',
         }),
-        h('p', { class: 'font-medium text-highlighted' }, name)
-      ])
-    }
+        h('p', { class: 'font-medium text-highlighted' }, name),
+      ]);
+    },
   },
   {
     accessorKey: 'email',
     header: ({ column }) => {
-      const isSorted = column.getIsSorted()
+      const isSorted = column.getIsSorted();
 
       return h(UButton, {
         color: 'neutral',
@@ -125,43 +134,45 @@ const columns: TableColumn<User>[] = [
             : 'i-lucide-arrow-down-wide-narrow'
           : 'i-lucide-arrow-up-down',
         class: '-mx-2.5',
-        onClick: () => column.toggleSorting(column.getIsSorted() === 'asc')
-      })
-    }
+        onClick: () => column.toggleSorting(column.getIsSorted() === 'asc'),
+      });
+    },
   },
   {
     accessorKey: 'role',
     header: 'Permissions',
     cell: ({ row }) => {
-      const perms = parsePermissions(row.original.role)
-      return h('div', { class: 'flex flex-wrap gap-1' },
+      const perms = parsePermissions(row.original.role);
+      return h(
+        'div',
+        { class: 'flex flex-wrap gap-1' },
         perms.map((p) => {
-          const color = p === 'admin' ? 'error' : p === 'judge' ? 'warning' : 'primary'
-          return h(UBadge, { class: 'capitalize', variant: 'subtle', color, size: 'sm' }, () => p)
-        })
-      )
-    }
+          const color = p === 'admin' ? 'error' : p === 'judge' ? 'warning' : 'primary';
+          return h(UBadge, { class: 'capitalize', variant: 'subtle', color, size: 'sm' }, () => p);
+        }),
+      );
+    },
   },
   {
     accessorKey: 'team_id',
     header: 'Team ID',
-    cell: ({ row }) => row.original.team_id ?? '-'
-  }
-]
+    cell: ({ row }) => row.original.team_id ?? '-',
+  },
+];
 
 const email = computed({
   get: (): string => {
-    return (table.value?.tableApi?.getColumn('email')?.getFilterValue() as string) || ''
+    return (table.value?.tableApi?.getColumn('email')?.getFilterValue() as string) || '';
   },
   set: (value: string) => {
-    table.value?.tableApi?.getColumn('email')?.setFilterValue(value || undefined)
-  }
-})
+    table.value?.tableApi?.getColumn('email')?.setFilterValue(value || undefined);
+  },
+});
 
 const pagination = ref({
   pageIndex: 0,
-  pageSize: 10
-})
+  pageSize: 10,
+});
 </script>
 
 <template>
@@ -207,11 +218,11 @@ const pagination = ref({
                   type: 'checkbox' as const,
                   checked: column.getIsVisible(),
                   onUpdateChecked(checked: boolean) {
-                    table?.tableApi?.getColumn(column.id)?.toggleVisibility(!!checked)
+                    table?.tableApi?.getColumn(column.id)?.toggleVisibility(!!checked);
                   },
                   onSelect(e?: Event) {
-                    e?.preventDefault()
-                  }
+                    e?.preventDefault();
+                  },
                 }))
             "
             :content="{ align: 'end' }"
@@ -233,7 +244,7 @@ const pagination = ref({
         v-model:row-selection="rowSelection"
         v-model:pagination="pagination"
         :pagination-options="{
-          getPaginationRowModel: getPaginationRowModel()
+          getPaginationRowModel: getPaginationRowModel(),
         }"
         class="shrink-0"
         :data="data"
@@ -245,7 +256,7 @@ const pagination = ref({
           tbody: '[&>tr]:last:[&>td]:border-b-0',
           th: 'py-2 first:rounded-l-lg last:rounded-r-lg border-y border-default first:border-l last:border-r',
           td: 'border-b border-default',
-          separator: 'h-0'
+          separator: 'h-0',
         }"
       />
 
@@ -278,18 +289,15 @@ const pagination = ref({
         </template>
 
         <p class="text-muted">
-          Are you sure you want to delete <strong>{{ selectedRows.length }}</strong> selected user(s)?
-          This action cannot be undone.
+          Are you sure you want to delete
+          <strong>{{ selectedRows.length }}</strong>
+          selected user(s)? This action cannot be undone.
         </p>
 
         <template #footer>
           <div class="flex justify-end gap-2">
-            <UButton color="neutral" variant="outline" @click="modalOpen = false">
-              Cancel
-            </UButton>
-            <UButton color="error" @click="onDelete">
-              Delete
-            </UButton>
+            <UButton color="neutral" variant="outline" @click="modalOpen = false">Cancel</UButton>
+            <UButton color="error" @click="onDelete">Delete</UButton>
           </div>
         </template>
       </UCard>

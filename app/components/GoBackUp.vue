@@ -1,28 +1,32 @@
 <template>
-
-    <Transition name="fade">
-        <UButton v-if="isVisible" class="z-999 fixed bottom-4 right-4" icon="i-lucide-arrow-up" @click="scrollToTop" />
-    </Transition>
+  <Transition name="fade">
+    <UButton
+      v-if="isVisible"
+      class="z-999 fixed bottom-4 right-4"
+      icon="i-lucide-arrow-up"
+      @click="scrollToTop"
+    />
+  </Transition>
 </template>
 
 <script setup>
-const isVisible = ref(false)
+const isVisible = ref(false);
 
 const scrollToTop = () => {
-  window.scrollTo({ top: 0, behavior: 'smooth' })
-}
+  window.scrollTo({ top: 0, behavior: 'smooth' });
+};
 
 const handleScroll = () => {
-  isVisible.value = window.scrollY > window.innerHeight
-}
+  isVisible.value = window.scrollY > window.innerHeight;
+};
 
 onMounted(() => {
-  window.addEventListener('scroll', handleScroll)
-})
+  window.addEventListener('scroll', handleScroll);
+});
 
 onUnmounted(() => {
-  window.removeEventListener('scroll', handleScroll)
-})
+  window.removeEventListener('scroll', handleScroll);
+});
 </script>
 
 <style scoped>

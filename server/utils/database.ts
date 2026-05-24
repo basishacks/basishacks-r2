@@ -1,27 +1,27 @@
-import Database from 'better-sqlite3'
-import type { Statement } from 'better-sqlite3'
-import path from 'path'
-import { fileURLToPath } from 'url'
+import Database from 'better-sqlite3';
+import type { Statement } from 'better-sqlite3';
+import path from 'path';
+import { fileURLToPath } from 'url';
 
-const __filename = fileURLToPath(import.meta.url)
-const __dirname = path.dirname(__filename)
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = path.dirname(__filename);
 
-let dbInstance: any = null
+let dbInstance: any = null;
 
 /**
  * Initialize the database globally (call once at startup)
  */
 export function initializeDatabase(): any {
   if (!dbInstance) {
-    const dbPath = path.resolve(__dirname, '../../database/basishacks.sqlite')
-    console.log(`[DB] Initializing database at: ${dbPath}`)
-    dbInstance = new Database(dbPath)
+    const dbPath = path.resolve(__dirname, '../../database/basishacks.sqlite');
+    console.log(`[DB] Initializing database at: ${dbPath}`);
+    dbInstance = new Database(dbPath);
     // Enable foreign keys and WAL mode
-    dbInstance.pragma('journal_mode = WAL')
-    dbInstance.pragma('foreign_keys = ON')
-    console.log('[DB] Database initialized successfully')
+    dbInstance.pragma('journal_mode = WAL');
+    dbInstance.pragma('foreign_keys = ON');
+    console.log('[DB] Database initialized successfully');
   }
-  return dbInstance
+  return dbInstance;
 }
 
 /**
@@ -29,28 +29,28 @@ export function initializeDatabase(): any {
  */
 export function getDatabase(): any {
   if (!dbInstance) {
-    return initializeDatabase()
+    return initializeDatabase();
   }
-  return dbInstance
+  return dbInstance;
 }
 
 /**
  * SQLite Statement wrapper that mimics D1's Statement interface
  */
 class SQLiteStatement {
-  private statement: Statement
-  private bindings: any[] = []
+  private statement: Statement;
+  private bindings: any[] = [];
 
   constructor(statement: Statement) {
-    this.statement = statement
+    this.statement = statement;
   }
 
   /**
    * Bind parameters to the statement
    */
   bind(...params: any[]): this {
-    this.bindings = params
-    return this
+    this.bindings = params;
+    return this;
   }
 
   /**
@@ -58,11 +58,11 @@ class SQLiteStatement {
    */
   first<T = any>(): T | undefined {
     try {
-      const result = this.statement.get(...this.bindings) as T | undefined
-      return result
+      const result = this.statement.get(...this.bindings) as T | undefined;
+      return result;
     } catch (error) {
-      console.error('SQLite error in first():', error)
-      throw error
+      console.error('SQLite error in first():', error);
+      throw error;
     }
   }
 
@@ -71,11 +71,11 @@ class SQLiteStatement {
    */
   all<T = any>(): { results: T[] } {
     try {
-      const results = this.statement.all(...this.bindings) as T[]
-      return { results }
+      const results = this.statement.all(...this.bindings) as T[];
+      return { results };
     } catch (error) {
-      console.error('SQLite error in all():', error)
-      throw error
+      console.error('SQLite error in all():', error);
+      throw error;
     }
   }
 
@@ -84,15 +84,15 @@ class SQLiteStatement {
    */
   run(): { meta: { changed_db: number } } {
     try {
-      const result = this.statement.run(...this.bindings)
+      const result = this.statement.run(...this.bindings);
       return {
         meta: {
           changed_db: result.changes,
         },
-      }
+      };
     } catch (error) {
-      console.error('SQLite error in run():', error)
-      throw error
+      console.error('SQLite error in run():', error);
+      throw error;
     }
   }
 }
@@ -101,10 +101,10 @@ class SQLiteStatement {
  * SQLite Database wrapper that mimics D1Database interface
  */
 export class SQLiteDatabase {
-  private db: any
+  private db: any;
 
   constructor(db: any) {
-    this.db = db
+    this.db = db;
   }
 
   /**
@@ -112,12 +112,12 @@ export class SQLiteDatabase {
    */
   prepare(sql: string): SQLiteStatement {
     try {
-      const stmt = this.db.prepare(sql)
-      return new SQLiteStatement(stmt)
+      const stmt = this.db.prepare(sql);
+      return new SQLiteStatement(stmt);
     } catch (error) {
-      console.error('SQLite error preparing statement:', error)
-      console.error('SQL:', sql)
-      throw error
+      console.error('SQLite error preparing statement:', error);
+      console.error('SQL:', sql);
+      throw error;
     }
   }
 
@@ -126,23 +126,23 @@ export class SQLiteDatabase {
    */
   batch<T = any>(statements: Array<{ sql: string; params: any[] }>): T[] {
     try {
-      const results: T[] = []
+      const results: T[] = [];
       const transaction = this.db.transaction(() => {
         for (const stmt of statements) {
-          const prepared = this.db.prepare(stmt.sql)
-          const result = prepared.all(...stmt.params)
+          const prepared = this.db.prepare(stmt.sql);
+          const result = prepared.all(...stmt.params);
           if (Array.isArray(result)) {
-            results.push(...(result as T[]))
+            results.push(...(result as T[]));
           } else {
-            results.push(result as T)
+            results.push(result as T);
           }
         }
-      })
-      transaction()
-      return results
+      });
+      transaction();
+      return results;
     } catch (error) {
-      console.error('SQLite error in batch():', error)
-      throw error
+      console.error('SQLite error in batch():', error);
+      throw error;
     }
   }
 
@@ -151,10 +151,10 @@ export class SQLiteDatabase {
    */
   exec(sql: string): any {
     try {
-      this.db.exec(sql)
+      this.db.exec(sql);
     } catch (error) {
-      console.error('SQLite error in exec():', error)
-      throw error
+      console.error('SQLite error in exec():', error);
+      throw error;
     }
   }
 }
@@ -163,8 +163,8 @@ export class SQLiteDatabase {
  * Create and return a D1-compatible database wrapper
  */
 export function createDatabaseWrapper(): SQLiteDatabase {
-  const db = getDatabase()
-  return new SQLiteDatabase(db)
+  const db = getDatabase();
+  return new SQLiteDatabase(db);
 }
 
-export default getDatabase
+export default getDatabase;

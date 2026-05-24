@@ -20,21 +20,21 @@ The official website for the BIBS-C Network Hackathon (season 2, 2025–26). A f
 
 ## Technology Stack
 
-| Layer | Technology |
-|-------|------------|
-| Framework | Nuxt 3 |
-| UI | @nuxt/ui ^4.6.1 (Tailwind CSS v4) |
-| Language | TypeScript 5.6+ |
-| Runtime | Node.js >= v24 |
-| Package Manager | Bun (preferred); npm works |
-| Database (local) | better-sqlite3 with WAL mode |
-| Database (prod) | Cloudflare D1 |
-| Auth | nuxt-auth-utils (session-based) |
-| Validation | Zod 4.x |
-| Fonts | @nuxt/fonts (local provider) |
-| Icons | @iconify-json/lucide, @iconify-json/material-symbols |
-| Linting | @nuxt/eslint + Prettier |
-| Deployment | Cloudflare Pages |
+| Layer            | Technology                                           |
+| ---------------- | ---------------------------------------------------- |
+| Framework        | Nuxt 3                                               |
+| UI               | @nuxt/ui ^4.6.1 (Tailwind CSS v4)                    |
+| Language         | TypeScript 5.6+                                      |
+| Runtime          | Node.js >= v24                                       |
+| Package Manager  | Bun (preferred); npm works                           |
+| Database (local) | better-sqlite3 with WAL mode                         |
+| Database (prod)  | Cloudflare D1                                        |
+| Auth             | nuxt-auth-utils (session-based)                      |
+| Validation       | Zod 4.x                                              |
+| Fonts            | @nuxt/fonts (local provider)                         |
+| Icons            | @iconify-json/lucide, @iconify-json/material-symbols |
+| Linting          | @nuxt/eslint + Prettier                              |
+| Deployment       | Cloudflare Pages                                     |
 
 ## Project Structure
 
@@ -74,6 +74,7 @@ database/               # Local SQLite file
 ## Local Setup
 
 ### Requirements
+
 - Node.js >= v24
 - Bun (preferred) or npm
 
@@ -85,20 +86,22 @@ Copy `.env.example` to `.env` and fill in the required values:
 cp .env.example .env
 ```
 
-| Variable | Purpose |
-|----------|---------|
-| `NUXT_SESSION_PASSWORD` | Session encryption key (>= 32 bytes) |
-| `NUXT_SEND_CODE_URL` | Webhook URL for sending login codes |
-| `MICROSOFT_CLIENT_SECRET` | MS Entra app secret |
+| Variable                  | Purpose                              |
+| ------------------------- | ------------------------------------ |
+| `NUXT_SESSION_PASSWORD`   | Session encryption key (>= 32 bytes) |
+| `NUXT_SEND_CODE_URL`      | Webhook URL for sending login codes  |
+| `MICROSOFT_CLIENT_SECRET` | MS Entra app secret                  |
 
 ### 2. Install Dependencies
 
 Using Bun:
+
 ```bash
 bun i
 ```
 
 Using npm:
+
 ```bash
 npm i
 ```
@@ -106,12 +109,14 @@ npm i
 ### 3. Initialize Database
 
 Using Bun:
+
 ```bash
 bunx wrangler d1 execute DB --file sql/init.sql
 bunx wrangler d1 execute DB --command 'INSERT INTO hackathon VALUES(1, "not_started", 0, 0, 0, 0, 0, NULL, NULL) ON CONFLICT DO NOTHING'
 ```
 
 Using npm:
+
 ```bash
 npx wrangler d1 execute DB --file sql/init.sql
 npx wrangler d1 execute DB --command 'INSERT INTO hackathon VALUES(1, "not_started", 0, 0, 0, 0, 0, NULL, NULL) ON CONFLICT DO NOTHING'
@@ -120,6 +125,7 @@ npx wrangler d1 execute DB --command 'INSERT INTO hackathon VALUES(1, "not_start
 ### 4. Run Migrations
 
 Apply any pending migrations:
+
 ```bash
 # Example: apply all migration files
 for f in sql/migration-*.sql; do bunx wrangler d1 execute DB --file "$f"; done
@@ -184,11 +190,11 @@ The project includes a full OAuth2 authorization server (DevConnect) for third-p
 
 Scopes are defined in `shared/oauth2-scopes.ts`. Public scopes can be added by any app owner; admin-only scopes require admin privileges.
 
-| Scope | Description | Access |
-|-------|-------------|--------|
-| `openid` | Basic OpenID Connect identity | Public |
-| `profile` | User profile information | Public |
-| `email` | User's email address | Public |
+| Scope     | Description                   | Access |
+| --------- | ----------------------------- | ------ |
+| `openid`  | Basic OpenID Connect identity | Public |
+| `profile` | User profile information      | Public |
+| `email`   | User's email address          | Public |
 
 ### Token Endpoint
 
@@ -204,6 +210,7 @@ grant_type=authorization_code
 ```
 
 Response:
+
 ```json
 {
   "access_token": "<jwt>",
@@ -223,6 +230,7 @@ Pushes to `main` trigger `.github/workflows/deploy-cloudflare.yml`:
 5. Deploy `dist/` to Cloudflare Pages
 
 Required repository secrets:
+
 - `CLOUDFLARE_API_TOKEN`
 - `CLOUDFLARE_ACCOUNT_ID`
 

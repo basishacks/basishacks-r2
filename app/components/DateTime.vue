@@ -1,15 +1,15 @@
 <script setup lang="ts">
 const { date } = defineProps<{
-  date: Date
-}>()
+  date: Date;
+}>();
 
 const text = computed(() =>
   date.toLocaleString('en-CA', {
     dateStyle: 'medium',
     timeStyle: 'short',
     timeZone: 'Asia/Shanghai',
-  })
-)
+  }),
+);
 </script>
 
 <template>

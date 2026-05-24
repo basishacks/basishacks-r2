@@ -1,39 +1,34 @@
 <script setup lang="ts">
 useHead({
   title: `${WEBSITE_NAME}`,
-})
+});
 
-const { data, error } = await useFetch('/api/hackathon')
+const { data, error } = await useFetch('/api/hackathon');
 if (error.value) {
-  throw error.value
+  throw error.value;
 }
-const hackathon = computed(() => data.value!)
+const hackathon = computed(() => data.value!);
 
-const status = computed(() => hackathon.value.status)
-const startDate = computed(() => new Date(hackathon.value.start_timestamp))
-const endDate = computed(() => new Date(hackathon.value.end_timestamp))
-const votingStartDate = computed(
-  () => new Date(hackathon.value.voting_start_timestamp)
-)
-const votingEndDate = computed(
-  () => new Date(hackathon.value.voting_end_timestamp)
-)
-const resultsOpenDate = computed(
-  () => new Date(hackathon.value.results_open_timestamp)
-)
+const status = computed(() => hackathon.value.status);
+const startDate = computed(() => new Date(hackathon.value.start_timestamp));
+const endDate = computed(() => new Date(hackathon.value.end_timestamp));
+const votingStartDate = computed(() => new Date(hackathon.value.voting_start_timestamp));
+const votingEndDate = computed(() => new Date(hackathon.value.voting_end_timestamp));
+const resultsOpenDate = computed(() => new Date(hackathon.value.results_open_timestamp));
 </script>
 
 <template>
   <div class="mt-4">
     <h1 class="text-4xl bold mb-4 glow">
-      Welcome to <span class="text-primary">{{ WEBSITE_NAME }}</span
-      >!
+      Welcome to
+      <span class="text-primary">{{ WEBSITE_NAME }}</span>
+      !
     </h1>
     <p class="mb-4">
-      This is the official website of the 2025-26 BIBS-C Network Hackathon
-      (<span class="text-primary glow">{{ WEBSITE_NAME }}</span
-      >), a week where creativity meets technology, where ideas transform into
-      prototypes, and where brilliant minds come together to build the future.
+      This is the official website of the 2025-26 BIBS-C Network Hackathon (
+      <span class="text-primary glow">{{ WEBSITE_NAME }}</span>
+      ), a week where creativity meets technology, where ideas transform into prototypes, and where
+      brilliant minds come together to build the future.
     </p>
     <ULink href="/dashboard">
       <UAlert v-if="status !== 'not_started'" variant="soft" class="mb-4">
@@ -48,16 +43,11 @@ const resultsOpenDate = computed(
     </ULink>
 
     <!-- schedule -->
-    <h2 v-if="status !== 'finished'" class="text-3xl bold mb-4 glow-sm">
-      Schedule
-    </h2>
+    <h2 v-if="status !== 'finished'" class="text-3xl bold mb-4 glow-sm">Schedule</h2>
     <p v-if="status === 'paused'" class="mb-4">
       The website is currently under maintenance. Please check back later.
     </p>
-    <ul
-      v-else-if="status !== 'finished'"
-      class="grid grid-cols-1 lg:grid-cols-2 mb-4 gap-4"
-    >
+    <ul v-else-if="status !== 'finished'" class="grid grid-cols-1 lg:grid-cols-2 mb-4 gap-4">
       <li v-if="status === 'not_started'">
         <LargeCountdown :date="startDate" label="Hackathon starts" />
       </li>
@@ -83,22 +73,24 @@ const resultsOpenDate = computed(
       <template #content>
         <ul class="mb-4 whitespace-pre-wrap">
           <li>
-            {{ '' }}* Hackathon starts:{{ '  ' }}<DateTime :date="startDate" />
+            {{ '' }}* Hackathon starts:{{ '  ' }}
+            <DateTime :date="startDate" />
           </li>
           <li>
-            {{ '' }}* Hackathon ends:{{ '    ' }}<DateTime :date="endDate" />
+            {{ '' }}* Hackathon ends:{{ '    ' }}
+            <DateTime :date="endDate" />
           </li>
           <li>
-            {{ '' }}* Voting starts:{{ '     '
-            }}<DateTime :date="votingStartDate" />
+            {{ '' }}* Voting starts:{{ '     ' }}
+            <DateTime :date="votingStartDate" />
           </li>
           <li>
-            {{ '' }}* Voting ends:{{ '       '
-            }}<DateTime :date="votingEndDate" />
+            {{ '' }}* Voting ends:{{ '       ' }}
+            <DateTime :date="votingEndDate" />
           </li>
           <li>
-            {{ '' }}* Results released:{{ '  '
-            }}<DateTime :date="resultsOpenDate" />
+            {{ '' }}* Results released:{{ '  ' }}
+            <DateTime :date="resultsOpenDate" />
           </li>
         </ul>
       </template>
@@ -108,13 +100,14 @@ const resultsOpenDate = computed(
     <h2 class="text-3xl bold mb-4 glow-sm">Theme</h2>
     <p v-if="!hackathon.theme_name" class="mb-4">
       The theme of the hackathon will be revealed on
-      <DateTime class="bold" :date="startDate" />.
+      <DateTime class="bold" :date="startDate" />
+      .
     </p>
     <template v-else>
       <p class="mb-2">
         The theme of the hackathon is:
-        <span class="bold glow text-primary">{{ hackathon.theme_name }}</span
-        >!
+        <span class="bold glow text-primary">{{ hackathon.theme_name }}</span>
+        !
       </p>
       <p class="mb-4" v-html="hackathon.theme_description" />
     </template>
@@ -124,14 +117,15 @@ const resultsOpenDate = computed(
     <ul class="mb-4">
       <li>
         * Check out the projects made in
-        <ULink href="https://nethack.biszweb.club/showcase" target="_blank"
-          >last year's network hackathon!</ULink
-        >
+        <ULink href="https://nethack.biszweb.club/showcase" target="_blank">
+          last year's network hackathon!
+        </ULink>
         Maybe you'll find inspiration there.
       </li>
       <li>
-        * Check out <ULink href="/rules">the rules for the hackathon</ULink> and
-        start planning your project accordingly.
+        * Check out
+        <ULink href="/rules">the rules for the hackathon</ULink>
+        and start planning your project accordingly.
       </li>
     </ul>
   </div>

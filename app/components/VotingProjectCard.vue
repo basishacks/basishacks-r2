@@ -1,7 +1,7 @@
 <script setup lang="ts">
 const { project } = defineProps<{
-  project: APITeam['project']
-}>()
+  project: APITeam['project'];
+}>();
 </script>
 
 <template>
@@ -16,8 +16,9 @@ const { project } = defineProps<{
           :href="project.repo_url!"
           external
           target="_blank"
-          >Repo</UButton
         >
+          Repo
+        </UButton>
       </UTooltip>
       <UTooltip :text="project.demo_url!">
         <UButton
@@ -26,8 +27,9 @@ const { project } = defineProps<{
           :href="project.demo_url!"
           external
           target="_blank"
-          >Demo</UButton
         >
+          Demo
+        </UButton>
       </UTooltip>
     </div>
   </UCard>

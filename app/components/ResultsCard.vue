@@ -1,10 +1,10 @@
 <script setup lang="ts">
 const { team, rank } = defineProps<{
-  team: APITeam
-  rank: number | null
-}>()
+  team: APITeam;
+  rank: number | null;
+}>();
 
-const rankText = computed(() => rank ? `#${rank}. ` : '')
+const rankText = computed(() => (rank ? `#${rank}. ` : ''));
 </script>
 
 <template>
@@ -20,8 +20,9 @@ const rankText = computed(() => rank ? `#${rank}. ` : '')
           :href="team.project.repo_url!"
           external
           target="_blank"
-          >Repo</UButton
         >
+          Repo
+        </UButton>
       </UTooltip>
       <UTooltip :text="team.project.demo_url!">
         <UButton
@@ -30,8 +31,9 @@ const rankText = computed(() => rank ? `#${rank}. ` : '')
           :href="team.project.demo_url!"
           external
           target="_blank"
-          >Demo</UButton
         >
+          Demo
+        </UButton>
       </UTooltip>
     </div>
   </UCard>

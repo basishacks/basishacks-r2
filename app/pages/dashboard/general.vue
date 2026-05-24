@@ -1,74 +1,68 @@
 @ -1,336 +0,0 @@
 <script setup lang="ts">
-import type { ButtonProps } from '@nuxt/ui'
+import type { ButtonProps } from '@nuxt/ui';
 
 definePageMeta({
-    layout: 'dashboard',
+  layout: 'dashboard',
   middleware: ['auth'],
-})
+});
 
 useHead({
   title: `General | ${WEBSITE_NAME}`,
-})
+});
 
-const { user: userRef } = useUserSession()
-const user = computed(() => userRef.value!)
+const { user: userRef } = useUserSession();
+const user = computed(() => userRef.value!);
 
-const { data: hackathon, error: hackathonError } =
-  await useFetch('/api/hackathon')
+const { data: hackathon, error: hackathonError } = await useFetch('/api/hackathon');
 if (hackathonError.value) {
-  throw hackathonError.value
+  throw hackathonError.value;
 }
 
 const { data, error, refresh } = await useFetch<GetUserResponse>(
   () => `/api/users/${user.value.id}`,
-)
+);
 if (error.value) {
-  throw error.value
+  throw error.value;
 }
 
-
-const isDirty = ref(false)
+const isDirty = ref(false);
 
 async function refreshData() {
   await withLoadingIndicator(async () => {
-    await refresh()
-  })
-  isDirty.value = false
+    await refresh();
+  });
+  isDirty.value = false;
 }
 
 function dateUpdated(dirty: boolean) {
-  isDirty.value = dirty
+  isDirty.value = dirty;
 }
 
 onBeforeRouteLeave(() => {
-  if (
-    isDirty.value &&
-    !confirm('You have unsaved changes. Are you sure you want to leave?')
-  ) {
-    return abortNavigation()
+  if (isDirty.value && !confirm('You have unsaved changes. Are you sure you want to leave?')) {
+    return abortNavigation();
   }
-})
+});
 
 function beforeUnload(event: BeforeUnloadEvent) {
   if (isDirty.value) {
-    event.preventDefault()
-    event.returnValue = true
+    event.preventDefault();
+    event.returnValue = true;
   }
 }
 
 watch(isDirty, (value) => {
   if (value) {
-    window.addEventListener('beforeunload', beforeUnload)
+    window.addEventListener('beforeunload', beforeUnload);
   } else {
-    window.removeEventListener('beforeunload', beforeUnload)
+    window.removeEventListener('beforeunload', beforeUnload);
   }
-})
+});
 
 onUnmounted(() => {
-  window.removeEventListener('beforeunload', beforeUnload)
-})
-
+  window.removeEventListener('beforeunload', beforeUnload);
+});
 
 const links = ref<ButtonProps[]>([
   {
@@ -76,9 +70,9 @@ const links = ref<ButtonProps[]>([
     color: 'neutral',
     variant: 'subtle',
     trailingIcon: 'i-lucide-arrow-right',
-    href: "/"
-  }
-])
+    href: '/',
+  },
+]);
 
 const links_noteam = ref<ButtonProps[]>([
   {
@@ -86,10 +80,9 @@ const links_noteam = ref<ButtonProps[]>([
     color: 'neutral',
     variant: 'subtle',
     trailingIcon: 'i-lucide-arrow-right',
-    href: "/dashboard/teams"
-  }
-])
-
+    href: '/dashboard/teams',
+  },
+]);
 </script>
 
 <template>
@@ -109,14 +102,11 @@ const links_noteam = ref<ButtonProps[]>([
         You have submitted your project. Congratulations! 🎉
       </p>
       <p v-else-if="hackathon?.status !== 'in_progress'" class="mb-4">
-        The submission period is over, and you can no longer submit your
-        project.
+        The submission period is over, and you can no longer submit your project.
       </p>
       <ProjectForm
         :team="data?.team"
-        :disabled="
-          hackathon?.status !== 'in_progress' || data?.team?.project.submitted
-        "
+        :disabled="hackathon?.status !== 'in_progress' || data?.team?.project.submitted"
         @dirty="dateUpdated"
         @refresh="refreshData"
       />
@@ -131,4 +121,3 @@ const links_noteam = ref<ButtonProps[]>([
     </div>
   </div>
 </template>
-

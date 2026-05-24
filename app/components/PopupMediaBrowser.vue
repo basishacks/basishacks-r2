@@ -1,4 +1,4 @@
-<template >
+<template>
   <UModal :title="title">
     <slot name="trigger">
       <UButton variant="ghost" class="text-ui-muted" :disabled="disabled">
@@ -39,7 +39,7 @@ const props = defineProps({
     type: Boolean,
     default: false,
   },
-})
+});
 </script>
 
 <style scoped>

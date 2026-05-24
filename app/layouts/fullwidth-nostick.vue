@@ -1,13 +1,11 @@
-
-
 <template>
   <div>
-    <RoleHeader class="relative"/>
+    <RoleHeader class="relative" />
 
     <UMain>
       <slot />
     </UMain>
 
-    <Footer/>
+    <Footer />
   </div>
 </template>

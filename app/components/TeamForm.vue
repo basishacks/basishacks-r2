@@ -1,68 +1,65 @@
 <script setup lang="ts">
-import type { FormSubmitEvent } from '@nuxt/ui'
-import { AddTeamMemberRequest, UpdateTeamRequest } from '~~/shared/schemas'
+import type { FormSubmitEvent } from '@nuxt/ui';
+import { AddTeamMemberRequest, UpdateTeamRequest } from '~~/shared/schemas';
 
 const { team, disabled } = defineProps<{
-  team: APITeam
-  disabled: boolean
-}>()
+  team: APITeam;
+  disabled: boolean;
+}>();
 const emit = defineEmits<{
-  refresh: []
-}>()
+  refresh: [];
+}>();
 
-const { id, name } = team
+const { id, name } = team;
 
-const toast = useToast()
+const toast = useToast();
 
-const { user: currentUser } = useUserSession()
+const { user: currentUser } = useUserSession();
 
 const {
   data: users,
   error,
   refresh,
-} = await useFetch<GetTeamMembersResponse>(`/api/teams/${id}/users`)
+} = await useFetch<GetTeamMembersResponse>(`/api/teams/${id}/users`);
 if (error.value) {
-  throw error.value
+  throw error.value;
 }
 
 const removeMemberMessage = (user: Pick<User, 'id' | 'name' | 'email'>) => {
   return `Are you sure you want to ${
-    user.id === currentUser.value?.id
-      ? 'leave'
-      : `remove ${user.name || user.email} from`
+    user.id === currentUser.value?.id ? 'leave' : `remove ${user.name || user.email} from`
   } your team?${
     users.value?.length === 1
       ? " This is the last member of your team, so you won't be able to recover it."
       : ''
-  }`
-}
+  }`;
+};
 
 async function removeUser(user: Pick<User, 'id' | 'name' | 'email'>) {
+  console.log(1);
 
-  console.log(1)
-  
   if (true) {
     try {
       await withLoadingIndicator(async () => {
         const { message } = await $fetch(`/api/teams/${id}/users/${user.id}`, {
           method: 'DELETE',
-        })
+        });
         toast.add({
           color: 'success',
           title: message,
-        })
+        });
         if (user.id === currentUser.value?.id) {
-          emit('refresh')
+          emit('refresh');
         } else {
-          await refresh()
+          await refresh();
         }
-      })
+      });
     } catch (e) {
       toast.add({
         color: 'error',
         title: 'Failed to remove member',
         description: getErrorMessage(e),
-      })
+      });
     }
   }
 }
@@ -70,66 +67,60 @@ async function removeUser(user: Pick<User, 'id' | 'name' | 'email'>) {
 // rename
 const nameState = reactive({
   name: name,
-})
+});
 
-async function onNameSubmit(
-  event: FormSubmitEvent<UpdateTeamRequest>,
-  close: () => void
-) {
+async function onNameSubmit(event: FormSubmitEvent<UpdateTeamRequest>, close: () => void) {
   try {
     await withLoadingIndicator(async () => {
       const { message } = await $fetch(`/api/teams/${id}`, {
         method: 'PATCH',
         body: event.data,
-      })
+      });
       toast.add({
         color: 'success',
         title: message,
-      })
-      emit('refresh')
-      await refresh()
-    })
+      });
+      emit('refresh');
+      await refresh();
+    });
   } catch (e) {
     toast.add({
       color: 'error',
       title: 'Failed to rename team',
       description: getErrorMessage(e),
-    })
+    });
   } finally {
-    close()
+    close();
   }
 }
 
 // add user
 const state = reactive({
   email: '',
-})
+});
 
-async function onSubmit(
-  event: FormSubmitEvent<AddTeamMemberRequest>,
-  close: () => void
-) {
+async function onSubmit(event: FormSubmitEvent<AddTeamMemberRequest>, close: () => void) {
   try {
     await withLoadingIndicator(async () => {
       const { message } = await $fetch(`/api/teams/${id}/users`, {
         method: 'POST',
         body: event.data,
-      })
+      });
       toast.add({
         color: 'success',
         title: message,
-      })
-      emit('refresh')
-      await refresh()
-    })
+      });
+      emit('refresh');
+      await refresh();
+    });
   } catch (e) {
     toast.add({
       color: 'error',
       title: 'Failed to add member',
       description: getErrorMessage(e),
-    })
+    });
   } finally {
-    close()
+    close();
   }
 }
 </script>
@@ -138,7 +129,8 @@ async function onSubmit(
   <div>
     <h2 class="text-3xl bold mb-4 flex gap-4">
       <span>
-        Your team: <span class="glow">{{ team.name }}</span>
+        Your team:
+        <span class="glow">{{ team.name }}</span>
       </span>
 
       <UModal title="Rename team">
@@ -167,11 +159,7 @@ async function onSubmit(
       </UModal>
 
       <UModal title="Add team member">
-        <UButton
-          :disabled="disabled"
-          variant="soft"
-          icon="i-material-symbols-person-add"
-        />
+        <UButton :disabled="disabled" variant="soft" icon="i-material-symbols-person-add" />
 
         <template #body="{ close }">
           <UForm
@@ -198,10 +186,15 @@ async function onSubmit(
           <h3 class="flex flex-wrap items-center gap-2">
             <span class="bold">{{ user.name || user.email }}</span>
             <div class="flex-1" />
-            <ModalConfirm 
-            title="Remove team member"
-            color="error"
-            :click="() => {removeUser(user)}">
+            <ModalConfirm
+              title="Remove team member"
+              color="error"
+              :click="
+                () => {
+                  removeUser(user);
+                }
+              "
+            >
               <UButton
                 :disabled="disabled"
                 icon="i-material-symbols-delete"

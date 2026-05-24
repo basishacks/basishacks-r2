@@ -1,12 +1,6 @@
-
-
 <template>
-
-  
-
   <div>
-    
-    <RoleHeader/>
+    <RoleHeader />
 
     <UMain>
       <UContainer>
@@ -14,6 +8,6 @@
       </UContainer>
     </UMain>
 
-    <Footer/>
+    <Footer />
   </div>
 </template>

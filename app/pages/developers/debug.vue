@@ -1,78 +1,91 @@
 <script setup lang="ts">
-import { onMounted } from 'vue'
-import { hasPermission, DevPermissions } from '~~/shared/permissions'
+import { onMounted } from 'vue';
+import { hasPermission, DevPermissions } from '~~/shared/permissions';
 
 definePageMeta({
-  layout: 'developers-dashboard'
-})
+  layout: 'developers-dashboard',
+});
 
 // Client-side permission guard
-const { user: me } = await useApiUser()
-if (!hasPermission(me.value?.role, DevPermissions.PORTAL_DEBUG_VIEW) && !hasPermission(me.value?.role, 'admin')) {
-  await navigateTo('/developers')
-  useToast().add({ title: 'Access denied', description: 'You do not have permission to view debug tools.', color: 'error' })
+const { user: me } = await useApiUser();
+if (
+  !hasPermission(me.value?.role, DevPermissions.PORTAL_DEBUG_VIEW) &&
+  !hasPermission(me.value?.role, 'admin')
+) {
+  await navigateTo('/developers');
+  useToast().add({
+    title: 'Access denied',
+    description: 'You do not have permission to view debug tools.',
+    color: 'error',
+  });
 }
 
 // File upload state
-const file = ref<File | null>(null)
-const uploading = ref(false)
-const permalink = ref('')
-const uploadError = ref('')
-const loadingFiles = ref(false)
-const fileLists = ref({ assets: [] as Array<{ name: string; url: string }>, userast: [] as Array<{ name: string; url: string }> })
+const file = ref<File | null>(null);
+const uploading = ref(false);
+const permalink = ref('');
+const uploadError = ref('');
+const loadingFiles = ref(false);
+const fileLists = ref({
+  assets: [] as Array<{ name: string; url: string }>,
+  userast: [] as Array<{ name: string; url: string }>,
+});
 
-const items = ref(['static', 'user'])
-const value = ref('static')
-const keepOriginalName = ref(false)
+const items = ref(['static', 'user']);
+const value = ref('static');
+const keepOriginalName = ref(false);
 
 const loadFiles = async () => {
-  loadingFiles.value = true
+  loadingFiles.value = true;
   try {
-    const response = await $fetch<{ assets: string[]; userast: string[] }>('/api/debug/files')
-    fileLists.value.assets = response.assets.map((name) => ({ name, url: `/assets/${name}` }))
-    fileLists.value.userast = response.userast.map((name) => ({ name, url: `/userast/${name}` }))
+    const response = await $fetch<{ assets: string[]; userast: string[] }>('/api/debug/files');
+    fileLists.value.assets = response.assets.map((name) => ({ name, url: `/assets/${name}` }));
+    fileLists.value.userast = response.userast.map((name) => ({
+      name,
+      url: `/userast/${name}`,
+    }));
   } catch (err: any) {
-    uploadError.value = err.message || 'Unable to load file list'
+    uploadError.value = err.message || 'Unable to load file list';
   } finally {
-    loadingFiles.value = false
+    loadingFiles.value = false;
   }
-}
+};
 
 const handleFileChange = (event: Event) => {
-  const target = event.target as HTMLInputElement
-  file.value = target.files?.[0] || null
-}
+  const target = event.target as HTMLInputElement;
+  file.value = target.files?.[0] || null;
+};
 
 const uploadFile = async () => {
-  if (!file.value) return
+  if (!file.value) return;
 
-  uploading.value = true
-  uploadError.value = ''
-  permalink.value = ''
+  uploading.value = true;
+  uploadError.value = '';
+  permalink.value = '';
 
   try {
-    const formData = new FormData()
-    formData.append('file', file.value)
+    const formData = new FormData();
+    formData.append('file', file.value);
 
     const params = new URLSearchParams({
       mode: value.value,
       keepName: keepOriginalName.value ? 'true' : 'false',
-    })
+    });
     const response = await $fetch<{ permalink: string }>(`/api/debug/upload?${params.toString()}`, {
       method: 'POST',
       body: formData,
-    })
+    });
 
-    permalink.value = response.permalink
-    await loadFiles()
+    permalink.value = response.permalink;
+    await loadFiles();
   } catch (err: any) {
-    uploadError.value = err.message || 'Upload failed'
+    uploadError.value = err.message || 'Upload failed';
   } finally {
-    uploading.value = false
+    uploading.value = false;
   }
-}
+};
 
-onMounted(loadFiles)
+onMounted(loadFiles);
 </script>
 
 <template>
@@ -92,7 +105,11 @@ onMounted(loadFiles)
         variant="soft"
         class="mb-4"
         :title="uploadError"
-        :close="{ onClick: () => { uploadError = '' } }"
+        :close="{
+          onClick: () => {
+            uploadError = '';
+          },
+        }"
       />
 
       <div class="space-y-6">
@@ -109,7 +126,7 @@ onMounted(loadFiles)
                 class="block w-full text-sm text-muted file:mr-4 file:py-2 file:px-4 file:rounded-lg file:border-0 file:bg-primary file:text-white hover:file:bg-primary/90"
                 required
                 @change="handleFileChange"
-              >
+              />
             </div>
 
             <USelectMenu v-model="value" :items="items" />
@@ -129,7 +146,9 @@ onMounted(loadFiles)
           <div v-if="permalink" class="mt-4">
             <p class="text-sm">
               Permalink:
-              <a :href="permalink" target="_blank" class="text-primary hover:underline">{{ permalink }}</a>
+              <a :href="permalink" target="_blank" class="text-primary hover:underline">
+                {{ permalink }}
+              </a>
             </p>
           </div>
         </UCard>
@@ -153,9 +172,13 @@ onMounted(loadFiles)
               <h3 class="font-medium mb-2">/assets</h3>
               <ul class="space-y-1">
                 <li v-if="loadingFiles" class="text-sm text-muted">Loading assets...</li>
-                <li v-else-if="fileLists.assets.length === 0" class="text-sm text-muted">No file uploads found.</li>
+                <li v-else-if="fileLists.assets.length === 0" class="text-sm text-muted">
+                  No file uploads found.
+                </li>
                 <li v-for="f in fileLists.assets" :key="f.name">
-                  <a :href="f.url" target="_blank" class="text-sm text-primary hover:underline">{{ f.name }}</a>
+                  <a :href="f.url" target="_blank" class="text-sm text-primary hover:underline">
+                    {{ f.name }}
+                  </a>
                 </li>
               </ul>
             </div>
@@ -164,9 +187,13 @@ onMounted(loadFiles)
               <h3 class="font-medium mb-2">/userast</h3>
               <ul class="space-y-1">
                 <li v-if="loadingFiles" class="text-sm text-muted">Loading user assets...</li>
-                <li v-else-if="fileLists.userast.length === 0" class="text-sm text-muted">No user asset uploads found.</li>
+                <li v-else-if="fileLists.userast.length === 0" class="text-sm text-muted">
+                  No user asset uploads found.
+                </li>
                 <li v-for="f in fileLists.userast" :key="f.name">
-                  <a :href="f.url" target="_blank" class="text-sm text-primary hover:underline">{{ f.name }}</a>
+                  <a :href="f.url" target="_blank" class="text-sm text-primary hover:underline">
+                    {{ f.name }}
+                  </a>
                 </li>
               </ul>
             </div>

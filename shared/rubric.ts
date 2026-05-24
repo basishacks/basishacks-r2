@@ -1,8 +1,8 @@
 export interface RubricData {
-  abbr: string
-  name: string
-  description: string
-  weight: number
+  abbr: string;
+  name: string;
+  description: string;
+  weight: number;
 }
 
 const rubrics = {
@@ -71,8 +71,8 @@ const rubrics = {
     },
   },
 } satisfies {
-  junior: Record<string, RubricData>
-  senior: Record<string, RubricData>
-}
+  junior: Record<string, RubricData>;
+  senior: Record<string, RubricData>;
+};
 
-export default rubrics
+export default rubrics;

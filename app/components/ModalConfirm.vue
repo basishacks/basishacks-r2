@@ -1,24 +1,18 @@
 <template>
-
-<UModal>
-    <slot/>
+  <UModal>
+    <slot />
     <template #body>
-        <slot name="content"/>
-        
+      <slot name="content" />
     </template>
-    
+
     <template #footer="{ close }">
-
-        <UButton :color="color" @click="click">Confirm</UButton>
-        <UButton color="neutral" variant="outline" @click="close">Cancel</UButton>
-
+      <UButton :color="color" @click="click">Confirm</UButton>
+      <UButton color="neutral" variant="outline" @click="close">Cancel</UButton>
     </template>
-</UModal>
+  </UModal>
+</template>
 
- </template>
-
- <script setup lang="ts"> 
- 
+<script setup lang="ts">
 const props = defineProps({
   color: {
     type: String,
@@ -28,10 +22,7 @@ const props = defineProps({
     type: Function,
     default: () => {},
   },
-
-  
-})
+});
 
 //console.log(props.click)
-
 </script>

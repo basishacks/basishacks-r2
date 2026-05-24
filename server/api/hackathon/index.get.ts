@@ -1,15 +1,14 @@
 export default defineEventHandler(async (event) => {
-  const hackathon = await getHackathon(event)
+  const hackathon = await getHackathon(event);
 
   if (!hackathon) {
     throw createError({
       statusCode: 404,
       message: 'No hackathon found',
-    })
+    });
   }
 
-  const showTheme =
-    hackathon.status !== 'not_started' && hackathon.status !== 'paused'
+  const showTheme = hackathon.status !== 'not_started' && hackathon.status !== 'paused';
 
   return {
     status: hackathon.status,
@@ -20,5 +19,5 @@ export default defineEventHandler(async (event) => {
     results_open_timestamp: hackathon.results_open_timestamp,
     theme_name: showTheme ? hackathon.theme_name : null,
     theme_description: showTheme ? hackathon.theme_description : null,
-  }
-})
+  };
+});
