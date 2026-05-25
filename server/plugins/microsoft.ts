@@ -70,7 +70,7 @@ async function requestMicrosoft(endpoint: string, method: string = "GET", body: 
             "Content-Type": "application/json",
             "Authorization": "Bearer " + await getMSAccessToken()
         },
-        body: typeof body === "string" ? body : JSON.stringify(body)
+        body: method === "GET" ? null : (typeof body === "string" ? body : JSON.stringify(body))
     });
 
     return res;
@@ -78,13 +78,15 @@ async function requestMicrosoft(endpoint: string, method: string = "GET", body: 
 
 async function requestUserMicrosoft(endpoint: string, method: string = "GET", body: string | Object | null = null) {
 
+    console.log(getDummyUserAccessToken())
+
     const res = await fetch("https://graph.microsoft.com/v1.0" + endpoint, {
         method,
         headers: {
             "Content-Type": "application/json",
             "Authorization": "Bearer " + getDummyUserAccessToken()
         },
-        body: typeof body === "string" ? body : JSON.stringify(body)
+        body: method === "GET" ? null : (typeof body === "string" ? body : JSON.stringify(body))
     });
 
     if (res.status == 401) {
@@ -300,4 +302,14 @@ export async function initializeChatbotWebhook() {
 
 export function getChatbotWebhookId() {
     return metadata.webhook_id;
+}
+
+export async function pollChatbotMessages() {
+    console.log("[MS Graph] Starting to poll chatbot messages...")
+
+    const res = await requestUserMicrosoft("/me/chats/getAllMessages/delta", "GET")
+
+    const json = await res.json()
+
+    console.log(json)
 }
