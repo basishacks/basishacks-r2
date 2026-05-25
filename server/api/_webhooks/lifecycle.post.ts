@@ -8,6 +8,7 @@ export default defineEventHandler(async (event) => {
   // Microsoft Graph sends a validation token as a query parameter during subscription creation/renewal.
   // The endpoint MUST respond with 200 OK and echo the token as text/plain.
   const query = getQuery(event)
+  console.log('[MS Graph] lifecycle validate', query)
   const validationToken = query.validationToken as string | undefined
   if (validationToken) {
     setResponseHeader(event, 'Content-Type', 'text/plain; charset=utf-8')
@@ -15,6 +16,7 @@ export default defineEventHandler(async (event) => {
     return validationToken
   }
 
+  
   const body = await readBody(event)
 
   const value = body.value
