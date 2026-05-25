@@ -258,7 +258,7 @@ export async function refreshChatbotWebhook() {
         return
     }
 
-    const res = await requestUserMicrosoft("/subscriptions/" + getChatbotWebhookId(), "PATCH", {
+    const res = await requestMicrosoft("/subscriptions/" + getChatbotWebhookId(), "PATCH", {
         "expirationDateTime": new Date(Date.now() + 1 * 24 * 60 * 60 * 1000).toISOString(), // 1 days from now
     })
 
@@ -276,7 +276,7 @@ export async function initializeChatbotWebhook() {
 
     metadata.webhook_state = randomBytes(89).toString("base64url")
 
-    const res = await requestUserMicrosoft("/subscriptions", "POST", {
+    const res = await requestMicrosoft("/subscriptions", "POST", {
         "changeType": "created,updated",
         "notificationUrl": process.env.CURRENT_URL_ORIGIN + "/api/_webhooks/update",
         "lifecycleNotificationUrl": process.env.CURRENT_URL_ORIGIN + "/api/_webhooks/lifecycle",
