@@ -28,7 +28,7 @@ export default defineEventHandler(async (event) => {
 
     console.log("[MS Graph] Webhook update received:", changeType, resource)
 
-    setResponseStatus(event, 202)
+    setResponseStatus(event, 200)
     return {message: "Received"}
 
 })
