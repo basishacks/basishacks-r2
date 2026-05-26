@@ -3,7 +3,7 @@ import type { FormSubmitEvent } from '@nuxt/ui'
 import { SubmitTeamRequest, UpdateTeamRequest } from '~~/shared/schemas'
 
 const { team: defaultTeam, disabled = false } = defineProps<{
-  team: APITeam
+  team: APITeam | null | undefined
   disabled?: boolean
 }>()
 const emit = defineEmits<{
@@ -24,6 +24,8 @@ watch(
 )
 
 const intent = ref<'save' | 'submit'>('save')
+const showConfirmModal = ref(false)
+let pendingSubmitEvent: FormSubmitEvent<UpdateTeamRequest | SubmitTeamRequest> | null = null
 
 const state = reactive({
   name: '',
@@ -39,6 +41,7 @@ const state = reactive({
 watch(
   () => defaultTeam,
   (value) => {
+    if (!value) return
     state.name = value.name
     state.pathway = value.pathway || 'junior'
     state.project.name = value.project.name
@@ -53,13 +56,21 @@ async function onSubmit(
   event: FormSubmitEvent<UpdateTeamRequest | SubmitTeamRequest>
 ) {
   const isSubmit = event.submitter?.id === 'project-submit'
-  if (
-    isSubmit &&
-    !confirm(
-      "Are you sure you want to submit your team's project? You cannot make edits afterwards."
-    )
-  )
+  if (isSubmit) {
+    // Store the event and show confirmation modal
+    pendingSubmitEvent = event
+    showConfirmModal.value = true
     return
+  }
+
+  // For save action, proceed directly
+  await performSubmit(event)
+}
+
+async function performSubmit(
+  event: FormSubmitEvent<UpdateTeamRequest | SubmitTeamRequest>
+) {
+  const isSubmit = event.submitter?.id === 'project-submit'
 
   const payload = {
     ...event.data,
@@ -73,6 +84,9 @@ async function onSubmit(
   try {
     await withLoadingIndicator(async () => {
       let res: { message: string }
+      if (!defaultTeam) {
+        return
+      }
       if (!isSubmit) {
         res = await $fetch(`/api/teams/${defaultTeam.id}`, {
           method: 'PATCH',
@@ -98,6 +112,14 @@ async function onSubmit(
     })
   }
 }
+
+async function confirmSubmit() {
+  if (pendingSubmitEvent) {
+    showConfirmModal.value = false
+    await performSubmit(pendingSubmitEvent)
+    pendingSubmitEvent = null
+  }
+}
 </script>
 
 <template>
@@ -106,7 +128,7 @@ async function onSubmit(
     :state="state"
     :schema="intent === 'save' ? UpdateTeamRequest : SubmitTeamRequest"
     :disabled="disabled"
-    class="max-w-[600px] space-y-4 mb-4 mx-auto"
+    class="max-w-[600px] space-y-4 mb-4"
     @submit="onSubmit"
   >
     <UFormField
@@ -178,13 +200,27 @@ async function onSubmit(
         @click="intent = 'save'"
         >Save</UButton
       >
-      <UButton
-        id="project-submit"
-        :disabled="disabled"
-        type="submit"
-        @click="intent = 'submit'"
-        >Submit</UButton
-      >
+
+      <ModalConfirm 
+        title="Remove team member"
+        color="error"
+        @click="intent = 'submit'">
+          <UButton
+            id="project-submit"
+            :disabled="disabled"
+            type="submit"
+            
+            >Submit</UButton
+          >
+
+          <template #content>
+            <p>Confirm submission to your project? You will not be able to make further changes once submitted.</p>
+          </template>
+        </ModalConfirm>
+
+      
     </div>
+
+   
   </UForm>
 </template>

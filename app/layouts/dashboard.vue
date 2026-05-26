@@ -9,49 +9,16 @@ const items = ref<NavigationMenuItem[][]>([
       type: 'label'
     },
 
-
-
-
-
-        
-    {
-      label: 'Guide',
-      icon: 'i-lucide-book-open',
-      children: [
-        {
-          label: 'Introduction',
-          description: 'Fully styled and customizable components for Nuxt.',
-          icon: 'i-lucide-house'
-        },
-        {
-          label: 'Installation',
-          description: 'Learn how to install and configure Nuxt UI in your application.',
-          icon: 'i-lucide-cloud-download'
-        },
-        {
-          label: 'Icons',
-          icon: 'i-lucide-smile',
-          description: 'You have nothing to do, @nuxt/icon will handle it automatically.'
-        },
-        {
-          label: 'Colors',
-          icon: 'i-lucide-swatch-book',
-          description: 'Choose a primary and a neutral color from your Tailwind CSS theme.'
-        },
-        {
-          label: 'Theme',
-          icon: 'i-lucide-cog',
-          description: 'You can customize components by using the `class` / `ui` props or in your app.config.ts.'
-        }
-      ]
-    },
-
         {
           label: 'Overview',
           icon: 'i-lucide-info',
           to: '/dashboard'
     },
-
+        {
+          label: 'Team',
+          icon: 'i-fluent-people-team-16-filled',
+          to: '/dashboard/teams'
+    },
 
     {
           label: 'General',
@@ -59,18 +26,14 @@ const items = ref<NavigationMenuItem[][]>([
           to: '/dashboard/general'
     },
 
-    {
-          label: 'Teams',
-          icon: 'i-fluent-people-team-16-filled',
-          to: '/dashboard/teams'
-    },
 
-    {
-          label: 'Presentation',
-          icon: 'i-lucide-presentation',
-          to: '/dashboard/presentation',
-          chip: true
-    },
+
+    // {
+    //       label: 'Presentation',
+    //       icon: 'i-lucide-presentation',
+    //       to: '/dashboard/presentation',
+    //       chip: true
+    // },
     
    
   ],
@@ -91,14 +54,13 @@ const items = ref<NavigationMenuItem[][]>([
     <div class="bg-white-100 p-64"></div>
   </div> -->
 
-  <div>
     <RoleHeader/>
 
   
 
 
-  <UContainer class="flex flex-col ">
-    <div class="hide-small fixed -translate-x-full -mx-12 ">
+  <UContainer class="flex flex-col">
+    <div class="fixed -translate-x-full -mx-12 ">
       <div class="mt-12"/>
       <UCard>
         <template #header>
@@ -121,8 +83,10 @@ id="hoverdashnotif" color="neutral" class="z-0 mt-4 nopanel text-xs text-muted r
       <slot />
     </div>
   </UContainer>
-  </div>
 
+
+  
+  
   
 </template>
 

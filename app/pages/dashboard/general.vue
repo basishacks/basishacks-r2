@@ -102,7 +102,7 @@ const links_noteam = ref<ButtonProps[]>([
       />
     </div>
 
-    <div v-else-if="hackathon?.status !== 'not_started'">
+    <div v-else-if="hackathon?.status !== 'not_started'" class="">
       <h2 class="text-3xl bold mb-4">General</h2>
 
       <p v-if="data?.team?.project.submitted" class="mb-4 glow">

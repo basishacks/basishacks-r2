@@ -53,17 +53,7 @@ const items = computed<NavigationMenuItem[][]>(() => [[{
   to: "/developers/debug",
   disabled: !hasPermission(user.value?.role, DevPermissions.PORTAL_DEBUG_VIEW) && !hasPermission(user.value?.role, 'admin')
 }
-], [{
-  label: 'Feedback',
-  icon: 'i-lucide-message-circle',
-  to: 'https://github.com/nuxt-ui-templates/dashboard',
-  target: '_blank'
-}, {
-  label: 'Help & Support',
-  icon: 'i-lucide-info',
-  to: 'https://github.com/nuxt/ui',
-  target: '_blank'
-}]])
+], ])
 
 const name = computed(() => user.value?.name || 'Log In')
 

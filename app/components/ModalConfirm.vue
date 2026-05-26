@@ -10,7 +10,7 @@
     <template #footer="{ close }">
 
         <UButton :color="color" @click="click">Confirm</UButton>
-        <UButton color="neutral" variant="outline" @click="close">Cancel</UButton>
+        <UButton :color="colorSecond" variant="outline" @click="close">Cancel</UButton>
 
     </template>
 </UModal>
@@ -28,8 +28,11 @@ const props = defineProps({
     type: Function,
     default: () => {},
   },
+  colorSecond: {
+    type: String,
+    default: 'neutral',
+  }
 
-  
 })
 
 //console.log(props.click)
