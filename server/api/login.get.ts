@@ -1,4 +1,5 @@
 import { randomBytes } from "crypto"
+import { AuthorizeSession } from "./oauth2/session.post"
 
 export function constructOnSiteLoginURL() {
     /* Constructs DevConnect OAuth URL
