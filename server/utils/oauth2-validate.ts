@@ -1,6 +1,7 @@
 import type { H3Event } from 'h3'
 import { getOAuth2Application } from './database/oauth2_applications'
 import { env } from 'node:process'
+import { AuthorizeSession } from '../api/oauth2/session.post';
 
 /**
  * Validates OAuth2 authorization request parameters
@@ -131,4 +132,17 @@ export async function validateOAuth2AuthorizationRequest(
     redirect_uri: redirectUri,
     app
   }
+}
+
+/** Called after mscallback is sucessful and returns the next step.
+ * 
+ * Only two things can happen:
+ * immediately redirect to the uri.
+ * IF AN APPLICATION IS REQUESTING SENSITIVE SCOPES OAuth2Scopes.sensitive, redirect to authorization consent page
+ */
+export function determinePostMicrosoft(session: AuthorizeSession): string {
+
+  console.log(session)
+
+  return session.redirect_uri + "?code=" + session.code + "&state=" + session.bh_state
 }

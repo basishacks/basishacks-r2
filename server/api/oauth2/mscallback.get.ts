@@ -4,6 +4,7 @@ import oAuth2Config, { structureLink } from '~~/server/utils/oauth2';
 import { generateExchangeCode, getAuthorizeSession } from './session.post';
 import { createHash } from 'crypto';
 import { constructOnSiteLoginURL } from '../login.get';
+import { determinePostMicrosoft } from '~~/server/utils/oauth2-validate';
 
 
 function decodeJWT(token: string) {
@@ -143,7 +144,7 @@ export default defineEventHandler(async (event: any) => {
 
     generateExchangeCode(session)
 
-    const redir = session.redirect_uri + "?code=" + session.code + "&state=" + session.bh_state
+    const redir = determinePostMicrosoft(session)
 
     console.log("[Authorization -> OAuth2] MS Token Exchange sucess " + session.redirect_uri)
 
