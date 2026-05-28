@@ -1,40 +1,34 @@
 <template>
+    <UModal v-model:open="isOpen">
+        <slot />
+        <template #body>
+            <slot name="content" />
+        </template>
 
-<UModal>
-    <slot/>
-    <template #body>
-        <slot name="content"/>
-        
-    </template>
-    
-    <template #footer="{ close }">
+        <template #footer="{ close }">
+            <UButton :color="color" @click="click">Confirm</UButton>
+            <UButton :color="colorSecond" variant="outline" @click="close">Cancel</UButton>
+        </template>
+    </UModal>
+</template>
 
-        <UButton :color="color" @click="click">Confirm</UButton>
-        <UButton :color="colorSecond" variant="outline" @click="close">Cancel</UButton>
+<script setup lang="ts">
+const isOpen = defineModel("open", { default: false });
 
-    </template>
-</UModal>
-
- </template>
-
- <script setup lang="ts"> 
- 
 const props = defineProps({
-  color: {
-    type: String,
-    default: 'primary',
-  },
-  click: {
-    type: Function,
-    default: () => {},
-  },
-  colorSecond: {
-    type: String,
-    default: 'neutral',
-  }
-
-})
+    color: {
+        type: String,
+        default: "primary",
+    },
+    click: {
+        type: Function,
+        default: () => {},
+    },
+    colorSecond: {
+        type: String,
+        default: "neutral",
+    },
+});
 
 //console.log(props.click)
-
 </script>

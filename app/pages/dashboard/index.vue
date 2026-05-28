@@ -1,7 +1,7 @@
 @ -1,336 +0,0 @@
 <script setup lang="ts">
 definePageMeta({
-    layout: 'dashboard',
+  layout: 'dashboard',
   middleware: ['auth'],
 })
 
@@ -264,13 +264,7 @@ onUnmounted(() => {
 
         
 
-        <p v-else-if="data.team.project.submitted" class="mb-4 glow">
-          You have submitted your project. Congratulations! 🎉
-        </p>
-        <p v-else-if="hackathon?.status !== 'in_progress'" class="mb-4">
-          The submission period is over, and you can no longer submit your
-          project.
-        </p>
+
         
       </template>
     </template>

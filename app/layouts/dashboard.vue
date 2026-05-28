@@ -26,6 +26,12 @@ const items = ref<NavigationMenuItem[][]>([
           to: '/dashboard/general'
     },
 
+    {
+          label: 'Results',
+          icon: 'i-lucide-trophy',
+          to: '/dashboard/results'
+    },
+
 
 
     // {
