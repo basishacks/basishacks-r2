@@ -71,7 +71,7 @@ export default defineEventHandler(async (event: any) => {
     })
   }
 
-  deleteCookie(event, "bridge_id") // only delete after sucessful
+  
 
   
 
@@ -142,9 +142,7 @@ export default defineEventHandler(async (event: any) => {
 
     
 
-    generateExchangeCode(session)
-
-    const redir = determinePostMicrosoft(session)
+    const redir = determinePostMicrosoft(event, session)
 
     console.log("[Authorization -> OAuth2] MS Token Exchange sucess " + session.redirect_uri)
 

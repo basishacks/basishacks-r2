@@ -27,6 +27,13 @@ export interface AuthorizeSession {
   bh_verifier_challenge: string,
   bh_verifier_challenge_method: string,
   scopes: string[],
+  /**
+   * "identification" = just identified the app. user has to login or enter email
+   * "requesting" = requesting external resource, from ms oauth or from email/code
+   * "consent" = user logged in and awaiting for consent (skippabe if trusted app or insensitive scopes)
+   * "completed" = session completed, code generated, waiting for token exchange
+   */
+  login_state: "identification" | "requesting" | "consent" | "completed",
   code: string | null
 }
 
@@ -97,7 +104,7 @@ export async function exchangeAuthorizationCode(code: string, clientId?: string,
         .setProtectedHeader({ alg: 'HS256' })
         .setIssuer('basishacks')
         .setAudience(session.application.client_id)
-        .setIssuedAt(new Date().toString())
+        .setIssuedAt(Date.now())
         .setExpirationTime('1h')
         .sign(key)
 
@@ -126,6 +133,7 @@ export function constructSession(redirect_uri: string, app: OAuth2Application, s
     bh_verifier_challenge: code_challenge,
     bh_verifier_challenge_method: code_challenge_method,
     scopes: decodeURI(scope).split(' ').filter(s => s),
+    login_state: "identification",
     code: null
   }
 

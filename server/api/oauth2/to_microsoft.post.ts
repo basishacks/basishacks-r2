@@ -37,6 +37,7 @@ export default defineEventHandler(async (event) => {
   }
 
     const link = generateMicrosoftOAuth2Link(session)
+    session.login_state = "requesting"
 
     return {
         redirect_to: link

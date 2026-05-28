@@ -1,6 +1,7 @@
 import { randomBytes } from 'node:crypto'
 import { LoginRequest } from '~~/shared/schemas'
 import { completeAuthorizeSession, generateExchangeCode, getAuthorizeSession } from '../oauth2/session.post'
+import { determinePostMicrosoft } from '~~/server/utils/oauth2-validate'
 
 export default defineEventHandler(async (event) => {
 
@@ -24,20 +25,21 @@ export default defineEventHandler(async (event) => {
     })
   }
 
-  await setUserSession(event, {
-    user: { id: user.id }
-  })
-  /* If you look carefully, the first hand app on this website is technically a dummy login. :)
-    as a result even a code is generated, basishacks doesnt need to redeem it.
-    HOWEVER, for external apps, this code will be used to grant an access token for operations.
-  */
-  // completeAuthorizeSession(token) Removed becuase session is removed after dccallback
+  const redir = determinePostMicrosoft(event, session)
 
-  generateExchangeCode(session)
-
-  return {
-    user,
-    redirect_to: session.redirect_uri + "?code=" + session.code + "&state=" + session.bh_state,
-    time: Date.now()
+  if (session.login_state == "completed") {
+    return {
+      user,
+      redirect_to: redir,
+      time: Date.now()
+    }
+  } else { // consent
+    return {
+      user,
+      redirect_to: null, // stay here
+      time: Date.now()
+    }
   }
+
+  
 })

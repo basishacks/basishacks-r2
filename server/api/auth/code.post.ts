@@ -46,6 +46,7 @@ export default defineEventHandler(async (event) => {
   }
   user.name = data.name
   await updateUserName(event, user)
+  session.login_state = "requesting"
 
   return { message: 'Sent code to your Teams account' }
 })

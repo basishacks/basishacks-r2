@@ -42,7 +42,8 @@ export default defineEventHandler(async (event) => {
     name: session.application.name,
     description: session.application.description,
     type: session.application.type,
-    session: session.token
+    session: session.token,
+    login_state: session.login_state
   };
   
 })

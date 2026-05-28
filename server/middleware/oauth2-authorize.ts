@@ -2,7 +2,7 @@ import { defineEventHandler } from 'h3'
 import { randomBytes } from 'node:crypto'
 import { validateOAuth2AuthorizationRequest } from '~/../server/utils/oauth2-validate'
 import type { AuthorizeSession} from '../api/oauth2/session.post';
-import { addAuthorizeSession, attachAuthorizeSessionCookie, constructSession } from '../api/oauth2/session.post'
+import { addAuthorizeSession, attachAuthorizeSessionCookie, constructSession, getAuthorizeSession } from '../api/oauth2/session.post'
 import { generateMicrosoftOAuth2Link } from '../api/oauth2/to_microsoft.post'
 
 /**
@@ -15,6 +15,20 @@ export default defineEventHandler(async (event) => {
   if (!event.node.req.url?.includes('/api/oauth2/authorize')) {
     return
   }
+
+  const currentBridgeId = getCookie(event, "bridge_id")
+  if (currentBridgeId) {
+    
+    const currentSession = getAuthorizeSession(currentBridgeId || '')
+    if (currentSession && (currentSession.login_state == "identification" || currentSession.login_state == "consent")) { // security: refresh must gaurentee login flow from the top
+      console.log("[Authorization -> OAuth2] Existing session found for bridge_id " + currentBridgeId.substring(0, 16) + "... skipping new authorization and refreshing")
+      attachAuthorizeSessionCookie(currentSession, event)
+      currentSession.expire_time = Date.now() + 10 * 60 * 1000 // Extend session for another 10 mins
+      return
+    }
+    console.log("[Authorization -> OAuth2] Existing session found for bridge_id " + currentBridgeId.substring(0, 16) + "... but invalid login state " + currentSession?.login_state + " or session null, starting new authorization")
+  }
+  
 
   const query = getQuery(event)
   const client_id = query.client_id as string
@@ -36,7 +50,7 @@ export default defineEventHandler(async (event) => {
 
     const app: OAuth2Application = validatedRequest?.app as OAuth2Application
     
-    const session: AuthorizeSession = constructSession(redirect_uri || '', app, query.state as string, query.code_challenge as string, query.code_challenge_method as string)
+    const session: AuthorizeSession = constructSession(redirect_uri || '', app, query.state as string, query.code_challenge as string, query.code_challenge_method as string, query.scope as string)
     
     addAuthorizeSession(session)
 

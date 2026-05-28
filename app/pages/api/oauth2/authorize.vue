@@ -249,6 +249,7 @@ const navigateToOAuth2 = async () => {
 }
 
 const animatedChange = async (newStatus: string) => {
+ 
   isLoading.value = true
   status.value = "none"
   await delay(600)
@@ -336,10 +337,10 @@ async function submitCode(code: number[]) {
       })
       userId.value = res.id
       
-      if (app.value?.type == "first") {
+      if (res.redirect_to) {
         await animatedChange("none")
         showLoading.value = true
-        returnToApp(res)
+        returnToApp(res) // stupid function but ill tell u here: it just redirects to res.redirect_to lol
       } else {
         animatedChange('sensitive_consent')
       }
@@ -447,11 +448,12 @@ async function loginFlowCheck(reattempt: boolean = false) {
     } else {
       // 做的好 ！！！！
       await fade();
+
+
+
       applicationName.value = js.name
       app.value = js
       status.value = 'login'
-      
-      sessionStorage.setItem("oauth2_token", js.session)
     }
   }
   
@@ -542,7 +544,7 @@ function drawMatrix() {
 
     const text = matrixCharacters.charAt(Math.floor(Math.random() * matrixCharacters.length))
     const x = i * fontSize
-    // @ts-ignore fuck you ts
+    // @ts-ignore
     const y = drops[i] * fontSize;
 
     ctx.fillText(text, x, y)
@@ -550,7 +552,7 @@ function drawMatrix() {
     if (y > height && Math.random() > 0.975) {
       drops[i] = 0
     }
-    // @ts-ignore fuck you ts
+    // @ts-ignore
     drops[i] += 1
   }
 }
