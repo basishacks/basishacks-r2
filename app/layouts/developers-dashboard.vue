@@ -119,7 +119,9 @@ const name = computed(() => user.value?.name || 'Log In')
     </template>
   </UDashboardSidebar>
 
+
   <slot></slot>
+
 
   </UDashboardGroup>
 </template>

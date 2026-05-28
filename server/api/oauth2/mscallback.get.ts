@@ -1,6 +1,6 @@
 
 
-import oAuth2Config, { structureLink } from '~~/shared/oauth2';
+import oAuth2Config, { structureLink } from '~~/server/utils/oauth2';
 import { generateExchangeCode, getAuthorizeSession } from './session.post';
 import { createHash } from 'crypto';
 import { constructOnSiteLoginURL } from '../login.get';

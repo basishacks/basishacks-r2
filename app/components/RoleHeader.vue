@@ -21,11 +21,7 @@
           href="/profile"
         >
           <template v-if="userRef">
-            <UAvatar
-              :src="user?.profile_picture ? `/userast/${user.profile_picture}` : undefined"
-              :alt="user?.name || user?.email || 'User'"
-              size="sm"
-            />
+            <UserAvatar :user="user" size="sm" />
           </template>
           <UIcon v-else name="i-material-symbols-account-circle-full" class="text-xl" />
         </UButton>

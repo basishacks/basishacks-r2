@@ -20,4 +20,3 @@ export function structureLink(state: string, code_challenge: string, scope: stri
     + "&code_challenge_method=S256"
     
 }
-

@@ -210,10 +210,10 @@ onMounted(() => {
 
           <UFileUpload v-slot="{ open, removeFile }" v-model="state.avatar" accept="image/*">
             <div class="flex flex-wrap items-center gap-3">
-              <UAvatar
+              <UserAvatar
                 size="lg"
-                :src="avatarPreviewUrl || (user.profile_picture ? `/userast/${user.profile_picture}` : undefined)"
-                :alt="user.name || user.email || 'User'"
+                :user="user"
+                :preview-src="avatarPreviewUrl || undefined"
                 icon="i-lucide-image"
               />
 
@@ -255,7 +255,7 @@ onMounted(() => {
 
         <UFormField name="profile_theme_image" label="Profile Theme">
           <p class="text-muted text-xs">Select the theme of your profile.</p>
-          <p class="text-muted text-xs">This setting will affect the background display of your <ULink :to="profileLink">profile page</ULink> and your <UserPopover user="5"><span class="underline">profile card</span></UserPopover></p>
+          <p class="text-muted text-xs">This setting will affect the background display of your <ULink :to="profileLink">profile page</ULink> and your <UserPopover :user="user"><span class="underline">profile card</span></UserPopover></p>
           
           <div ref="fileUploadRef" class="w-full mt-4 rounded-md bg-gray-500 rounded-xl bg-center bg-cover bg-no-repeat">
             <UFileUpload

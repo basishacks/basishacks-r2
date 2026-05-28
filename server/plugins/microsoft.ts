@@ -1,6 +1,6 @@
 import { createHash, randomBytes } from "node:crypto";
 import { env } from "node:process";
-import { structureLink } from "~~/shared/oauth2";
+import { structureLink } from "~~/server/utils/oauth2";
 
 const metadata = {
     access_token: null as string | null,

@@ -63,29 +63,34 @@ const items = ref<NavigationMenuItem[][]>([
     <RoleHeader/>
 
   
-
+  
 
   <UContainer class="flex flex-col">
+    
     <div class="fixed -translate-x-full -mx-12 ">
-      <div class="mt-12"/>
-      <UCard>
-        <template #header>
-          <span class="uppercase text-sm font-bold text-muted">ongoing</span>
-          <h3 class="text-2xl bold glow ">June 2026</h3>
-          <span class="metallic-gold uppercase bold">#{{ THEME_NAME }}</span>
-          <USeparator class="my-4" size="sm"/>
-          <ULink class="text-xs" href="/theme/june-2026">See event details <UIcon name="i-lucide-arrow-right"/></ULink>
-        </template>
-      </UCard>
-      <UNavigationMenu orientation="vertical" :items="items" class="data-[orientation=vertical]:w-48 mt-12"/>
-    </div>
 
-    <UBanner
+        <UCard>
+          <template #header>
+            <span class="uppercase text-sm font-bold text-muted">ongoing</span>
+            <h3 class="text-2xl bold glow ">June 2026</h3>
+            <span class="metallic-gold uppercase bold">#{{ THEME_NAME }}</span>
+            <USeparator class="my-4" size="sm"/>
+            <ULink class="text-xs" href="/theme/june-2026">See event details <UIcon name="i-lucide-arrow-right"/></ULink>
+          </template>
+        </UCard>
+        <UNavigationMenu orientation="vertical" :items="items" class="data-[orientation=vertical]:w-48 mt-12"/>
+      </div>
+    
+    
+    <div class="mt-12 mx-auto max-w-(--ui-container)">
+
+      
+
+      <UBanner
 id="hoverdashnotif" color="neutral" class="z-0 mt-4 nopanel text-xs text-muted rounded-md show-small"
     title="You can also expand the dashboard tab to see more options"
     close/>
-    
-    <div class="mt-12">
+
       <slot />
     </div>
   </UContainer>

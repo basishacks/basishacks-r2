@@ -22,7 +22,7 @@
                   <h3 class="text-sm text-red-400">There was a problem during your login</h3>
                   <p class="mt-4 text-sm">{{ error_description }}</p>
 
-                  <UButton v-if="!error_description_initial" color="neutral" class="mt-8" :disabled="isLoading" @click="restartLoginProcess">Try Again</UButton>
+                  <UButton color="neutral" class="mt-8" :disabled="isLoading" @click="restartLoginProcess">Try Again</UButton>
                 </div>
               </Transition>
 
@@ -141,7 +141,6 @@
 import type { FormSubmitEvent } from '@nuxt/ui'
 import { computed, onBeforeUnmount, onMounted, reactive, ref } from 'vue'
 
-import oAuth2Config from '~~/shared/oauth2'
 import { LoginRequest, SendCodeRequest } from '~~/shared/schemas'
 
 

@@ -2,7 +2,7 @@ import { MicrosoftRedirectRequest } from "~~/shared/schemas"
 import type { AuthorizeSession} from "./session.post";
 import { getAuthorizeSession } from "./session.post"
 import { createHash, randomBytes } from "crypto"
-import { structureLink } from "~~/shared/oauth2"
+import { structureLink } from "~~/server/utils/oauth2"
 
 export function generateMicrosoftOAuth2Link(session: AuthorizeSession) {
   const state = randomBytes(75).toString("base64url")

@@ -8,7 +8,8 @@ definePageMeta({
   layout: 'developers-dashboard'
 })
 
-const UAvatar = resolveComponent('UAvatar')
+const UserAvatar = resolveComponent('UserAvatar')
+const UserPopover = resolveComponent('UserPopover')
 const UButton = resolveComponent('UButton')
 const UBadge = resolveComponent('UBadge')
 const UCheckbox = resolveComponent('UCheckbox')
@@ -101,10 +102,11 @@ const columns: TableColumn<User>[] = [
     cell: ({ row }) => {
       const name = row.original.name ?? 'Unknown'
       return h('div', { class: 'flex items-center gap-3' }, [
-        h(UAvatar, {
-          src: row.original.profile_picture ? `/userast/${row.original.profile_picture}` : undefined,
-          alt: name,
-          size: 'lg'
+        h(UserPopover, { user: row.original.id }, {
+          default: () => h(UserAvatar, {
+            user: row.original,
+            size: 'lg'
+          })
         }),
         h('p', { class: 'font-medium text-highlighted' }, name)
       ])
