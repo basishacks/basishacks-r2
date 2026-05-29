@@ -74,10 +74,9 @@ const dashboardContent: NavigationMenuItem[] = [
     },
 
     {
-          label: 'Presentation',
-          icon: 'i-material-symbols-present-to-all',
-          to: '/dashboard/presentation',
-          chip: true
+          label: 'Results',
+          icon: 'i-lucide-trophy',
+          to: '/dashboard/results'
     },
     
    

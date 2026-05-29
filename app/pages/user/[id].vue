@@ -21,8 +21,6 @@ if (error.value) {
 
 const user = computed(() => data.value as APIUser)
 
-console.log(user.value)
-
 onMounted(() => {
   const e: any = backgroundRef.value;
   if (e && user.value?.profile_theme?.value) {

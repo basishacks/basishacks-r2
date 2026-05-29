@@ -27,17 +27,19 @@ export default defineEventHandler(async (event) => {
 
   const currentBridgeId = getCookie(event, "bridge_id")
   if (currentBridgeId) {
+
+    
     
     const currentSession = getAuthorizeSession(currentBridgeId || '')
 
     if (!currentSession) {
       console.log("[Authorization -> OAuth2] No session found for bridge_id " + currentBridgeId.substring(0, 16) + "..., starting new authorization")
-    } else if (!(
-      currentSession.application.client_id == client_id &&
-      encodeURI(currentSession.scopes.join(' ')) == encodeURI(decodeURI(scope)) && // ensure only encoded ONCE 
-      currentSession.redirect_uri == redirect_uri && 
-      currentSession.bh_state == state
-    )) {
+    } else if (
+      currentSession.application.client_id != client_id ||
+      encodeURI(currentSession.scopes.join(' ')) != encodeURI(decodeURI(scope)) || // ensure only encoded ONCE 
+      currentSession.redirect_uri != redirect_uri ||
+      currentSession.bh_state != state
+    ) {
       console.log("[Authorization -> OAuth2] Existing session found for bridge_id " + currentBridgeId.substring(0, 16) + "... failed parameter check. new session...")
     } else if ((currentSession.login_state == "identification" || currentSession.login_state == "consent")) { // security: refresh must gaurentee login flow from the top
       console.log("[Authorization -> OAuth2] Existing session found for bridge_id " + currentBridgeId.substring(0, 16) + "... skipping new authorization and refreshing")

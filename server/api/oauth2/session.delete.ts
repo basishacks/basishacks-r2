@@ -23,34 +23,35 @@ export default defineEventHandler(async (event) => {
     throw createError({
       statusCode: 400,
       message: "session_expired"
+    })
+  }
+
+  if (removeIfSessionExpired(session)) {
+      throw createError({
+        statusCode: 400,
+        message: "session_expired"
       })
-    }
+  }
 
-    if (removeIfSessionExpired(session)) {
-        throw createError({
-          statusCode: 400,
-          message: "session_expired"
-        })
-    }
+  let message: string
+  let redir: string
 
-    completeAuthorizeSession(session.token)
+  if (body.action === 'cancel' || body.action === 'deny') {
+    message = body.action === 'cancel'
+      ? "User cancelled authorization request"
+      : "User denied authorization request"
 
-    let message: string
-    let redir: string
+    deleteCookie(event, "bridge_id") // ensure session cookie is removed on cancel/deny
+    session.login_state = "completed" // mark session as completed to prevent reuse, even though it will be deleted on next auth attempt
 
-    if (body.action === 'cancel' || body.action === 'deny') {
-      message = body.action === 'cancel'
-        ? "User cancelled authorization request"
-        : "User denied authorization request"
+    redir = session.redirect_uri + "?error=access_denied&error_description=" + encodeURI(message) + "&state=" + session.bh_state
+  } else {
+    // consent
+    redir = completeConsentFlow(event, session)
+  }
 
-      redir = session.redirect_uri + "?error=access_denied&error_description=" + encodeURI(message) + "&state=" + session.bh_state
-    } else {
-      // consent
-      redir = session.redirect_uri + "?code=" + encodeURIComponent(session.token) + "&state=" + session.bh_state
-    }
-
-    return {
-        redirect_to: redir
-    }
+  return {
+      redirect_to: redir
+  }
 
 })

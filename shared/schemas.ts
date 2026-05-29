@@ -172,6 +172,6 @@ export const ManageRedirectUriRequest = z.object({
 export type ManageRedirectUriRequest = z.infer<typeof ManageRedirectUriRequest>
 
 export const OAuth2SessionActionRequest = z.object({
-  action: z.enum(['cancel', 'consent', 'deny'], "Actions must be one of 'cancel', 'consent', or 'deny'")
+  action: z.enum(['cancel', 'consent', 'assume_consent', 'deny'], "Actions must be one of 'cancel', 'consent', 'assume_consent', or 'deny'")
 })
 export type OAuth2SessionActionRequest = z.infer<typeof OAuth2SessionActionRequest>

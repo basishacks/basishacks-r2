@@ -1,7 +1,7 @@
 import type { H3Event } from 'h3'
 import { getOAuth2Application } from './database/oauth2_applications'
 import { env } from 'node:process'
-import { AuthorizeSession, generateExchangeCode } from '../api/oauth2/session.post';
+import { AuthorizeSession, completeAuthorizeSession, generateExchangeCode } from '../api/oauth2/session.post';
 import { OAuth2ScopeDescriptions, OAuth2Scopes } from '~~/shared/oauth2-scopes';
 
 /**
@@ -135,6 +135,18 @@ export async function validateOAuth2AuthorizationRequest(
   }
 }
 
+export function usedSensitiveScopes(session: AuthorizeSession): boolean {
+  for (const scope of session.scopes) {
+    const s = OAuth2Scopes[scope]
+    if (s?.sensitive) {
+      console.log("[Authorization -> OAuth2] Application " + session.application.client_id + " requests sensitive scope " + scope + ", triggering consent")
+      return true
+    }
+  }
+
+  return false
+}
+
 /** Called after mscallback is sucessful and returns the next step.
  * 
  * Only two things can happen:
@@ -143,15 +155,12 @@ export async function validateOAuth2AuthorizationRequest(
  */
 export function determinePostMicrosoft(event: any,session: AuthorizeSession): string {
 
-  for (const scope of session.scopes) {
-    const s = OAuth2Scopes[scope]
-    if (s?.sensitive) {
-      console.log("[Authorization -> OAuth2] Application " + session.application.client_id + " requests sensitive scope " + scope + ", triggering consent")
-      // trigger consent
-      session.login_state = "consent"
-      return "/api/oauth2/authorize?client_id=" + session.application.client_id + "&scope=" + session.scopes.join(' ') + "&redirect_uri=" + session.redirect_uri + "&state=" + session.bh_state + "&response_type=code" + (session.bh_verifier_challenge ? ("&code_challenge=" + session.bh_verifier_challenge) : "") + (session.bh_verifier_challenge_method ? ("&code_challenge_method=" + session.bh_verifier_challenge_method) : "")
-    }
+  const sensitive = usedSensitiveScopes(session)
+  if (sensitive) {
+    session.login_state = "consent"
+    return "/api/oauth2/authorize?client_id=" + session.application.client_id + "&scope=" + session.scopes.join(' ') + "&redirect_uri=" + session.redirect_uri + "&state=" + session.bh_state + "&response_type=code" + (session.bh_verifier_challenge ? ("&code_challenge=" + session.bh_verifier_challenge) : "") + (session.bh_verifier_challenge_method ? ("&code_challenge_method=" + session.bh_verifier_challenge_method) : "")
   }
+  
 
   return completeConsentFlow(event, session)
 }

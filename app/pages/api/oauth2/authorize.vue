@@ -362,10 +362,10 @@ async function submitCode(code: number[]) {
       })
       userId.value = res.user.id
       apiUser.value = res.user
-      if (res.redirect_to) {
+      if (!res.sensitive) {
         await animatedChange("none")
         showLoading.value = true
-        returnToApp(res) // stupid function but ill tell u here: it just redirects to res.redirect_to lol
+        returnToApp({result: "assume_consent"}) // stupid function but ill tell u here: it just redirects to res.redirect_to lol
       } else {
         animatedChange('sensitive_consent')
       }

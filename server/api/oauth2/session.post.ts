@@ -44,6 +44,7 @@ export function addAuthorizeSession(session: AuthorizeSession) {
 }
 
 export function getAuthorizeSession(token: string): AuthorizeSession | null {
+
   const session = AUTHORIZE_SESSION_STORE[token] || null
   if (!session) return null
   if (Date.now() > session.expire_time) {
@@ -108,7 +109,7 @@ export async function exchangeAuthorizationCode(code: string, clientId?: string,
         .setExpirationTime('1h')
         .sign(key)
 
-      delete AUTHORIZE_SESSION_STORE[token]
+      completeAuthorizeSession(session.token)
       return jwt
     }
   }

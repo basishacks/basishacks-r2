@@ -1,7 +1,7 @@
 import { randomBytes } from 'node:crypto'
 import { LoginRequest } from '~~/shared/schemas'
 import { completeAuthorizeSession, generateExchangeCode, getAuthorizeSession } from '../oauth2/session.post'
-import { determinePostMicrosoft } from '~~/server/utils/oauth2-validate'
+import { determinePostMicrosoft, usedSensitiveScopes } from '~~/server/utils/oauth2-validate'
 
 export default defineEventHandler(async (event) => {
 
@@ -37,21 +37,13 @@ export default defineEventHandler(async (event) => {
   
   const apiuser = await getUser(event ,user.id)
 
-  const redir = determinePostMicrosoft(event, session)
+  const sensitive = usedSensitiveScopes(session)
 
-  if (session.login_state == "completed") {
-    return {
-      apiuser,
-      redirect_to: redir,
+  return {
+      user: apiuser,
+      sensitive,
       time: Date.now()
     }
-  } else { // consent
-    return {
-      apiuser,
-      redirect_to: null, // stay here
-      time: Date.now()
-    }
-  }
 
   
 })
