@@ -22,7 +22,7 @@ export default defineNuxtConfig({
     asyncContext: true,
   },
   devServer: {
-    port: 3001,
+    port: 24598,
   },
   icon: {
     customCollections: [],

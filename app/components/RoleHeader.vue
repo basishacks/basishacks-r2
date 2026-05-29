@@ -8,12 +8,6 @@
       <UNavigationMenu :items="navItems" />
 
       <template #right>
-        <UButton
-          icon="i-lucide-menu"
-          variant="ghost"
-          class="lg:hidden"
-          @click="emit('toggleDrawer')"
-        />
         <UColorModeButton />
         <UButton
           variant="ghost"
@@ -42,9 +36,6 @@
 import type { NavigationMenuItem } from '@nuxt/ui'
 import { hasPermission } from '~~/shared/permissions'
 
-const emit = defineEmits<{
-  toggleDrawer: []
-}>()
 
 const { user: userRef } = useUserSession()
 // this is honestly ugly asf but i can't think of a clean solution

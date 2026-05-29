@@ -41,14 +41,14 @@ onUnmounted(() => {
   >
     <p class="bold">{{ label }}</p>
     <div
-      class="flex flex-row justify-around text-5xl sm:text-6xl items-center bold gap-1"
+      class="flex flex-row justify-around text-[clamp(1.75rem,3.5vw,2.5rem)] items-center bold gap-1"
     >
       <span class="text-primary">{{ formatSegment(days) }}</span>
-      <span class="text-2xl sm:text-3xl">:</span>
+      <span class="text-[0.5em]">:</span>
       <span class="text-primary">{{ formatSegment(hours) }}</span>
-      <span class="text-2xl sm:text-3xl">:</span>
+      <span class="text-[0.5em]">:</span>
       <span class="text-primary">{{ formatSegment(minutes) }}</span>
-      <span class="text-2xl sm:text-3xl">:</span>
+      <span class="text-[0.5em]">:</span>
       <span class="text-primary">{{ formatSegment(seconds) }}</span>
     </div>
     <p class="bold"><DateTime :date="date" /></p>
