@@ -23,7 +23,7 @@ export default defineEventHandler(async (event) => {
   if (!token) {
     throw createError({
       status: 400,
-      message: "Header 'bridge_id' is required"
+      message: "Cookie 'bridge_id' is required"
     })
   }
 

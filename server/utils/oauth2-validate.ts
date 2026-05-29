@@ -153,6 +153,10 @@ export function determinePostMicrosoft(event: any,session: AuthorizeSession): st
     }
   }
 
+  return completeConsentFlow(event, session)
+}
+
+export function completeConsentFlow(event: any, session: AuthorizeSession): string {
   generateExchangeCode(session)
   session.login_state = "completed"
   deleteCookie(event, "bridge_id") // only delete after sucessful

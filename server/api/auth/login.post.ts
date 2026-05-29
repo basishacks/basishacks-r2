@@ -5,7 +5,16 @@ import { determinePostMicrosoft } from '~~/server/utils/oauth2-validate'
 
 export default defineEventHandler(async (event) => {
 
-  const { email, code, token } = await readValidatedBody(event, LoginRequest.parse)
+  const { email, code } = await readValidatedBody(event, LoginRequest.parse)
+
+  const token = getCookie(event, "bridge_id")
+
+  if (!token) {
+    throw createError({
+      status: 400,
+      message: "Cookie 'bridge_id' is required"
+    })
+  }
 
   const session = getAuthorizeSession(token)
   console.log("[Authorize -> Login] Requested Login Submit: T:" + token.substring(0, 16) + "...")
@@ -18,24 +27,27 @@ export default defineEventHandler(async (event) => {
   }
 
   const user = await getUserByCode(event, email, code.join(''))
+  
   if (!user) {
     throw createError({
       status: 400,  
       message: 'The given email & code combination is incorrect',
     })
   }
+  
+  const apiuser = await getUser(event ,user.id)
 
   const redir = determinePostMicrosoft(event, session)
 
   if (session.login_state == "completed") {
     return {
-      user,
+      apiuser,
       redirect_to: redir,
       time: Date.now()
     }
   } else { // consent
     return {
-      user,
+      apiuser,
       redirect_to: null, // stay here
       time: Date.now()
     }

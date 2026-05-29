@@ -5,7 +5,7 @@
         <div class="rounded-md bg-default w-full max-w-md px-8 text-center">
 
             <div class="relative flex items-center justify-center my-8">
-              <UIcon name="i-material-symbols-arrow-back" class="absolute left-0 w-6 h-6 cursor-pointer hover:opacity-80 transition-opacity" @click="dummyFunction" />
+              <UIcon name="i-material-symbols-arrow-back" class="absolute left-0 w-6 h-6 cursor-pointer hover:opacity-80 transition-opacity" @click="returnToApp({result:'cancel'})" />
               <p class="text-xl bold glow text-primary">{{ WEBSITE_NAME }}</p>
             </div>
             <USeparator></USeparator>
@@ -22,7 +22,7 @@
                   <h3 class="text-sm text-red-400">There was a problem during your login</h3>
                   <p class="mt-4 text-sm">{{ error_description }}</p>
 
-                  <UButton color="neutral" class="mt-8" :disabled="isLoading" @click="restartLoginProcess">Try Again</UButton>
+                  <UButton v-if="!error_description_initial" color="neutral" class="mt-8" :disabled="isLoading" @click="restartLoginProcess">Try Again</UButton>
                 </div>
               </Transition>
 
@@ -111,19 +111,23 @@
                   </div>
 
                   <div>
-                    <h3 class="text-mx">Allow <span class="bold">{{ applicationName }}</span> to...</h3>
-                    <p v-if="usedScopes.includes('openid') || usedScopes.includes('profile') || usedScopes.includes('email')" class="flex flex-row items-center justify-center gap-2">
-                      <UIcon name="i-material-symbols-check" class="text-primary"/>
-                      <span class="text-sm">View your profile information</span>
+                    <h3 class="text-mx mb-2">Allow <span class="bold">{{ applicationName }}</span> to...</h3>
+                    <p v-for="desc in parsedScopeDescriptions" :key="desc.msg" class="flex flex-row items-center justify-center gap-2">
+                      <UIcon v-if="!desc.sensitive" name="i-material-symbols-check" class="text-primary"/>
+                      <UIcon v-else name="i-heroicons-exclaimation-circle-solid" class="text-yellow-600"/>
+                      <span class="text-sm">{{ desc.msg }}</span>
+                      <UTooltip :delay-duration="0" :text="desc.tooltip">
+                        <UIcon v-if="desc.tooltip" name="i-lucide-circle-question-mark" class="text-muted"></UIcon>
+                      </UTooltip>
                     </p>
                   </div>
 
                   <div class="flex flex-row gap-4">
-                    <UButton @click="returnToApp({ result: 'success', code: 'example_code' })">
-                      Sure
+                    <UButton @click="returnToApp({ result: 'consent'})" :disabled="isLoading">
+                      Consent
                     </UButton>
-                    <UButton color="neutral" @click="returnToApp({ result: 'error', error: 'access_denied', error_description: 'User denied consent' })">
-                      Nope
+                    <UButton color="neutral" @click="returnToApp({ result: 'deny'})" :disabled="isLoading" >
+                      Deny
                     </UButton>
                   </div>
                 </div>
@@ -140,6 +144,7 @@
 <script setup lang="ts">
 import type { FormSubmitEvent } from '@nuxt/ui'
 import { computed, onBeforeUnmount, onMounted, reactive, ref } from 'vue'
+import { OAuth2ScopeDescriptions, OAuth2Scopes } from '~~/shared/oauth2-scopes'
 
 import { LoginRequest, SendCodeRequest } from '~~/shared/schemas'
 
@@ -151,30 +156,51 @@ const error_description_initial = ref(true)
 const error = ref('')
 const isLoading = ref(false) // basically making all buttons uninteractable
 const userId = ref<number | null>(null)
+const apiUser = ref<APIUser | null>(null)
 const applicationName = ref('')
 const usedScopes: Ref<string[]> = ref([])
+const parsedScopeDescriptions: Ref<any> = computed(() => {
+
+  const readable = []
+  if (usedScopes.value.includes("openid") || usedScopes.value.includes("profile") || usedScopes.value.includes("email")) {
+    readable.push({msg: "View your basic account information", sensitive: false})
+  }
+
+  for (const scope of usedScopes.value) {
+    if (scope == "openid" || scope == "profile" || scope == "email") continue
+
+    readable.push({msg: OAuth2Scopes[scope]?.description|| 'Bake you a cake (mystery permission)', sensitive: OAuth2Scopes[scope]?.sensitive, tooltip: OAuth2Scopes[scope]?.tooltip})
+  }
+
+  readable.sort((a, b) => {
+    if (a.msg === "View your basic account information") return -1
+    if (b.msg === "View your basic account information") return 1
+    return (b.sensitive ? 1 : 0) - (a.sensitive ? 1 : 0)
+  })
+
+  return readable
+})
 const route = useRoute()
 const app: Ref<OAuth2Application | null> = ref(null)
 
-const dummyFunction = async () => {
+const returnToApp = async (options: any) => {
 
   isLoading.value = true
 
-  const res = await $fetch("/api/oauth2/session", {
-    method: "DELETE"
+  const result = options.result
+
+  const res: any = await $fetch("/api/oauth2/session", {
+    method: "DELETE",
+    body: {
+      action: result
+    }
   })
 
   if (res.redirect_to) {
     window.location.href = res.redirect_to
-  }
-
-}
-
-const returnToApp = (options: any) => {
-
-  isLoading.value = true
-
-  window.location.href = options.redirect_to
+  } else {
+    await showLoginError(res.message, res.message == "session_expired")
+  } 
 
 }
 
@@ -220,8 +246,7 @@ const navigateToOAuth2 = async () => {
 
   try {
     const res: any = await $fetch('/api/oauth2/to_microsoft', {
-      method: 'POST',
-      body: { token: sessionStorage.getItem("oauth2_token") || ""},
+      method: 'POST'
     })
     const js = res
     const url = js.redirect_to
@@ -236,7 +261,7 @@ const navigateToOAuth2 = async () => {
     await navigateTo(url, {external:true})
   } catch (e: any) {
     if (getErrorMessage(e) == "session_expired") {
-      await showLoginError(e)
+      await showLoginError(e, true)
     } else {
       toast.add({
         title: "Login Failed",
@@ -270,12 +295,12 @@ const animatedChange = async (newStatus: string) => {
       }),
     ]
     
-    // Set timeout to show placeholders after 1 second
+    // Set timeout to show placeholders after 0.2 second
     const timeoutPromise = new Promise<void>((resolve) => {
       setTimeout(() => {
         showPlaceholders.value = true
         resolve()
-      }, 1000)
+      }, 100)
     })
     
     // Wait for either all images to load or timeout
@@ -300,7 +325,7 @@ async function onSendCodeSubmit(event: FormSubmitEvent<SendCodeRequest>) {
     await withLoadingIndicator(async () => {
       const res = await $fetch('/api/auth/code', {
         method: 'POST',
-        body: { email, token: sessionStorage.getItem("oauth2_token") || ""},
+        body: { email },
       })
       stateLogin.email = email
       // console.log(1)
@@ -312,7 +337,7 @@ async function onSendCodeSubmit(event: FormSubmitEvent<SendCodeRequest>) {
     })
   } catch (e: any) {
     if (getErrorMessage(e) == "session_expired") {
-      await showLoginError(e)
+      await showLoginError(e, true)
     } else {
       toast.add({
         title: "Login Failed",
@@ -333,10 +358,10 @@ async function submitCode(code: number[]) {
     await withLoadingIndicator(async () => {
       const res: any = await $fetch('/api/auth/login', {
         method: 'POST',
-        body: { email: stateLogin.email, code, token: sessionStorage.getItem("oauth2_token") || "" },
+        body: { email: stateLogin.email, code },
       })
-      userId.value = res.id
-      
+      userId.value = res.user.id
+      apiUser.value = res.user
       if (res.redirect_to) {
         await animatedChange("none")
         showLoading.value = true
@@ -347,7 +372,7 @@ async function submitCode(code: number[]) {
     })
   } catch (e: any) {
     if (getErrorMessage(e) == "session_expired") {
-      await showLoginError(e)
+      await showLoginError(e, true)
     } else {
       toast.add({
         title: "Login Failed",
@@ -443,17 +468,25 @@ async function loginFlowCheck(reattempt: boolean = false) {
         status.value = 'error'
         error.value = "invalid_request"
         error_description.value = js.message
+        error_description_initial.value = true
       }
       
     } else {
-      // 做的好 ！！！！
-      await fade();
-
-
+      // 做的好 ！！！！  
 
       applicationName.value = js.name
       app.value = js
-      status.value = 'login'
+      userId.value = js.user_id
+      apiUser.value = js.api_user
+      
+
+      if (js.login_state == "consent") {
+        fade(0);
+        animatedChange("sensitive_consent")
+      } else {
+        await fade();
+        status.value = 'login'
+      }
     }
   }
   
@@ -484,7 +517,6 @@ let ctx: CanvasRenderingContext2D | null = null
 
 const userAvatarLoaded = ref(false)
 const applicationAvatarLoaded = ref(false)
-const avatarsReady = computed(() => userAvatarLoaded.value && applicationAvatarLoaded.value)
 const showPlaceholders = ref(false)
 
 const preloadImage = (url: string): Promise<void> => {

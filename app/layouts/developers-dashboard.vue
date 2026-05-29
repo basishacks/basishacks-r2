@@ -53,7 +53,7 @@ const items = computed<NavigationMenuItem[][]>(() => [[{
   to: "/developers/debug",
   disabled: !hasPermission(user.value?.role, DevPermissions.PORTAL_DEBUG_VIEW) && !hasPermission(user.value?.role, 'admin')
 }
-], ])
+] ])
 
 const name = computed(() => user.value?.name || 'Log In')
 

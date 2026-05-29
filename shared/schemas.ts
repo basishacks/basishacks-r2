@@ -32,14 +32,12 @@ const ScoreValues = z.object(
 
 export const SendCodeRequest = z.object({
   email: BasisEmail,
-  token: z.string()
 })
 export type SendCodeRequest = z.infer<typeof SendCodeRequest>
 
 export const LoginRequest = z.object({
   email: BasisEmail,
-  code: z.array(z.number().max(9).min(0)).length(6, "Code must be 6 digits"),
-  token: z.string()
+  code: z.array(z.number().max(9).min(0)).length(6, "Code must be 6 digits")
 })
 export type LoginRequest = z.infer<typeof LoginRequest>
 
@@ -172,3 +170,8 @@ export const ManageRedirectUriRequest = z.object({
     ),
 })
 export type ManageRedirectUriRequest = z.infer<typeof ManageRedirectUriRequest>
+
+export const OAuth2SessionActionRequest = z.object({
+  action: z.enum(['cancel', 'consent', 'deny'], "Actions must be one of 'cancel', 'consent', or 'deny'")
+})
+export type OAuth2SessionActionRequest = z.infer<typeof OAuth2SessionActionRequest>

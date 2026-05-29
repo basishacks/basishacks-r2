@@ -10,7 +10,16 @@ export default defineEventHandler(async (event) => {
     })
   }
 
-  const { email, token } = await readValidatedBody(event, SendCodeRequest.parse)
+  const { email } = await readValidatedBody(event, SendCodeRequest.parse)
+  const token = getCookie(event, "bridge_id")
+
+  if (!token) {
+    throw createError({
+      status: 400,
+      message: "Cookie 'bridge_id' is required"
+    })
+  }
+
   const session = getAuthorizeSession(token)
   console.log("[Authorize -> Code] Requested Login Code: T:" + token.substring(0, 16) + "...")
 

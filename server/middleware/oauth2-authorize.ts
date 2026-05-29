@@ -2,7 +2,7 @@ import { defineEventHandler } from 'h3'
 import { randomBytes } from 'node:crypto'
 import { validateOAuth2AuthorizationRequest } from '~/../server/utils/oauth2-validate'
 import type { AuthorizeSession} from '../api/oauth2/session.post';
-import { addAuthorizeSession, attachAuthorizeSessionCookie, constructSession, getAuthorizeSession } from '../api/oauth2/session.post'
+import { addAuthorizeSession, attachAuthorizeSessionCookie, completeAuthorizeSession, constructSession, getAuthorizeSession } from '../api/oauth2/session.post'
 import { generateMicrosoftOAuth2Link } from '../api/oauth2/to_microsoft.post'
 
 /**
@@ -16,25 +16,42 @@ export default defineEventHandler(async (event) => {
     return
   }
 
+  const query = getQuery(event)
+  const client_id = query.client_id as string
+  const scope = query.scope as string
+  const state = query.state as string
+  const response_type = query.response_type as string
+  const code_challenge = query.code_challenge as string
+  const code_challenge_method = query.code_challenge_method as string
+  const redirect_uri = query.redirect_uri as string | undefined
+
   const currentBridgeId = getCookie(event, "bridge_id")
   if (currentBridgeId) {
     
     const currentSession = getAuthorizeSession(currentBridgeId || '')
-    if (currentSession && (currentSession.login_state == "identification" || currentSession.login_state == "consent")) { // security: refresh must gaurentee login flow from the top
+
+    if (!currentSession) {
+      console.log("[Authorization -> OAuth2] No session found for bridge_id " + currentBridgeId.substring(0, 16) + "..., starting new authorization")
+    } else if (!(
+      currentSession.application.client_id == client_id &&
+      encodeURI(currentSession.scopes.join(' ')) == encodeURI(decodeURI(scope)) && // ensure only encoded ONCE 
+      currentSession.redirect_uri == redirect_uri && 
+      currentSession.bh_state == state
+    )) {
+      console.log("[Authorization -> OAuth2] Existing session found for bridge_id " + currentBridgeId.substring(0, 16) + "... failed parameter check. new session...")
+    } else if ((currentSession.login_state == "identification" || currentSession.login_state == "consent")) { // security: refresh must gaurentee login flow from the top
       console.log("[Authorization -> OAuth2] Existing session found for bridge_id " + currentBridgeId.substring(0, 16) + "... skipping new authorization and refreshing")
       attachAuthorizeSessionCookie(currentSession, event)
       currentSession.expire_time = Date.now() + 10 * 60 * 1000 // Extend session for another 10 mins
-      return
+      return // here
     }
     console.log("[Authorization -> OAuth2] Existing session found for bridge_id " + currentBridgeId.substring(0, 16) + "... but invalid login state " + currentSession?.login_state + " or session null, starting new authorization")
+    
+    completeAuthorizeSession(currentBridgeId) // if using old session this will not be hit bc of prev return func
   }
   
-
-  const query = getQuery(event)
-  const client_id = query.client_id as string
-  const scope = query.scope as string
-  const redirect_uri = query.redirect_uri as string | undefined
-  const state = query.state as string | undefined
+  
+  
 
   try {
     const validatedRequest = await validateOAuth2AuthorizationRequest(
@@ -59,6 +76,7 @@ export default defineEventHandler(async (event) => {
     if (app.proxy_microsoft) {
       // instant redirect mode, skip basishacks login
       const link = generateMicrosoftOAuth2Link(session)
+      session.login_state = "requesting"
 
       console.log("[Authorization -> OAuth2] Microsoft proxy application " + app.client_id)
 
