@@ -27,6 +27,47 @@ const intent = ref<"save" | "submit">("save");
 const showConfirmModal = ref(false);
 let pendingSubmitEvent: FormSubmitEvent<UpdateTeamRequest | SubmitTeamRequest> | null = null;
 
+const autosaveStatus = ref('');
+
+async function triggerAutosave() {
+    if (!formRef.value?.dirty || !defaultTeam) {
+        // autosaveStatus.value = 'Synced with origin';
+        return
+    };
+
+    autosaveStatus.value = 'Auto-saving...';
+    try {
+        await $fetch(`/api/teams/${defaultTeam.id}`, {
+            method: 'PATCH',
+            body: {
+                name: state.name,
+                pathway: state.pathway,
+                project: {
+                    name: state.project.name,
+                    description: state.project.description,
+                    demo_url: state.project.demo_url || null,
+                    repo_url: state.project.repo_url || null,
+                },
+            },
+        });
+        autosaveStatus.value = `Auto-saved at ${new Date().toLocaleTimeString()}`;
+    } catch (e) {
+        autosaveStatus.value = 'Auto-save failed';
+    }
+}
+
+let autosaveInterval: ReturnType<typeof setInterval> | null = null
+
+onMounted(() => {
+    autosaveInterval = setInterval(triggerAutosave, 10000)
+})
+
+onUnmounted(() => {
+    if (autosaveInterval) {
+        clearInterval(autosaveInterval)
+    }
+})
+
 const state = reactive({
     name: "",
     pathway: "junior" as TeamPathway,
@@ -83,6 +124,7 @@ async function performSubmit(event: FormSubmitEvent<UpdateTeamRequest | SubmitTe
                 return;
             }
             if (!isSubmit) {
+                // @ts-ignore i dont know
                 res = await $fetch(`/api/teams/${defaultTeam.id}`, {
                     method: "PATCH",
                     body: payload,
@@ -97,6 +139,8 @@ async function performSubmit(event: FormSubmitEvent<UpdateTeamRequest | SubmitTe
                 color: "success",
                 title: res.message,
             });
+
+            autosaveStatus.value = `Saved at ${new Date().toLocaleTimeString()}`;
         });
         emit("refresh");
     } catch (e) {
@@ -216,5 +260,9 @@ async function confirmSubmit() {
                 </template>
             </ModalConfirm>
         </div>
+
+        <p v-if="autosaveStatus" class="text-sm text-neutral-500">
+            {{ autosaveStatus }}
+        </p>
     </UForm>
 </template>

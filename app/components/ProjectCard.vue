@@ -5,16 +5,50 @@ const props = defineProps<{
 
 const { data: team } = await useFetch<GetTeamResponse>(() => '/api/teams/' + props.id)
 
-console.log(team.value)
 </script>
 
 <template>
-  <UCard>
+  <UCard v-if="team"
+    description=teamname
+  >
     <template #header>
-      <h3 class="text-xl">Project</h3>
+      <h3 v-if="team.project.name" class="text-xl bold">{{ team.project.name }}</h3>
+      <h3 v-else class="text-muted">(No Project Name)</h3>
+      <span class="text-sm">Team: </span>
+      <span v-if="team && team.name" class="text-muted text-sm">{{ team.name }}</span>
+      <span v-else class="text-muted text-sm"(No Team Name)></span>
     </template>
-    <template #description>
-      <pre v-if="team">{{ team }}</pre>
+
+    <template #default>
+        <p v-if="team.project.description" class="whitespace-pre-wrap">{{ team.project.description }}</p>
+        <p v-else class="text-muted">(No Project Description)</p>
     </template>
+
+    <template #footer>
+      <div class="flex flex-row gap-2">
+            <UTooltip :text="team.project.repo_url!">
+        <UButton
+          variant="subtle"
+          icon="i-material-symbols-merge"
+          :href="team.project.repo_url!"
+          external
+          target="_blank"
+          :disabled="!team.project.repo_url"
+          >Repo</UButton
+        >
+      </UTooltip>
+      <UTooltip :text="team.project.demo_url!">
+        <UButton
+          variant="subtle"
+          icon="i-material-symbols-play-arrow"
+          :href="team.project.demo_url!"
+          external
+          target="_blank"
+          :disabled="!team.project.repo_url"
+          >Demo</UButton
+        >
+      </UTooltip>
+        </div>
+        </template>
   </UCard>
 </template>

@@ -178,6 +178,29 @@ watch(isDirty, (value) => {
 onUnmounted(() => {
   window.removeEventListener('beforeunload', beforeUnload)
 })
+
+
+const actions = ref([
+  {
+    title: 'Edit your project',
+    description: 'Make changes to your project details, add links, and more.',
+    to: '/dashboard/general',
+    icon: 'i-heroicons-pencil-square-solid',
+  },
+  {
+    title: 'Manage your team',
+    description: 'Add or remove team member or change your team name.',
+    to: '/dashboard/teams',
+    icon: 'i-heroicons-users-solid',
+  },
+  {
+    title: 'View your results',
+    description: 'View the results of the hackathon.',
+    to: '/dashboard/results',
+    icon: 'i-lucide-trophy',
+  },
+])
+
 </script>
 
 <template>
@@ -226,6 +249,18 @@ onUnmounted(() => {
       <h2 class="text-3xl bold mb-4">Your project</h2>
 
       <ProjectCard v-if="data.team_id" :id="data.team_id"></ProjectCard>
+
+      <h2 class="text-3xl bold my-4">Continue...</h2>
+      
+
+      <UPageGrid>
+      
+      <UPageCard
+        v-for="(card, index) in actions"
+        :key="index"
+        v-bind="card"
+      />
+    </UPageGrid>
     </template>
   </div>
 </template>
