@@ -7,7 +7,7 @@
  * This page is used to refresh sessions
  *
  */
-import { randomBytes } from 'crypto';
+import { createHash, randomBytes } from 'crypto';
 import { SignJWT } from 'jose';
 import { validateOAuth2AuthorizationRequest } from '~/../server/utils/oauth2-validate';
 
@@ -52,12 +52,9 @@ export function generateExchangeCode(session: AuthorizeSession) {
   session.code = code;
 }
 
-export async function exchangeAuthorizationCode(
-  code: string,
-  clientId?: string,
-  redirectUri?: string,
-): Promise<string> {
-  const secret = process.env.NUXT_OAUTH2_JWT_SECRET;
+export async function exchangeAuthorizationCode(code: string, clientId?: string, redirectUri?: string, scope?: string, codeVerifier?: string): Promise<string> {
+
+  const secret = process.env.NUXT_OAUTH2_JWT_SECRET
   if (!secret) {
     throw new Error('NUXT_OAUTH2_JWT_SECRET is not set');
   }
@@ -83,7 +80,26 @@ export async function exchangeAuthorizationCode(
       }
 
       if (redirectUri && session.redirect_uri !== redirectUri) {
-        throw new Error('redirect_uri mismatch');
+        throw new Error('redirect_uri mismatch')
+      }
+
+      // PKCE verification
+      if (session.bh_verifier_challenge && session.bh_verifier_challenge_method) {
+        if (!codeVerifier) {
+          throw new Error('code_verifier is required for PKCE')
+        }
+
+        let verified = false
+        if (session.bh_verifier_challenge_method === 'S256') {
+          const hash = createHash('sha256').update(codeVerifier).digest('base64url')
+          verified = hash === session.bh_verifier_challenge
+        } else {
+          verified = codeVerifier === session.bh_verifier_challenge
+        }
+
+        if (!verified) {
+          throw new Error('Invalid code_verifier')
+        }
       }
 
       const jwt = await new SignJWT({
@@ -91,6 +107,7 @@ export async function exchangeAuthorizationCode(
         user_id: session.user.id,
         client_id: session.application.client_id,
         redirect_uri: session.redirect_uri,
+        scope: scope || session.application.permissions || '',
       })
         .setProtectedHeader({ alg: 'HS256' })
         .setIssuedAt()

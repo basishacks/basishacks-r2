@@ -175,5 +175,17 @@ export const ManageRedirectUriRequest = z.object({
       (val) => val.startsWith('https://') || val.startsWith('http://localhost'),
       'Redirect URIs must start with http://localhost or https://',
     ),
-});
-export type ManageRedirectUriRequest = z.infer<typeof ManageRedirectUriRequest>;
+})
+export type ManageRedirectUriRequest = z.infer<typeof ManageRedirectUriRequest>
+
+export const OAuth2TokenRequest = z.object({
+  grant_type: z.literal('authorization_code', {
+    message: "Only 'authorization_code' grant type is supported"
+  }),
+  code: z.string('Authorization code is required').min(1, 'Authorization code is required'),
+  client_id: z.string('client_id is required').min(1, 'client_id is required'),
+  client_secret: z.string('client_secret is required').min(1, 'client_secret is required'),
+  redirect_uri: z.string().optional(),
+  code_verifier: z.string().optional(),
+})
+export type OAuth2TokenRequest = z.infer<typeof OAuth2TokenRequest>

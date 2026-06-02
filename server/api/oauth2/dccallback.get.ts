@@ -44,12 +44,12 @@ export default defineEventHandler(async (event) => {
   const { payload } = await jwtVerify(result, new TextEncoder().encode(secret));
   const userId = Number(payload.user_id);
 
-  await setUserSession(event, {
-    user: {
-      id: userId,
-      token: payload,
-    },
-  });
+    await setUserSession(event, {
+        user: {
+            id: userId,
+            token: payload,
+            token_raw: result
+        },
+    })
 
-  await sendRedirect(event, '/dashboard', 302);
-});
+    
