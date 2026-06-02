@@ -51,7 +51,7 @@ export const OAuth2Scopes: Record<string, OAuth2ScopeMeta> = {
         description: 'Read Microsoft Teams chat',
         adminOnly: false,
         sensitive: true,
-        tooltip: "This application can read chats between you and other users. It cannot read group chats or channel messages."
+        tooltip: "This application can read chats between you and other specified users. It cannot read or recieve group chats or general chat messages from everyone."
     },
     // Example admin-only scope:
     // admin: { description: 'Access administrative functions', adminOnly: true },

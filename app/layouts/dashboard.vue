@@ -67,7 +67,7 @@ const items = ref<NavigationMenuItem[][]>([
 
   <UContainer class="flex flex-col">
     
-    <div class="fixed -translate-x-full -mx-12 ">
+    <div class="fixed -translate-x-full -mx-12 mt-12">
 
         <UCard>
           <template #header>

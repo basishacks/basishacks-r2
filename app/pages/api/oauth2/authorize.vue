@@ -95,7 +95,7 @@
               </Transition>
 
               <Transition name="fade">
-                <div v-if="status == 'sensitive_consent' && showPlaceholders" class="my-auto flex flex-col items-center gap-4">
+                <div v-if="status == 'sensitive_consent' && showPlaceholders" class="flex flex-col items-center gap-4 h-full justify-center">
                   <div class="flex flex-row items-center gap-4">
                     <div v-if="!userAvatarLoaded" class="w-[48px] h-[48px]">
                       <USkeleton class="w-full h-full rounded-full" />
@@ -129,6 +129,18 @@
                     <UButton color="neutral" @click="returnToApp({ result: 'deny'})" :disabled="isLoading" >
                       Deny
                     </UButton>
+                  </div>
+
+                  <div v-if="apiUser && apiUser.name" class="inline-flex items-center gap-2">
+                    <span class="text-xs text-muted">
+                      <UIcon name="i-lucide-user"></UIcon>
+                      Logged in as
+                    </span>
+                    <UserPopover :user="apiUser">
+                      <span class="text-xs underline select-none">
+                        {{ apiUser.name }}
+                      </span>
+                    </UserPopover>
                   </div>
                 </div>
               </Transition>
@@ -477,7 +489,7 @@ async function loginFlowCheck(reattempt: boolean = false) {
       applicationName.value = js.name
       app.value = js
       userId.value = js.user_id
-      apiUser.value = js.api_user
+      apiUser.value = js.user
       
 
       if (js.login_state == "consent") {
@@ -620,8 +632,12 @@ onBeforeUnmount(() => {
 })
 
 definePageMeta({
-  title: `OAuth2 Authorization | ${WEBSITE_NAME}`,
+  
   layout: false
+})
+
+useHead({
+  title: `Authentication | ${WEBSITE_NAME}`,
 })
 </script>
 

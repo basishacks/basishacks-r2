@@ -32,6 +32,10 @@ interface GetUserResponse extends APIUser {
   team: APITeam | null
 }
 
+interface GetTeamResponse extends APITeam {
+
+}
+
 type CreateTeamResponse = APITeam
 
 type GetTeamMembersResponse = {
