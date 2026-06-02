@@ -7,35 +7,80 @@ import { onMounted, ref, computed } from 'vue'
 
 const bootLines = ref([])
 const showMain = ref(false)
+const terminalLines = ref([])
+const terminalDone = ref(false)
 
 const bootSequence = [
-  'BIOS v2.0.26 — BIBS-C Network Systems Inc.',
-  'POST: Memory test... 640K OK',
-  'Loading basishacks_kernel.bin at 0x7C00...',
-  '0x7C00: B8 00 10 8E D8 8E C0 8E D0 BC 00 90 FB',
-  'Initializing network interface... OK',
-  'DHCP lease acquired: 10.0.0.42',
-  'ARP cache: 3 entries resolved',
-  'Connecting to hackathon subnet... OK',
-  'Loading modules: [oauth2] [rubric] [ballot] [teams]',
-  '  MOV AX, 0x0026  ; season 2, 2026',
-  '  INT 0x21        ; dispatch',
-  'All systems nominal.',
-  '',
-  '> hackathon --status=READY',
-  '> Season 2 — 2025/26',
-  '> Awaiting operators...',
+  { text: 'BIOS v2.0.26 — BIBS-C Network Systems Inc.', delay: 0 },
+  { text: 'POST: Memory test... 640K OK', delay: 80 },
+  { text: 'Loading basishacks_kernel.bin at 0x7C00...', delay: 60 },
+  { text: '0x7C00: B8 00 10 8E D8 8E C0 8E D0 BC 00 90 FB', delay: 40 },
+  { text: 'Initializing network interface... OK', delay: 100 },
+  { text: 'DHCP lease acquired: 10.0.0.42', delay: 80 },
+  { text: 'ARP cache: 3 entries resolved', delay: 60 },
+  { text: 'Connecting to hackathon subnet... OK', delay: 100 },
+  { text: 'Loading modules: [oauth2] [rubric] [ballot] [teams]', delay: 80 },
+  { text: '  MOV AX, 0x0026  ; season 2, 2026', delay: 40 },
+  { text: '  INT 0x21        ; dispatch', delay: 40 },
+  { text: 'All systems nominal.', delay: 80 },
+  { text: '', delay: 40 },
+  { text: '> hackathon --status=READY', delay: 60 },
+  { text: '> Season 2 — 2025/26', delay: 60 },
+  { text: '> Awaiting operators...', delay: 60 },
+]
+
+const terminalCommands = [
+  { type: 'prompt', text: '$ nmap -sV 10.0.0.0/24 --top-ports 1024' },
+  { type: 'output', text: '' },
+  { type: 'output', text: 'Starting Nmap 7.94 ( https://nmap.org )' },
+  { type: 'output', text: 'Scanning 256 hosts... [################################] 100%' },
+  { type: 'output', text: '' },
+  { type: 'output', text: 'PORT     STATE  SERVICE       VERSION' },
+  { type: 'output', text: '80/tcp   open   http          Nitro/2.x (h3 server)' },
+  { type: 'output', text: '443/tcp  open   https         Nitro/2.x (TLS 1.3)' },
+  { type: 'output', text: '5432/tcp open   postgresql    Cloudflare D1 proxy' },
+  { type: 'output', text: '8080/tcp open   http-proxy    Vite HMR dev server' },
+  { type: 'output', text: '' },
+  { type: 'output', text: 'Nmap done: 256 IP addresses (54 hosts up)' },
+  { type: 'output', text: '' },
+  { type: 'prompt', text: '$ basishacks recon --deep' },
+  { type: 'output', text: '' },
+  { type: 'output', text: '[*] Enumerating attack surface...' },
+  { type: 'output', text: '[+] 54 API endpoints discovered' },
+  { type: 'output', text: '[+] 18 Vue components loaded' },
+  { type: 'output', text: '[+] 23 page routes mapped' },
+  { type: 'output', text: '[+] 6 layouts registered' },
+  { type: 'output', text: '[+] 8 OAuth2 scopes available' },
+  { type: 'output', text: '[+] 5 rubric criteria (scores 0-5)' },
+  { type: 'output', text: '[+] 3 auth methods: magic_code, ms_oauth2, devconnect' },
+  { type: 'output', text: '[+] Zod validation: ALL endpoints hardened' },
+  { type: 'output', text: '[+] Rate limit: 60 req/min per IP' },
+  { type: 'output', text: '' },
+  { type: 'output', text: '[*] Vulnerability scan: 0 critical | 0 high | 0 medium' },
+  { type: 'output', text: '[✓] System is locked down. Ready for operators.' },
+  { type: 'output', text: '' },
+  { type: 'prompt', text: '$ _' },
 ]
 
 onMounted(() => {
-  bootSequence.forEach((line, i) => {
+  bootSequence.forEach((item, i) => {
     setTimeout(() => {
-      bootLines.value.push(line)
-    }, i * 110)
+      bootLines.value.push(item.text)
+    }, i * 110 + item.delay)
   })
   setTimeout(() => {
     showMain.value = true
   }, bootSequence.length * 110 + 300)
+
+  let delay = 1200
+  terminalCommands.forEach((cmd, i) => {
+    setTimeout(() => {
+      terminalLines.value.push(cmd)
+      if (i === terminalCommands.length - 1) {
+        terminalDone.value = true
+      }
+    }, delay + i * 180)
+  })
 })
 
 const binaryGibberish = computed(() => {
@@ -50,15 +95,6 @@ const binaryGibberish = computed(() => {
   }
   return lines.join('\n')
 })
-
-const asmDump = `0100 B82600    MOV  AX,0026     ; basishacks v2.26
-0103 8ED8      MOV  DS,AX
-0105 8EC0      MOV  ES,AX
-0107 BE0001    MOV  SI,0100     ; hackathon_ptr
-010A BF0002    MOV  DI,0200     ; team_buffer
-010D B98000    MOV  CX,0080     ; 128 teams
-0110 F3A4      REPZ MOVSB       ; load all
-0112 CD21      INT  21h         ; dispatch`
 </script>
 
 <div class="crt-home crt-scanlines">
@@ -108,6 +144,29 @@ const asmDump = `0100 B82600    MOV  AX,0026     ; basishacks v2.26
   <div class="binary-stream">{{ binaryGibberish }}</div>
 </div>
 
+<div class="terminal-window">
+  <div class="terminal-titlebar">
+    <div class="terminal-dots">
+      <span class="dot dot-red"></span>
+      <span class="dot dot-yellow"></span>
+      <span class="dot dot-green"></span>
+    </div>
+    <span class="terminal-title">basishacks@recon:~</span>
+    <span class="terminal-shell-info">bash — 80×24</span>
+  </div>
+  <div class="terminal-body">
+    <div v-for="(line, i) in terminalLines" :key="i" :class="['terminal-line', line.type]">
+      <template v-if="line.type === 'prompt'">
+        <span class="t-user">basishacks</span><span class="t-at">@</span><span class="t-host">recon</span><span class="t-colon">:</span><span class="t-path">~</span><span class="t-dollar">$ </span><span class="t-cmd">{{ line.text.replace('$ ', '') }}</span>
+      </template>
+      <template v-else>
+        {{ line.text }}
+      </template>
+    </div>
+    <span v-if="terminalDone" class="crt-cursor-inline">_</span>
+  </div>
+</div>
+
 <div class="network-grid">
   <div class="network-node">
     <div class="node-title">⚡ FULL-STACK NUXT 3</div>
@@ -144,12 +203,6 @@ const asmDump = `0100 B82600    MOV  AX,0026     ; basishacks v2.26
     <span class="asm-mnemonic">MOV</span>  <span class="asm-hex">CX</span>, 0x0036     <span class="asm-comment">; 54 endpoints</span>
     <span class="asm-mnemonic">REPZ</span> <span class="asm-hex">MOVSB</span>         <span class="asm-comment">; load all routes</span>
     <span class="asm-mnemonic">INT</span>  <span class="asm-hex">0x21</span>          <span class="asm-comment">; dispatch to Nitro</span></div>
-</div>
-
-<div class="terminal-block">
-  <span class="prompt">$</span> basishacks --info<br>
-  <span class="output">Version: 2.0.26 | Endpoints: 54 | Components: 18 | Pages: 23</span><br>
-  <span class="prompt">$</span> <span class="crt-cursor-inline">_</span>
 </div>
 
 <div class="binary-section binary-bottom">
@@ -385,6 +438,100 @@ const asmDump = `0100 B82600    MOV  AX,0026     ; basishacks v2.26
   opacity: 0.2;
 }
 
+.terminal-window {
+  border: 1px solid var(--crt-green-dark);
+  border-radius: 8px;
+  overflow: hidden;
+  margin: 1.5rem 0;
+  font-family: 'Space Mono', monospace;
+}
+
+.terminal-titlebar {
+  background: var(--crt-bg-mute);
+  border-bottom: 1px solid var(--crt-green-dark);
+  padding: 0.4rem 0.75rem;
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  font-size: 0.7rem;
+  color: var(--vp-c-text-3);
+}
+
+.dark .terminal-titlebar {
+  background: #1a1a1a;
+}
+
+.terminal-dots {
+  display: flex;
+  gap: 5px;
+  flex-shrink: 0;
+}
+
+.dot {
+  width: 10px;
+  height: 10px;
+  border-radius: 50%;
+  display: inline-block;
+}
+
+.dot-red { background: #ff5f57; }
+.dot-yellow { background: #febc2e; }
+.dot-green { background: #28c840; }
+
+.terminal-title {
+  flex: 1;
+  text-align: center;
+  font-weight: 500;
+  color: var(--vp-c-text-2);
+}
+
+.terminal-shell-info {
+  color: var(--vp-c-text-3);
+  font-size: 0.6rem;
+  flex-shrink: 0;
+}
+
+.terminal-body {
+  background: var(--crt-bg-soft);
+  padding: 0.75rem 1rem;
+  font-size: clamp(0.62rem, 1.3vw, 0.72rem);
+  line-height: 1.55;
+  min-height: 280px;
+  overflow-x: auto;
+  -webkit-overflow-scrolling: touch;
+}
+
+.dark .terminal-body {
+  background: #080808;
+}
+
+.terminal-line {
+  white-space: pre-wrap;
+  word-break: break-word;
+  margin: 0;
+}
+
+.terminal-line.output {
+  color: var(--vp-c-text-2);
+}
+
+.terminal-line.prompt {
+  color: var(--crt-green);
+}
+
+.t-user { color: #5af78e; font-weight: 600; }
+.t-at { color: var(--vp-c-text-3); }
+.t-host { color: #57c7ff; font-weight: 600; }
+.t-colon { color: var(--vp-c-text-3); }
+.t-path { color: #ff6ac1; font-weight: 500; }
+.t-dollar { color: var(--vp-c-text-2); }
+.t-cmd { color: #f3f99d; }
+
+.dark .t-user { color: #5af78e; }
+.dark .t-host { color: #57c7ff; }
+.dark .t-path { color: #ff6ac1; }
+.dark .t-cmd { color: #f3f99d; }
+
 .asm-section {
   margin: 1rem 0;
 }
@@ -458,28 +605,6 @@ const asmDump = `0100 B82600    MOV  AX,0026     ; basishacks v2.26
   font-size: clamp(0.65rem, 1.4vw, 0.76rem);
 }
 
-.terminal-block {
-  background: var(--crt-bg-mute);
-  border: 1px solid var(--crt-green-dark);
-  border-radius: 6px;
-  padding: 0.75rem 1rem;
-  margin: 1.25rem 0;
-  font-family: 'Space Mono', monospace;
-  color: var(--crt-green);
-  font-size: clamp(0.7rem, 1.5vw, 0.8rem);
-  line-height: 1.6;
-  overflow-x: auto;
-  -webkit-overflow-scrolling: touch;
-}
-
-.dark .terminal-block {
-  background: #080808;
-}
-
-.terminal-block .output {
-  color: var(--vp-c-text-2);
-}
-
 .footer-ascii {
   text-align: center;
   margin-top: 1.5rem;
@@ -524,6 +649,15 @@ const asmDump = `0100 B82600    MOV  AX,0026     ; basishacks v2.26
     width: 100%;
     order: -1;
   }
+
+  .terminal-body {
+    min-height: 200px;
+    padding: 0.6rem 0.75rem;
+  }
+
+  .terminal-shell-info {
+    display: none;
+  }
 }
 
 @media (max-width: 480px) {
@@ -563,8 +697,20 @@ const asmDump = `0100 B82600    MOV  AX,0026     ; basishacks v2.26
     font-size: 0.65rem;
   }
 
-  .terminal-block {
-    padding: 0.6rem 0.75rem;
+  .terminal-body {
+    min-height: 160px;
+    font-size: 0.58rem;
+    padding: 0.5rem 0.6rem;
+  }
+
+  .terminal-titlebar {
+    padding: 0.3rem 0.5rem;
+    font-size: 0.6rem;
+  }
+
+  .dot {
+    width: 8px;
+    height: 8px;
   }
 
   .asm-block {
