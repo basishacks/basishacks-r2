@@ -2,21 +2,27 @@
 
 The official website for the BIBS-C Network Hackathon (season 2, 2025–26). A full-stack Nuxt 3 application managing hackathon registration, team creation, project submission, peer voting, judge scoring, and a custom OAuth2 developer platform (DevConnect).
 
+> 📖 **Full documentation** is available in the [`documentation/`](./documentation/) directory as a VitePress site. See [Documentation](#documentation) for details.
+
 ## Features
 
 - **Hackathon Management** — Event state control (not_started, in_progress, voting, finished, paused), scheduling, and submissions
 - **Team System** — Team creation, member management, project submission (name, description, demo URL, repo URL), and pathway assignment (junior/senior)
-- **Peer Voting** — Star-based voting with scores that must sum to exactly 12
-- **Judge Scoring** — Rubric-based judging with scores 0–5 per criterion
-- **Authentication** — Magic code email login, Microsoft Entra ID OAuth2, and custom DevConnect OAuth2
+- **Peer Voting** — Star-based voting with scores that must sum to exactly 12 across 4 assigned projects from the same pathway
+- **Judge Scoring** — Rubric-based judging with weighted criteria (0–5 per criterion), different weightings for junior and senior pathways
+- **Score Calculation** — Final scores: 25% peer voting + 75% judge scores, with automated ranking
+- **Authentication** — Magic code email login (`@basischina.com`), Microsoft Entra ID OAuth2, and custom DevConnect OAuth2
 - **DevConnect / OAuth2 Platform** — Developer portal for creating and managing OAuth2 applications with:
   - Client secret management (SHA-256 hashed, multiple secrets supported)
   - Redirect URI management with HTTPS/localhost validation
-  - Scope permission management (`openid`, `profile`, `email`) with admin-only scope support
+  - Scope permission management (`openid`, `profile`, `email`, `meetings.*`) with admin-only scope support
   - OAuth2 authorization code flow with PKCE support
   - OAuth2 URL generator for sharing authorization links
-- **Role-Based Access Control** — participant, judge, and admin roles
-- **Asset Management** — Profile pictures, team images, and file uploads
+  - JWT access tokens with scope-based claims
+- **Permission-Based Access Control** — Fine-grained dot-notation permissions (e.g., `portal.users.view`) stored in the user's role field, with admin bypass
+- **Developer Portal** — Permission-gated admin interface for user/team management, OAuth2 application configuration, file uploads, and DeepSeek AI chat sessions
+- **Microsoft Graph Integration** — Meeting creation, Teams chat messaging, webhook subscriptions, and a DeepSeek-powered chatbot with tool calling
+- **Asset Management** — Profile pictures (jdenticon fallback), team images, and file uploads
 
 ## Technology Stack
 
@@ -190,11 +196,16 @@ The project includes a full OAuth2 authorization server (DevConnect) for third-p
 
 Scopes are defined in `shared/oauth2-scopes.ts`. Public scopes can be added by any app owner; admin-only scopes require admin privileges.
 
-| Scope     | Description                   | Access |
-| --------- | ----------------------------- | ------ |
-| `openid`  | Basic OpenID Connect identity | Public |
-| `profile` | User profile information      | Public |
-| `email`   | User's email address          | Public |
+| Scope                              | Description                                     | Access     |
+| ---------------------------------- | ----------------------------------------------- | ---------- |
+| `openid`                           | Basic OpenID Connect identity                   | Public     |
+| `profile`                          | User profile information                        | Public     |
+| `email`                            | User's email address                            | Public     |
+| `offline_access`                   | Maintain access to granted resources            | Public     |
+| `meetings.read.application`        | Read app-generated meetings                     | Public     |
+| `meetings.read.all`                | Read all meetings                               | Admin only |
+| `meetings.readwrite.application`   | Read/write app-generated meetings               | Public     |
+| `meetings.readwrite.all`           | Read/write all meetings                         | Admin only |
 
 ### Token Endpoint
 
@@ -242,6 +253,29 @@ Required repository secrets:
 - **Secret storage** — Client secrets are SHA-256 hashed; only shown once on creation
 - **Session encryption** — `nuxt-auth-utils` with 32-byte minimum password
 - **Foreign keys** — Enforced via `PRAGMA foreign_keys = ON`
+
+## Documentation
+
+Comprehensive technical documentation is available in the [`documentation/`](./documentation/) directory as a VitePress site.
+
+### Running the Documentation Site
+
+```bash
+cd documentation
+npm install
+npm run dev
+```
+
+### Documentation Structure
+
+| Section | Description |
+|---------|-------------|
+| **Guide** | Getting started, project overview, environment setup |
+| **Architecture** | Runtime architecture, database design, authentication, OAuth2 system |
+| **Frontend** | Vue components, pages, layouts, composables & utilities |
+| **Backend** | API reference (54 endpoints), server utilities, plugins & middleware |
+| **Shared Code** | Zod schemas, TypeScript types, rubric system, permissions, OAuth2 scopes |
+| **Deployment** | Cloudflare deployment, security considerations, rate limiting |
 
 ## License
 
