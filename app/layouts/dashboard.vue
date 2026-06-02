@@ -75,10 +75,10 @@ const items = ref<NavigationMenuItem[][]>([
         <UCard>
           <template #header>
             <span class="uppercase text-sm font-bold text-muted">ongoing</span>
-            <h3 class="text-2xl bold glow ">June 2026</h3>
-            <span class="metallic-gold uppercase bold">#{{ THEME_NAME }}</span>
+            <h3 class="text-2xl bold glow ">May 2026</h3>
+            <span class="">Beneath the Surface</span>
             <USeparator class="my-4" size="sm"/>
-            <ULink class="text-xs" href="/theme/june-2026">See event details <UIcon name="i-lucide-arrow-right"/></ULink>
+            <ULink class="text-xs" href="https://slack-files.com/T09V59WQY1E-F0A8LUTHZHQ-0eb4891888">See event details <UIcon name="i-lucide-arrow-right"/></ULink>
           </template>
         </UCard>
         <UNavigationMenu orientation="vertical" :items="items" class="data-[orientation=vertical]:w-48 mt-12"/>
