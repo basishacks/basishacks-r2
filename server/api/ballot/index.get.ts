@@ -56,7 +56,7 @@ export default defineEventHandler(async (event) => {
     ballotScores = await Promise.all(
       scores.map(async (s) => ({
         ...s,
-        team: (await getTeam(event, s.project_id))!,
+        team: (await getTeamById(event, s.project_id))!,
       })),
     )
   }

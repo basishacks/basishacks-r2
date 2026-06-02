@@ -15,7 +15,7 @@ const { user: userRef } = useUserSession()
 const user = computed(() => userRef.value!)
 
 const { data: hackathon, error: hackathonError } =
-  await useFetch('/api/hackathon')
+  await useFetch('/api/seasons/active')
 if (hackathonError.value) {
   throw hackathonError.value
 }
@@ -26,6 +26,8 @@ const { data, error, refresh } = await useFetch<GetUserResponse>(
 if (error.value) {
   throw error.value
 }
+
+
 
 
 const isDirty = ref(false)

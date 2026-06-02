@@ -13,7 +13,7 @@ const { user: userRef } = useUserSession()
 const user = computed(() => userRef.value!)
 
 const { data: hackathon, error: hackathonError } =
-  await useFetch('/api/hackathon')
+  await useFetch('/api/seasons/active')
 if (hackathonError.value) {
   throw hackathonError.value
 }
@@ -201,6 +201,15 @@ const actions = ref([
   },
 ])
 
+const { data: teamData, error: teamError, refresh: teamRefresh } = await useFetch<GetTeamMembersResponse>(
+  () => `/api/teams/${data.value?.team?.id}/users`,
+)
+if (teamError.value) {
+  throw teamError.value
+}
+
+console.log(teamData.value)
+
 </script>
 
 <template>
@@ -248,7 +257,7 @@ const actions = ref([
 
       <h2 class="text-3xl bold mb-4">Your project</h2>
 
-      <ProjectCard v-if="data.team_id" :id="data.team_id"></ProjectCard>
+      <ProjectCard v-if="data.team_id" :id="data.team_id" :members="teamData"></ProjectCard>
 
       <h2 class="text-3xl bold my-4">Continue...</h2>
       

@@ -146,6 +146,10 @@ export async function deleteUsers(event: H3Event, userIDs: number[]) {
     ).bind(id).run()
 
     event.context.db.prepare(
+      'DELETE FROM user_past_teams WHERE user_id = ?'
+    ).bind(id).run()
+
+    event.context.db.prepare(
       'DELETE FROM users WHERE id = ?'
     ).bind(id).run()
   }

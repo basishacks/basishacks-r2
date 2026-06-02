@@ -26,11 +26,7 @@ const items = ref<NavigationMenuItem[][]>([
           to: '/dashboard/general'
     },
 
-    {
-          label: 'Results',
-          icon: 'i-lucide-trophy',
-          to: '/dashboard/results'
-    },
+    
 
 
 
@@ -42,6 +38,13 @@ const items = ref<NavigationMenuItem[][]>([
     // },
     
    
+  ],
+  [
+    {
+          label: 'Results',
+          icon: 'i-lucide-trophy',
+          to: '/dashboard/results'
+    },
   ],
   [
     {
@@ -87,8 +90,8 @@ const items = ref<NavigationMenuItem[][]>([
       
 
       <UBanner
-id="hoverdashnotif" color="neutral" class="z-0 mt-4 nopanel text-xs text-muted rounded-md show-small"
-    title="You can also expand the dashboard tab to see more options"
+id="hoverdashnotif" color="neutral" class="z-0 my-4 nopanel text-xs text-muted rounded-md show-small"
+    title="You can also hover or expand the dashboard tab to see more options"
     close/>
 
       <slot />

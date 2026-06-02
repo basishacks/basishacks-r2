@@ -71,6 +71,7 @@ export const UpdateTeamRequest = z.object({
         .union([z.url(), z.literal('')])
         .nullish()
         .transform((v) => (v === '' ? null : v)),
+      sourcing: z.optional(z.string().max(2000)),
     })
   ),
 })
@@ -85,6 +86,7 @@ export const SubmitTeamRequest = z.object({
       .min(30, 'Please provide more details in the description'),
     demo_url: z.url(),
     repo_url: z.url(),
+    sourcing: z.optional(z.string().max(2000)),
   }),
 })
 export type SubmitTeamRequest = z.infer<typeof SubmitTeamRequest>
@@ -175,3 +177,8 @@ export const OAuth2SessionActionRequest = z.object({
   action: z.enum(['cancel', 'consent', 'assume_consent', 'deny'], "Actions must be one of 'cancel', 'consent', 'assume_consent', or 'deny'")
 })
 export type OAuth2SessionActionRequest = z.infer<typeof OAuth2SessionActionRequest>
+
+export const SetActiveSeasonRequest = z.object({
+  season_id: z.number().int().positive().nullable(),
+})
+export type SetActiveSeasonRequest = z.infer<typeof SetActiveSeasonRequest>

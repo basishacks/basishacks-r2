@@ -30,7 +30,8 @@ CREATE TABLE IF NOT EXISTS teams (
     project_description TEXT NOT NULL DEFAULT '',
     project_demo_url TEXT,
     project_repo_url TEXT,
-    project_submitted INTEGER NOT NULL DEFAULT 0
+    project_submitted INTEGER NOT NULL DEFAULT 0,
+    sourcing TEXT NOT NULL DEFAULT ''
 );
 CREATE INDEX IF NOT EXISTS teams_score ON teams (score);
 CREATE INDEX IF NOT EXISTS teams_rank ON teams (rank);

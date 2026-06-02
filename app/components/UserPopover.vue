@@ -3,24 +3,26 @@
     <slot />
 
     <template #content>
-      <div class="flex items-center gap-3 p-3 min-w-[200px]">
+      <div class="min-w-[200px] overflow-hidden">
         <template v-if="pending">
-          <USkeleton class="w-10 h-10 rounded-full shrink-0" />
-          <div class="space-y-1.5 flex-1">
-            <USkeleton class="w-24 h-4 rounded" />
-            <USkeleton class="w-16 h-3 rounded" />
+          <USkeleton class="w-full h-16 rounded-none" />
+          <div class="flex items-center gap-3 p-3">
+            <USkeleton class="w-10 h-10 rounded-full shrink-0" />
+            <div class="space-y-1.5 flex-1">
+              <USkeleton class="w-24 h-4 rounded" />
+              <USkeleton class="w-16 h-3 rounded" />
+            </div>
           </div>
         </template>
 
         <template v-else-if="hoveredUser">
-          <UserAvatar :user="hoveredUser" size="md" />
-          <div class="min-w-0">
-            <p class="text-sm font-medium truncate">
-              {{ hoveredUser.name || hoveredUser.email }}
-            </p>
-            <p class="text-xs text-muted truncate">
-              {{ hoveredUser.email }}
-            </p>
+          <div
+            v-if="hoveredUser.profile_theme?.mode === 'url' && hoveredUser.profile_theme.value"
+            class="h-24 w-full bg-cover bg-center rounded-t"
+            :style="{ backgroundImage: `url(/userast/${hoveredUser.profile_theme.value})` }"
+          />
+          <div class="flex items-center gap-3 p-3">
+            <UserItem :user="hoveredUser" />
           </div>
         </template>
       </div>

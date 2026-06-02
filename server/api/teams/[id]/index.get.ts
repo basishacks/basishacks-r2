@@ -1,18 +1,9 @@
 import { DevPermissions, hasPermission } from "~~/shared/permissions"
 
 export default defineEventHandler(async (event) => {
-
   const user = await requireUser(event)
-  let details = false;
-
-  if (user) {
-    if (hasPermission(user.role, DevPermissions.PORTAL_TEAMS_VIEW)) {
-      details = true
-    }
-  }
-
-
   const id = parseInt(getRouterParam(event, 'id')!)
+  const isMember = user.team_id === id
 
   const team = await getTeam(event, id)
 
@@ -23,5 +14,8 @@ export default defineEventHandler(async (event) => {
     })
   }
 
-  return convertTeamToPublic(team, details)
+  // Team members and dev-portal users see scores; everyone else gets public view
+  const showDetails = isMember || hasPermission(user.role, DevPermissions.PORTAL_TEAMS_VIEW)
+
+  return convertTeamToPublic(team, showDetails)
 })

@@ -13,6 +13,7 @@ const UserPopover = resolveComponent('UserPopover')
 const UButton = resolveComponent('UButton')
 const UBadge = resolveComponent('UBadge')
 const UCheckbox = resolveComponent('UCheckbox')
+const UDropdownMenu = resolveComponent('UDropdownMenu')
 
 const toast = useToast()
 const table = useTemplateRef<any>('table')
@@ -25,7 +26,9 @@ const columnFilters = ref([{
 const columnVisibility = ref()
 const rowSelection = ref<Record<string, boolean>>({})
 
-const { data, status, refresh } = await useFetch<User[]>('/api/users', {
+type AdminUser = User & { past_team_ids: string | null }
+
+const { data, status, refresh } = await useFetch<AdminUser[]>('/api/users', {
   lazy: true
 })
 
@@ -73,7 +76,7 @@ async function onDelete() {
   }
 }
 
-const columns: TableColumn<User>[] = [
+const columns: TableColumn<AdminUser>[] = [
   {
     id: 'select',
     header: ({ table }) =>
@@ -148,7 +151,59 @@ const columns: TableColumn<User>[] = [
     accessorKey: 'team_id',
     header: 'Team ID',
     cell: ({ row }) => row.original.team_id ?? '-'
-  }
+  },
+  {
+    accessorKey: 'past_team_ids',
+    header: 'Past Teams',
+    cell: ({ row }) => {
+      const ids = row.original.past_team_ids
+      if (!ids) return '-'
+      const idList = ids.split(',').map((s) => parseInt(s.trim())).filter(Boolean)
+      return h('div', { class: 'flex flex-wrap gap-1' },
+        idList.map((tid) => h(UBadge, { variant: 'subtle', color: 'neutral', size: 'sm' }, () => String(tid)))
+      )
+    }
+  },
+  {
+    id: 'actions',
+    header: '',
+    cell: ({ row }) => {
+      const userId = row.original.id
+      return h('div', { class: 'text-right' }, [
+        h(UDropdownMenu, {
+          items: [
+            {
+              label: 'Log in as user',
+              icon: 'i-lucide-log-in',
+              onSelect: async () => {
+                try {
+                  await $fetch('/api/auth/impersonate', {
+                    method: 'POST',
+                    body: { userId },
+                  })
+                  window.location.href = '/'
+                } catch (e: any) {
+                  useToast().add({
+                    title: 'Error',
+                    description: e?.data?.message || e?.message || 'Failed to log in as user.',
+                    color: 'error',
+                  })
+                }
+              },
+            },
+          ],
+          content: { align: 'end' },
+        }, {
+          default: () => h(UButton, {
+            icon: 'i-lucide-ellipsis-vertical',
+            color: 'neutral',
+            variant: 'ghost',
+            ariaLabel: 'Actions',
+          }),
+        }),
+      ])
+    },
+  },
 ]
 
 const email = computed({

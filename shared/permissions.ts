@@ -12,6 +12,8 @@ export const DevPermissions = {
   PORTAL_APPLICATIONS_CREATE_FIRST_PARTY: "portal.applications.create.firstparty",
   PORTAL_APPLICATIONS_DELETE: "portal.applications.delete",
   PORTAL_APPLICATIONS_VIEW_ALL: "portal.applications.view.all",
+  PORTAL_SEASONS_VIEW: "portal.seasons.view",
+  PORTAL_SEASONS_EDIT: "portal.seasons.edit",
 } as const
 
 export function parsePermissions(role: string | null | undefined): string[] {

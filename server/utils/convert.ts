@@ -34,12 +34,14 @@ export function convertTeamToPublic(
     pathway: team.pathway,
     rank: team.rank,
     score: withScore ? team.score : null,
+    season_id: team.season_id,
     project: {
       name: team.project_name,
       description: team.project_description,
       demo_url: team.project_demo_url,
       repo_url: team.project_repo_url,
       submitted: team.project_submitted ? true : false,
+      sourcing: team.sourcing,
     },
   }
 }

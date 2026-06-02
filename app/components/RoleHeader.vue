@@ -43,7 +43,7 @@ const { data: user } = useFetch<GetUserResponse>(
   () => `/api/users/${userRef.value?.id}`,
   { lazy: true }
 )
-const { data: hackathon } = useFetch('/api/hackathon', { lazy: true })
+const { data: hackathon } = useFetch('/api/seasons/active', { lazy: true })
 
 const profileIconColor = computed(() => {
   return userRef.value ? 'text-primary' : 'text-ui-muted'
@@ -100,6 +100,11 @@ const navItems = computed<NavigationMenuItem[]>(() => {
       children: dashboardContent,
       
     },
+    {
+      label: 'Showcase',
+      to: '/showcase',
+      icon: 'i-lucide-spotlight',
+    }
   ]
   if (
     (hasPermission(user.value?.role, 'judge') || hasPermission(user.value?.role, 'admin')) &&
@@ -122,12 +127,6 @@ const navItems = computed<NavigationMenuItem[]>(() => {
       icon: 'i-material-symbols-ballot',
     })
   }
-  if (hackathon.value?.status === 'finished') {
-    links.push({
-      label: 'Results',
-      to: '/results',
-      icon: 'i-material-symbols-flag',
-    })
-  }
+
   return links
 })</script>

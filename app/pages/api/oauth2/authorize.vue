@@ -20,7 +20,7 @@
                 <div v-if="status == 'error'" class="my-auto">
                   <UIcon name="i-material-symbols-error-rounded" class="w-8 h-8 text-red-400"/>
                   <h3 class="text-sm text-red-400">There was a problem during your login</h3>
-                  <p class="mt-4 text-sm">{{ error_description }}</p>
+                  <p class="mt-4 text-sm" v-html="error_description" />
 
                   <UButton v-if="!error_description_initial" color="neutral" class="mt-8" :disabled="isLoading" @click="restartLoginProcess">Try Again</UButton>
                 </div>
@@ -30,7 +30,10 @@
 
                 <div v-if="status == 'login'" class="w-full flex flex-col gap-4 items-start justify-start">
 
-                  <h3 class="text-xl bold">Sign in</h3>
+                  <div class="text-left">
+                    <h3 class="text-xl bold mb-0">Sign in</h3>
+                    <span v-if="app" class="text-sm">To <span class="text-primary">{{ app.name ? app.name : "continue to Application" }}</span></span>
+                  </div>
                   <UForm
                     :state="state"
                     :schema="SendCodeRequest"
@@ -222,6 +225,20 @@ const queryString = (value: unknown) => {
   return ''
 }
 
+const swapQuotesToCode = (message: string): string => {
+  let inside = false
+  let result = ''
+  for (const char of message) {
+    if (char === "'") {
+      result += inside ? '</code>' : '<code>'
+      inside = !inside
+    } else {
+      result += char
+    }
+  }
+  return result
+}
+
 const userAvatarUrl = computed(() =>
   `/api/users/${userId.value}/profile_picture`
 )
@@ -398,7 +415,7 @@ async function submitCode(code: number[]) {
 }
 
 async function showLoginError(error: any, allow_back: boolean = true) {
-  error_description.value = getErrorMessage(error) == "session_expired" ? "Your login session has expired. Please restart the login process." : getErrorMessage(error)
+  error_description.value = swapQuotesToCode(getErrorMessage(error) == "session_expired" ? "Your login session has expired. Please restart the login process." : getErrorMessage(error))
   error_description_initial.value = !allow_back
   animatedChange("error")
 }
@@ -441,7 +458,7 @@ async function loginFlowCheck(reattempt: boolean = false) {
     await fade()
     status.value = 'error'
     error.value = "invalid_request"
-    error_description.value = json.message
+    error_description.value = swapQuotesToCode(json.message)
     err.value = undefined
     return
   }
@@ -479,7 +496,7 @@ async function loginFlowCheck(reattempt: boolean = false) {
         await fade();
         status.value = 'error'
         error.value = "invalid_request"
-        error_description.value = js.message
+        error_description.value = swapQuotesToCode(js.message)
         error_description_initial.value = true
       }
       

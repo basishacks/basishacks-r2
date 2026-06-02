@@ -23,7 +23,7 @@ const { data, error, refresh } = await useFetch<GetUserResponse>(
   () => `/api/users/${user.value.id}`,
 )
 const { data: hackathon, error: hackathonError } =
-  await useFetch('/api/hackathon')
+  await useFetch('/api/seasons/active')
 if (hackathonError.value) {
   throw hackathonError.value
 }
@@ -102,3 +102,4 @@ async function onSubmit(event: FormSubmitEvent<CreateTeamRequest>) {
       </div>
   </div>
 </template>
+

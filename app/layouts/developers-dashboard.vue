@@ -52,6 +52,11 @@ const items = computed<NavigationMenuItem[][]>(() => [[{
   icon: 'i-lucide-files',
   to: "/developers/debug",
   disabled: !hasPermission(user.value?.role, DevPermissions.PORTAL_DEBUG_VIEW) && !hasPermission(user.value?.role, 'admin')
+}, {
+  label: 'Seasons',
+  icon: 'i-lucide-calendar',
+  to: "/developers/seasons",
+  disabled: !hasPermission(user.value?.role, DevPermissions.PORTAL_SEASONS_VIEW) && !hasPermission(user.value?.role, 'admin')
 }
 ] ])
 

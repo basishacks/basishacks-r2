@@ -19,21 +19,23 @@ interface APITeam {
   pathway: TeamPathway | null
   rank: number | null
   score: number | null
+  season_id: number
   project: {
     name: string
     description: string
     demo_url: string | null
     repo_url: string | null
     submitted: boolean
+    sourcing: string
   },
 }
 
 interface GetUserResponse extends APIUser {
   team: APITeam | null
+  past_teams: APITeam[]
 }
 
 interface GetTeamResponse extends APITeam {
-
 }
 
 type CreateTeamResponse = APITeam
@@ -51,7 +53,7 @@ interface UpdateUserResponse {
 
 interface GetBallotResponse {
   id: number
-  projects: (APITeam['project'] & { id: number })[]
-  scores: (1 | 2 | 3 | 4 | 5)[] | null
+  projects: (APITeam['project'] & { id: number })[],
+  scores: (1 | 2 | 3 | 4 | 5)[] | null,
   reasoning: string | null
 }
