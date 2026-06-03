@@ -49,9 +49,14 @@ export default defineEventHandler(async (event) => {
     await Promise.all(teams.map((t) => updateTeam(event, t)))
   }
 
+  const awardsByTeam = await getAwardsForTeams(
+    event,
+    teams.map((t) => t.id),
+  )
+
   return teams
     .toSorted(
       (a, b) => a.pathway!.localeCompare(b.pathway!) || a.rank! - b.rank!,
     )
-    .map((t) => convertTeamToPublic(t, true))
+    .map((t) => convertTeamToPublic(t, true, awardsByTeam[t.id] ?? []))
 })

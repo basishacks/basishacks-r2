@@ -2,7 +2,8 @@
 export default defineNuxtConfig({
   compatibilityDate: '2025-07-15',
   devtools: { enabled: false }, // keeps crasing
-  modules: ['@nuxt/eslint', '@nuxt/ui', 'nuxt-auth-utils'],
+  modules: ['@nuxt/eslint', '@nuxt/ui', 'nuxt-auth-utils', '@comark/nuxt'],
+  
   css: ['~/assets/css/main.css'],
   runtimeConfig: {
     sendCodeURL: '',
@@ -29,6 +30,9 @@ export default defineNuxtConfig({
   vite: {
     server: {
       allowedHosts: true,
+    },
+    optimizeDeps: {
+      include: ['@comark/vue'],
     },
     build: {
       target: 'es2020',

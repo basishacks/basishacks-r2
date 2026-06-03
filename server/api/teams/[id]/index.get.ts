@@ -16,6 +16,7 @@ export default defineEventHandler(async (event) => {
 
   // Team members and dev-portal users see scores; everyone else gets public view
   const showDetails = isMember || hasPermission(user.role, DevPermissions.PORTAL_TEAMS_VIEW)
+  const awards = await getAwards(event, id)
 
-  return convertTeamToPublic(team, showDetails)
+  return convertTeamToPublic(team, showDetails, awards)
 })

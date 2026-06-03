@@ -1,9 +1,12 @@
 <script setup lang="ts">
+
 const props = defineProps<{
   id: number
 }>()
 
 const { data: team } = await useFetch<GetTeamResponse>(() => '/api/teams/' + props.id)
+
+
 
 </script>
 
@@ -20,7 +23,7 @@ const { data: team } = await useFetch<GetTeamResponse>(() => '/api/teams/' + pro
     </template>
 
     <template #default>
-        <p v-if="team.project.description" class="whitespace-pre-wrap">{{ team.project.description }}</p>
+        <Comark v-if="team.project.description" class="whitespace-pre-wrap">{{ team.project.description }}</Comark>
         <p v-else class="text-muted">(No Project Description)</p>
     </template>
 

@@ -3,6 +3,13 @@ interface ProfileTheme {
   value: string
 }
 
+interface APIAward {
+  namespace: string
+  name: string
+  meta: Record<string, unknown>
+  text: string
+}
+
 interface APIUser {
   id: number
   email: string
@@ -27,7 +34,8 @@ interface APITeam {
     repo_url: string | null
     submitted: boolean
     sourcing: string
-  },
+  }
+  awards: APIAward[]
 }
 
 interface GetUserResponse extends APIUser {

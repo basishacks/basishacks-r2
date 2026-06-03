@@ -89,3 +89,9 @@ interface OAuth2Application {
     profile_picture: string | null
     owner_id: number | null
 }
+
+interface TeamAward {
+  team_id: number
+  award: string
+  meta: string
+}

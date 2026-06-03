@@ -174,51 +174,26 @@ color="fill-gray-400"
         
     </div>
 
-    <div class="bg-black py-16 flex flex-col gap-6">
-      <h2 class="text-center text-3xl text-white font-bold mb-4">All Projects</h2>
+    <div class="min-h-screen flex flex-col justify-center gap-8 py-16">
+      <h2 class="text-center text-3xl font-bold mb-4">All Projects</h2>
+      <p class="text-center">Submitted by over <span class="bold">28</span> enthusiastic teams!</p>
 
-      <UMarquee :repeat="4" class="py-2">
-        <div
+      <UMarquee :repeat="4" pause-on-hover :overlay="false" class="[--duration:160s] py-2">
+        <ShowcaseMarqueeCard
           v-for="team in projectTeams"
           :key="team.id"
-          class="w-72 mx-3 p-4 rounded-xl border border-neutral-700 bg-neutral-900 hover:border-primary hover:bg-neutral-800 transition-colors cursor-pointer flex-shrink-0 select-none"
+          :team="team"
           @click="openProject(team)"
-        >
-          <h4 class="font-bold text-white truncate">{{ team.project?.name || '(No Project Name)' }}</h4>
-          <div class="flex items-center gap-2 mt-2">
-            <span class="text-sm text-neutral-400 truncate">{{ team.name }}</span>
-            <UBadge
-              v-if="team.pathway"
-              variant="outline"
-              size="xs"
-              :color="team.pathway === 'junior' ? 'primary' : 'warning'"
-            >
-              {{ team.pathway === 'junior' ? 'Junior' : 'Senior' }}
-            </UBadge>
-          </div>
-        </div>
+        />
       </UMarquee>
 
-      <UMarquee :repeat="4" reverse class="py-2">
-        <div
+      <UMarquee :repeat="4" reverse pause-on-hover :overlay="false" class="[--duration:160s] py-2">
+        <ShowcaseMarqueeCard
           v-for="team in [...projectTeams].reverse()"
           :key="team.id"
-          class="w-72 mx-3 p-4 rounded-xl border border-neutral-700 bg-neutral-900 hover:border-primary hover:bg-neutral-800 transition-colors cursor-pointer flex-shrink-0 select-none"
+          :team="team"
           @click="openProject(team)"
-        >
-          <h4 class="font-bold text-white truncate">{{ team.project?.name || '(No Project Name)' }}</h4>
-          <div class="flex items-center gap-2 mt-2">
-            <span class="text-sm text-neutral-400 truncate">{{ team.name }}</span>
-            <UBadge
-              v-if="team.pathway"
-              variant="outline"
-              size="xs"
-              :color="team.pathway === 'junior' ? 'primary' : 'warning'"
-            >
-              {{ team.pathway === 'junior' ? 'Junior' : 'Senior' }}
-            </UBadge>
-          </div>
-        </div>
+        />
       </UMarquee>
     </div>
 
@@ -235,7 +210,7 @@ color="fill-gray-400"
 </template>
 <script setup>
 
-const { data: teams } = await useFetch('/api/teams')
+const { data: teams } = await useFetch('/api/teams?season_id=2')
 const modalOpen = ref(false)
 const selectedTeam = ref(null)
 

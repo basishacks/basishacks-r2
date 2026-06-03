@@ -38,5 +38,5 @@ export default defineEventHandler(async (event) => {
     await addTeamMember(event, team.id, userID)
   }
 
-  return convertTeamToPublic(team)
+  return convertTeamToPublic(team, false, [])
 })

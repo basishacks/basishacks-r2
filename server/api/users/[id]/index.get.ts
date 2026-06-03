@@ -24,9 +24,17 @@ export default defineEventHandler(async (event) => {
   const team = user.team_id ? await getTeamById(event, user.team_id) : null
   const pastTeams = await getUserPastTeams(event, id)
 
+  const allTeamIds = [
+    ...(team ? [team.id] : []),
+    ...pastTeams.map((t) => t.id),
+  ]
+  const awardsByTeam = await getAwardsForTeams(event, allTeamIds)
+
   return {
     ...convertUserToPublic(user),
-    team: team && convertTeamToPublic(team, true),
-    past_teams: pastTeams.map((t) => convertTeamToPublic(t, true)),
+    team: team && convertTeamToPublic(team, true, awardsByTeam[team.id] ?? []),
+    past_teams: pastTeams.map((t) =>
+      convertTeamToPublic(t, true, awardsByTeam[t.id] ?? []),
+    ),
   } satisfies GetUserResponse
 })
