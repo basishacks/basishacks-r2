@@ -8,7 +8,7 @@ definePageMeta({
 const { user: userRef } = useUserSession()
 const userID = computed(() => userRef.value?.id ?? 0)
 
-const { data: hackathon } = await useFetch('/api/hackathon')
+const { data: hackathon } = await useFetch('/api/seasons/active')
 if (hackathon.value?.status !== 'voting') {
   throw await navigateTo('/')
 }

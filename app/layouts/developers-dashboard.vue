@@ -52,18 +52,13 @@ const items = computed<NavigationMenuItem[][]>(() => [[{
   icon: 'i-lucide-files',
   to: "/developers/debug",
   disabled: !hasPermission(user.value?.role, DevPermissions.PORTAL_DEBUG_VIEW) && !hasPermission(user.value?.role, 'admin')
-}
-], [{
-  label: 'Feedback',
-  icon: 'i-lucide-message-circle',
-  to: 'https://github.com/nuxt-ui-templates/dashboard',
-  target: '_blank'
 }, {
-  label: 'Help & Support',
-  icon: 'i-lucide-info',
-  to: 'https://github.com/nuxt/ui',
-  target: '_blank'
-}]])
+  label: 'Seasons',
+  icon: 'i-lucide-calendar',
+  to: "/developers/seasons",
+  disabled: !hasPermission(user.value?.role, DevPermissions.PORTAL_SEASONS_VIEW) && !hasPermission(user.value?.role, 'admin')
+}
+] ])
 
 const name = computed(() => user.value?.name || 'Log In')
 
@@ -129,7 +124,9 @@ const name = computed(() => user.value?.name || 'Log In')
     </template>
   </UDashboardSidebar>
 
+
   <slot></slot>
+
 
   </UDashboardGroup>
 </template>

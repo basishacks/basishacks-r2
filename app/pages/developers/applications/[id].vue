@@ -653,7 +653,15 @@ async function copyGeneratedUrl() {
                   variant="subtle"
                   size="sm"
                 >
-                  Requires Moderator Approval
+                  Mod Approval
+                </UBadge>
+                <UBadge
+                  v-if="meta.sensitive"
+                  color="warning"
+                  variant="subtle"
+                  size="sm"
+                >
+                  User Consent
                 </UBadge>
               </div>
               <p class="text-xs text-muted">{{ meta.description }}</p>

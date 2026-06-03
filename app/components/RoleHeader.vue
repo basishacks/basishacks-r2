@@ -8,12 +8,6 @@
       <UNavigationMenu :items="navItems" />
 
       <template #right>
-        <UButton
-          icon="i-lucide-menu"
-          variant="ghost"
-          class="lg:hidden"
-          @click="emit('toggleDrawer')"
-        />
         <UColorModeButton />
         <UButton
           variant="ghost"
@@ -21,11 +15,7 @@
           href="/profile"
         >
           <template v-if="userRef">
-            <UAvatar
-              :src="user?.profile_picture ? `/userast/${user.profile_picture}` : undefined"
-              :alt="user?.name || user?.email || 'User'"
-              size="sm"
-            />
+            <UserAvatar :user="user" size="sm" />
           </template>
           <UIcon v-else name="i-material-symbols-account-circle-full" class="text-xl" />
         </UButton>
@@ -46,9 +36,6 @@
 import type { NavigationMenuItem } from '@nuxt/ui'
 import { hasPermission } from '~~/shared/permissions'
 
-const emit = defineEmits<{
-  toggleDrawer: []
-}>()
 
 const { user: userRef } = useUserSession()
 // this is honestly ugly asf but i can't think of a clean solution
@@ -56,7 +43,7 @@ const { data: user } = useFetch<GetUserResponse>(
   () => `/api/users/${userRef.value?.id}`,
   { lazy: true }
 )
-const { data: hackathon } = useFetch('/api/hackathon', { lazy: true })
+const { data: hackathon } = useFetch('/api/seasons/active', { lazy: true })
 
 const profileIconColor = computed(() => {
   return userRef.value ? 'text-primary' : 'text-ui-muted'
@@ -87,10 +74,9 @@ const dashboardContent: NavigationMenuItem[] = [
     },
 
     {
-          label: 'Presentation',
-          icon: 'i-material-symbols-present-to-all',
-          to: '/dashboard/presentation',
-          chip: true
+          label: 'Results',
+          icon: 'i-lucide-trophy',
+          to: '/dashboard/results'
     },
     
    
@@ -114,6 +100,11 @@ const navItems = computed<NavigationMenuItem[]>(() => {
       children: dashboardContent,
       
     },
+    {
+      label: 'Showcase',
+      to: '/showcase',
+      icon: 'i-lucide-spotlight',
+    }
   ]
   if (
     (hasPermission(user.value?.role, 'judge') || hasPermission(user.value?.role, 'admin')) &&
@@ -136,12 +127,6 @@ const navItems = computed<NavigationMenuItem[]>(() => {
       icon: 'i-material-symbols-ballot',
     })
   }
-  if (hackathon.value?.status === 'finished') {
-    links.push({
-      label: 'Results',
-      to: '/results',
-      icon: 'i-material-symbols-flag',
-    })
-  }
+
   return links
 })</script>

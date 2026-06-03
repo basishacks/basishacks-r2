@@ -23,7 +23,7 @@ const { data, error, refresh } = await useFetch<GetUserResponse>(
   () => `/api/users/${user.value.id}`,
 )
 const { data: hackathon, error: hackathonError } =
-  await useFetch('/api/hackathon')
+  await useFetch('/api/seasons/active')
 if (hackathonError.value) {
   throw hackathonError.value
 }
@@ -75,7 +75,7 @@ async function onSubmit(event: FormSubmitEvent<CreateTeamRequest>) {
     <UForm
       :state="state"
       :schema="CreateTeamRequest"
-      class="space-y-2 max-w-[600px] mx-auto"
+      class="space-y-2 max-w-[600px]"
       @submit="onSubmit"
     >
       <UFormField name="name" label="Team name">
@@ -102,3 +102,4 @@ async function onSubmit(event: FormSubmitEvent<CreateTeamRequest>) {
       </div>
   </div>
 </template>
+

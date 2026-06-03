@@ -2,7 +2,7 @@ import { MicrosoftRedirectRequest } from "~~/shared/schemas"
 import type { AuthorizeSession} from "./session.post";
 import { getAuthorizeSession } from "./session.post"
 import { createHash, randomBytes } from "crypto"
-import { structureLink } from "~~/shared/oauth2"
+import { structureLink } from "~~/server/utils/oauth2"
 
 export function generateMicrosoftOAuth2Link(session: AuthorizeSession) {
   const state = randomBytes(75).toString("base64url")
@@ -23,7 +23,7 @@ export default defineEventHandler(async (event) => {
   if (!token) {
     throw createError({
       status: 400,
-      message: "Header 'bridge_id' is required"
+      message: "Cookie 'bridge_id' is required"
     })
   }
 
@@ -37,6 +37,7 @@ export default defineEventHandler(async (event) => {
   }
 
     const link = generateMicrosoftOAuth2Link(session)
+    session.login_state = "requesting"
 
     return {
         redirect_to: link

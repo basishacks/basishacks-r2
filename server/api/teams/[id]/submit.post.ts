@@ -38,6 +38,7 @@ export default defineEventHandler(async (event) => {
   team.project_description = payload.project.description
   team.project_demo_url = payload.project.demo_url
   team.project_repo_url = payload.project.repo_url
+  team.sourcing = payload.project.sourcing ?? ''
   team.project_submitted = 1
 
   await updateTeam(event, team)

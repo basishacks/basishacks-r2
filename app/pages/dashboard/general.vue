@@ -15,7 +15,7 @@ const { user: userRef } = useUserSession()
 const user = computed(() => userRef.value!)
 
 const { data: hackathon, error: hackathonError } =
-  await useFetch('/api/hackathon')
+  await useFetch('/api/seasons/active')
 if (hackathonError.value) {
   throw hackathonError.value
 }
@@ -26,6 +26,8 @@ const { data, error, refresh } = await useFetch<GetUserResponse>(
 if (error.value) {
   throw error.value
 }
+
+
 
 
 const isDirty = ref(false)
@@ -102,7 +104,7 @@ const links_noteam = ref<ButtonProps[]>([
       />
     </div>
 
-    <div v-else-if="hackathon?.status !== 'not_started'">
+    <div v-else-if="hackathon?.status !== 'not_started'" class="">
       <h2 class="text-3xl bold mb-4">General</h2>
 
       <p v-if="data?.team?.project.submitted" class="mb-4 glow">

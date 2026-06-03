@@ -23,7 +23,9 @@ const columnFilters = ref([{
 const columnVisibility = ref()
 const rowSelection = ref<Record<string, boolean>>({})
 
-const { data, status, refresh } = await useFetch<Team[]>('/api/admin/teams', {
+type AdminTeam = Team & { season_name: string | null }
+
+const { data, status, refresh } = await useFetch<AdminTeam[]>('/api/admin/teams', {
   lazy: true
 })
 
@@ -71,7 +73,7 @@ async function onDelete() {
   }
 }
 
-const columns: TableColumn<Team>[] = [
+const columns: TableColumn<AdminTeam>[] = [
   {
     id: 'select',
     header: ({ table }) =>
@@ -125,7 +127,7 @@ const columns: TableColumn<Team>[] = [
   },
   {
     accessorKey: 'score',
-    header: 'Score',
+    header: 'Score (/800)',
     cell: ({ row }) => row.original.score ?? '-'
   },
   {
@@ -148,6 +150,11 @@ const columns: TableColumn<Team>[] = [
         color: submitted ? 'success' : 'neutral'
       }, () => (submitted ? 'Yes' : 'No'))
     }
+  },
+  {
+    accessorKey: 'season_name',
+    header: 'Season',
+    cell: ({ row }) => row.original.season_name ?? '-'
   }
 ]
 

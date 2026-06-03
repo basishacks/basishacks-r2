@@ -46,6 +46,8 @@ export default defineEventHandler(async (event) => {
     team.project_demo_url = payload.project.demo_url
   if (payload.project?.repo_url !== undefined)
     team.project_repo_url = payload.project.repo_url
+  if (payload.project?.sourcing !== undefined)
+    team.sourcing = payload.project.sourcing
 
   await updateTeam(event, team)
 

@@ -56,6 +56,15 @@ async function onSubmit(event: FormSubmitEvent<CreateTeamScoresRequest>) {
     <p class="mb-2">Team: {{ team.name }} ({{ team.id }})</p>
     <p>Pathway: {{ team.pathway }}</p>
     <pre class="my-4 mx-[2ch] text-wrap">{{ team.project.description }}</pre>
+    <UAlert
+      v-if="team.project.sourcing"
+      icon="i-lucide-book-open"
+      color="info"
+      variant="subtle"
+      title="AI Statement"
+      :description="team.project.sourcing"
+      class="mb-4"
+    />
     <div class="flex flex-wrap gap-2">
       <UTooltip :text="team.project.repo_url!">
         <UButton

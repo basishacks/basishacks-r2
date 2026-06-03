@@ -26,6 +26,14 @@ export interface AuthorizeSession {
   bh_state: string,
   bh_verifier_challenge: string,
   bh_verifier_challenge_method: string,
+  scopes: string[],
+  /**
+   * "identification" = just identified the app. user has to login or enter email
+   * "requesting" = requesting external resource, from ms oauth or from email/code
+   * "consent" = user logged in and awaiting for consent (skippabe if trusted app or insensitive scopes)
+   * "completed" = session completed, code generated, waiting for token exchange
+   */
+  login_state: "identification" | "requesting" | "consent" | "completed",
   code: string | null
 }
 
@@ -36,6 +44,7 @@ export function addAuthorizeSession(session: AuthorizeSession) {
 }
 
 export function getAuthorizeSession(token: string): AuthorizeSession | null {
+
   const session = AUTHORIZE_SESSION_STORE[token] || null
   if (!session) return null
   if (Date.now() > session.expire_time) {
@@ -63,6 +72,7 @@ export async function exchangeAuthorizationCode(code: string, clientId?: string,
 
   const key = new TextEncoder().encode(secret)
 
+  // probably gonna put this in the database later
   for (const token in AUTHORIZE_SESSION_STORE) {
     const session = AUTHORIZE_SESSION_STORE[token]
     if (!session) continue
@@ -109,14 +119,16 @@ export async function exchangeAuthorizationCode(code: string, clientId?: string,
         user_id: session.user.id,
         client_id: session.application.client_id,
         redirect_uri: session.redirect_uri,
-        scope: scope || session.application.permissions || '',
+        scope: session.scopes // must supply a scope
       })
         .setProtectedHeader({ alg: 'HS256' })
-        .setIssuedAt()
+        .setIssuer('basishacks')
+        .setAudience(session.application.client_id)
+        .setIssuedAt(Date.now())
         .setExpirationTime('1h')
         .sign(key)
 
-      delete AUTHORIZE_SESSION_STORE[token]
+      completeAuthorizeSession(session.token)
       return jwt
     }
   }
@@ -124,7 +136,7 @@ export async function exchangeAuthorizationCode(code: string, clientId?: string,
   throw new Error('Invalid authorization code')
 }
 
-export function constructSession(redirect_uri: string, app: OAuth2Application, state: string, code_challenge: string, code_challenge_method: string): AuthorizeSession {
+export function constructSession(redirect_uri: string, app: OAuth2Application, state: string, code_challenge: string, code_challenge_method: string, scope: string): AuthorizeSession {
   const sessid = randomBytes(128).toString("base64url")
 
   const session: AuthorizeSession = {
@@ -140,6 +152,8 @@ export function constructSession(redirect_uri: string, app: OAuth2Application, s
     bh_state: state,
     bh_verifier_challenge: code_challenge,
     bh_verifier_challenge_method: code_challenge_method,
+    scopes: decodeURI(scope).split(' ').filter(s => s),
+    login_state: "identification",
     code: null
   }
 
@@ -188,7 +202,7 @@ export default defineEventHandler(async (event) => {
         body.code_challenge_method as string
     );
 
-    const session: AuthorizeSession = constructSession(body.redirect_uri, req.app, body.state, body.code_challenge, body.code_challenge_method)
+    const session: AuthorizeSession = constructSession(body.redirect_uri, req.app, body.state, body.code_challenge, body.code_challenge_method, body.scope)
 
     addAuthorizeSession(session)
 

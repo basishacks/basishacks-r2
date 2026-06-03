@@ -1,7 +1,7 @@
 @ -1,336 +0,0 @@
 <script setup lang="ts">
 definePageMeta({
-    layout: 'dashboard',
+  layout: 'dashboard',
   middleware: ['auth'],
 })
 
@@ -13,7 +13,7 @@ const { user: userRef } = useUserSession()
 const user = computed(() => userRef.value!)
 
 const { data: hackathon, error: hackathonError } =
-  await useFetch('/api/hackathon')
+  await useFetch('/api/seasons/active')
 if (hackathonError.value) {
   throw hackathonError.value
 }
@@ -121,10 +121,6 @@ function triggerConfetti(force: boolean = false) {
 
 // go Buckeyes!
 
-
-
-     
-
     if (rank === 1) {
       confettiPride(confetti, ['#FFD700', '#FFA500', '#FFFF00'])
       confettiFireworks(confetti, ['#FFD700', '#FFA500', '#FFFF00'])
@@ -182,6 +178,38 @@ watch(isDirty, (value) => {
 onUnmounted(() => {
   window.removeEventListener('beforeunload', beforeUnload)
 })
+
+
+const actions = ref([
+  {
+    title: 'Edit your project',
+    description: 'Make changes to your project details, add links, and more.',
+    to: '/dashboard/general',
+    icon: 'i-heroicons-pencil-square-solid',
+  },
+  {
+    title: 'Manage your team',
+    description: 'Add or remove team member or change your team name.',
+    to: '/dashboard/teams',
+    icon: 'i-heroicons-users-solid',
+  },
+  {
+    title: 'View your results',
+    description: 'View the results of the hackathon.',
+    to: '/dashboard/results',
+    icon: 'i-lucide-trophy',
+  },
+])
+
+const { data: teamData, error: teamError, refresh: teamRefresh } = await useFetch<GetTeamMembersResponse>(
+  () => `/api/teams/${data.value?.team?.id}/users`,
+)
+if (teamError.value) {
+  throw teamError.value
+}
+
+console.log(teamData.value)
+
 </script>
 
 <template>
@@ -227,52 +255,21 @@ onUnmounted(() => {
         up-to-date rules and requirements.
       </p>
 
+      <h2 class="text-3xl bold mb-4">Your project</h2>
+
+      <ProjectCard v-if="data.team_id" :id="data.team_id" :members="teamData"></ProjectCard>
+
+      <h2 class="text-3xl bold my-4">Continue...</h2>
       
 
-      <template v-if="hackathon?.status !== 'not_started'">
-
-        <h2 class="text-3xl bold mb-4">Your project</h2>
-
-        <div v-if="data.team.rank" class="mb-4 max-w-[600px] mx-auto border border-gray-200 dark:border-gray-800 rounded-lg p-6 bg-white dark:bg-gray-900">
-
-          <p class="mb-2"><strong>April 2026</strong><span style="color:var(--ui-text-muted)"> - </span>Cyberpunk</p>
-
-          <div class="flex items-center gap-8">
-            <!-- Score Section -->
-            <div class="flex-1">
-              <p class="text-sm text-gray-600 dark:text-gray-400 mb-2 uppercase tracking-wide">Overall Rating</p>
-              <div class="flex items-baseline gap-1">
-                <span class="text-6xl font-bold text-gray-900 dark:text-white">{{ data.team.score }}</span>
-                <span class="text-xl text-gray-500 dark:text-gray-400">/100</span>
-              </div>
-            </div>
-
-            <!-- Divider -->
-            <div class="w-0.5 h-24 bg-gray-300 dark:bg-gray-600"/>
-
-            <!-- Rank Section -->
-            <div class="flex-1">
-              <p class="text-sm text-gray-600 dark:text-gray-400 mb-2 uppercase tracking-wide">Ranking</p>
-              <div class="text-6xl font-bold" :class="[rankColorClass, rankMetallicClass]">
-                #{{ data.team.rank }}
-              </div>
-            </div>
-          </div>
-
-          <ULink href="/results" class="mt-4 inline-block text-sm text-primary hover:underline" >See full results and feedback</ULink>
-        </div>  
-
-        
-
-        <p v-else-if="data.team.project.submitted" class="mb-4 glow">
-          You have submitted your project. Congratulations! 🎉
-        </p>
-        <p v-else-if="hackathon?.status !== 'in_progress'" class="mb-4">
-          The submission period is over, and you can no longer submit your
-          project.
-        </p>
-        
-      </template>
+      <UPageGrid>
+      
+      <UPageCard
+        v-for="(card, index) in actions"
+        :key="index"
+        v-bind="card"
+      />
+    </UPageGrid>
     </template>
   </div>
 </template>

@@ -1,6 +1,8 @@
 import type { H3Event } from 'h3'
 import { getOAuth2Application } from './database/oauth2_applications'
 import { env } from 'node:process'
+import { AuthorizeSession, completeAuthorizeSession, generateExchangeCode } from '../api/oauth2/session.post';
+import { OAuth2ScopeDescriptions, OAuth2Scopes } from '~~/shared/oauth2-scopes';
 
 /**
  * Validates OAuth2 authorization request parameters
@@ -131,4 +133,41 @@ export async function validateOAuth2AuthorizationRequest(
     redirect_uri: redirectUri,
     app
   }
+}
+
+export function usedSensitiveScopes(session: AuthorizeSession): boolean {
+  for (const scope of session.scopes) {
+    const s = OAuth2Scopes[scope]
+    if (s?.sensitive) {
+      console.log("[Authorization -> OAuth2] Application " + session.application.client_id + " requests sensitive scope " + scope + ", triggering consent")
+      return true
+    }
+  }
+
+  return false
+}
+
+/** Called after mscallback is sucessful and returns the next step.
+ * 
+ * Only two things can happen:
+ * immediately redirect to the uri.
+ * IF AN APPLICATION IS REQUESTING SENSITIVE SCOPES OAuth2Scopes.sensitive, redirect to authorization consent page
+ */
+export function determinePostMicrosoft(event: any,session: AuthorizeSession): string {
+
+  const sensitive = usedSensitiveScopes(session)
+  if (sensitive) {
+    session.login_state = "consent"
+    return "/api/oauth2/authorize?client_id=" + session.application.client_id + "&scope=" + session.scopes.join(' ') + "&redirect_uri=" + session.redirect_uri + "&state=" + session.bh_state + "&response_type=code" + (session.bh_verifier_challenge ? ("&code_challenge=" + session.bh_verifier_challenge) : "") + (session.bh_verifier_challenge_method ? ("&code_challenge_method=" + session.bh_verifier_challenge_method) : "")
+  }
+  
+
+  return completeConsentFlow(event, session)
+}
+
+export function completeConsentFlow(event: any, session: AuthorizeSession): string {
+  generateExchangeCode(session)
+  session.login_state = "completed"
+  deleteCookie(event, "bridge_id") // only delete after sucessful
+  return session.redirect_uri + "?code=" + session.code + "&state=" + session.bh_state
 }

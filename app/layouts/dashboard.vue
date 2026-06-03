@@ -9,49 +9,16 @@ const items = ref<NavigationMenuItem[][]>([
       type: 'label'
     },
 
-
-
-
-
-        
-    {
-      label: 'Guide',
-      icon: 'i-lucide-book-open',
-      children: [
-        {
-          label: 'Introduction',
-          description: 'Fully styled and customizable components for Nuxt.',
-          icon: 'i-lucide-house'
-        },
-        {
-          label: 'Installation',
-          description: 'Learn how to install and configure Nuxt UI in your application.',
-          icon: 'i-lucide-cloud-download'
-        },
-        {
-          label: 'Icons',
-          icon: 'i-lucide-smile',
-          description: 'You have nothing to do, @nuxt/icon will handle it automatically.'
-        },
-        {
-          label: 'Colors',
-          icon: 'i-lucide-swatch-book',
-          description: 'Choose a primary and a neutral color from your Tailwind CSS theme.'
-        },
-        {
-          label: 'Theme',
-          icon: 'i-lucide-cog',
-          description: 'You can customize components by using the `class` / `ui` props or in your app.config.ts.'
-        }
-      ]
-    },
-
         {
           label: 'Overview',
           icon: 'i-lucide-info',
           to: '/dashboard'
     },
-
+        {
+          label: 'Team',
+          icon: 'i-fluent-people-team-16-filled',
+          to: '/dashboard/teams'
+    },
 
     {
           label: 'General',
@@ -59,20 +26,25 @@ const items = ref<NavigationMenuItem[][]>([
           to: '/dashboard/general'
     },
 
-    {
-          label: 'Teams',
-          icon: 'i-fluent-people-team-16-filled',
-          to: '/dashboard/teams'
-    },
+    
 
-    {
-          label: 'Presentation',
-          icon: 'i-lucide-presentation',
-          to: '/dashboard/presentation',
-          chip: true
-    },
+
+
+    // {
+    //       label: 'Presentation',
+    //       icon: 'i-lucide-presentation',
+    //       to: '/dashboard/presentation',
+    //       chip: true
+    // },
     
    
+  ],
+  [
+    {
+          label: 'Results',
+          icon: 'i-lucide-trophy',
+          to: '/dashboard/results'
+    },
   ],
   [
     {
@@ -91,38 +63,44 @@ const items = ref<NavigationMenuItem[][]>([
     <div class="bg-white-100 p-64"></div>
   </div> -->
 
-  <div>
     <RoleHeader/>
 
   
+  
 
-
-  <UContainer class="flex flex-col ">
-    <div class="hide-small fixed -translate-x-full -mx-12 ">
-      <div class="mt-12"/>
-      <UCard>
-        <template #header>
-          <span class="uppercase text-sm font-bold text-muted">ongoing</span>
-          <h3 class="text-2xl bold glow ">June 2026</h3>
-          <span class="metallic-gold uppercase bold">#{{ THEME_NAME }}</span>
-          <USeparator class="my-4" size="sm"/>
-          <ULink class="text-xs" href="/theme/june-2026">See event details <UIcon name="i-lucide-arrow-right"/></ULink>
-        </template>
-      </UCard>
-      <UNavigationMenu orientation="vertical" :items="items" class="data-[orientation=vertical]:w-48 mt-12"/>
-    </div>
-
-    <UBanner
-id="hoverdashnotif" color="neutral" class="z-0 mt-4 nopanel text-xs text-muted rounded-md show-small"
-    title="You can also expand the dashboard tab to see more options"
-    close/>
+  <UContainer class="flex flex-col">
     
-    <div class="mt-12">
+    <div class="fixed -translate-x-full -mx-12 mt-12">
+
+        <UCard>
+          <template #header>
+            <span class="uppercase text-sm font-bold text-muted">ongoing</span>
+            <h3 class="text-2xl bold glow ">May 2026</h3>
+            <span class="">Beneath the Surface</span>
+            <USeparator class="my-4" size="sm"/>
+            <ULink class="text-xs" href="https://slack-files.com/T09V59WQY1E-F0A8LUTHZHQ-0eb4891888">See event details <UIcon name="i-lucide-arrow-right"/></ULink>
+          </template>
+        </UCard>
+        <UNavigationMenu orientation="vertical" :items="items" class="data-[orientation=vertical]:w-48 mt-12"/>
+      </div>
+    
+    
+    <div class="mt-12 mx-auto max-w-(--ui-container)">
+
+      
+
+      <UBanner
+id="hoverdashnotif" color="neutral" class="z-0 my-4 nopanel text-xs text-muted rounded-md show-small"
+    title="You can also hover or expand the dashboard tab to see more options"
+    close/>
+
       <slot />
     </div>
   </UContainer>
-  </div>
 
+
+  
+  
   
 </template>
 

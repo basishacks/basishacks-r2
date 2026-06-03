@@ -1,6 +1,11 @@
-import oAuth2Config, { structureLink } from '~~/shared/oauth2';
+
+
+import oAuth2Config, { structureLink } from '~~/server/utils/oauth2';
 import { generateExchangeCode, getAuthorizeSession } from './session.post';
 import { createHash } from 'crypto';
+import { constructOnSiteLoginURL } from '../login.get';
+import { determinePostMicrosoft } from '~~/server/utils/oauth2-validate';
+
 
 function decodeJWT(token: string) {
   try {
@@ -57,7 +62,7 @@ export default defineEventHandler(async (event: any) => {
     return redirectWithOAuth2Error(event, getFallbackRedirectUri(), "invalid_request", "Your login session does not exist or has expired. Please login again.")
   }
 
-  deleteCookie(event, "bridge_id")
+  
 
   const hashed = createHash("sha256").update(session.ms_verifier || "").digest("base64url")
   console.log("[Authorize -> MSCallBack] Requested Redeeming MS Code: T:" + token.substring(0, 16) + "... Verif:" + session?.ms_verifier?.substring(0, 16) + "... SHA256:" + hashed.substring(0, 16) + "...")
@@ -120,9 +125,7 @@ export default defineEventHandler(async (event: any) => {
 
     session.user = user
 
-    generateExchangeCode(session)
-
-    const redir = session.redirect_uri + "?code=" + session.code + "&state=" + session.bh_state
+    const redir = determinePostMicrosoft(event, session)
 
     console.log("[Authorization -> OAuth2] MS Token Exchange sucess " + session.redirect_uri)
 

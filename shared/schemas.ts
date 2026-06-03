@@ -32,14 +32,12 @@ const ScoreValues = z.object(
 
 export const SendCodeRequest = z.object({
   email: BasisEmail,
-  token: z.string()
 })
 export type SendCodeRequest = z.infer<typeof SendCodeRequest>
 
 export const LoginRequest = z.object({
   email: BasisEmail,
-  code: z.array(z.number().max(9).min(0)).length(6, "Code must be 6 digits"),
-  token: z.string()
+  code: z.array(z.number().max(9).min(0)).length(6, "Code must be 6 digits")
 })
 export type LoginRequest = z.infer<typeof LoginRequest>
 
@@ -73,6 +71,7 @@ export const UpdateTeamRequest = z.object({
         .union([z.url(), z.literal('')])
         .nullish()
         .transform((v) => (v === '' ? null : v)),
+      sourcing: z.optional(z.string().max(2000)),
     })
   ),
 })
@@ -87,6 +86,7 @@ export const SubmitTeamRequest = z.object({
       .min(30, 'Please provide more details in the description'),
     demo_url: z.url(),
     repo_url: z.url(),
+    sourcing: z.optional(z.string().max(2000)),
   }),
 })
 export type SubmitTeamRequest = z.infer<typeof SubmitTeamRequest>
@@ -184,3 +184,12 @@ export const OAuth2TokenRequest = z.object({
   code_verifier: z.string().optional(),
 })
 export type OAuth2TokenRequest = z.infer<typeof OAuth2TokenRequest>
+export const OAuth2SessionActionRequest = z.object({
+  action: z.enum(['cancel', 'consent', 'assume_consent', 'deny'], "Actions must be one of 'cancel', 'consent', 'assume_consent', or 'deny'")
+})
+export type OAuth2SessionActionRequest = z.infer<typeof OAuth2SessionActionRequest>
+
+export const SetActiveSeasonRequest = z.object({
+  season_id: z.number().int().positive().nullable(),
+})
+export type SetActiveSeasonRequest = z.infer<typeof SetActiveSeasonRequest>

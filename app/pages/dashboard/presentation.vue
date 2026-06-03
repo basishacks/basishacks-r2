@@ -12,6 +12,9 @@
 
 <script lang="ts" setup>
 
-setPageLayout('dashboard')
+definePageMeta({
+  layout: 'dashboard',
+  middleware: 'auth',
+})
 
 </script>
