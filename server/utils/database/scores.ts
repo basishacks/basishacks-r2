@@ -7,10 +7,13 @@ export async function createTeamScores(
     'team_id' | 'judge_user_id' | 'scores' | 'reasoning'
   >,
 ): Promise<TeamScores> {
+
+  const season = await getHackathon(event)
+
   return (event.context.db.prepare(
-    'INSERT INTO team_scores(team_id, judge_user_id, reasoning, scores) VALUES(?, ?, ?, ?) RETURNING *',
+    'INSERT INTO team_scores(team_id, judge_user_id, reasoning, scores, season_id) VALUES(?, ?, ?, ?, ?) RETURNING *',
   )
-    .bind(scores.team_id, scores.judge_user_id, scores.reasoning, scores.scores)
+    .bind(scores.team_id, scores.judge_user_id, scores.reasoning, scores.scores, season?.id)
     .first() as TeamScores)!
 }
 

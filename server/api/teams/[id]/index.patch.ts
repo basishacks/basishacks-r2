@@ -28,7 +28,7 @@ export default defineEventHandler(async (event) => {
 
   const payload = await readValidatedBody(event, UpdateTeamRequest.parse)
 
-  const team = (await getTeam(event, id))!
+  const team = (await getTeam(event, id, true))!
   if (team.project_submitted) {
     throw createError({
       status: 403,

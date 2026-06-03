@@ -44,11 +44,11 @@ interface Team {
 }
 
 interface TeamScores {
-  id: number
   team_id: number
   judge_user_id: number
   scores: string
   reasoning: string
+  season_id: number | null
 }
 
 interface User {

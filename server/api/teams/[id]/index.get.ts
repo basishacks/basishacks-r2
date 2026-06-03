@@ -5,7 +5,7 @@ export default defineEventHandler(async (event) => {
   const id = parseInt(getRouterParam(event, 'id')!)
   const isMember = user.team_id === id
 
-  const team = await getTeam(event, id)
+  const team = await getTeam(event, id, true)
 
   if (!team) {
     return createError({

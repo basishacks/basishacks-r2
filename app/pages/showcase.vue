@@ -173,20 +173,80 @@ color="fill-gray-400"
       </div>
         
     </div>
-    
-    
 
+    <div class="bg-black py-16 flex flex-col gap-6">
+      <h2 class="text-center text-3xl text-white font-bold mb-4">All Projects</h2>
 
-    <UMarquee/>
+      <UMarquee :repeat="4" class="py-2">
+        <div
+          v-for="team in projectTeams"
+          :key="team.id"
+          class="w-72 mx-3 p-4 rounded-xl border border-neutral-700 bg-neutral-900 hover:border-primary hover:bg-neutral-800 transition-colors cursor-pointer flex-shrink-0 select-none"
+          @click="openProject(team)"
+        >
+          <h4 class="font-bold text-white truncate">{{ team.project?.name || '(No Project Name)' }}</h4>
+          <div class="flex items-center gap-2 mt-2">
+            <span class="text-sm text-neutral-400 truncate">{{ team.name }}</span>
+            <UBadge
+              v-if="team.pathway"
+              variant="outline"
+              size="xs"
+              :color="team.pathway === 'junior' ? 'primary' : 'warning'"
+            >
+              {{ team.pathway === 'junior' ? 'Junior' : 'Senior' }}
+            </UBadge>
+          </div>
+        </div>
+      </UMarquee>
 
-
-
-    <div>
-        <p class="py-500"/>
+      <UMarquee :repeat="4" reverse class="py-2">
+        <div
+          v-for="team in [...projectTeams].reverse()"
+          :key="team.id"
+          class="w-72 mx-3 p-4 rounded-xl border border-neutral-700 bg-neutral-900 hover:border-primary hover:bg-neutral-800 transition-colors cursor-pointer flex-shrink-0 select-none"
+          @click="openProject(team)"
+        >
+          <h4 class="font-bold text-white truncate">{{ team.project?.name || '(No Project Name)' }}</h4>
+          <div class="flex items-center gap-2 mt-2">
+            <span class="text-sm text-neutral-400 truncate">{{ team.name }}</span>
+            <UBadge
+              v-if="team.pathway"
+              variant="outline"
+              size="xs"
+              :color="team.pathway === 'junior' ? 'primary' : 'warning'"
+            >
+              {{ team.pathway === 'junior' ? 'Junior' : 'Senior' }}
+            </UBadge>
+          </div>
+        </div>
+      </UMarquee>
     </div>
 
-</template> 
+    <UModal v-model:open="modalOpen" :title="selectedTeam?.name || 'Project'">
+      <template #body>
+        <ProjectCard v-if="selectedTeam" :id="selectedTeam.id" />
+      </template>
+    </UModal>
+
+    <div>
+      <p class="py-500"/>
+    </div>
+
+</template>
 <script setup>
+
+const { data: teams } = await useFetch('/api/teams')
+const modalOpen = ref(false)
+const selectedTeam = ref(null)
+
+const projectTeams = computed(() => {
+  return (teams.value || []).filter((t) => t.project?.name)
+})
+
+function openProject(team) {
+  selectedTeam.value = team
+  modalOpen.value = true
+}
 
 definePageMeta({
   layout: 'fullwidth-nostick',

@@ -57,3 +57,15 @@ interface GetBallotResponse {
   scores: (1 | 2 | 3 | 4 | 5)[] | null,
   reasoning: string | null
 }
+
+interface BallotSummaryItem {
+  season_id: number
+  season_name: string
+  project_count: number
+  ballot_count: number
+}
+
+type GetBallotSummaryResponse = {
+  current: BallotSummaryItem | null
+  past: BallotSummaryItem[]
+}

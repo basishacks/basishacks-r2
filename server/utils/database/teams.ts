@@ -2,7 +2,12 @@ import type { H3Event } from 'h3'
 
 // --- Active season filtered (default behavior) ---
 
-export async function getTeam(event: H3Event, teamID: number): Promise<Team | null> {
+export async function getTeam(event: H3Event, teamID: number, allSeason?: boolean): Promise<Team | null> {
+  if (allSeason) {
+    return event.context.db.prepare('SELECT * FROM teams WHERE id = ?')
+      .bind(teamID)
+      .first() as Team | null
+  }
   const activeSeason = await getActiveSeason(event)
   const seasonId = activeSeason?.id ?? -1
   return event.context.db.prepare(

@@ -136,9 +136,9 @@ function triggerConfetti(force: boolean = false) {
   })
 }
 
-onMounted(() => {
-  triggerConfetti()
-})
+// onMounted(() => {
+//   triggerConfetti()
+// })
 
 async function refreshData() {
   await withLoadingIndicator(async () => {

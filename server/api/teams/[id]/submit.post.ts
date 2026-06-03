@@ -25,7 +25,15 @@ export default defineEventHandler(async (event) => {
 
   const payload = await readValidatedBody(event, SubmitTeamRequest.parse)
 
-  const team = (await getTeam(event, id))!
+  const team = await getTeam(event, id)
+
+  if (!team) {
+    throw createError({
+      status: 404,
+      message: 'Team not found or not accessible currently',
+    })
+  }
+
   if (team.project_submitted) {
     throw createError({
       status: 403,
