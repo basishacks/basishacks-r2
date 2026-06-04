@@ -8,13 +8,25 @@ export default defineEventHandler(async (event) => {
 
   const teams = (await getAllTeams(event)).filter((t) => t.project_submitted)
 
+  // Fetch all scores in a single query and group by team_id
+  const allScores = await getAllTeamScores(event)
+  const scoresByTeamId = new Map<number, TeamScores[]>()
+  for (const score of allScores) {
+    const existing = scoresByTeamId.get(score.team_id)
+    if (existing) {
+      existing.push(score)
+    } else {
+      scoresByTeamId.set(score.team_id, [score])
+    }
+  }
+
   const pathways = ['junior', 'senior'] as const
   for (const pathway of pathways) {
     const projects = teams.filter((t) => t.pathway === pathway)
 
     // calculate scores
     for (const project of projects) {
-      const judgeScores = await getTeamScoresByTeamID(event, project.id)
+      const judgeScores = scoresByTeamId.get(project.id) ?? []
       let judgeTotal = 0
       for (const score of judgeScores) {
         const scores = JSON.parse(score.scores)

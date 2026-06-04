@@ -26,3 +26,12 @@ export async function getTeamScoresByTeamID(event: H3Event, teamID: number): Pro
       .all() as { results: TeamScores[] }
   ).results
 }
+
+export async function getAllTeamScores(event: H3Event): Promise<TeamScores[]> {
+  return (
+    event.context.db.prepare(
+      'SELECT * FROM team_scores',
+    )
+      .all() as { results: TeamScores[] }
+  ).results
+}
