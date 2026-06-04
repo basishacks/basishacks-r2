@@ -224,7 +224,10 @@ function openProject(team) {
 }
 
 definePageMeta({
-  layout: 'fullwidth-nostick',
+  layout: 'fullwidth',
+  layoutProps: {
+    stickyHeader: false,
+  },
   title: `Results | ${WEBSITE_NAME}`,
 })
 

@@ -2,7 +2,7 @@
 
 <template>
   <div>
-    <RoleHeader/>
+    <RoleHeader :class="{ relative: !stickyHeader }"/>
 
     <UMain>
       <slot />
@@ -11,3 +11,9 @@
     <Footer/>
   </div>
 </template>
+
+<script setup lang="ts">
+defineProps<{
+  stickyHeader?: boolean
+}>()
+</script>
