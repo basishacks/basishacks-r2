@@ -13,6 +13,8 @@ export const DEFAULT_RATE_LIMIT_CONFIG: RateLimitConfig = {
 // Map to store request history: key -> array of timestamps
 const requestHistory = new Map<string, number[]>()
 
+const MAX_ENTRIES = 10_000
+
 export async function getClientIdentifier(event: H3Event): Promise<string> {
   // Try to get user ID first (for authenticated requests)
   try {
@@ -77,7 +79,7 @@ export function applyRateLimit(
     requestHistory.set(identifier, history)
 
     // Periodic memory cleanup
-    if (Math.random() < 0.01) {
+    if (Math.random() < 0.1) {
       const oneHourAgo = now - 60 * 60 * 1000
       for (const [key, times] of requestHistory.entries()) {
         const recentTimes = times.filter((t) => t > oneHourAgo)
@@ -86,6 +88,17 @@ export function applyRateLimit(
         } else {
           requestHistory.set(key, recentTimes)
         }
+      }
+    }
+
+    // Evict oldest entries when the map exceeds the max size
+    if (requestHistory.size > MAX_ENTRIES) {
+      const entries = [...requestHistory.entries()]
+        .map(([key, times]) => ({ key, oldest: times[0] ?? Infinity }))
+        .sort((a, b) => a.oldest - b.oldest)
+      const deleteCount = Math.ceil(MAX_ENTRIES * 0.2)
+      for (let i = 0; i < deleteCount && i < entries.length; i++) {
+        requestHistory.delete(entries[i].key)
       }
     }
 

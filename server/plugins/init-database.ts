@@ -106,9 +106,11 @@ export default defineNitroPlugin((nitroApp) => {
     console.log('[Nitro] Database schema initialized')
   }
 
+  const dbWrapper = createDatabaseWrapper()
+
   console.log('[Nitro] Database plugin loaded')
 
   nitroApp.hooks.hook('request', (event) => {
-    event.context.db = createDatabaseWrapper()
+    event.context.db = dbWrapper
   })
 })
