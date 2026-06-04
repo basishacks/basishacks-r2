@@ -56,9 +56,14 @@ coverage
 
 # Personal/IDE
 .wakatime-project
+.trae/
 
 # Documentation (VitePress site)
 documentation/
+docs/
+
+# User upload artifacts (typo dir from original .gitignore)
+public/userast/
 
 # Redundant schema dump (canonical schema is in sql/init.sql)
 schema.sql
