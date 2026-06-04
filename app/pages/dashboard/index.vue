@@ -13,13 +13,14 @@ const { user: userRef } = useUserSession()
 const user = computed(() => userRef.value!)
 
 const { data: hackathon, error: hackathonError } =
-  await useFetch('/api/seasons/active')
+  await useFetch('/api/seasons/active', { dedupe: 'defer' })
 if (hackathonError.value) {
   throw hackathonError.value
 }
 
 const { data, error, refresh } = await useFetch<GetUserResponse>(
   () => `/api/users/${user.value.id}`,
+  { dedupe: 'defer' },
 )
 if (error.value) {
   throw error.value
@@ -203,6 +204,7 @@ const actions = ref([
 
 const { data: teamData, error: teamError, refresh: teamRefresh } = await useFetch<GetTeamMembersResponse>(
   () => `/api/teams/${data.value?.team?.id}/users`,
+  { dedupe: 'defer' },
 )
 if (teamError.value) {
   throw teamError.value
@@ -255,7 +257,7 @@ if (teamError.value) {
 
       <h2 class="text-3xl bold mb-4">Your project</h2>
 
-      <ProjectCard v-if="data.team_id" :id="data.team_id" :members="teamData"></ProjectCard>
+      <LazyProjectCard v-if="data.team_id" :id="data.team_id" :members="teamData"></LazyProjectCard>
 
       <h2 class="text-3xl bold my-4">Continue...</h2>
       

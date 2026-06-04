@@ -6,7 +6,7 @@
 
   <h3 class="text-2xl bold">Current Results</h3>
 
-  <ScoreCard v-if="user?.team && user?.team.score" :team="user.team"></ScoreCard>
+  <LazyScoreCard v-if="user?.team && user?.team.score" :team="user.team"></LazyScoreCard>
   <p v-else class="text-muted">No scores for this season!</p>
 
   <USeparator class="my-6"/>

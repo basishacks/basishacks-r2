@@ -13,7 +13,7 @@
             <div class="w-full h-80 flex flex-row justify-center items-start my-8">
 
               <Transition name="fade">
-                <LoaderAnimationInline v-if="showLoading" class="my-auto"/>
+                <LazyLoaderAnimationInline v-if="showLoading" class="my-auto"/>
               </Transition>
 
               <Transition name="fade">

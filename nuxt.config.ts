@@ -15,6 +15,13 @@ export default defineNuxtConfig({
   colorMode: {
     preference: 'dark',
   },
+  routeRules: {
+    '/rules': { swr: 3600 },
+    '/showcase': { swr: 600 },
+    '/': { swr: 300 },
+    '/developers/**': { ssr: false },
+    '/api/**': { headers: { 'cache-control': 's-maxage=60' } },
+  },
   experimental: {
     asyncContext: true,
   },

@@ -199,7 +199,7 @@ color="fill-gray-400"
 
     <UModal v-model:open="modalOpen" :title="selectedTeam?.name || 'Project'">
       <template #body>
-        <ProjectCard v-if="selectedTeam" :id="selectedTeam.id" />
+        <LazyProjectCard v-if="selectedTeam" :id="selectedTeam.id" />
       </template>
     </UModal>
 
@@ -210,7 +210,7 @@ color="fill-gray-400"
 </template>
 <script setup>
 
-const { data: teams } = await useFetch('/api/teams?season_id=2')
+const { data: teams } = await useFetch('/api/teams?season_id=2', { dedupe: 'defer' })
 const modalOpen = ref(false)
 const selectedTeam = ref(null)
 
