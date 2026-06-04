@@ -1,5 +1,5 @@
 <template>
-  <div class="mt-4">
+  <div v-once class="mt-4">
     <h1 class="text-4xl bold glow mb-4">Rules</h1>
     <p class="mb-4">
       Here you can find the rules of {{ WEBSITE_NAME }}, what you need to do,

@@ -536,7 +536,7 @@ async function loginFlowCheck(reattempt: boolean = false) {
 //////// MATRIX PAINT JOB
 
 const canvas = ref<HTMLCanvasElement | null>(null)
-const animationFrameId = 0
+let animationFrameId = 0
 let drops: Array<number> = []
 const fontSize = 18
 let columnCount = 0
@@ -635,7 +635,11 @@ function handleResize() {
 
 onMounted(async () => {
   setupCanvas()
-  setInterval(() => {animate()}, 33)
+  function loop() {
+    animate()
+    animationFrameId = window.requestAnimationFrame(loop)
+  }
+  animationFrameId = window.requestAnimationFrame(loop)
   window.addEventListener('resize', handleResize)
   
   
