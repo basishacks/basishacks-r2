@@ -1,107 +1,105 @@
-import type { H3Event } from 'h3'
+import type { H3Event } from "h3";
 
 interface RateLimitConfig {
-  maxRequests: number
-  windowMs: number
+    maxRequests: number;
+    windowMs: number;
 }
 
 export const DEFAULT_RATE_LIMIT_CONFIG: RateLimitConfig = {
-  maxRequests: 60, // 60 requests per minute
-  windowMs: 60 * 1000, // per minute
-}
+    maxRequests: 60, // 60 requests per minute
+    windowMs: 60 * 1000, // per minute
+};
 
 // Map to store request history: key -> array of timestamps
-const requestHistory = new Map<string, number[]>()
+const requestHistory = new Map<string, number[]>();
 
-const MAX_ENTRIES = 10_000
+const MAX_ENTRIES = 10_000;
 
 export async function getClientIdentifier(event: H3Event): Promise<string> {
-  // Try to get user ID first (for authenticated requests)
-  try {
-    const session = await getUserSession(event)
-    if (session?.user?.id) {
-      return `user:${session.user.id}`
+    // Try to get user ID first (for authenticated requests)
+    try {
+        const session = await getUserSession(event);
+        if (session?.user?.id) {
+            return `user:${session.user.id}`;
+        }
+    } catch {
+        // User not authenticated, fall through to IP
     }
-  } catch {
-    // User not authenticated, fall through to IP
-  }
 
-  // Fall back to IP address for unauthenticated requests
-  const ip =
-    getHeader(event, 'x-forwarded-for')?.split(',')[0]?.trim() ||
-    getHeader(event, 'cf-connecting-ip') ||
-    getHeader(event, 'x-real-ip') ||
-    'unknown'
+    // Fall back to IP address for unauthenticated requests
+    const ip =
+        getHeader(event, "x-forwarded-for")?.split(",")[0]?.trim() ||
+        getHeader(event, "cf-connecting-ip") ||
+        getHeader(event, "x-real-ip") ||
+        "unknown";
 
-  return `ip:${ip}`
+    return `ip:${ip}`;
 }
 
 export function applyRateLimit(
-  handler: (event: H3Event) => Promise<any>,
-  config: Partial<RateLimitConfig> = {}
+    handler: (event: H3Event) => Promise<any>,
+    config: Partial<RateLimitConfig> = {},
 ) {
-  const finalConfig = { ...DEFAULT_RATE_LIMIT_CONFIG, ...config }
+    const finalConfig = { ...DEFAULT_RATE_LIMIT_CONFIG, ...config };
 
-  return async (event: H3Event) => {
-    const identifier = await getClientIdentifier(event)
-    const now = Date.now()
+    return async (event: H3Event) => {
+        const identifier = await getClientIdentifier(event);
+        const now = Date.now();
 
-    // Get or initialize request history for this identifier
-    let history = requestHistory.get(identifier) || []
+        // Get or initialize request history for this identifier
+        let history = requestHistory.get(identifier) || [];
 
-    // Remove old requests outside the window
-    history = history.filter((timestamp) => now - timestamp < finalConfig.windowMs)
+        // Remove old requests outside the window
+        history = history.filter((timestamp) => now - timestamp < finalConfig.windowMs);
 
-    // Check if rate limit exceeded
-    if (history.length >= finalConfig.maxRequests) {
-      const oldestRequest = history[0]
-      if (!oldestRequest) return;
-      const resetTime = new Date(oldestRequest + finalConfig.windowMs)
-      const retryAfter = Math.ceil(
-        (oldestRequest + finalConfig.windowMs - now) / 1000
-      )
+        // Check if rate limit exceeded
+        if (history.length >= finalConfig.maxRequests) {
+            const oldestRequest = history[0];
+            if (!oldestRequest) return;
+            const resetTime = new Date(oldestRequest + finalConfig.windowMs);
+            const retryAfter = Math.ceil((oldestRequest + finalConfig.windowMs - now) / 1000);
 
-      setHeader(event, 'Retry-After', retryAfter)
+            setHeader(event, "Retry-After", retryAfter);
 
-      throw createError({
-        status: 429,
-        statusMessage: 'Too Many Requests',
-        data: {
-          message: `Rate limit exceeded. Max ${finalConfig.maxRequests} requests per ${finalConfig.windowMs / 1000}s.`,
-          retryAfter,
-          resetTime: resetTime.toISOString(),
-        },
-      })
-    }
-
-    // Add current request
-    history.push(now)
-    requestHistory.set(identifier, history)
-
-    // Periodic memory cleanup
-    if (Math.random() < 0.1) {
-      const oneHourAgo = now - 60 * 60 * 1000
-      for (const [key, times] of requestHistory.entries()) {
-        const recentTimes = times.filter((t) => t > oneHourAgo)
-        if (recentTimes.length === 0) {
-          requestHistory.delete(key)
-        } else {
-          requestHistory.set(key, recentTimes)
+            throw createError({
+                status: 429,
+                statusMessage: "Too Many Requests",
+                data: {
+                    message: `Rate limit exceeded. Max ${finalConfig.maxRequests} requests per ${finalConfig.windowMs / 1000}s.`,
+                    retryAfter,
+                    resetTime: resetTime.toISOString(),
+                },
+            });
         }
-      }
-    }
 
-    // Evict oldest entries when the map exceeds the max size
-    if (requestHistory.size > MAX_ENTRIES) {
-      const entries = [...requestHistory.entries()]
-        .map(([key, times]) => ({ key, oldest: times[0] ?? Infinity }))
-        .sort((a, b) => a.oldest - b.oldest)
-      const deleteCount = Math.ceil(MAX_ENTRIES * 0.2)
-      for (let i = 0; i < deleteCount && i < entries.length; i++) {
-        requestHistory.delete(entries[i].key)
-      }
-    }
+        // Add current request
+        history.push(now);
+        requestHistory.set(identifier, history);
 
-    return await handler(event)
-  }
+        // Periodic memory cleanup
+        if (Math.random() < 0.1) {
+            const oneHourAgo = now - 60 * 60 * 1000;
+            for (const [key, times] of requestHistory.entries()) {
+                const recentTimes = times.filter((t) => t > oneHourAgo);
+                if (recentTimes.length === 0) {
+                    requestHistory.delete(key);
+                } else {
+                    requestHistory.set(key, recentTimes);
+                }
+            }
+        }
+
+        // Evict oldest entries when the map exceeds the max size
+        if (requestHistory.size > MAX_ENTRIES) {
+            const entries = [...requestHistory.entries()]
+                .map(([key, times]) => ({ key, oldest: times[0] ?? Infinity }))
+                .sort((a, b) => a.oldest - b.oldest);
+            const deleteCount = Math.ceil(MAX_ENTRIES * 0.2);
+            for (let i = 0; i < deleteCount && i < entries.length; i++) {
+                requestHistory.delete(entries[i].key);
+            }
+        }
+
+        return await handler(event);
+    };
 }

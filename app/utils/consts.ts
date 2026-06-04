@@ -1,3 +1,1 @@
-
-
-export const WEBSITE_NAME = 'basishacks'
+export const WEBSITE_NAME = "basishacks";

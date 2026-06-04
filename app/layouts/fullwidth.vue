@@ -1,19 +1,17 @@
-
-
 <template>
-  <div>
-    <RoleHeader :class="{ relative: !stickyHeader }"/>
+    <div>
+        <RoleHeader :class="{ relative: !stickyHeader }" />
 
-    <UMain>
-      <slot />
-    </UMain>
+        <UMain>
+            <slot />
+        </UMain>
 
-    <Footer/>
-  </div>
+        <Footer />
+    </div>
 </template>
 
 <script setup lang="ts">
 defineProps<{
-  stickyHeader?: boolean
-}>()
+    stickyHeader?: boolean;
+}>();
 </script>

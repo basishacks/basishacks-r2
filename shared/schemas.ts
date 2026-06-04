@@ -1,195 +1,206 @@
-import z from 'zod'
-import rubrics from './rubric'
+import z from "zod";
+import rubrics from "./rubric";
 
 const BasisEmail = z
-  .email()
-  .refine(
-    (s) => s.toLowerCase().endsWith('@basischina.com'),
-    'Please use a @basischina.com email'
-  )
+    .email()
+    .refine(
+        (s) => s.toLowerCase().endsWith("@basischina.com"),
+        "Please use a @basischina.com email",
+    );
 
 const TeamName = z
-  .string()
-  .min(2, 'Team name must be at least 2 characters')
-  .max(30, 'Team name cannot be longer than 30 characters')
+    .string()
+    .min(2, "Team name must be at least 2 characters")
+    .max(30, "Team name cannot be longer than 30 characters");
 
-const TeamPathway = z.enum(['junior', 'senior'])
+const TeamPathway = z.enum(["junior", "senior"]);
 
-const BooleanString = z
-  .enum(['true', 'false'])
-  .transform((s) => s === 'true')
+const BooleanString = z.enum(["true", "false"]).transform((s) => s === "true");
 
-const ZeroToFive = z.number().int().min(0).max(5)
+const ZeroToFive = z.number().int().min(0).max(5);
 const ScoreValues = z.object(
-  Object.keys(rubrics['junior']).reduce(
-    (obj, key) => ({
-      ...obj,
-      [key]: ZeroToFive,
-    }),
-    {} as Record<keyof (typeof rubrics)['junior'], typeof ZeroToFive>
-  )
-)
+    Object.keys(rubrics["junior"]).reduce(
+        (obj, key) => ({
+            ...obj,
+            [key]: ZeroToFive,
+        }),
+        {} as Record<keyof (typeof rubrics)["junior"], typeof ZeroToFive>,
+    ),
+);
 
 export const SendCodeRequest = z.object({
-  email: BasisEmail,
-})
-export type SendCodeRequest = z.infer<typeof SendCodeRequest>
+    email: BasisEmail,
+});
+export type SendCodeRequest = z.infer<typeof SendCodeRequest>;
 
 export const LoginRequest = z.object({
-  email: BasisEmail,
-  code: z.array(z.number().max(9).min(0)).length(6, "Code must be 6 digits")
-})
-export type LoginRequest = z.infer<typeof LoginRequest>
+    email: BasisEmail,
+    code: z.array(z.number().max(9).min(0)).length(6, "Code must be 6 digits"),
+});
+export type LoginRequest = z.infer<typeof LoginRequest>;
 
 export const MicrosoftRedirectRequest = z.object({
-  token: z.string()
-})
-export type MicrosoftRedirectRequest = z.infer<typeof MicrosoftRedirectRequest>
+    token: z.string(),
+});
+export type MicrosoftRedirectRequest = z.infer<typeof MicrosoftRedirectRequest>;
 
 export const CreateTeamQuery = z.object({
-  add: BooleanString.optional(),
-})
-export type CreateTeamQuery = z.infer<typeof CreateTeamQuery>
+    add: BooleanString.optional(),
+});
+export type CreateTeamQuery = z.infer<typeof CreateTeamQuery>;
 
 export const CreateTeamRequest = z.object({
-  name: TeamName,
-})
-export type CreateTeamRequest = z.infer<typeof CreateTeamRequest>
+    name: TeamName,
+});
+export type CreateTeamRequest = z.infer<typeof CreateTeamRequest>;
 
 export const UpdateTeamRequest = z.object({
-  name: z.optional(TeamName),
-  pathway: z.optional(TeamPathway),
-  project: z.optional(
-    z.object({
-      name: z.optional(z.string().max(50)),
-      description: z.optional(z.string().max(2000)),
-      demo_url: z
-        .union([z.url(), z.literal('')])
-        .nullish()
-        .transform((v) => (v === '' ? null : v)),
-      repo_url: z
-        .union([z.url(), z.literal('')])
-        .nullish()
-        .transform((v) => (v === '' ? null : v)),
-      sourcing: z.optional(z.string().max(2000)),
-    })
-  ),
-})
-export type UpdateTeamRequest = z.infer<typeof UpdateTeamRequest>
+    name: z.optional(TeamName),
+    pathway: z.optional(TeamPathway),
+    project: z.optional(
+        z.object({
+            name: z.optional(z.string().max(50)),
+            description: z.optional(z.string().max(2000)),
+            demo_url: z
+                .union([z.url(), z.literal("")])
+                .nullish()
+                .transform((v) => (v === "" ? null : v)),
+            repo_url: z
+                .union([z.url(), z.literal("")])
+                .nullish()
+                .transform((v) => (v === "" ? null : v)),
+            sourcing: z.optional(z.string().max(2000)),
+        }),
+    ),
+});
+export type UpdateTeamRequest = z.infer<typeof UpdateTeamRequest>;
 
 export const SubmitTeamRequest = z.object({
-  pathway: TeamPathway,
-  project: z.object({
-    name: z.string().nonempty(),
-    description: z
-      .string()
-      .min(30, 'Please provide more details in the description'),
-    demo_url: z.url(),
-    repo_url: z.url(),
-    sourcing: z.optional(z.string().max(2000)),
-  }),
-})
-export type SubmitTeamRequest = z.infer<typeof SubmitTeamRequest>
+    pathway: TeamPathway,
+    project: z.object({
+        name: z.string().nonempty(),
+        description: z.string().min(30, "Please provide more details in the description"),
+        demo_url: z.url(),
+        repo_url: z.url(),
+        sourcing: z.optional(z.string().max(2000)),
+    }),
+});
+export type SubmitTeamRequest = z.infer<typeof SubmitTeamRequest>;
 
 export const AddTeamMemberRequest = z.object({
-  email: BasisEmail,
-})
-export type AddTeamMemberRequest = z.infer<typeof AddTeamMemberRequest>
+    email: BasisEmail,
+});
+export type AddTeamMemberRequest = z.infer<typeof AddTeamMemberRequest>;
 
-const MAX_FILE_SIZE = 10 * 1024 * 1024 // 10MB
-const ACCEPTED_IMAGE_TYPES = ['image/jpeg', 'image/jpg', 'image/png', 'image/webp']
+const MAX_FILE_SIZE = 10 * 1024 * 1024; // 10MB
+const ACCEPTED_IMAGE_TYPES = ["image/jpeg", "image/jpg", "image/png", "image/webp"];
 
 const formatBytes = (bytes: number, decimals = 2) => {
-  if (bytes === 0) return '0 Bytes'
-  const k = 1024
-  const dm = decimals < 0 ? 0 : decimals
-  const sizes = ['Bytes', 'KB', 'MB', 'GB', 'TB', 'PB', 'EB', 'ZB', 'YB']
-  const i = Math.floor(Math.log(bytes) / Math.log(k))
-  return Number.parseFloat((bytes / Math.pow(k, i)).toFixed(dm)) + ' ' + sizes[i]
-}
-
-
+    if (bytes === 0) return "0 Bytes";
+    const k = 1024;
+    const dm = decimals < 0 ? 0 : decimals;
+    const sizes = ["Bytes", "KB", "MB", "GB", "TB", "PB", "EB", "ZB", "YB"];
+    const i = Math.floor(Math.log(bytes) / Math.log(k));
+    return Number.parseFloat((bytes / Math.pow(k, i)).toFixed(dm)) + " " + sizes[i];
+};
 
 export const UpdateUserRequest = z.object({
-  name: z.optional(z.string().max(30)),
-  profile_theme_image: z.union([
-    z.instanceof(File)
-      .refine((file) => file.size <= MAX_FILE_SIZE,
-        `The image is too large. Please choose an image smaller than ${formatBytes(MAX_FILE_SIZE)}.`
-      )
-      .refine((file) => ACCEPTED_IMAGE_TYPES.includes(file.type),
-        'Please upload a valid image file (JPEG, PNG, or WebP)'
-      ),
-    z.string().startsWith('data'),
-    z.null(),
-  ]).optional(),
-  avatar: z.union([
-    z.instanceof(File)
-      .refine((file) => file.size <= MAX_FILE_SIZE,
-        `The image is too large. Please choose an image smaller than ${formatBytes(MAX_FILE_SIZE)}.`
-      )
-      .refine((file) => ACCEPTED_IMAGE_TYPES.includes(file.type),
-        'Please upload a valid image file (JPEG, PNG, or WebP)'
-      ),
-    z.string().startsWith('data'),
-    z.null(),
-  ]).optional()
-})
-export type UpdateUserRequest = z.infer<typeof UpdateUserRequest>
+    name: z.optional(z.string().max(30)),
+    profile_theme_image: z
+        .union([
+            z
+                .instanceof(File)
+                .refine(
+                    (file) => file.size <= MAX_FILE_SIZE,
+                    `The image is too large. Please choose an image smaller than ${formatBytes(MAX_FILE_SIZE)}.`,
+                )
+                .refine(
+                    (file) => ACCEPTED_IMAGE_TYPES.includes(file.type),
+                    "Please upload a valid image file (JPEG, PNG, or WebP)",
+                ),
+            z.string().startsWith("data"),
+            z.null(),
+        ])
+        .optional(),
+    avatar: z
+        .union([
+            z
+                .instanceof(File)
+                .refine(
+                    (file) => file.size <= MAX_FILE_SIZE,
+                    `The image is too large. Please choose an image smaller than ${formatBytes(MAX_FILE_SIZE)}.`,
+                )
+                .refine(
+                    (file) => ACCEPTED_IMAGE_TYPES.includes(file.type),
+                    "Please upload a valid image file (JPEG, PNG, or WebP)",
+                ),
+            z.string().startsWith("data"),
+            z.null(),
+        ])
+        .optional(),
+});
+export type UpdateUserRequest = z.infer<typeof UpdateUserRequest>;
 
 export const CreateTeamScoresRequest = z.object({
-  reasoning: z.string().min(10, 'Please write more').max(2000),
-  scores: ScoreValues,
-})
-export type CreateTeamScoresRequest = z.infer<typeof CreateTeamScoresRequest>
+    reasoning: z.string().min(10, "Please write more").max(2000),
+    scores: ScoreValues,
+});
+export type CreateTeamScoresRequest = z.infer<typeof CreateTeamScoresRequest>;
 
 export const SubmitVoteRequest = z
-  .object({
-    scores: z.array(z.number().int().min(1).max(5)),
-    reasoning: z.string().min(30, 'Please write a bit more').max(2000, 'You wrote too much!'),
-  })
-  .refine(
-    ({ scores }) => scores.reduce((a, b) => a + b, 0) === 12,
-    'Stars must sum to 12'
-  )
-export type SubmitVoteRequest = z.infer<typeof SubmitVoteRequest>
+    .object({
+        scores: z.array(z.number().int().min(1).max(5)),
+        reasoning: z.string().min(30, "Please write a bit more").max(2000, "You wrote too much!"),
+    })
+    .refine(({ scores }) => scores.reduce((a, b) => a + b, 0) === 12, "Stars must sum to 12");
+export type SubmitVoteRequest = z.infer<typeof SubmitVoteRequest>;
 
 export const CreateApplicationRequest = z.object({
-  name: z.string("Application name is required").min(1, 'Application name is required').max(64, 'Application name cannot exceed 64 characters'),
-  description: z.string().max(1024, 'Application description cannot exceed 1024 characters').optional(),
-  proxy_microsoft: z.boolean(),
-  type: z.enum(['first', 'third']).optional(),
-})
-export type CreateApplicationRequest = z.infer<typeof CreateApplicationRequest>
+    name: z
+        .string("Application name is required")
+        .min(1, "Application name is required")
+        .max(64, "Application name cannot exceed 64 characters"),
+    description: z
+        .string()
+        .max(1024, "Application description cannot exceed 1024 characters")
+        .optional(),
+    proxy_microsoft: z.boolean(),
+    type: z.enum(["first", "third"]).optional(),
+});
+export type CreateApplicationRequest = z.infer<typeof CreateApplicationRequest>;
 
 export const ManageRedirectUriRequest = z.object({
-  uri: z.string()
-    .min(1, 'Redirect URI is required')
-    .url('Invalid URL format')
-    .refine(
-      (val) => val.startsWith('https://') || val.startsWith('http://localhost'),
-      'Redirect URIs must start with http://localhost or https://'
-    ),
-})
-export type ManageRedirectUriRequest = z.infer<typeof ManageRedirectUriRequest>
+    uri: z
+        .string()
+        .min(1, "Redirect URI is required")
+        .url("Invalid URL format")
+        .refine(
+            (val) => val.startsWith("https://") || val.startsWith("http://localhost"),
+            "Redirect URIs must start with http://localhost or https://",
+        ),
+});
+export type ManageRedirectUriRequest = z.infer<typeof ManageRedirectUriRequest>;
 
 export const OAuth2TokenRequest = z.object({
-  grant_type: z.literal('authorization_code', {
-    message: "Only 'authorization_code' grant type is supported"
-  }),
-  code: z.string('Authorization code is required').min(1, 'Authorization code is required'),
-  client_id: z.string('client_id is required').min(1, 'client_id is required'),
-  client_secret: z.string('client_secret is required').min(1, 'client_secret is required'),
-  redirect_uri: z.string().optional(),
-  code_verifier: z.string().optional(),
-})
-export type OAuth2TokenRequest = z.infer<typeof OAuth2TokenRequest>
+    grant_type: z.literal("authorization_code", {
+        message: "Only 'authorization_code' grant type is supported",
+    }),
+    code: z.string("Authorization code is required").min(1, "Authorization code is required"),
+    client_id: z.string("client_id is required").min(1, "client_id is required"),
+    client_secret: z.string("client_secret is required").min(1, "client_secret is required"),
+    redirect_uri: z.string().optional(),
+    code_verifier: z.string().optional(),
+});
+export type OAuth2TokenRequest = z.infer<typeof OAuth2TokenRequest>;
 export const OAuth2SessionActionRequest = z.object({
-  action: z.enum(['cancel', 'consent', 'assume_consent', 'deny'], "Actions must be one of 'cancel', 'consent', 'assume_consent', or 'deny'")
-})
-export type OAuth2SessionActionRequest = z.infer<typeof OAuth2SessionActionRequest>
+    action: z.enum(
+        ["cancel", "consent", "assume_consent", "deny"],
+        "Actions must be one of 'cancel', 'consent', 'assume_consent', or 'deny'",
+    ),
+});
+export type OAuth2SessionActionRequest = z.infer<typeof OAuth2SessionActionRequest>;
 
 export const SetActiveSeasonRequest = z.object({
-  season_id: z.number().int().positive().nullable(),
-})
-export type SetActiveSeasonRequest = z.infer<typeof SetActiveSeasonRequest>
+    season_id: z.number().int().positive().nullable(),
+});
+export type SetActiveSeasonRequest = z.infer<typeof SetActiveSeasonRequest>;

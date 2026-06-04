@@ -20,21 +20,21 @@ The stack is Vue 3 (frontend) + Nitro (backend) + SQLite (local dev) / Cloudflar
 
 ## Technology Stack
 
-| Layer | Technology |
-|-------|------------|
-| Framework | Nuxt 3 (latest) |
-| UI | `@nuxt/ui` ^4.6.1 (Tailwind CSS v4 based) |
-| Language | TypeScript 5.6+ |
-| Runtime | Node.js >= v24 |
-| Package Manager | Bun (preferred); npm works |
-| Database (local) | `better-sqlite3` with WAL mode |
-| Database (prod) | Cloudflare D1 (binding name `DB`) |
-| Auth | `nuxt-auth-utils` (session-based) |
-| Validation | Zod 4.x |
-| Fonts | `@nuxt/fonts` (local provider) |
-| Icons | `@iconify-json/lucide`, `@iconify-json/material-symbols` |
-| Linting | `@nuxt/eslint` + Prettier |
-| Deployment | Cloudflare Pages via GitHub Actions |
+| Layer            | Technology                                               |
+| ---------------- | -------------------------------------------------------- |
+| Framework        | Nuxt 3 (latest)                                          |
+| UI               | `@nuxt/ui` ^4.6.1 (Tailwind CSS v4 based)                |
+| Language         | TypeScript 5.6+                                          |
+| Runtime          | Node.js >= v24                                           |
+| Package Manager  | Bun (preferred); npm works                               |
+| Database (local) | `better-sqlite3` with WAL mode                           |
+| Database (prod)  | Cloudflare D1 (binding name `DB`)                        |
+| Auth             | `nuxt-auth-utils` (session-based)                        |
+| Validation       | Zod 4.x                                                  |
+| Fonts            | `@nuxt/fonts` (local provider)                           |
+| Icons            | `@iconify-json/lucide`, `@iconify-json/material-symbols` |
+| Linting          | `@nuxt/eslint` + Prettier                                |
+| Deployment       | Cloudflare Pages via GitHub Actions                      |
 
 ---
 
@@ -126,12 +126,14 @@ bun run cf-types
 ## Runtime Architecture
 
 ### Local Development
+
 - Nitro preset: `node-server`
 - Uses `better-sqlite3` directly against `./database/basishacks.sqlite`
 - `server/plugins/01.database.ts` initializes the DB on startup and attaches a `SQLiteDatabase` wrapper to every H3 event context (`event.context.db`)
 - The wrapper (`server/utils/database.ts`) mimics Cloudflare D1’s `Statement` and `Database` interfaces so the same DB code works locally and in production
 
 ### Production (Cloudflare Pages)
+
 - Built with `--preset cloudflare-pages`
 - D1 database binding name is `DB` (see `wrangler.jsonc`)
 - The same `event.context.db` is used, but backed by the actual D1 binding
@@ -149,11 +151,13 @@ Three auth methods are supported:
 Session storage is handled by `nuxt-auth-utils`. The session cookie stores only `{ user: { id: number } }`.
 
 Roles:
+
 - `participant`
 - `judge`
 - `admin`
 
 Use the helpers in `server/utils/auth.ts` to enforce roles:
+
 - `requireUser(event)` — returns the full DB user row or 401
 - `requireJudge(event)` — 403 if not judge/admin
 - `requireAdmin(event)` — 403 if not admin
@@ -204,6 +208,7 @@ Use the helpers in `server/utils/auth.ts` to enforce roles:
 ## Testing
 
 Tests are run with `node --env-file=.env tests/index.js`. The runner imports and executes:
+
 - `test.oauth2.js`
 - `test.microsoft.ts` (mostly commented out; requires admin-approved MS Graph permissions)
 - `test.deepseek.ts`
@@ -234,6 +239,7 @@ Pushes to `main` trigger `.github/workflows/deploy-cloudflare.yml`:
 5. Deploy `dist/` to Cloudflare Pages project `basishacks2025` via Wrangler
 
 Required repository secrets:
+
 - `CLOUDFLARE_API_TOKEN`
 - `CLOUDFLARE_ACCOUNT_ID`
 
@@ -243,13 +249,13 @@ Required repository secrets:
 
 Copy `.env.example` to `.env` and fill in:
 
-| Variable | Purpose |
-|----------|---------|
-| `NUXT_SESSION_PASSWORD` | Session encryption key (>= 32 bytes) |
-| `NUXT_SEND_CODE_URL` | External webhook/service URL for sending login codes |
-| `MICROSOFT_CLIENT_SECRET` | MS Entra app secret for Graph API |
-| `MICROSOFT_DUMMY_USER_NAME` | ROPC test user (rarely used) |
-| `MICROSOFT_DUMMY_USER_PASSWORD` | ROPC test password (rarely used) |
+| Variable                        | Purpose                                              |
+| ------------------------------- | ---------------------------------------------------- |
+| `NUXT_SESSION_PASSWORD`         | Session encryption key (>= 32 bytes)                 |
+| `NUXT_SEND_CODE_URL`            | External webhook/service URL for sending login codes |
+| `MICROSOFT_CLIENT_SECRET`       | MS Entra app secret for Graph API                    |
+| `MICROSOFT_DUMMY_USER_NAME`     | ROPC test user (rarely used)                         |
+| `MICROSOFT_DUMMY_USER_PASSWORD` | ROPC test password (rarely used)                     |
 
 In production, these are configured in the Cloudflare Pages dashboard / Wrangler secrets.
 
@@ -272,14 +278,14 @@ In production, these are configured in the Cloudflare Pages dashboard / Wrangler
 1. **Update `README.md`** — If your changes affect any feature, configuration, command, or behavior described in the README, update the relevant sections to reflect the current state of the project.
 
 2. **Update VitePress documentation** — If your changes affect any area documented in the `documentation/` directory, update the corresponding pages:
-   - `documentation/guide/` — Getting started, project overview, environment setup
-   - `documentation/architecture/` — Overview, runtime, database, auth, OAuth2
-   - `documentation/frontend/` — Components, pages, layouts, composables
-   - `documentation/backend/` — API reference, server utilities, plugins & middleware
-   - `documentation/shared/` — Schemas, types, rubric, permissions, OAuth2 scopes
-   - `documentation/deployment/` — Cloudflare deployment, security, rate limiting
+    - `documentation/guide/` — Getting started, project overview, environment setup
+    - `documentation/architecture/` — Overview, runtime, database, auth, OAuth2
+    - `documentation/frontend/` — Components, pages, layouts, composables
+    - `documentation/backend/` — API reference, server utilities, plugins & middleware
+    - `documentation/shared/` — Schemas, types, rubric, permissions, OAuth2 scopes
+    - `documentation/deployment/` — Cloudflare deployment, security, rate limiting
 
-   If no existing page covers the changed area, add a new page and register it in `documentation/.vitepress/config.ts` sidebar.
+    If no existing page covers the changed area, add a new page and register it in `documentation/.vitepress/config.ts` sidebar.
 
 3. **Verify the documentation builds** — Run `cd documentation && npm run build` to confirm no broken links or build errors.
 

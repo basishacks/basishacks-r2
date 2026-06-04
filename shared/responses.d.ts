@@ -1,79 +1,78 @@
 interface ProfileTheme {
-  mode: "url" | "emoji" | "gradient"
-  value: string
+    mode: "url" | "emoji" | "gradient";
+    value: string;
 }
 
 interface APIAward {
-  namespace: string
-  name: string
-  meta: Record<string, unknown>
-  text: string
+    namespace: string;
+    name: string;
+    meta: Record<string, unknown>;
+    text: string;
 }
 
 interface APIUser {
-  id: number
-  email: string
-  role: string
-  name: string | null
-  team_id: number | null
-  profile_theme: ProfileTheme | null
-  profile_picture: string | null
+    id: number;
+    email: string;
+    role: string;
+    name: string | null;
+    team_id: number | null;
+    profile_theme: ProfileTheme | null;
+    profile_picture: string | null;
 }
 
 interface APITeam {
-  id: number
-  name: string
-  pathway: TeamPathway | null
-  rank: number | null
-  score: number | null
-  season_id: number
-  project: {
-    name: string
-    description: string
-    demo_url: string | null
-    repo_url: string | null
-    submitted: boolean
-    sourcing: string
-  }
-  awards: APIAward[]
+    id: number;
+    name: string;
+    pathway: TeamPathway | null;
+    rank: number | null;
+    score: number | null;
+    season_id: number;
+    project: {
+        name: string;
+        description: string;
+        demo_url: string | null;
+        repo_url: string | null;
+        submitted: boolean;
+        sourcing: string;
+    };
+    awards: APIAward[];
 }
 
 interface GetUserResponse extends APIUser {
-  team: APITeam | null
-  past_teams: APITeam[]
+    team: APITeam | null;
+    past_teams: APITeam[];
 }
 
-interface GetTeamResponse extends APITeam {
-}
+interface GetTeamResponse extends APITeam {}
 
-type CreateTeamResponse = APITeam
+type CreateTeamResponse = APITeam;
 
 type GetTeamMembersResponse = {
-  id: number
-  email: string
-  name: string | null
-  team_id: number | null
-}[]
+    id: number;
+    email: string;
+    name: string | null;
+    team_id: number | null;
+}[];
 
 interface UpdateUserResponse {
-  message: string
+    message: string;
 }
 
 interface GetBallotResponse {
-  id: number
-  projects: (APITeam['project'] & { id: number })[],
-  scores: (1 | 2 | 3 | 4 | 5)[] | null,
-  reasoning: string | null
+    id: number;
+    projects: (APITeam["project"] & { id: number })[];
+    scores: (1 | 2 | 3 | 4 | 5)[] | null;
+    reasoning: string | null;
 }
 
 interface BallotSummaryItem {
-  season_id: number
-  season_name: string
-  project_count: number
-  ballot_count: number
+    season_id: number;
+    season_name: string;
+    project_count: number;
+    ballot_count: number;
 }
 
 type GetBallotSummaryResponse = {
-  current: BallotSummaryItem | null
-  past: BallotSummaryItem[]
-}
+    current: BallotSummaryItem | null;
+    past: BallotSummaryItem[];
+};

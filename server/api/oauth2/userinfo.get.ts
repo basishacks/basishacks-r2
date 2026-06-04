@@ -1,4 +1,4 @@
-import { withOAuth2JWT } from '~~/server/utils/oauth2-jwt'
+import { withOAuth2JWT } from "~~/server/utils/oauth2-jwt";
 
 /**
  * OAuth2 UserInfo Endpoint
@@ -12,24 +12,24 @@ import { withOAuth2JWT } from '~~/server/utils/oauth2-jwt'
  * - email, email_verified (if 'email' scope granted)
  */
 export default withOAuth2JWT(
-  async (event) => {
-    const { payload, scopes, user } = event.context.oauth2!
+    async (event) => {
+        const { payload, scopes, user } = event.context.oauth2!;
 
-    const claims: Record<string, any> = {
-      sub: String(user!.id),
-    }
+        const claims: Record<string, any> = {
+            sub: String(user!.id),
+        };
 
-    if (scopes.includes('profile')) {
-      claims.name = user!.name
-      claims.picture = user!.profile_picture
-    }
+        if (scopes.includes("profile")) {
+            claims.name = user!.name;
+            claims.picture = user!.profile_picture;
+        }
 
-    if (scopes.includes('email')) {
-      claims.email = user!.email
-      claims.email_verified = true
-    }
+        if (scopes.includes("email")) {
+            claims.email = user!.email;
+            claims.email_verified = true;
+        }
 
-    return claims
-  },
-  { loadUser: true }
-)
+        return claims;
+    },
+    { loadUser: true },
+);

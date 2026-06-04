@@ -1,4 +1,4 @@
-import { initializeDatabase, createDatabaseWrapper } from '../utils/database'
+import { initializeDatabase, createDatabaseWrapper } from "../utils/database";
 
 const SCHEMA_SQL = `
 CREATE TABLE IF NOT EXISTS hackathon (
@@ -95,22 +95,24 @@ CREATE TABLE IF NOT EXISTS oauth2_applications (
     profile_picture TEXT,
     PRIMARY KEY(client_id)
 );
-`
+`;
 
 export default defineNitroPlugin((nitroApp) => {
-  const db = initializeDatabase()
+    const db = initializeDatabase();
 
-  const tables = (db.prepare("SELECT name FROM sqlite_master WHERE type='table'").all() as { name: string }[]).map(r => r.name)
-  if (tables.length === 0) {
-    db.exec(SCHEMA_SQL)
-    console.log('[Nitro] Database schema initialized')
-  }
+    const tables = (
+        db.prepare("SELECT name FROM sqlite_master WHERE type='table'").all() as { name: string }[]
+    ).map((r) => r.name);
+    if (tables.length === 0) {
+        db.exec(SCHEMA_SQL);
+        console.log("[Nitro] Database schema initialized");
+    }
 
-  const dbWrapper = createDatabaseWrapper()
+    const dbWrapper = createDatabaseWrapper();
 
-  console.log('[Nitro] Database plugin loaded')
+    console.log("[Nitro] Database plugin loaded");
 
-  nitroApp.hooks.hook('request', (event) => {
-    event.context.db = dbWrapper
-  })
-})
+    nitroApp.hooks.hook("request", (event) => {
+        event.context.db = dbWrapper;
+    });
+});

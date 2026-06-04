@@ -4,21 +4,21 @@ The official website for the BIBS-C Network Hackathon (season 2, 2025–26).
 
 ## Technology Stack
 
-| Layer | Technology |
-|-------|------------|
-| Framework | Nuxt 3 |
-| UI | @nuxt/ui ^4.8.1 (Tailwind CSS v4) |
-| Language | TypeScript 5.6+ |
-| Runtime | Node.js >= v24 |
-| Package Manager | Bun (preferred); npm works |
-| Database (local) | better-sqlite3 with WAL mode |
-| Database (prod) | Cloudflare D1 |
-| Auth | nuxt-auth-utils (session-based) |
-| Validation | Zod 4.x |
-| Fonts | @nuxt/fonts (local provider) |
-| Icons | @iconify-json/lucide, @iconify-json/material-symbols |
-| Linting | @nuxt/eslint + Prettier |
-| Deployment | Cloudflare Pages |
+| Layer            | Technology                                           |
+| ---------------- | ---------------------------------------------------- |
+| Framework        | Nuxt 3                                               |
+| UI               | @nuxt/ui ^4.8.1 (Tailwind CSS v4)                    |
+| Language         | TypeScript 5.6+                                      |
+| Runtime          | Node.js >= v24                                       |
+| Package Manager  | Bun (preferred); npm works                           |
+| Database (local) | better-sqlite3 with WAL mode                         |
+| Database (prod)  | Cloudflare D1                                        |
+| Auth             | nuxt-auth-utils (session-based)                      |
+| Validation       | Zod 4.x                                              |
+| Fonts            | @nuxt/fonts (local provider)                         |
+| Icons            | @iconify-json/lucide, @iconify-json/material-symbols |
+| Linting          | @nuxt/eslint + Prettier                              |
+| Deployment       | Cloudflare Pages                                     |
 
 ## Project Structure
 
