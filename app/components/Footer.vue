@@ -6,7 +6,9 @@
     <UFooter>
         <template #left>
             <div class="w-full">
-                <p class="text-muted text-xs">Copyright © {{ new Date().getFullYear() }} BISZ Developers' Club, BINJ Hack Club</p>
+                <p class="text-muted text-xs inline-flex items-baseline gap-1">
+                    <UIcon name="i-lucide-copyright"></UIcon>
+                    {{ new Date().getFullYear() }} BISZ Developers' Club, BINJ Hack Club</p>
                 <ULink class="text-xs" to="/contributing" target="_blank">Contribute to basishacks</ULink><br>
                 <ULink class="text-xs" to="/developers">Developer Portal</ULink>
             </div>

@@ -9,6 +9,7 @@ export default defineEventHandler(async (event) => {
       s.id AS season_id,
       s.name AS season_name,
       COUNT(DISTINCT t.id) AS project_count,
+      COUNT(DISTINCT CASE WHEN t.project_submitted = 1 THEN t.id END) AS submitted_count,
       COUNT(DISTINCT ts.team_id) AS ballot_count
     FROM seasons s
     LEFT JOIN teams t ON t.season_id = s.id

@@ -203,10 +203,6 @@ color="fill-gray-400"
       </template>
     </UModal>
 
-    <div>
-      <p class="py-500"/>
-    </div>
-
 </template>
 <script setup>
 

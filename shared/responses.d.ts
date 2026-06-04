@@ -70,6 +70,7 @@ interface BallotSummaryItem {
   season_id: number
   season_name: string
   project_count: number
+  submitted_count: number
   ballot_count: number
 }
 

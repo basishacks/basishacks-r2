@@ -29,7 +29,7 @@ const season: HackathonSeason = hackathonSeasons[season_id] || {
         <span class="text-3xl">
           <span class="text-primary bold">{{ props.season.ballot_count }}</span>
           <span class="text-muted">/</span>
-          <span class="bold">{{ props.season.project_count }}</span>
+          <span class="bold">{{ props.season.submitted_count }}</span>
         </span>
       </div>
     </template>

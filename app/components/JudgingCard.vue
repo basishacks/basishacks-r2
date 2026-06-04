@@ -53,18 +53,28 @@ async function onSubmit(event: FormSubmitEvent<CreateTeamScoresRequest>) {
 <template>
   <UCard variant="subtle" class="mb-4">
     <h2 class="bold text-2xl mb-2">{{ team.project.name }}</h2>
-    <p class="mb-2">Team: {{ team.name }} ({{ team.id }})</p>
-    <p>Pathway: {{ team.pathway }}</p>
-    <pre class="my-4 mx-[2ch] text-wrap">{{ team.project.description }}</pre>
+    <div class="flex flex-row items-baseline gap-4">
+      <p class="mb-2">Team: {{ team.name }}</p>
+    <UBadge
+            variant="outline"
+            :color="team.pathway == 'junior' ? 'primary' : 'warning'"
+            >{{ team.pathway == 'junior' ? 'Junior' : 'Senior' }}</UBadge>
+    
+    </div>
+    <Comark class="my-4 mx-[2ch] text-wrap">{{ team.project.description }}</Comark>
     <UAlert
       v-if="team.project.sourcing"
       icon="i-lucide-book-open"
       color="info"
       variant="subtle"
       title="AI Statement"
-      :description="team.project.sourcing"
       class="mb-4"
-    />
+    >
+    <template #description>
+      <Comark>{{ team.project.sourcing }}</Comark>
+    </template>
+  
+    </UAlert>
     <div class="flex flex-wrap gap-2">
       <UTooltip :text="team.project.repo_url!">
         <UButton

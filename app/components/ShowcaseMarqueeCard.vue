@@ -41,7 +41,7 @@ const { data: members } = await useFetch<GetTeamMembersResponse>(
       </UBadge>
     </div>
     <h4 class="text-xl font-bold truncate">{{ team.project?.name || '(No Project Name)' }}</h4>
-    <p class="text-base truncate mt-1">{{ team.name }}</p>
+    <p class="text-sm truncate mt-1">{{ team.project?.description || '(No Project Description)' }}</p>
     <UserAvatarGroup
       v-if="members && members.length > 0"
       :users="members"

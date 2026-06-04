@@ -1,15 +1,36 @@
 import { readFileSync, writeFileSync, copyFileSync, unlinkSync } from 'node:fs'
-import { execSync } from 'node:child_process'
+import { spawn } from 'node:child_process'
 
 const FILES = [
   { path: 'server/utils/database.ts', backup: 'server/utils/database.ts.bak' },
   { path: 'nuxt.config.ts', backup: 'nuxt.config.ts.bak' }
 ]
 
+let restored = false
+
+function restore() {
+  if (restored) return
+  restored = true
+  for (const file of FILES) {
+    try {
+      copyFileSync(file.backup, file.path)
+      unlinkSync(file.backup)
+    } catch {
+      // backup may not exist
+    }
+  }
+  console.log('[build-bun] Restored patched files')
+}
+
 // 1. Backup originals
 for (const file of FILES) {
   copyFileSync(file.path, file.backup)
 }
+
+// Ensure restoration on any exit path
+process.on('SIGINT', () => { restore(); process.exit(130) })
+process.on('SIGTERM', () => { restore(); process.exit(143) })
+process.on('exit', restore)
 
 try {
   // 2. Patch database.ts for bun:sqlite
@@ -41,16 +62,24 @@ try {
   writeFileSync(FILES[1].path, configContent)
   console.log('[build-bun] Patched nuxt.config.ts (trace: true)')
 
-  // 4. Run the build
-  execSync('bun run build', { stdio: 'inherit' })
+  // 4. Run the build with spawn so signal handling is reliable
+  const child = spawn('bun', ['run', 'build'], {
+    stdio: 'inherit',
+    shell: false
+  })
+
+  child.on('close', (code) => {
+    restore()
+    process.exit(code ?? 0)
+  })
+
+  child.on('error', (err) => {
+    console.error('[build-bun] Failed to start build:', err)
+    restore()
+    process.exit(1)
+  })
 } catch (err) {
   console.error('[build-bun] Build failed:', err)
+  restore()
   process.exit(1)
-} finally {
-  // 5. Always restore originals
-  for (const file of FILES) {
-    copyFileSync(file.backup, file.path)
-    unlinkSync(file.backup)
-  }
-  console.log('[build-bun] Restored patched files')
 }

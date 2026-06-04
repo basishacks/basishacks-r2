@@ -1,30 +1,12 @@
 import type { H3Event } from 'h3'
-
-export interface Award {
-  namespace: string
-  name: string
-  computed: (meta: Record<string, unknown>) => string
-}
-
-export const AWARD_REGISTRY: Record<string, Award> = {
-  best_overall: {
-    namespace: 'best_overall',
-    name: 'Best Overall',
-    computed: () => 'Best Overall Award',
-  },
-  score_threshold: {
-    namespace: 'score_threshold',
-    name: 'Score Threshold',
-    computed: (meta) => `Some text = ${(meta as any).value ?? 0}`,
-  },
-}
+import { AWARD_REGISTRY, type Award } from '~~/shared/awards'
 
 export interface ResolvedAward {
   team_id: number
   namespace: string
   name: string
   meta: Record<string, unknown>
-  text: string
+  text: string | string[] | null
 }
 
 function parseMeta(meta: string): Record<string, unknown> {
@@ -59,7 +41,7 @@ export async function getAwards(
       namespace: row.award,
       name: definition.name,
       meta,
-      text: definition.computed(meta),
+      text: definition.computed ? definition.computed(meta) : null,
     }
   })
 }
@@ -92,11 +74,11 @@ export async function getAwardsForTeams(
       namespace: row.award,
       name: definition.name,
       meta,
-      text: definition.computed(meta),
+      text: definition.computed ? definition.computed(meta) : null,
     }
 
     if (!result[row.team_id]) result[row.team_id] = []
-    result[row.team_id].push(resolved)
+    result[row.team_id]?.push(resolved)
   }
 
   return result

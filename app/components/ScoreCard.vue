@@ -42,14 +42,7 @@
         <div class="flex flex-col">
           <div class="flex flex-row gap-2">
             <span class="text-sm text-muted">Team</span>
-            <UModal :title="team.name">
-              <UButton variant="link" class="p-0 h-auto text-sm">
-                {{ team.name }}
-              </UButton>
-              <template #body>
-                <ProjectCard :id="team.id" />
-              </template>
-            </UModal>
+            <span class="text-sm">{{ team.name }}</span>
           </div>
           <UserAvatarGroup v-if="members && members.length > 0" :users="members" :max="5" size="md" class="mt-2"/>
           <p v-else class="text-muted text-sm">(No members...? For some reason)</p>
@@ -57,10 +50,22 @@
       </div>
     </template>
     <template #footer>
+      <div class="flex flex-col gap-2">
+        <UModal :title="team.name">
+        <UButton variant="link" class="p-0 h-auto text-xs">
+          <UIcon name="i-lucide-file" class="text-xs"></UIcon>
+          See Project Details
+        </UButton>
+        <template #body>
+          <ProjectCard :id="team.id" />
+        </template>
+      </UModal>
       <ULink class="text-xs" :href="hackathonSeasons[team.season_id!]?.docs || '#'" target="_blank" external>
+        <UIcon name="i-lucide-calendar" class="text-xs"></UIcon>
         See Season Details
         <UIcon name="i-lucide-arrow-right" class="text-xs"></UIcon>
       </ULink>
+      </div>
     </template>
 </UCard>
 

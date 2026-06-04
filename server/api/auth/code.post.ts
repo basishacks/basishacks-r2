@@ -10,8 +10,10 @@ export default defineEventHandler(async (event) => {
     })
   }
 
-  const { email } = await readValidatedBody(event, SendCodeRequest.parse)
+  const { email: email2 } = await readValidatedBody(event, SendCodeRequest.parse)
   const token = getCookie(event, "bridge_id")
+
+  const email = email2.toLowerCase().trim()
 
   if (!token) {
     throw createError({
