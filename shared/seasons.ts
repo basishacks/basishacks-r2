@@ -1,4 +1,4 @@
-interface HackathonSeason {
+export interface HackathonSeason {
   id: number
   theme_name: string | null
   theme_description: string | null,

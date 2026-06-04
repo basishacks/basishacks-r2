@@ -3,6 +3,13 @@ interface ProfileTheme {
   value: string
 }
 
+interface APIAward {
+  namespace: string
+  name: string
+  meta: Record<string, unknown>
+  text: string
+}
+
 interface APIUser {
   id: number
   email: string
@@ -27,7 +34,8 @@ interface APITeam {
     repo_url: string | null
     submitted: boolean
     sourcing: string
-  },
+  }
+  awards: APIAward[]
 }
 
 interface GetUserResponse extends APIUser {
@@ -56,4 +64,16 @@ interface GetBallotResponse {
   projects: (APITeam['project'] & { id: number })[],
   scores: (1 | 2 | 3 | 4 | 5)[] | null,
   reasoning: string | null
+}
+
+interface BallotSummaryItem {
+  season_id: number
+  season_name: string
+  project_count: number
+  ballot_count: number
+}
+
+type GetBallotSummaryResponse = {
+  current: BallotSummaryItem | null
+  past: BallotSummaryItem[]
 }

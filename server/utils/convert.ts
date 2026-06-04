@@ -1,3 +1,5 @@
+import type { ResolvedAward } from './database/awards'
+
 function parseProfileTheme(input?: string): ProfileTheme {
   const [rawMode, rawValue] = (input ?? "").split("|")
 
@@ -27,6 +29,7 @@ export function convertUserToPublic(user: User): APIUser {
 export function convertTeamToPublic(
   team: Team,
   withScore: boolean = false,
+  awards: ResolvedAward[] = [],
 ): APITeam {
   return {
     id: team.id,
@@ -43,5 +46,6 @@ export function convertTeamToPublic(
       submitted: team.project_submitted ? true : false,
       sourcing: team.sourcing,
     },
+    awards: awards.map(({ team_id, ...award }) => award),
   }
 }

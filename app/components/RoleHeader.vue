@@ -116,17 +116,5 @@ const navItems = computed<NavigationMenuItem[]>(() => {
       icon: 'i-material-symbols-gavel',
     })
   }
-  if (
-    hasPermission(user.value?.role, 'participant') &&
-    user.value?.team_id &&
-    hackathon.value?.status === 'voting'
-  ) {
-    links.push({
-      label: 'Voting',
-      to: '/voting',
-      icon: 'i-material-symbols-ballot',
-    })
-  }
-
   return links
 })</script>

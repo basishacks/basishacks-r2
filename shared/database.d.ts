@@ -44,11 +44,11 @@ interface Team {
 }
 
 interface TeamScores {
-  id: number
   team_id: number
   judge_user_id: number
   scores: string
   reasoning: string
+  season_id: number | null
 }
 
 interface User {
@@ -88,4 +88,10 @@ interface OAuth2Application {
     type: "first" | "third"
     profile_picture: string | null
     owner_id: number | null
+}
+
+interface TeamAward {
+  team_id: number
+  award: string
+  meta: string
 }

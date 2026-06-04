@@ -6,16 +6,16 @@
 
   <h3 class="text-2xl bold">Current Results</h3>
 
-  <ResultCard v-if="user?.team && user?.team.score" :team="user.team"></ResultCard>
+  <ScoreCard v-if="user?.team && user?.team.score" :team="user.team"></ScoreCard>
   <p v-else class="text-muted">No scores for this season!</p>
 
   <USeparator class="my-6"/>
 
   <h3 class="text-2xl bold">Past Seasons</h3>
 
-  <div v-if="user?.past_teams?.length && user?.past_teams?.length > 0" class="flex flex-col gap-4">
+  <div v-if="user?.past_teams?.length && user?.past_teams?.length > 0" class="flex flex-col gap-4 mt-4">
     
-    <ResultCard v-for="team in user.past_teams!" :key="team.id" :team="team"></ResultCard>
+    <ScoreCard v-for="team in user.past_teams!" :key="team.id" :team="team"></ScoreCard>
 
   </div>
   <p v-else class="text-muted">No scores for past seasons!</p>

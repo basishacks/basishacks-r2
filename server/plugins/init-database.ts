@@ -37,14 +37,13 @@ CREATE INDEX IF NOT EXISTS teams_score ON teams (score);
 CREATE INDEX IF NOT EXISTS teams_rank ON teams (rank);
 
 CREATE TABLE IF NOT EXISTS team_scores (
-    id INTEGER PRIMARY KEY AUTOINCREMENT,
     team_id INTEGER NOT NULL,
     judge_user_id INTEGER NOT NULL,
     scores TEXT NOT NULL,
     reasoning TEXT NOT NULL DEFAULT '<no reasoning provided>',
     FOREIGN KEY (team_id) REFERENCES teams(id),
     FOREIGN KEY (judge_user_id) REFERENCES users(id),
-    UNIQUE (team_id, judge_user_id)
+    PRIMARY KEY (team_id, judge_user_id)
 );
 
 CREATE TABLE IF NOT EXISTS users (

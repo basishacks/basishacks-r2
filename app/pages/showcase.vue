@@ -173,20 +173,55 @@ color="fill-gray-400"
       </div>
         
     </div>
-    
-    
 
+    <div class="min-h-screen flex flex-col justify-center gap-8 py-16">
+      <h2 class="text-center text-3xl font-bold mb-4">All Projects</h2>
+      <p class="text-center">Submitted by over <span class="bold">28</span> enthusiastic teams!</p>
 
-    <UMarquee/>
+      <UMarquee :repeat="4" pause-on-hover :overlay="false" class="[--duration:160s] py-2">
+        <ShowcaseMarqueeCard
+          v-for="team in projectTeams"
+          :key="team.id"
+          :team="team"
+          @click="openProject(team)"
+        />
+      </UMarquee>
 
-
-
-    <div>
-        <p class="py-500"/>
+      <UMarquee :repeat="4" reverse pause-on-hover :overlay="false" class="[--duration:160s] py-2">
+        <ShowcaseMarqueeCard
+          v-for="team in [...projectTeams].reverse()"
+          :key="team.id"
+          :team="team"
+          @click="openProject(team)"
+        />
+      </UMarquee>
     </div>
 
-</template> 
+    <UModal v-model:open="modalOpen" :title="selectedTeam?.name || 'Project'">
+      <template #body>
+        <ProjectCard v-if="selectedTeam" :id="selectedTeam.id" />
+      </template>
+    </UModal>
+
+    <div>
+      <p class="py-500"/>
+    </div>
+
+</template>
 <script setup>
+
+const { data: teams } = await useFetch('/api/teams?season_id=2')
+const modalOpen = ref(false)
+const selectedTeam = ref(null)
+
+const projectTeams = computed(() => {
+  return (teams.value || []).filter((t) => t.project?.name)
+})
+
+function openProject(team) {
+  selectedTeam.value = team
+  modalOpen.value = true
+}
 
 definePageMeta({
   layout: 'fullwidth-nostick',

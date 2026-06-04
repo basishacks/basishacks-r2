@@ -5,7 +5,13 @@
       <div class="flex flex-col gap-4">
         <div class="flex flex-col">
           <span class="text-sm font-bold text-muted">{{ seasonDate }}</span>
-          <span class="">{{ seasonName }}</span>
+          <div class="flex flex-row gap-2">
+            <span class="">{{ seasonName }}</span>
+            <UBadge
+            variant="outline"
+            :color="team.pathway == 'junior' ? 'primary' : 'warning'"
+            >{{ team.pathway == 'junior' ? 'Junior' : 'Senior' }}</UBadge>
+          </div>
         </div>
         <div v-if="team.score" class="w-full flex flex-row justify-between items-center">
           <div class="w-1/2">
@@ -36,7 +42,14 @@
         <div class="flex flex-col">
           <div class="flex flex-row gap-2">
             <span class="text-sm text-muted">Team</span>
-            <span class="text-sm">{{ team.name }}</span>
+            <UModal :title="team.name">
+              <UButton variant="link" class="p-0 h-auto text-sm">
+                {{ team.name }}
+              </UButton>
+              <template #body>
+                <ProjectCard :id="team.id" />
+              </template>
+            </UModal>
           </div>
           <UserAvatarGroup v-if="members && members.length > 0" :users="members" :max="5" size="md" class="mt-2"/>
           <p v-else class="text-muted text-sm">(No members...? For some reason)</p>
