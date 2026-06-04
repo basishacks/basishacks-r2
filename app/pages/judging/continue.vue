@@ -8,13 +8,14 @@ definePageMeta({
 const { user: userRef } = useUserSession()
 const userID = computed(() => userRef.value?.id ?? 0)
 
-const { data: hackathon } = await useFetch('/api/seasons/active')
+const { data: hackathon } = await useFetch('/api/seasons/active', { dedupe: 'defer' })
 if (hackathon.value?.status !== 'voting') {
   throw await navigateTo('/')
 }
 
 const { data: userData, error: userError } = await useFetch<GetUserResponse>(
   () => `/api/users/${userID.value}`,
+  { dedupe: 'defer' },
 )
 if (userError.value) {
   throw userError.value
@@ -25,6 +26,7 @@ if (!hasPermission(userData.value?.role, 'admin') && !hasPermission(userData.val
 
 const { data, error, refresh } = await useFetch<APITeam[]>(
   '/api/teams?judging=1',
+  { dedupe: 'defer' },
 )
 if (error.value) {
   throw error.value

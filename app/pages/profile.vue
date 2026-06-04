@@ -12,7 +12,8 @@ const { user: userRef, clear } = useUserSession()
 const userID = computed(() => userRef.value?.id ?? 0)
 
 const { data, error, refresh } = await useFetch(
-  () => `/api/users/${userID.value}`
+  () => `/api/users/${userID.value}`,
+  { dedupe: 'defer' }
 )
 if (error.value) {
   throw error.value

@@ -2,11 +2,12 @@
 
 const props = defineProps<{
   id: number
+  team?: GetTeamResponse
 }>()
 
-const { data: team } = await useFetch<GetTeamResponse>(() => '/api/teams/' + props.id)
+const { data: fetchedTeam } = await useFetch<GetTeamResponse>(() => '/api/teams/' + props.id, { dedupe: 'defer' })
 
-
+const team = computed(() => props.team ?? fetchedTeam.value)
 
 </script>
 

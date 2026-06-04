@@ -41,9 +41,9 @@ const { user: userRef } = useUserSession()
 // this is honestly ugly asf but i can't think of a clean solution
 const { data: user } = useFetch<GetUserResponse>(
   () => `/api/users/${userRef.value?.id}`,
-  { lazy: true }
+  { lazy: true, dedupe: 'defer' }
 )
-const { data: hackathon } = useFetch('/api/seasons/active', { lazy: true })
+const { data: hackathon } = useFetch('/api/seasons/active', { lazy: true, dedupe: 'defer' })
 
 const profileIconColor = computed(() => {
   return userRef.value ? 'text-primary' : 'text-ui-muted'

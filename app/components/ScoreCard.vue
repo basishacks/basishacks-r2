@@ -72,6 +72,7 @@ import hackathonSeasons from '~~/shared/seasons'
 
 const props = defineProps<{
   team: GetTeamResponse
+  members?: GetTeamMembersResponse
 }>()
 
 const seasonDate = computed(() => {
@@ -84,9 +85,12 @@ const seasonName = computed(() => {
   return hackathonSeasons[props.team.season_id]?.theme_name || "Unknown Name"
 })
 
-const { data: members } = await useFetch<GetTeamMembersResponse>(
-  () => `/api/teams/${props.team.id}/users`
+const { data: fetchedMembers } = await useFetch<GetTeamMembersResponse>(
+  () => `/api/teams/${props.team.id}/users`,
+  { dedupe: 'defer' },
 )
+
+const members = computed(() => props.members ?? fetchedMembers.value)
 
 const loaded = ref(false)
 onMounted(() => {

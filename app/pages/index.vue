@@ -3,7 +3,7 @@ useHead({
   title: `${WEBSITE_NAME}`,
 })
 
-const { data, error } = await useFetch('/api/seasons/active')
+const { data, error } = await useFetch('/api/seasons/active', { dedupe: 'defer' })
 if (error.value) {
   throw error.value
 }
