@@ -1,5 +1,4 @@
 <script setup lang="ts">
-import JudgeProgressCard from '~/components/JudgeProgressCard.vue'
 import { hasPermission } from '~~/shared/permissions'
 
 definePageMeta({

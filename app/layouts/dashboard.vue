@@ -32,7 +32,6 @@ const items = ref<NavigationMenuItem[][]>([
 
     // {
     //       label: 'Presentation',
-    //       icon: 'i-lucide-presentation',
     //       to: '/dashboard/presentation',
     //       chip: true
     // },

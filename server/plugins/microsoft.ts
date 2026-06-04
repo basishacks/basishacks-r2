@@ -149,7 +149,7 @@ export async function initializeDummyUserAccessToken() {
 
     
 
-    console.log("[MS Graph] Response from Dummy User Token Endpoint: " + res.status + " Token:" + (data.access_token as string).substring(0, 20) + "..." + " Refresh Token:" + (data.refresh_token as string).substring(0, 20) + "...");
+    // console.log("[MS Graph] Response from Dummy User Token Endpoint: " + res.status + " Token:" + (data.access_token as string).substring(0, 20) + "..." + " Refresh Token:" + (data.refresh_token as string).substring(0, 20) + "...");
 
     if (res.status == 400) {
 
