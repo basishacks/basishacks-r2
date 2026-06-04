@@ -120,10 +120,10 @@ export default defineNitroPlugin((nitroApp) => {
 1. Checks for missing columns in the `users` and `hackathon` tables via `PRAGMA table_info`
 2. Adds any missing columns with `ALTER TABLE ... ADD COLUMN`
 3. Upserts the hackathon row with schedule timestamps
-4. Inserts the default `basishacks connect` OAuth2 application if it doesn't exist
+4. Inserts the default `basishacks connect` OAuth2 application if it does not exist
 
 ::: tip
-This plugin acts as a lightweight auto-migration system. It adds new columns that were introduced in migrations without requiring manual SQL execution in local dev.
+This plugin acts as a lightweight auto-migration system. It adds new columns that were introduced in migrations without requiring manual SQL execution in local development.
 :::
 
 ### `microsoft.ts`
@@ -132,7 +132,7 @@ This plugin acts as a lightweight auto-migration system. It adds new columns tha
 
 1. On startup, fetches an app-level access token using client credentials flow
 2. Provides `requestMicrosoft()` and `requestUserMicrosoft()` wrappers for Graph API calls
-3. Exports higher-level functions like `createMicrosoftMeeting()` and `createOrGetExistingDirectChat()`
+3. Exports higher-level functions such as `createMicrosoftMeeting()` and `createOrGetExistingDirectChat()`
 4. Caches direct chat IDs in-memory to avoid repeated Graph API lookups
 
 ::: warning

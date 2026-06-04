@@ -203,7 +203,7 @@ Each user is limited to **2 applications** (`MAX_APPLICATIONS_PER_USER`).
 
 | Type | Description |
 |------|-------------|
-| `first` | First-party application (internal, like basishacks connect) |
+| `first` | First-party application (internal, such as basishacks connect) |
 | `third` | Third-party application |
 
 ### Secret management

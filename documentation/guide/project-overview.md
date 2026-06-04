@@ -1,6 +1,6 @@
 ---
 title: Project Overview
-description: High-level overview of the basishacks hackathon platform — what it does, how it's built, and how the codebase is organized.
+description: High-level overview of the basishacks hackathon platform — what it does, how it is built, and how the codebase is organized.
 ---
 
 # Project Overview
@@ -53,7 +53,7 @@ Users enter their `@basischina.com` email, receive a 6-digit verification code (
 
 ### 2. Microsoft OAuth2
 
-Delegates authentication to Microsoft Entra ID (tenant `cbc6e1e2-a6bb-4002-bbdc-6da892a051a7`). Users click the Microsoft login button and are redirected to Microsoft's consent screen. On success, they're redirected back with an authorization code that's exchanged for a basishacks session.
+Delegates authentication to Microsoft Entra ID (tenant `cbc6e1e2-a6bb-4002-bbdc-6da892a051a7`). Users click the Microsoft login button and are redirected to Microsoft's consent screen. On success, they are redirected back with an authorization code that is exchanged for a basishacks session.
 
 ### 3. basishacks connect
 

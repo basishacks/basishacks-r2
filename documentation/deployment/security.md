@@ -136,4 +136,4 @@ When an application requests a scope marked as `sensitive: true` in `shared/oaut
 2. The user can approve (`consent`), deny (`deny`), or cancel (`cancel`)
 3. Only after consent is the authorization code issued
 
-This prevents applications from silently accessing sensitive user data like chat messages or all meetings.
+This prevents applications from silently accessing sensitive user data such as chat messages or all meetings.

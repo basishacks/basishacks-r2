@@ -141,7 +141,7 @@ These interfaces match the SQL schema exactly. They include all columns, includi
 
 ## API Response Interfaces
 
-These types define the shape of data returned by API endpoints. Internal fields (like `login_code`, `login_expiry`) are stripped by `convertUserToPublic` and `convertTeamToPublic` in `server/utils/convert.ts`.
+These types define the shape of data returned by API endpoints. Internal fields (such as `login_code`, `login_expiry`) are stripped by `convertUserToPublic` and `convertTeamToPublic` in `server/utils/convert.ts`.
 
 ### `ProfileTheme`
 

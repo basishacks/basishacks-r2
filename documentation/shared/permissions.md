@@ -56,7 +56,7 @@ This format was chosen because:
 
 ### Why This Replaced CHECK Constraints
 
-Previously, the `role` column used a SQL `CHECK` constraint limiting values to `'participant'`, `'judge'`, `'admin'`. This was too rigid — it couldn't express fine-grained permissions like "can view debug panel but not manage users." The new system allows any combination of permissions to be assigned.
+Previously, the `role` column used a SQL `CHECK` constraint limiting values to `'participant'`, `'judge'`, `'admin'`. This was too rigid — it could not express fine-grained permissions such as "can view debug panel but not manage users." The new system allows any combination of permissions to be assigned.
 
 ## Helper Functions
 

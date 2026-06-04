@@ -394,7 +394,7 @@ File system helpers for managing static and user assets.
 | `removeUserAsset(name)` | Deletes a file from `public/userast/` |
 | `getUserAsset(name)` | Reads a file from `public/userast/` as a Buffer |
 
-All functions create directories recursively if they don't exist. Remove functions silently catch errors (file may not exist).
+All functions create directories recursively if they do not exist. Remove functions silently catch errors (file may not exist).
 
 ---
 

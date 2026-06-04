@@ -5,11 +5,11 @@ description: Get the basishacks hackathon platform running on your local machine
 
 # Getting Started
 
-This guide walks you through setting up the **basishacks** development environment from scratch. By the end, you'll have the app running locally with HTTPS on port 24598.
+This guide walks you through setting up the **basishacks** development environment from scratch. By the end, you will have the app running locally with HTTPS on port 24598.
 
 ## Prerequisites
 
-Before you begin, make sure you have the following installed:
+Before you begin, ensure you have the following installed:
 
 | Requirement | Minimum Version | Notes |
 |-------------|----------------|-------|
@@ -19,7 +19,7 @@ Before you begin, make sure you have the following installed:
 
 ### Installing Bun
 
-If you don't have Bun installed:
+If Bun is not installed:
 
 ```bash
 # macOS / Linux
@@ -169,7 +169,7 @@ The preview server runs on port 24598.
 
 ## Running Tests
 
-The project uses a simple test runner without a framework like Vitest or Jest:
+The project uses a simple test runner without a framework such as Vitest or Jest:
 
 ```bash
 bun test
@@ -191,7 +191,7 @@ Once the server is running, follow these steps to log in for the first time:
 2. **Enter your email** — Use a `@basischina.com` email address. The magic code auth system only accepts emails from this domain.
 3. **Receive a verification code** — A 6-digit code is sent to your email (via the `NUXT_SEND_CODE_URL` webhook). In development, the code is also logged to the server console.
 4. **Enter the code** — Type the 6-digit code on the verification screen. The code expires after 10 minutes.
-5. **Access the dashboard** — After successful verification, you're redirected to the dashboard.
+5. **Access the dashboard** — After successful verification, you are redirected to the dashboard.
 
 ### Alternative Login Methods
 

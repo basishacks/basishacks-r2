@@ -78,7 +78,7 @@ Stores judge scores for each team. Each judge can score a team exactly once.
 | `profile_picture` | `TEXT` | Profile picture URL or identifier |
 
 ::: warning
-The `role` column originally had a `CHECK` constraint limiting it to `participant`, `judge`, or `admin`. This was removed via `migration-permissions.sql` to support space-separated permission strings like `"participant portal.users.view portal.teams.view"`.
+The `role` column originally had a `CHECK` constraint limiting it to `participant`, `judge`, or `admin`. This was removed via `migration-permissions.sql` to support space-separated permission strings such as `"participant portal.users.view portal.teams.view"`.
 :::
 
 ### `ballots`

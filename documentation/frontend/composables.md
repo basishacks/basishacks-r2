@@ -222,7 +222,7 @@ export default defineAppConfig({
 | `link.variants.active.false` | Primary color for inactive links (overrides default muted style) |
 
 ::: tip
-The container max-width calculations ensure content doesn't overlap with the fixed dashboard sidebar on larger screens.
+The container max-width calculations ensure content does not overlap with the fixed dashboard sidebar on larger screens.
 :::
 
 ## Cross-Cutting Patterns
