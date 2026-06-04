@@ -319,7 +319,7 @@ Full OAuth2 authorization page with login + consent flow. Uses **no layout** (`l
 2. **Microsoft OAuth2** — Redirects to Microsoft login via `/api/oauth2/to_microsoft`
 
 **Consent screen:**
-- Shows user avatar ↔ app avatar connection
+- Shows user avatar and app avatar connection
 - Lists scope descriptions with sensitive/non-sensitive indicators
 - "Consent" or "Deny" buttons
 - Displays logged-in user name with `UserPopover`

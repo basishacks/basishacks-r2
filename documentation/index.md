@@ -57,7 +57,7 @@ const terminalCommands = [
   { type: 'output', text: '[+] Rate limit: 60 req/min per IP' },
   { type: 'output', text: '' },
   { type: 'output', text: '[*] Vulnerability scan: 0 critical | 0 high | 0 medium' },
-  { type: 'output', text: '[✓] System is locked down. Ready for operators.' },
+  { type: 'output', text: '[OK] System is locked down. Ready for operators.' },
   { type: 'output', text: '' },
   { type: 'prompt', text: '$ _' },
 ]
@@ -169,27 +169,27 @@ const binaryGibberish = computed(() => {
 
 <div class="network-grid">
   <div class="network-node">
-    <div class="node-title">⚡ FULL-STACK NUXT 3</div>
+    <div class="node-title">FULL-STACK NUXT 3</div>
     <div class="node-desc">Vue 3 + Nitro + TypeScript + SQLite/D1</div>
   </div>
   <div class="network-node">
-    <div class="node-title">🔐 MULTI-AUTH</div>
+    <div class="node-title">MULTI-AUTH</div>
     <div class="node-desc">Magic code, Microsoft OAuth2, DevConnect PKCE</div>
   </div>
   <div class="network-node">
-    <div class="node-title">🏆 HACKATHON ENGINE</div>
+    <div class="node-title">HACKATHON ENGINE</div>
     <div class="node-desc">Teams, submissions, peer voting, judge rubrics</div>
   </div>
   <div class="network-node">
-    <div class="node-title">🛠 DEV PORTAL</div>
+    <div class="node-title">DEV PORTAL</div>
     <div class="node-desc">OAuth2 apps, secrets, scopes, URL generator</div>
   </div>
   <div class="network-node">
-    <div class="node-title">📡 MS GRAPH</div>
+    <div class="node-title">MS GRAPH</div>
     <div class="node-desc">Meetings, Teams chat, webhooks, DeepSeek AI</div>
   </div>
   <div class="network-node">
-    <div class="node-title">☁️ CLOUDFLARE</div>
+    <div class="node-title">CLOUDFLARE</div>
     <div class="node-desc">Pages + D1 + GitHub Actions CI/CD</div>
   </div>
 </div>
