@@ -38,6 +38,21 @@ export interface AuthorizeSession {
 }
 
 const AUTHORIZE_SESSION_STORE: Record<string, AuthorizeSession> = {}
+const AUTHORIZE_SESSION_CODE_INDEX: Map<string, string> = new Map()
+
+// Periodic cleanup: remove expired sessions every 60 seconds
+setInterval(() => {
+  const now = Date.now()
+  for (const token in AUTHORIZE_SESSION_STORE) {
+    const session = AUTHORIZE_SESSION_STORE[token]
+    if (session && now > session.expire_time) {
+      if (session.code) {
+        AUTHORIZE_SESSION_CODE_INDEX.delete(session.code)
+      }
+      delete AUTHORIZE_SESSION_STORE[token]
+    }
+  }
+}, 60_000)
 
 export function addAuthorizeSession(session: AuthorizeSession) {
   AUTHORIZE_SESSION_STORE[session.token] = session
@@ -48,6 +63,9 @@ export function getAuthorizeSession(token: string): AuthorizeSession | null {
   const session = AUTHORIZE_SESSION_STORE[token] || null
   if (!session) return null
   if (Date.now() > session.expire_time) {
+    if (session.code) {
+      AUTHORIZE_SESSION_CODE_INDEX.delete(session.code)
+    }
     delete AUTHORIZE_SESSION_STORE[token]
     return null
   }
@@ -55,12 +73,17 @@ export function getAuthorizeSession(token: string): AuthorizeSession | null {
 }
 
 export function completeAuthorizeSession(token: string) {
+  const session = AUTHORIZE_SESSION_STORE[token]
+  if (session?.code) {
+    AUTHORIZE_SESSION_CODE_INDEX.delete(session.code)
+  }
   delete AUTHORIZE_SESSION_STORE[token]
 }
 
 export function generateExchangeCode(session: AuthorizeSession) {
   const code = randomBytes(128).toString("base64url")
   session.code = code
+  AUTHORIZE_SESSION_CODE_INDEX.set(code, session.token)
 }
 
 export async function exchangeAuthorizationCode(code: string, clientId?: string, redirectUri?: string, scope?: string, codeVerifier?: string): Promise<string> {
@@ -72,68 +95,70 @@ export async function exchangeAuthorizationCode(code: string, clientId?: string,
 
   const key = new TextEncoder().encode(secret)
 
-  // probably gonna put this in the database later
-  for (const token in AUTHORIZE_SESSION_STORE) {
-    const session = AUTHORIZE_SESSION_STORE[token]
-    if (!session) continue
+  const token = AUTHORIZE_SESSION_CODE_INDEX.get(code)
+  if (!token) {
+    throw new Error('Invalid authorization code')
+  }
 
-    if (session.code === code) {
-      if (Date.now() > session.expire_time) {
-        delete AUTHORIZE_SESSION_STORE[token]
-        throw new Error('Authorization code has expired')
-      }
+  const session = AUTHORIZE_SESSION_STORE[token]
+  if (!session) {
+    AUTHORIZE_SESSION_CODE_INDEX.delete(code)
+    throw new Error('Invalid authorization code')
+  }
 
-      if (!session.user) {
-        throw new Error('No user attached to session')
-      }
+  if (Date.now() > session.expire_time) {
+    AUTHORIZE_SESSION_CODE_INDEX.delete(code)
+    delete AUTHORIZE_SESSION_STORE[token]
+    throw new Error('Authorization code has expired')
+  }
 
-      if (clientId && session.application.client_id !== clientId) {
-        throw new Error('client_id mismatch')
-      }
+  if (!session.user) {
+    throw new Error('No user attached to session')
+  }
 
-      if (redirectUri && session.redirect_uri !== redirectUri) {
-        throw new Error('redirect_uri mismatch')
-      }
+  if (clientId && session.application.client_id !== clientId) {
+    throw new Error('client_id mismatch')
+  }
 
-      // PKCE verification
-      if (session.bh_verifier_challenge && session.bh_verifier_challenge_method) {
-        if (!codeVerifier) {
-          throw new Error('code_verifier is required for PKCE')
-        }
+  if (redirectUri && session.redirect_uri !== redirectUri) {
+    throw new Error('redirect_uri mismatch')
+  }
 
-        let verified = false
-        if (session.bh_verifier_challenge_method === 'S256') {
-          const hash = createHash('sha256').update(codeVerifier).digest('base64url')
-          verified = hash === session.bh_verifier_challenge
-        } else {
-          verified = codeVerifier === session.bh_verifier_challenge
-        }
+  // PKCE verification
+  if (session.bh_verifier_challenge && session.bh_verifier_challenge_method) {
+    if (!codeVerifier) {
+      throw new Error('code_verifier is required for PKCE')
+    }
 
-        if (!verified) {
-          throw new Error('Invalid code_verifier')
-        }
-      }
+    let verified = false
+    if (session.bh_verifier_challenge_method === 'S256') {
+      const hash = createHash('sha256').update(codeVerifier).digest('base64url')
+      verified = hash === session.bh_verifier_challenge
+    } else {
+      verified = codeVerifier === session.bh_verifier_challenge
+    }
 
-      const jwt = await new SignJWT({
-        sub: String(session.user.id),
-        user_id: session.user.id,
-        client_id: session.application.client_id,
-        redirect_uri: session.redirect_uri,
-        scope: session.scopes // must supply a scope
-      })
-        .setProtectedHeader({ alg: 'HS256' })
-        .setIssuer('basishacks')
-        .setAudience(session.application.client_id)
-        .setIssuedAt(Date.now())
-        .setExpirationTime('1h')
-        .sign(key)
-
-      completeAuthorizeSession(session.token)
-      return jwt
+    if (!verified) {
+      throw new Error('Invalid code_verifier')
     }
   }
 
-  throw new Error('Invalid authorization code')
+  const jwt = await new SignJWT({
+    sub: String(session.user.id),
+    user_id: session.user.id,
+    client_id: session.application.client_id,
+    redirect_uri: session.redirect_uri,
+    scope: session.scopes // must supply a scope
+  })
+    .setProtectedHeader({ alg: 'HS256' })
+    .setIssuer('basishacks')
+    .setAudience(session.application.client_id)
+    .setIssuedAt(Date.now())
+    .setExpirationTime('1h')
+    .sign(key)
+
+  completeAuthorizeSession(session.token)
+  return jwt
 }
 
 export function constructSession(redirect_uri: string, app: OAuth2Application, state: string, code_challenge: string, code_challenge_method: string, scope: string): AuthorizeSession {
