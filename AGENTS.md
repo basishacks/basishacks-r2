@@ -262,3 +262,25 @@ In production, these are configured in the Cloudflare Pages dashboard / Wrangler
 - Peer voting scores must sum to exactly 12.
 - Judge scoring uses rubric criteria defined in `shared/rubric.ts` with scores 0–5 per criterion.
 - The `/api/debug/*` routes expose DeepSeek chat sessions and file upload utilities; these are intended for development only.
+
+---
+
+## Documentation Maintenance
+
+**This is a mandatory step.** Before ending every request or finalizing any plan, you MUST:
+
+1. **Update `README.md`** — If your changes affect any feature, configuration, command, or behavior described in the README, update the relevant sections to reflect the current state of the project.
+
+2. **Update VitePress documentation** — If your changes affect any area documented in the `documentation/` directory, update the corresponding pages:
+   - `documentation/guide/` — Getting started, project overview, environment setup
+   - `documentation/architecture/` — Overview, runtime, database, auth, OAuth2
+   - `documentation/frontend/` — Components, pages, layouts, composables
+   - `documentation/backend/` — API reference, server utilities, plugins & middleware
+   - `documentation/shared/` — Schemas, types, rubric, permissions, OAuth2 scopes
+   - `documentation/deployment/` — Cloudflare deployment, security, rate limiting
+
+   If no existing page covers the changed area, add a new page and register it in `documentation/.vitepress/config.ts` sidebar.
+
+3. **Verify the documentation builds** — Run `cd documentation && npm run build` to confirm no broken links or build errors.
+
+Do not mark a task as complete until the above steps are done.
