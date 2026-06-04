@@ -28,6 +28,7 @@ if (error.value) {
 
 const isDirty = ref(false)
 const confettiTriggered = ref(false)
+let confettiIntervalId: ReturnType<typeof setInterval> | null = null
 
 
 
@@ -80,11 +81,15 @@ function randomInRange(min: number, max: number) {
   return Math.random() * (max - min) + min;
 }
 
-var interval = setInterval(function() {
+confettiIntervalId = setInterval(function() {
   const timeLeft = animationEnd - Date.now();
 
   if (timeLeft <= 0) {
-    return clearInterval(interval);
+    if (confettiIntervalId !== null) {
+      clearInterval(confettiIntervalId);
+      confettiIntervalId = null;
+    }
+    return;
   }
 
   const particleCount = 100;
@@ -178,10 +183,14 @@ watch(isDirty, (value) => {
 
 onUnmounted(() => {
   window.removeEventListener('beforeunload', beforeUnload)
+  if (confettiIntervalId !== null) {
+    clearInterval(confettiIntervalId)
+    confettiIntervalId = null
+  }
 })
 
 
-const actions = ref([
+const actions = [
   {
     title: 'Edit your project',
     description: 'Make changes to your project details, add links, and more.',
@@ -200,7 +209,7 @@ const actions = ref([
     to: '/dashboard/results',
     icon: 'i-lucide-trophy',
   },
-])
+]
 
 const { data: teamData, error: teamError, refresh: teamRefresh } = await useFetch<GetTeamMembersResponse>(
   () => `/api/teams/${data.value?.team?.id}/users`,

@@ -11,7 +11,7 @@
     </Transition>
 
 
-    <div id="title" class="m-0 bg-black text-white landscape min-h-screen flex flex-col items-center justify-center gap-4 relative z-20">
+    <div id="title" v-once class="m-0 bg-black text-white landscape min-h-screen flex flex-col items-center justify-center gap-4 relative z-20">
 
         <div class="text-center lg:text-right lg:ml-auto lg:mr-48">
             <h3 class="text-2xl text-gray-200">Feburary 2026</h3>
@@ -63,7 +63,7 @@
           
       </div>
         
-      <video ref="videoRef" src="/assets/8a214d32-c43d-4141-b534-5225722a4d2b" muted preload="metadata" class="lg:ml-auto h-auto w-[50vw] max-lg:w-[75vw] max-lg:-order-1 max-lg:flex-1"/>
+      <video ref="videoRef" src="/assets/8a214d32-c43d-4141-b534-5225722a4d2b" muted preload="none" class="lg:ml-auto h-auto w-[50vw] max-lg:w-[75vw] max-lg:-order-1 max-lg:flex-1"/>
         <!-- text -->
     </div >
       
@@ -237,36 +237,6 @@ useHead({
       rel: 'preload',
       as: 'image',
       href: '/assets/c6c7b5b3-4256-4f9d-9899-15a7905a154c' // title image
-    },
-    {
-      rel: 'preload',
-      as: 'video',
-      href: '/assets/8a214d32-c43d-4141-b534-5225722a4d2b' // syl intro
-    },
-    {
-      rel: 'preload',
-      as: 'image',
-      href: '/assets/d3048fe7-b43b-4a95-a0a8-1d654819ddb3' // wojak left
-    },
-    {
-      rel: 'preload',
-      as: 'image',
-      href: '/assets/aea63660-a483-4308-bd3c-0934bb1e3339' // wojak right
-    },
-    {
-      rel: 'preload',
-      as: 'video',
-      href: '/assets/b1aee7a2-33fa-4681-bdbe-1fef3a481f0e' // team2 demo
-    },
-    {
-      rel: 'preload',
-      as: 'video',
-      href: '/assets/3f9cbe2c-c8ea-42f4-94f6-4a4a0cb01549' // team3 demo
-    },
-    {
-      rel: 'preload',
-      as: 'video',
-      href: '/assets/ee2c39cc-c590-4c36-a73e-43d335c76a86' // team3 demo
     }
   ]
 })
@@ -282,9 +252,10 @@ const team3Visible = ref(false)
 const team1DescriptionWrapper = ref(null)
 const team1NumberRef = ref(null)
 const cursorAuraVisible = ref(false)
-const cursorPosition = ref({ x: 0, y: 0 })
+const cursorPosition = shallowRef({ x: 0, y: 0 })
 const team1Proximity = ref(0)
 const dirtyLoading = ref(true)
+const team1InView = ref(false)
 
 const team1NumberStyle = computed(() => {
   const intensity = team1Proximity.value
@@ -344,55 +315,88 @@ onMounted(() => {
 
   dirtyLoading.value = false
 
-  const handleScroll = () => {
-    const scrollThreshold = window.innerHeight * 0.25
-    if (showScrollText.value) showScrollText.value = window.scrollY < scrollThreshold;
-    
+  const observers = []
 
-    // Team 1 video scroll animation
+  // "Scroll for more" text - hide when title section scrolls out of view
+  const titleEl = document.getElementById('title')
+  if (titleEl) {
+    const titleObserver = new IntersectionObserver(
+      ([entry]) => {
+        showScrollText.value = entry.isIntersecting
+      },
+      { threshold: 0.25 }
+    )
+    titleObserver.observe(titleEl)
+    observers.push(titleObserver)
+  }
+
+  // Team 1 - description fade-in + track in-view state for video scroll
+  if (team1Ref.value) {
+    const team1Observer = new IntersectionObserver(
+      ([entry]) => {
+        if (entry.isIntersecting && !team1showDescriptionRef.value) {
+          team1showDescriptionRef.value = true
+        }
+        team1InView.value = entry.isIntersecting
+      },
+      { threshold: 0.1 }
+    )
+    team1Observer.observe(team1Ref.value)
+    observers.push(team1Observer)
+  }
+
+  // Team 2 - one-time animation trigger
+  if (team2Ref.value) {
+    const team2Observer = new IntersectionObserver(
+      ([entry]) => {
+        if (entry.isIntersecting) {
+          team2Visible.value = true
+          team2Observer.disconnect()
+        }
+      },
+      { threshold: 0.33 }
+    )
+    team2Observer.observe(team2Ref.value)
+    observers.push(team2Observer)
+  }
+
+  // Team 3 - one-time animation trigger
+  if (team3Ref.value) {
+    const team3Observer = new IntersectionObserver(
+      ([entry]) => {
+        if (entry.isIntersecting) {
+          team3Visible.value = true
+          team3Observer.disconnect()
+        }
+      },
+      { threshold: 0.33 }
+    )
+    team3Observer.observe(team3Ref.value)
+    observers.push(team3Observer)
+  }
+
+  // Team 1 video scroll animation - only active when team1 is in view
+  const handleVideoScroll = () => {
+    if (!team1InView.value) return
     const element = team1Ref.value
-    if (element && videoRef.value) {
-      const rect = element.getBoundingClientRect()
+    if (!element || !videoRef.value) return
 
-      const elementTop = rect.top + window.scrollY - window.innerHeight / 2 // preload twice height
-      const elementHeight = rect.height * 0.5 // twice
-      const scrollY = window.scrollY
+    const rect = element.getBoundingClientRect()
+    const elementTop = rect.top + window.scrollY - window.innerHeight / 2
+    const elementHeight = rect.height * 0.5
+    const scrollY = window.scrollY
 
-      if (scrollY >= elementTop && scrollY <= elementTop + elementHeight) {
-
-        // also trigger description fade in
-        if (!team1showDescriptionRef.value) team1showDescriptionRef.value = true
-
-        const progress = (scrollY - elementTop) / elementHeight
-        videoRef.value.currentTime = progress * videoRef.value.duration
-      }
-    }
-
-    // Team 2 animation trigger
-    const team2Element = team2Ref.value
-    if (team2Element && !team2Visible.value) {
-      const rect = team2Element.getBoundingClientRect()
-      if (rect.top + rect.height / 1.5 < window.innerHeight && rect.bottom > 0) {
-        team2Visible.value = true
-      }
-    }
-
-    // Team 3 animation trigger
-    const team3Element = team3Ref.value
-    if (team3Element && !team3Visible.value) {
-      const rect = team3Element.getBoundingClientRect()
-      if (rect.top + rect.height / 1.5 < window.innerHeight && rect.bottom > 0) {
-        team3Visible.value = true
-      }
+    if (scrollY >= elementTop && scrollY <= elementTop + elementHeight) {
+      const progress = (scrollY - elementTop) / elementHeight
+      videoRef.value.currentTime = progress * videoRef.value.duration
     }
   }
 
-  window.addEventListener('scroll', handleScroll)
-
-  
+  window.addEventListener('scroll', handleVideoScroll)
 
   onUnmounted(() => {
-    window.removeEventListener('scroll', handleScroll)
+    window.removeEventListener('scroll', handleVideoScroll)
+    observers.forEach(obs => obs.disconnect())
   })
 })
 </script>

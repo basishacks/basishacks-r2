@@ -73,7 +73,7 @@ onUnmounted(() => {
 })
 
 
-const links = ref<ButtonProps[]>([
+const links: ButtonProps[] = [
   {
     label: 'Check Schedule',
     color: 'neutral',
@@ -81,9 +81,9 @@ const links = ref<ButtonProps[]>([
     trailingIcon: 'i-lucide-arrow-right',
     href: "/"
   }
-])
+]
 
-const links_noteam = ref<ButtonProps[]>([
+const links_noteam: ButtonProps[] = [
   {
     label: 'Create Team',
     color: 'neutral',
@@ -91,7 +91,7 @@ const links_noteam = ref<ButtonProps[]>([
     trailingIcon: 'i-lucide-arrow-right',
     href: "/dashboard/teams"
   }
-])
+]
 
 </script>
 
