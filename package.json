@@ -24,8 +24,6 @@
     "@nuxt/eslint": "1.10.0",
     "@nuxt/fonts": "^0.14.0",
     "@nuxt/ui": "^4.8.1",
-    "@vueuse/core": "^14.3.0",
-    "@vueuse/shared": "^14.3.0",
     "better-sqlite3": "^12.10.0",
     "canvas-confetti": "^1.9.4",
     "comark": "^0.3.2",
