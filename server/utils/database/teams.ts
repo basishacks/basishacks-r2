@@ -140,21 +140,14 @@ export async function updateTeam(event: H3Event, team: Team) {
 }
 
 export async function deleteTeams(event: H3Event, teamIDs: number[]) {
-  for (const id of teamIDs) {
-    event.context.db.prepare(
-      'DELETE FROM ballot_scores WHERE project_id = ?'
-    ).bind(id).run()
+  if (teamIDs.length === 0) return
 
-    event.context.db.prepare(
-      'DELETE FROM team_scores WHERE team_id = ?'
-    ).bind(id).run()
+  const placeholders = teamIDs.map(() => '?').join(', ')
 
-    event.context.db.prepare(
-      'UPDATE users SET team_id = NULL WHERE team_id = ?'
-    ).bind(id).run()
-
-    event.context.db.prepare(
-      'DELETE FROM teams WHERE id = ?'
-    ).bind(id).run()
-  }
+  event.context.db.batch([
+    { sql: `DELETE FROM ballot_scores WHERE project_id IN (${placeholders})`, params: [...teamIDs] },
+    { sql: `DELETE FROM team_scores WHERE team_id IN (${placeholders})`, params: [...teamIDs] },
+    { sql: `UPDATE users SET team_id = NULL WHERE team_id IN (${placeholders})`, params: [...teamIDs] },
+    { sql: `DELETE FROM teams WHERE id IN (${placeholders})`, params: [...teamIDs] },
+  ])
 }

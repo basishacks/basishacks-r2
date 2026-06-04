@@ -135,22 +135,14 @@ export async function updateUserRole(event: H3Event, userID: number, role: strin
 }
 
 export async function deleteUsers(event: H3Event, userIDs: number[]) {
-  for (const id of userIDs) {
-    // Remove related records first to avoid FK violations
-    event.context.db.prepare(
-      'DELETE FROM team_scores WHERE judge_user_id = ?'
-    ).bind(id).run()
+  if (userIDs.length === 0) return
 
-    event.context.db.prepare(
-      'DELETE FROM ballots WHERE user_id = ?'
-    ).bind(id).run()
+  const placeholders = userIDs.map(() => '?').join(', ')
 
-    event.context.db.prepare(
-      'DELETE FROM user_past_teams WHERE user_id = ?'
-    ).bind(id).run()
-
-    event.context.db.prepare(
-      'DELETE FROM users WHERE id = ?'
-    ).bind(id).run()
-  }
+  event.context.db.batch([
+    { sql: `DELETE FROM team_scores WHERE judge_user_id IN (${placeholders})`, params: [...userIDs] },
+    { sql: `DELETE FROM ballots WHERE user_id IN (${placeholders})`, params: [...userIDs] },
+    { sql: `DELETE FROM user_past_teams WHERE user_id IN (${placeholders})`, params: [...userIDs] },
+    { sql: `DELETE FROM users WHERE id IN (${placeholders})`, params: [...userIDs] },
+  ])
 }

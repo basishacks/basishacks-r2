@@ -15,9 +15,14 @@ export async function getSeasonById(event: H3Event, seasonId: number): Promise<S
 }
 
 export async function getActiveSeason(event: H3Event): Promise<Season | null> {
-  return event.context.db
+  if ('activeSeason' in event.context) {
+    return event.context.activeSeason!
+  }
+  const result = event.context.db
     .prepare('SELECT * FROM seasons WHERE is_active = 1')
     .first() as Season | null
+  event.context.activeSeason = result
+  return result
 }
 
 export async function setActiveSeason(event: H3Event, seasonId: number | null) {

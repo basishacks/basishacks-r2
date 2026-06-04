@@ -12,10 +12,33 @@ interface ChatSession {
   messages: ChatCompletionMessage[]
 }
 
+const SESSION_TTL_MS = 24 * 60 * 60 * 1000 // 24 hours
+const MAX_SESSIONS = 100
+
 let sessionIdCounter = 1
 const sessions = new Map<number, ChatSession>()
 
+function cleanupExpiredSessions() {
+  const now = Date.now()
+  for (const [id, session] of sessions) {
+    if (now - session.createdAt * 1000 > SESSION_TTL_MS) {
+      sessions.delete(id)
+    }
+  }
+}
+
+function enforceMaxSessions() {
+  if (sessions.size <= MAX_SESSIONS) return
+  const sorted = Array.from(sessions.values()).sort((a, b) => a.createdAt - b.createdAt)
+  const toRemove = sorted.slice(0, sessions.size - MAX_SESSIONS)
+  for (const session of toRemove) {
+    sessions.delete(session.id)
+  }
+}
+
 export function createSession(sessionName: string): ChatSession {
+  cleanupExpiredSessions()
+
   const id = sessionIdCounter++
   const session: ChatSession = {
     id,
@@ -24,6 +47,8 @@ export function createSession(sessionName: string): ChatSession {
     messages: [],
   }
   sessions.set(id, session)
+
+  enforceMaxSessions()
   return session
 }
 

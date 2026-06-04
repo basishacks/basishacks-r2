@@ -4,6 +4,7 @@ import { structureLink } from "~~/server/utils/oauth2";
 
 const metadata = {
     access_token: null as string | null,
+    token_expires_at: 0,
     user_access_token: null as string | null | undefined,
     user_refresh_token: null as string | null | undefined,
     webhook_state: null as string | null,
@@ -16,7 +17,7 @@ export default async function initializeMSAccessToken() {
 
     console.log("[MSGraph] Initializing MS Access Token...")
 
-    if (metadata.access_token) {
+    if (metadata.access_token && Date.now() < metadata.token_expires_at) {
         console.log("MS Access Token already initialized")
         return metadata.access_token;
     }
@@ -42,7 +43,9 @@ export default async function initializeMSAccessToken() {
         console.log("[MSGraph] API Endpoint response: " + code)
     }
     const data: any = await req.json()
-    return metadata.access_token = data.access_token
+    metadata.access_token = data.access_token
+    metadata.token_expires_at = Date.now() + (data.expires_in as number) * 1000 - 60000 // 1 minute buffer
+    return metadata.access_token
 }
 
 export async function getMSAccessToken() {
@@ -62,6 +65,10 @@ export async function getMSAccessToken() {
  */
 
 async function requestMicrosoft(endpoint: string, method: string = "GET", body: string | Object | null = null) {
+
+    if (Date.now() >= metadata.token_expires_at) {
+        initPromise = initializeMSAccessToken()
+    }
 
     const res = await fetch("https://graph.microsoft.com/v1.0" + endpoint, {
         method,
