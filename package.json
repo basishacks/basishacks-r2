@@ -10,7 +10,7 @@
         "test": "node --env-file=.env tests/index.js",
         "generate": "nuxt generate",
         "preview": "cross-env NODE_OPTIONS=--no-deprecation nuxt preview -p 24598",
-        "postinstall": "nuxt prepare",
+        "postinstall": "node scripts/patch-comark.mjs && nuxt prepare",
         "cf-types": "wrangler types",
         "format": "prettier --write .",
         "format:check": "prettier --check .",
