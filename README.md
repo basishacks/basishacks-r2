@@ -7,7 +7,7 @@ The official website for the BIBS-C Network Hackathon (season 2, 2025–26).
 | Layer | Technology |
 |-------|------------|
 | Framework | Nuxt 3 |
-| UI | @nuxt/ui ^4.6.1 (Tailwind CSS v4) |
+| UI | @nuxt/ui ^4.8.1 (Tailwind CSS v4) |
 | Language | TypeScript 5.6+ |
 | Runtime | Node.js >= v24 |
 | Package Manager | Bun (preferred); npm works |
@@ -50,9 +50,16 @@ shared/                 # Code shared between client and server
   oauth2-scopes.ts      # OAuth2 scope definitions
 
 sql/                    # Schema and migrations
-  init.sql              # Base schema
+  init.sql              # Base schema (includes performance indexes)
   migration-*.sql       # Dated migrations
   patch-*.sql           # Feature patches
 
-database/               # Local SQLite file
+public/                 # Static assets
+  img/                  # Application images (error.svg, Microsoft_logo.svg)
+  assets/               # User-uploaded files (gitignored)
+  fonts/                # Custom fonts
+
+documentation.zip       # Compressed VitePress documentation archive
+
+database/               # Local SQLite file (gitignored)
 ```
