@@ -105,8 +105,9 @@ export async function verifyOAuth2JWT(event: H3Event): Promise<OAuth2JWTPayload>
 /**
  * Parse a space-separated scope string into an array.
  */
-export function parseJWScopes(scope: string | undefined): string[] {
-  return (scope || '').split(' ').filter(Boolean)
+export function parseJWScopes(scope: unknown): string[] {
+  if (typeof scope !== 'string') return []
+  return scope.split(' ').filter(Boolean)
 }
 
 /**

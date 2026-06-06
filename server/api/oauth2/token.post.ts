@@ -26,7 +26,7 @@ export default defineEventHandler(async (event) => {
 
   let body: OAuth2TokenRequest
   try {
-    console.log(rawBody)
+    // console.log("body", rawBody)
     body = await OAuth2TokenRequest.parseAsync(rawBody)
   } catch (err: any) {
     const issues = err.issues?.map((i: any) => i.message).join(', ')
