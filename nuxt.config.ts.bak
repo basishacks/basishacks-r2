@@ -54,7 +54,7 @@ export default defineNuxtConfig({
     preset: 'bun',
     externals: {
       // trace: true
-      trace: true
+      trace: false
     },
     rollupConfig: {
       onwarn(warning, warn) {

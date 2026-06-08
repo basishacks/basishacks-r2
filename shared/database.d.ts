@@ -96,6 +96,12 @@ interface TeamAward {
     meta: string;
 }
 
+interface PeerVotingScore {
+    user_id: number;
+    score: string;
+    reasoning: string | null;
+}
+
 interface SCVote {
     user_id: number;
     vote: string;

@@ -1,6 +1,6 @@
 
-import type { Statement } from 'bun:sqlite'
-import { Database } from 'bun:sqlite'
+import type { Statement } from 'better-sqlite3'
+import Database from 'better-sqlite3'
 import path from 'path'
 import { fileURLToPath } from 'url'
 
@@ -18,8 +18,8 @@ export function initializeDatabase(): any {
     console.log(`[DB] Initializing database at: ${dbPath}`)
     dbInstance = new Database(dbPath)
     // Enable foreign keys and WAL mode
-    dbInstance.run('PRAGMA journal_mode = WAL')
-    dbInstance.run('PRAGMA foreign_keys = ON')
+    dbInstance.pragma('journal_mode = WAL')
+    dbInstance.pragma('foreign_keys = ON')
     console.log('[DB] Database initialized successfully')
   }
   return dbInstance

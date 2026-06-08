@@ -149,10 +149,10 @@ export type CreateTeamScoresRequest = z.infer<typeof CreateTeamScoresRequest>;
 
 export const SubmitVoteRequest = z
     .object({
-        scores: z.array(z.number().int().min(1).max(5)),
-        reasoning: z.string().min(30, "Please write a bit more").max(2000, "You wrote too much!"),
+        scores: z.array(z.number().int().min(0).max(5)),
+        reasoning: z.string().max(2000, "You wrote too much!"),
     })
-    .refine(({ scores }) => scores.reduce((a, b) => a + b, 0) === 12, "Stars must sum to 12");
+    .refine(({ scores }) => scores.reduce((a, b) => a + b, 0) === 10, "Stars must sum to 10");
 export type SubmitVoteRequest = z.infer<typeof SubmitVoteRequest>;
 
 export const CreateApplicationRequest = z.object({

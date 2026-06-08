@@ -15,8 +15,11 @@ if (error.value) {
   throw error.value
 }
 
+const projects = computed(() => data.value?.projects ?? [])
+const submitted = computed(() => data.value?.submitted ?? false)
+
 const state = reactive<SubmitVoteRequest>({
-  scores: data.value?.scores ?? [3, 3, 3, 3],
+  scores: data.value?.scores ?? projects.value.map(() => 0 as 0 | 1 | 2 | 3 | 4 | 5),
   reasoning: data.value?.reasoning ?? '',
 })
 
@@ -40,8 +43,8 @@ async function onSubmit(event: FormSubmitEvent<SubmitVoteRequest>) {
 
   try {
     await withLoadingIndicator(async () => {
-      const res = await $fetch(`/api/ballot`, {
-        method: 'PATCH',
+      const res: any = await $fetch(`/api/ballot`, {
+        method: 'POST',
         body: event.data,
       })
       await refresh()
@@ -64,31 +67,43 @@ async function onSubmit(event: FormSubmitEvent<SubmitVoteRequest>) {
   <div class="mt-4">
     <h1 class="text-4xl text-primary bold glow mb-4">Peer voting</h1>
 
-    <p class="mb-4">
-      You will see four projects below. Please distribute 12 stars among them.
-      Each project must receive 1-5 stars, and you must use all of them. Please
-      also write a short paragraph justifying your vote. Make sure you include
-      details about ALL four projects!
+    <p>
+      Look through all the projects below.
+      
+      
     </p>
 
-    <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
-      <VotingProjectCard
-        v-for="project in data?.projects"
-        :key="project.id"
-        :project="project"
-      />
+    <p>You have a total of 10 stars to distribute, with a maximum of 5 stars per project. Therefore your stars are RARE so vote wisely!</p>
+
+    <p>Please make sure to provide reasoning for your votes to show love and support! You do not have to provide reasoning for all the projects.</p>
+
+
+    <div class="my-4">
+      <template v-for="(team, index) in projects" :key="team.id">
+        <VotingProjectCard
+          :team="team"
+          :score="state.scores[index] ?? 0"
+          :can-increment="!submitted && (state.scores[index] ?? 0) < 5 && totalStars < 10"
+          :can-decrement="!submitted && (state.scores[index] ?? 0) > 0"
+          @increment="increment(index)"
+          @decrement="decrement(index)"
+        />
+      </template>
+
+      <p v-if="projects.length === 0" class="text-muted">
+        No eligible projects to vote on.
+      </p>
     </div>
 
-    <h2 class="text-2xl mb-4 bold">Submit vote</h2>
+    <h2 class="text-2xl mb-4 bold">Summary</h2>
 
     <UForm
-      :disabled="!!data?.scores"
       :state="state"
       :schema="SubmitVoteRequest"
       @submit="onSubmit"
     >
       <UCard variant="subtle">
-        <p v-if="!!data?.scores" class="mb-4 bold">
+        <p v-if="submitted" class="mb-4 bold">
           You have voted already. Thank you!
         </p>
 
@@ -99,41 +114,28 @@ async function onSubmit(event: FormSubmitEvent<SubmitVoteRequest>) {
             size="1.2em"
             class="text-yellow-300"
           />
-          {{ totalStars }} / 12
+          {{ totalStars }} / 10
         </p>
 
-        <UFormField name="scores">
-          <div
-            class="grid grid-cols-[max-content_1fr] gap-x-4 gap-y-2 items-center mb-4"
-          >
+        <div class="mb-4">
+          <p class="text-sm text-muted mb-2">Your distribution:</p>
+          <div class="grid grid-cols-[1fr_max-content] gap-x-4 gap-y-1 items-center">
             <template
-              v-for="(project, index) in data?.projects"
-              :key="project.id"
+              v-for="(team, index) in projects"
+              :key="team.id"
             >
-              <span>{{ project.name }}</span>
-              <div class="flex items-center gap-4">
-                <UButton
-                  v-if="!data?.scores"
-                  icon="i-material-symbols-stat-minus-1"
-                  :disabled=" state.scores[index]! <= 1"
-                  @click="decrement(index)"
-                />
+              <span class="text-sm">{{ team.project.name }}</span>
+              <span class="text-sm flex items-center gap-1 justify-end">
                 <UIcon
                   name="i-material-symbols-star-rate"
-                  size="1.2em"
+                  size="1em"
                   class="text-yellow-300"
                 />
-                <span>{{ state.scores[index] }} / 5</span>
-                <UButton
-                  v-if="!data?.scores"
-                  icon="i-material-symbols-stat-1"
-                  :disabled="state.scores[index]! >= 5 || totalStars >= 12"
-                  @click="increment(index)"
-                />
-              </div>
+                {{ state.scores[index] ?? 0 }}
+              </span>
             </template>
           </div>
-        </UFormField>
+        </div>
 
         <UFormField name="reasoning" label="Your reasoning" class="mb-4">
           <UTextarea
@@ -141,11 +143,14 @@ async function onSubmit(event: FormSubmitEvent<SubmitVoteRequest>) {
             placeholder="Please explain your reasoning, making sure to include details about every project!"
             class="w-full"
             :rows="5"
+            :disabled="submitted"
           />
         </UFormField>
 
-        <UFormField v-if="!data?.scores">
-          <UButton :disabled="totalStars !== 12" type="submit">Submit</UButton>
+        <UFormField v-if="!submitted">
+          <UButton :disabled="totalStars !== 10 || projects.length === 0" type="submit">
+            Submit
+          </UButton>
         </UFormField>
       </UCard>
     </UForm>
