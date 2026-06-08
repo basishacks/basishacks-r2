@@ -86,3 +86,9 @@ CREATE TABLE IF NOT EXISTS oauth2_applications (
     profile_picture TEXT,
     PRIMARY KEY(client_id)
 );
+
+CREATE TABLE IF NOT EXISTS sc_votes (
+    user_id INTEGER,
+    vote TEXT,
+    submitted_at INTEGER
+);
