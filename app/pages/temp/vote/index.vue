@@ -276,8 +276,18 @@ async function submit() {
                         <UKbd>tab</UKbd>
                         to go to the previous candidate.
                     </li>
+                    <li>
+                        Leave empty if a vote is abstained. Abstained candidates will be highlighted in yellow, and candidates with errors will be highlighted in red.
+                    </li>
+                    <li>
+                        If you made a mistake, click <span class="text-primary">View all / edit ballots</span> above to view or delete your previous ballots.
+                    </li>
                 </ul>
             </div>
+
+            <br>
+            
+            <p class="text-sm">Click on <code>Show results</code> to toggle whether to show the winner or not. NOTE THAT all results are computed based on submitted ballots. In other words, the winner will change as more ballots are added</p>
 
             <USeparator class="my-4"></USeparator>
 

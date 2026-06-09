@@ -55,10 +55,10 @@ function formatVote(position: ElectionPosition, vote: Record<string, number | nu
     return ranked.map((r, i) => `${i + 1}. ${candidateMap.value.get(r.id) ?? r.id}`).join(", ");
 }
 
-async function onDelete(userId: number) {
+async function onDelete(ballotId: number) {
     if (!confirm("Are you sure you want to delete this ballot?")) return;
     try {
-        await $fetch(`/api/election/vote/${userId}`, {
+        await $fetch(`/api/election/vote/${ballotId}`, {
             method: "DELETE",
         });
         toast.add({
@@ -102,7 +102,7 @@ async function onDelete(userId: number) {
                     <tbody>
                         <tr
                             v-for="ballot in ballots"
-                            :key="ballot.user_id"
+                            :key="ballot.id"
                             class="border-b border-neutral-800"
                         >
                             <td class="py-2 pr-4">
@@ -131,7 +131,7 @@ async function onDelete(userId: number) {
                                     size="xs"
                                     color="error"
                                     variant="ghost"
-                                    @click="onDelete(ballot.user_id)"
+                                    @click="onDelete(ballot.id)"
                                 >
                                     Delete
                                 </UButton>

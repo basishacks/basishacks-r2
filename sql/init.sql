@@ -88,6 +88,7 @@ CREATE TABLE IF NOT EXISTS oauth2_applications (
 );
 
 CREATE TABLE IF NOT EXISTS sc_votes (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
     user_id INTEGER,
     vote TEXT,
     submitted_at INTEGER

@@ -5,21 +5,21 @@ export default defineEventHandler(async (event) => {
     if (!id) {
         throw createError({
             statusCode: 400,
-            statusMessage: "Missing user ID",
+            statusMessage: "Missing ballot ID",
         });
     }
 
-    const userId = Number(id);
-    if (Number.isNaN(userId)) {
+    const ballotId = Number(id);
+    if (Number.isNaN(ballotId)) {
         throw createError({
             statusCode: 400,
-            statusMessage: "Invalid user ID",
+            statusMessage: "Invalid ballot ID",
         });
     }
 
     const result = event.context.db
-        .prepare("DELETE FROM sc_votes WHERE user_id = ?")
-        .bind(userId)
+        .prepare("DELETE FROM sc_votes WHERE id = ?")
+        .bind(ballotId)
         .run();
 
     return {

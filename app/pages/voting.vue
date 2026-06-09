@@ -11,9 +11,8 @@ const toast = useToast()
 const { data, error, refresh } = await useFetch<GetBallotResponse>(
   '/api/ballot'
 )
-if (error.value) {
-  throw error.value
-}
+
+const fetchError = computed(() => error.value ? getErrorMessage(error.value) : null)
 
 const projects = computed(() => data.value?.projects ?? [])
 const submitted = computed(() => data.value?.submitted ?? false)
@@ -66,6 +65,16 @@ async function onSubmit(event: FormSubmitEvent<SubmitVoteRequest>) {
 <template>
   <div class="mt-4">
     <h1 class="text-4xl text-primary bold glow mb-4">Peer voting</h1>
+
+    <UAlert
+      v-if="fetchError"
+      color="error"
+      variant="subtle"
+      icon="i-material-symbols-error-rounded"
+      title="Error loading ballot"
+      :description="fetchError"
+      class="mb-4"
+    />
 
     <p>
       Look through all the projects below.

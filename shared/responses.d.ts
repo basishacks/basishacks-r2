@@ -101,6 +101,7 @@ interface ElectionResult {
 }
 
 interface ElectionBallot {
+    id: number;
     user_id: number;
     name: string | null;
     email: string | null;

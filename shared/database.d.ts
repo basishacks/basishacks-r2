@@ -103,6 +103,7 @@ interface PeerVotingScore {
 }
 
 interface SCVote {
+    id: number;
     user_id: number;
     vote: string;
     submitted_at: number | null;

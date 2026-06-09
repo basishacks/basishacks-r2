@@ -107,6 +107,17 @@ const navItems = computed<NavigationMenuItem[]>(() => {
     }
   ]
   if (
+    hackathon.value?.status === 'voting' &&
+    !hasPermission(user.value?.role, 'judge') &&
+    !hasPermission(user.value?.role, 'admin')
+  ) {
+    links.push({
+      label: 'Voting',
+      to: '/voting',
+      icon: 'i-material-symbols-star-rate',
+    })
+  }
+  if (
     (hasPermission(user.value?.role, 'judge') || hasPermission(user.value?.role, 'admin')) &&
     hackathon.value?.status === 'voting'
   ) {
