@@ -2,11 +2,15 @@ import type { H3Event } from 'h3'
 import { hasPermission } from '~~/shared/permissions'
 
 export async function requireUser(event: H3Event) {
-  const {
-    user: { id: userID },
-  } = await requireUserSession(event)
+  const session = await getUserSession(event)
+  if (!session?.user?.id) {
+    throw createError({
+      status: 401,
+      message: 'Logged in user not found',
+    })
+  }
 
-  const user = await getUser(event, userID)
+  const user = await getUser(event, session.user.id)
   if (!user) {
     throw createError({
       status: 401,
