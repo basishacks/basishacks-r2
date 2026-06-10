@@ -13,6 +13,9 @@ import { withOAuth2JWT } from '~~/server/utils/oauth2-jwt'
  */
 export default withOAuth2JWT(
   async (event) => {
+
+    console.log("[OAuth2] UserInfo endpoint hit")
+
     const { payload, scopes, user } = event.context.oauth2!
 
     const claims: Record<string, any> = {
@@ -29,7 +32,11 @@ export default withOAuth2JWT(
       claims.email_verified = true
     }
 
+    console.log("OAuth2 UserInfo claims:", claims)
+
     return claims
+
+    
   },
   { loadUser: true }
 )

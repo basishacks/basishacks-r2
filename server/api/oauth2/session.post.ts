@@ -119,7 +119,7 @@ export async function exchangeAuthorizationCode(code: string, clientId?: string,
         user_id: session.user.id,
         client_id: session.application.client_id,
         redirect_uri: session.redirect_uri,
-        scope: session.scopes // must supply a scope
+        scope: session.scopes.join(' ')
       })
         .setProtectedHeader({ alg: 'HS256' })
         .setIssuer('basishacks')
