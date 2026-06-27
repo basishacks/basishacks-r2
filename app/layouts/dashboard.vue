@@ -1,6 +1,12 @@
 <script setup lang="ts">
 import type { NavigationMenuItem } from '@nuxt/ui'
 
+const { data: hackathon, error: hackathonError } =
+  await useFetch('/api/seasons/active')
+if (hackathonError.value) {
+  throw hackathonError.value
+}
+
 const items = ref<NavigationMenuItem[][]>([
   [
     
@@ -74,7 +80,8 @@ const items = ref<NavigationMenuItem[][]>([
 
         <UCard>
           <template #header>
-            <span class="uppercase text-sm font-bold text-muted">ongoing</span>
+            <span v-if="hackathon?.status === 'ongoing'" class="uppercase text-sm font-bold text-muted">ongoing</span>
+            <span v-else class="uppercase text-sm font-bold text-muted">completed</span>
             <h3 class="text-2xl bold glow ">May 2026</h3>
             <span class="">Beneath the Surface</span>
             <USeparator class="my-4" size="sm"/>

@@ -35,9 +35,26 @@
             </div>
           </div>
         </div>
-        <div v-else class="text-muted flex flex-row items-center gap-2">
-          No results available 
-          <UIcon name="i-lucide-wind"></UIcon>
+        <div v-else class="relative w-full flex flex-row justify-between items-center">
+          <div class="absolute inset-0 z-10 flex flex-row items-center justify-center">
+            <div class="flex flex-row items-center gap-2 rounded-lg bg-background/80 px-4 py-2 shadow-sm backdrop-blur-sm text-muted">
+              <UIcon name="i-lucide-x"></UIcon>
+              <span>Project not submitted</span>
+            </div>
+          </div>
+          <div class="w-1/2 blur-md select-none">
+            <span class="uppercase text-sm text-muted">score</span>
+            <div class="w-1/2 flex items-baseline-last gap-1">
+              <span class="text-5xl font-bold">SOO</span>
+              <span class="text-muted">/800</span>
+            </div>
+          </div>
+          <div class="w-1/2 blur-md select-none">
+            <span class="uppercase text-sm text-muted">ranking</span>
+            <div class="flex items-baseline-last gap-1">
+              <span class="text-5xl font-bold">#SAD</span>
+            </div>
+          </div>
         </div>
         <div class="flex flex-col">
           <div class="flex flex-row gap-2">
