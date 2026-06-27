@@ -90,10 +90,18 @@ interface OAuth2Application {
     owner_id: number | null;
 }
 
+interface Award {
+    id: number;
+    name: string;
+    description: string;
+    icon: string;
+    color: string;
+}
+
 interface TeamAward {
     team_id: number;
-    award: string;
-    meta: string;
+    award_id: number;
+    meta: string | null;
 }
 
 interface PeerVotingScore {

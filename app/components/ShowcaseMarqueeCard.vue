@@ -18,19 +18,28 @@ const { data: members } = await useFetch<GetTeamMembersResponse>(
     @click="emit('click')"
   >
     <div class="flex items-center justify-between mb-3">
-      <span
-        v-if="team.rank"
-        class="text-3xl font-bold"
-        :class="{
-          'metallic-gold': team.rank === 1,
-          'metallic-silver': team.rank === 2,
-          'metallic-bronze': team.rank === 3,
-          'text-neutral-500': team.rank > 3
-        }"
-      >
-        #{{ team.rank }}
-      </span>
-      <span v-else class="text-lg">Unranked</span>
+      <div class="flex flex-row items-center gap-2">
+        <div>
+          <span
+            v-if="team.rank"
+            class="text-3xl font-bold"
+            :class="{
+              'metallic-gold': team.rank === 1,
+              'metallic-silver': team.rank === 2,
+              'metallic-bronze': team.rank === 3,
+              'text-neutral-500': team.rank > 3
+            }"
+          >
+            #{{ team.rank }}
+          </span>
+          <span v-else class="text-lg">Unranked</span>
+        </div>
+      <div class="flex flex-row gap-2">
+        <div v-for="award in team.awards" class="flex flex-row gap-2">
+            <AwardButton :award="award" size="sm"></AwardButton>
+        </div>
+      </div>
+      </div>
       <UBadge
         v-if="team.pathway"
         variant="outline"
