@@ -38,7 +38,7 @@ const terminalCommands = [
   { type: 'output', text: 'PORT     STATE  SERVICE       VERSION' },
   { type: 'output', text: '80/tcp   open   http          Nitro/2.x (h3 server)' },
   { type: 'output', text: '443/tcp  open   https         Nitro/2.x (TLS 1.3)' },
-  { type: 'output', text: '5432/tcp open   postgresql    Cloudflare D1 proxy' },
+  { type: 'output', text: '5432/tcp open   postgresql    SQLite proxy' },
   { type: 'output', text: '8080/tcp open   http-proxy    Vite HMR dev server' },
   { type: 'output', text: '' },
   { type: 'output', text: 'Nmap done: 256 IP addresses (54 hosts up)' },
@@ -189,8 +189,8 @@ const binaryGibberish = computed(() => {
     <div class="node-desc">Meetings, Teams chat, webhooks, DeepSeek AI</div>
   </div>
   <div class="network-node">
-    <div class="node-title">CLOUDFLARE</div>
-    <div class="node-desc">Pages + D1 + GitHub Actions CI/CD</div>
+    <div class="node-title">VPS</div>
+    <div class="node-desc">Node.js server + SQLite + CI/CD</div>
   </div>
 </div>
 
