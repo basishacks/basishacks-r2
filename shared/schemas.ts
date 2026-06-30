@@ -40,7 +40,7 @@ export const LoginRequest = z.object({
 export type LoginRequest = z.infer<typeof LoginRequest>;
 
 export const MicrosoftRedirectRequest = z.object({
-    token: z.string(),
+    token: z.string().min(1, 'Token must not be empty'),
 });
 export type MicrosoftRedirectRequest = z.infer<typeof MicrosoftRedirectRequest>;
 

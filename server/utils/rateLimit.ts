@@ -13,6 +13,11 @@ export const DEFAULT_RATE_LIMIT_CONFIG: RateLimitConfig = {
 // Map to store request history: key -> array of timestamps
 const requestHistory = new Map<string, number[]>()
 
+/** Clear the rate limit history — exposed for testing. */
+export function clearRateLimitHistory() {
+  requestHistory.clear()
+}
+
 export async function getClientIdentifier(event: H3Event): Promise<string> {
   // Try to get user ID first (for authenticated requests)
   try {

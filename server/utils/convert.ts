@@ -46,6 +46,9 @@ export function convertTeamToPublic(
       submitted: team.project_submitted ? true : false,
       sourcing: team.sourcing,
     },
-    awards: awards.map(({ team_id, ...award }) => award),
+    awards: awards.map(({ team_id, text, ...award }) => ({
+      ...award,
+      text: Array.isArray(text) ? text.join(', ') : (text ?? ''),
+    })),
   }
 }

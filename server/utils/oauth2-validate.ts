@@ -1,8 +1,8 @@
 import type { H3Event } from 'h3'
 import { getOAuth2Application } from './database/oauth2_applications'
-import { env } from 'node:process'
-import { AuthorizeSession, completeAuthorizeSession, generateExchangeCode } from '../api/oauth2/session.post';
-import { OAuth2ScopeDescriptions, OAuth2Scopes } from '~~/shared/oauth2-scopes';
+import type { AuthorizeSession } from '../api/oauth2/session.post'
+import { completeAuthorizeSession, generateExchangeCode } from '../api/oauth2/session.post'
+import { OAuth2Scopes } from '~~/shared/oauth2-scopes';
 
 /**
  * Validates OAuth2 authorization request parameters

@@ -22,9 +22,8 @@ export const DevPermissions = {
 
 export function parsePermissions(role: string | null | undefined): string[] {
     if (!role) return [];
-    return role
+    return decodeURIComponent(role)
         .split(" ")
-        .map((p) => decodeURIComponent(p.trim()))
         .filter(Boolean);
 }
 

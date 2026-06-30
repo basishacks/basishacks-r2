@@ -1,5 +1,4 @@
 import { defineEventHandler } from 'h3'
-import { randomBytes } from 'node:crypto'
 import { validateOAuth2AuthorizationRequest } from '~/../server/utils/oauth2-validate'
 import type { AuthorizeSession} from '../api/oauth2/session.post';
 import { addAuthorizeSession, attachAuthorizeSessionCookie, completeAuthorizeSession, constructSession, getAuthorizeSession } from '../api/oauth2/session.post'

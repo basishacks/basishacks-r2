@@ -9,9 +9,8 @@ const oAuth2Config = {
 
 export default oAuth2Config;
 
-const baseUrl = process.env.CURRENT_URL_ORIGIN || 'http://localhost:3000'
-
 export function structureLink(state: string, code_challenge: string, scope: string = oAuth2Config.scope, redirect_uri: string = oAuth2Config.redirectUri) {
+    const baseUrl = process.env.CURRENT_URL_ORIGIN || 'http://localhost:3000'
     return oAuth2Config.base + oAuth2Config.tenant + "/oauth2/v2.0/authorize?client_id=" + oAuth2Config.clientId + "&response_type=" + oAuth2Config.responseType 
     + "&redirect_uri=" + baseUrl + redirect_uri
     + "&scope=" + encodeURI(scope)
