@@ -1,36 +1,40 @@
 import type { H3Event } from 'h3'
+import { eq, and, or, asc, isNull } from 'drizzle-orm'
+import { users, teams, userPastTeams } from '~~/server/database/schema'
 
 export async function getTeamMembers(event: H3Event, teamID: number): Promise<User[]> {
-  const result = event.context.db.prepare(
-    'SELECT * FROM users WHERE team_id = ?'
-  )
-    .bind(teamID)
-    .all() as { results: User[] }
-  return result.results
+  return event.context.drizzle
+    .select()
+    .from(users)
+    .where(eq(users.team_id, teamID))
+    .all()
 }
 
 export async function getAllTeamMembers(event: H3Event, teamID: number): Promise<User[]> {
-  const result = event.context.db.prepare(
-    `SELECT DISTINCT u.* FROM users u
-     LEFT JOIN user_past_teams upt ON u.id = upt.user_id
-     WHERE u.team_id = ? OR upt.team_id = ?
-     ORDER BY u.id ASC`
-  )
-    .bind(teamID, teamID)
-    .all() as { results: User[] }
-  return result.results
+  const rows = event.context.drizzle
+    .selectDistinct()
+    .from(users)
+    .leftJoin(userPastTeams, eq(users.id, userPastTeams.user_id))
+    .where(
+      or(
+        eq(users.team_id, teamID),
+        eq(userPastTeams.team_id, teamID),
+      ),
+    )
+    .orderBy(asc(users.id))
+    .all()
+  return rows.map((r: { users: User }) => ({ ...r.users }))
 }
 
 export async function getUserPastTeams(event: H3Event, userID: number): Promise<Team[]> {
-  const result = event.context.db.prepare(
-    `SELECT t.* FROM teams t
-     INNER JOIN user_past_teams upt ON t.id = upt.team_id
-     WHERE upt.user_id = ?
-     ORDER BY t.id ASC`
-  )
-    .bind(userID)
-    .all() as { results: Team[] }
-  return result.results
+  const rows = event.context.drizzle
+    .select()
+    .from(teams)
+    .innerJoin(userPastTeams, eq(teams.id, userPastTeams.team_id))
+    .where(eq(userPastTeams.user_id, userID))
+    .orderBy(asc(teams.id))
+    .all()
+  return rows.map((r: { teams: Team }) => ({ ...r.teams }))
 }
 
 export async function addUserPastTeam(
@@ -38,10 +42,10 @@ export async function addUserPastTeam(
   userID: number,
   teamID: number
 ) {
-  event.context.db.prepare(
-    'INSERT OR IGNORE INTO user_past_teams(user_id, team_id) VALUES(?, ?)'
-  )
-    .bind(userID, teamID)
+  event.context.drizzle
+    .insert(userPastTeams)
+    .values({ user_id: userID, team_id: teamID })
+    .onConflictDoNothing()
     .run()
 }
 
@@ -53,13 +57,13 @@ export async function removeTeamMember(
   // Record the team as past before removing
   await addUserPastTeam(event, userID, teamID)
 
-  const result = event.context.db.prepare(
-    'UPDATE users SET team_id = NULL WHERE id = ? AND team_id = ?'
-  )
-    .bind(userID, teamID)
+  const result = event.context.drizzle
+    .update(users)
+    .set({ team_id: null })
+    .where(and(eq(users.id, userID), eq(users.team_id, teamID)))
     .run()
 
-  if (!result.meta.changed_db) {
+  if (result.changes === 0) {
     throw createError({
       status: 404,
       message: 'User not found or not in team',
@@ -72,13 +76,13 @@ export async function addTeamMember(
   teamID: number,
   userID: number
 ) {
-  const result = event.context.db.prepare(
-    'UPDATE users SET team_id = ? WHERE id = ? AND team_id IS NULL'
-  )
-    .bind(teamID, userID)
+  const result = event.context.drizzle
+    .update(users)
+    .set({ team_id: teamID })
+    .where(and(eq(users.id, userID), isNull(users.team_id)))
     .run()
 
-  if (!result.meta.changed_db) {
+  if (result.changes === 0) {
     throw createError({
       status: 404,
       message: 'User not found or already in a team',
