@@ -5,7 +5,6 @@
   "scripts": {
     "start": "cross-env NODE_ENV=production bun start-fix.mjs",
     "build": "cross-env NODE_OPTIONS=--no-deprecation nuxt build",
-    "build:bun": "node scripts/build-bun.mjs",
     "dev": "cross-env NODE_OPTIONS=--no-deprecation nuxt dev",
     "test": "vitest run",
     "test:watch": "vitest",
@@ -32,7 +31,6 @@
     "@vue/shared": "^3.5.35",
     "@vueuse/core": "^14.3.0",
     "@vueuse/shared": "^14.3.0",
-    "better-sqlite3": "^12.10.0",
     "drizzle-orm": "^0.44.7",
     "canvas-confetti": "^1.9.4",
     "comark": "^0.3.2",
@@ -61,6 +59,7 @@
     "@types/canvas-confetti": "^1.9.0",
     "@types/node": "^24.12.4",
     "@vitest/coverage-v8": "^4.1.9",
+    "better-sqlite3": "^12.10.0",
     "cross-env": "^10.1.0",
     "drizzle-kit": "^0.31.7",
     "prettier": "^3.8.3",
