@@ -66,31 +66,26 @@ bun i
 
 ## Database Initialization
 
-The local development environment uses `better-sqlite3` with a SQLite database file at `./database/basishacks.sqlite`. Initialize it using Wrangler's D1 CLI:
+The local development environment uses `better-sqlite3` with a SQLite database file at `./database/basishacks.sqlite`. The database is initialized automatically by the `init-database.ts` Nitro plugin when the dev server starts.
+
+To manually initialize the database:
 
 ```bash
-# Create the schema
-bunx wrangler d1 execute DB --file sql/init.sql
-
-# Seed the hackathon row
-bunx wrangler d1 execute DB --command 'INSERT INTO hackathon VALUES(1, "not_started", 0, 0, 0, 0, 0, NULL, NULL) ON CONFLICT DO NOTHING'
+# Apply the Drizzle migration
+bun run db:migrate
 ```
-
-:::: tip
-The `init-database.ts` Nitro plugin automatically creates the schema if the database is empty when the dev server starts. The `seed-hackathon.ts` plugin seeds timestamps and the default `basishacks connect` OAuth2 application. You only need to run the wrangler commands above for initial setup or if you've deleted the database file.
-::::
 
 ### Applying Migrations
 
-After the base schema, apply migration files in chronological order:
+Migrations are managed via Drizzle Kit:
 
 ```bash
-bunx wrangler d1 execute DB --file sql/migration-2026-01-12-07-23Z.sql
-bunx wrangler d1 execute DB --file sql/migration-2026-01-12-10-43Z.sql
-# ... continue with remaining migrations
-```
+# Generate a migration after schema changes
+bun run db:generate
 
-There is no automated migration runner — all migrations must be applied manually.
+# Apply migrations
+bun run db:migrate
+```
 
 ### Resetting the Database
 
@@ -206,18 +201,11 @@ devServer: {
 }
 ```
 
-## Cloudflare D1 Local Development
+## Database
 
-The project uses `nitro-cloudflare-dev` (^0.2.2) to simulate Cloudflare D1 locally. This package allows the Nitro dev server to use Wrangler's D1 local emulation, making the local development experience closer to production.
+The project uses Drizzle ORM with `better-sqlite3` for both local development and production. The database file is stored at `./database/basishacks.sqlite` with WAL mode enabled.
 
-The database wrapper (`server/utils/database.ts`) provides a `SQLiteDatabase` class that mimics the Cloudflare D1 interface:
-
-- `prepare(sql).bind(...params).first()` — Return the first matching row
-- `prepare(sql).bind(...params).all()` — Return all matching rows as `{ results: T[] }`
-- `prepare(sql).bind(...params).run()` — Execute a write statement, returns `{ meta: { changed_db: number } }`
-- `exec(sql)` — Execute raw SQL
-
-This ensures the same database code works identically in both local development (`better-sqlite3`) and production (Cloudflare D1).
+The Drizzle ORM instance is attached to `event.context.drizzle` on every request via the `init-database.ts` Nitro plugin.
 
 ## IDE Setup
 
