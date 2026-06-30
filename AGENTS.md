@@ -14,7 +14,7 @@ This file contains project-specific context for AI coding agents. The reader is 
 - Peer voting and judge scoring
 - OAuth2 application integrations
 
-The stack is Vue 3 (frontend) + Nitro (backend) + SQLite (local dev) / Cloudflare D1 (production).
+The stack is Vue 3 (frontend) + Nitro (backend) + SQLite (better-sqlite3).
 
 ---
 
@@ -28,13 +28,13 @@ The stack is Vue 3 (frontend) + Nitro (backend) + SQLite (local dev) / Cloudflar
 | Runtime | Node.js >= v24 |
 | Package Manager | Bun (preferred); npm works |
 | Database (local) | `better-sqlite3` with WAL mode |
-| Database (prod) | Cloudflare D1 (binding name `DB`) |
+| Database (prod) | SQLite (better-sqlite3) |
 | Auth | `nuxt-auth-utils` (session-based) |
 | Validation | Zod 4.x |
 | Fonts | `@nuxt/fonts` (local provider) |
 | Icons | `@iconify-json/lucide`, `@iconify-json/material-symbols` |
 | Linting | `@nuxt/eslint` + Prettier |
-| Deployment | Cloudflare Pages via GitHub Actions |
+| Deployment | Node.js server (VPS) |
 
 ---
 
@@ -53,10 +53,9 @@ server/             # Nitro backend
   api/              # API route handlers (file-based)
   middleware/       # Server middleware (OAuth2 authorize)
   plugins/          # Nitro plugins (DB init, MS Graph token init)
-  types/            # Type augmentations (H3EventContext, Cloudflare)
+  types/            # Type augmentations (H3EventContext)
   utils/            # Server utilities
-    database.ts     # SQLite wrapper that mimics D1 interface
-    database/*.ts   # Per-table DB helpers (users, teams, scores, etc.)
+    database/       # Drizzle ORM schema and init
     auth.ts         # requireUser / requireJudge / requireAdmin
     convert.ts      # DB row -> public API object transformers
     rateLimit.ts    # In-memory rate limiter
@@ -96,29 +95,21 @@ database/           # Local SQLite file (basishacks.sqlite)
 bun i
 
 # Initialize local database (run once)
-bunx wrangler d1 execute DB --file sql/init.sql
-bunx wrangler d1 execute DB --command 'INSERT INTO hackathon VALUES(1, "not_started", 0, 0, 0, 0, 0, NULL, NULL) ON CONFLICT DO NOTHING'
+bun run db:migrate
 
 # Dev server (HTTPS, port 24598)
 bun dev --https
 # or
 npm run dev -- --https
 
-# Production build (local preset = node-server)
+# Production build
 bun run build
-
-# Production build (Cloudflare Pages preset)
-bun run build --preset cloudflare-pages
 
 # Preview built app
 bun run preview   # port 24598
 
 # Run tests
 bun test
-# (internally: node --env-file=.env tests/index.js)
-
-# Update Cloudflare types
-bun run cf-types
 ```
 
 ---
@@ -128,13 +119,12 @@ bun run cf-types
 ### Local Development
 - Nitro preset: `node-server`
 - Uses `better-sqlite3` directly against `./database/basishacks.sqlite`
-- `server/plugins/01.database.ts` initializes the DB on startup and attaches a `SQLiteDatabase` wrapper to every H3 event context (`event.context.db`)
-- The wrapper (`server/utils/database.ts`) mimics Cloudflare D1’s `Statement` and `Database` interfaces so the same DB code works locally and in production
+- `server/plugins/init-database.ts` initializes the DB on startup via Drizzle ORM and attaches it to `event.context.drizzle`
 
-### Production (Cloudflare Pages)
-- Built with `--preset cloudflare-pages`
-- D1 database binding name is `DB` (see `wrangler.jsonc`)
-- The same `event.context.db` is used, but backed by the actual D1 binding
+### Production (VPS)
+- Nitro preset: `node-server`
+- Uses `better-sqlite3` directly against `./database/basishacks.sqlite`
+- The same `event.context.drizzle` is used as in local development
 
 ---
 
@@ -162,10 +152,10 @@ Use the helpers in `server/utils/auth.ts` to enforce roles:
 
 ## Database Conventions
 
-- All DB access goes through `event.context.db.prepare(sql).bind(...)`.
+- All DB access goes through `event.context.drizzle` (Drizzle ORM).
 - Per-table helpers live in `server/utils/database/*.ts` (e.g., `users.ts`, `teams.ts`).
-- The canonical TypeScript types are in `shared/database.d.ts` and must stay in sync with the SQL schema.
-- Migrations are stored in `sql/migration-*.sql` and `sql/patch-*.sql`. There is no automated migration runner; migrations are applied manually via `wrangler d1 execute`.
+- The canonical TypeScript types are in `shared/database.d.ts` (inferred from Drizzle schema).
+- Migrations are managed via Drizzle Kit (`drizzle/` directory).
 - Profile themes are stored as `"mode|value"` strings in the DB and parsed into `{ mode, value }` objects in the API layer (`server/utils/convert.ts`).
 
 ---
@@ -214,7 +204,7 @@ There is no framework like Vitest or Jest; tests are simple async functions that
 
 ## Security Considerations
 
-- **Rate limiting** is in-memory and per-instance. In production on Cloudflare Pages (edge functions), the limit is per isolate, not globally distributed.
+- **Rate limiting** is in-memory and per-process. Under high concurrency or with multiple server instances, consider using a shared store (e.g., Redis).
 - **Session password** (`NUXT_SESSION_PASSWORD`) must be at least 32 bytes.
 - **Foreign keys** are enforced (`PRAGMA foreign_keys = ON`).
 - **Input validation** is performed with Zod on every API endpoint.
@@ -225,17 +215,15 @@ There is no framework like Vitest or Jest; tests are simple async functions that
 
 ## Deployment
 
-Pushes to `main` trigger `.github/workflows/deploy-cloudflare.yml`:
+The application is deployed as a Node.js server on a VPS:
 
-1. Check out code
-2. Setup Bun 1.3.0
-3. `bun install`
-4. `bun run build --preset cloudflare-pages`
-5. Deploy `dist/` to Cloudflare Pages project `basishacks2025` via Wrangler
+```bash
+# Build for production
+bun run build
 
-Required repository secrets:
-- `CLOUDFLARE_API_TOKEN`
-- `CLOUDFLARE_ACCOUNT_ID`
+# Start the server
+node .output/server/index.mjs
+```
 
 ---
 
@@ -251,7 +239,7 @@ Copy `.env.example` to `.env` and fill in:
 | `MICROSOFT_DUMMY_USER_NAME` | ROPC test user (rarely used) |
 | `MICROSOFT_DUMMY_USER_PASSWORD` | ROPC test password (rarely used) |
 
-In production, these are configured in the Cloudflare Pages dashboard / Wrangler secrets.
+In production, these are configured in the server environment.
 
 ---
 
@@ -277,7 +265,7 @@ In production, these are configured in the Cloudflare Pages dashboard / Wrangler
    - `documentation/frontend/` — Components, pages, layouts, composables
    - `documentation/backend/` — API reference, server utilities, plugins & middleware
    - `documentation/shared/` — Schemas, types, rubric, permissions, OAuth2 scopes
-   - `documentation/deployment/` — Cloudflare deployment, security, rate limiting
+   - `documentation/deployment/` — Deployment, security, rate limiting
 
    If no existing page covers the changed area, add a new page and register it in `documentation/.vitepress/config.ts` sidebar.
 
