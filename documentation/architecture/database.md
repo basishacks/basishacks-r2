@@ -5,7 +5,7 @@ description: Database schema, access patterns, per-table helpers, type conventio
 
 # Database
 
-basishacks uses SQLite locally (`better-sqlite3` with WAL mode) and Cloudflare D1 in production. All database access goes through the `event.context.db` wrapper, which provides a D1-compatible interface.
+basishacks uses SQLite (`better-sqlite3` with WAL mode) for both local development and production. All database access goes through Drizzle ORM, which provides type-safe queries.
 
 ## Tables
 
@@ -237,19 +237,17 @@ Allowed modes: `url`, `emoji`, `gradient`. If the mode is unrecognized, it defau
 
 ## Migrations
 
-Migrations are stored in `sql/migration-*.sql` and `sql/patch-*.sql`. There is **no automated migration runner** — migrations are applied manually:
+Migrations are managed via Drizzle Kit. The schema is defined in `server/database/schema.ts`, and migrations are generated with:
 
 ```bash
-# Local development
-bunx wrangler d1 execute DB --file sql/migration-2026-06-02-22-15Z.sql
+# Generate a migration after schema changes
+bun run db:generate
 
-# Production
-bunx wrangler d1 execute DB --remote --file sql/migration-2026-06-02-22-15Z.sql
+# Apply migrations
+bun run db:migrate
 ```
 
-::: warning
-The `seed-hackathon.ts` plugin performs lightweight auto-migrations for local development (adding missing columns), but this is not a substitute for running migrations in production.
-:::
+Legacy SQL migrations are archived in `sql/archive/`.
 
 ### Notable migrations
 
