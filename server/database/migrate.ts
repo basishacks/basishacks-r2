@@ -1,0 +1,251 @@
+import { Database } from 'bun:sqlite'
+import { readFileSync, readdirSync } from 'node:fs'
+import { resolve } from 'node:path'
+
+const DEFAULT_DB_PATH = './database/basishacks.sqlite'
+const MIGRATIONS_DIR = resolve(process.cwd(), 'drizzle')
+
+/**
+ * Runs pending Drizzle migration SQL files against a bun:sqlite database.
+ *
+ * Migration files are read from the `drizzle/` directory and applied in
+ * lexicographic order. A `_drizzle_migrations` table tracks applied files so
+ * migrations are only run once.
+ *
+ * @param sqlite - Bun SQLite database instance
+ */
+function getExistingTables(sqlite: Database): Set<string> {
+  const rows = sqlite
+    .query<{ name: string }, []>(
+      "SELECT name FROM sqlite_master WHERE type = 'table'",
+    )
+    .all()
+  return new Set(rows.map((row) => row.name))
+}
+
+function extractCreatedTables(sql: string): string[] {
+  const tables: string[] = []
+  const regex = /CREATE\s+TABLE\s+(?:IF\s+NOT\s+EXISTS\s+)?`?([^`\s(]+)`?/gi
+  let match: RegExpExecArray | null
+  while ((match = regex.exec(sql)) !== null) {
+    tables.push(match[1])
+  }
+  return tables
+}
+
+export function migrateDatabase(sqlite: Database) {
+  sqlite.run(`
+    CREATE TABLE IF NOT EXISTS _drizzle_migrations (
+      hash TEXT PRIMARY KEY,
+      applied_at INTEGER NOT NULL DEFAULT (unixepoch())
+    )
+  `)
+
+  const applied = new Set(
+    sqlite
+      .query<{ hash: string }, []>('SELECT hash FROM _drizzle_migrations')
+      .all()
+      .map((row) => row.hash),
+  )
+
+  const migrationFiles = readdirSync(MIGRATIONS_DIR)
+    .filter((file) => file.endsWith('.sql'))
+    .sort()
+
+  const existingTables = getExistingTables(sqlite)
+
+  for (const file of migrationFiles) {
+    if (applied.has(file)) continue
+
+    const sql = readFileSync(resolve(MIGRATIONS_DIR, file), 'utf-8')
+
+    // If the migration would create tables that already exist, assume it was
+    // applied before migration tracking was in place and just record it.
+    const createdTables = extractCreatedTables(sql)
+    const alreadyApplied = createdTables.every(
+      (table) => table === '_drizzle_migrations' || existingTables.has(table),
+    )
+
+    if (!alreadyApplied) {
+      const statements = sql
+        .split('--> statement-breakpoint')
+        .map((s) => s.trim())
+        .filter((s) => s.length > 0)
+
+      for (const statement of statements) {
+        // Make CREATE statements idempotent so migrations can safely re-run
+        // against databases that were initialized before migration tracking.
+        const idempotentStatement = statement
+          .replace(/CREATE\s+TABLE\s+(?!IF\s+NOT\s+EXISTS)/i, 'CREATE TABLE IF NOT EXISTS ')
+          .replace(/CREATE\s+UNIQUE\s+INDEX\s+(?!IF\s+NOT\s+EXISTS)/i, 'CREATE UNIQUE INDEX IF NOT EXISTS ')
+          .replace(/CREATE\s+INDEX\s+(?!IF\s+NOT\s+EXISTS)/i, 'CREATE INDEX IF NOT EXISTS ')
+        sqlite.run(idempotentStatement)
+      }
+      console.log(`[Nitro] Applied migration: ${file}`)
+    } else {
+      console.log(`[Nitro] Migration already applied, recording: ${file}`)
+    }
+
+    sqlite.run('INSERT INTO _drizzle_migrations (hash) VALUES (?)', [file])
+  }
+}
+
+/**
+ * Ensures the hackathon singleton row exists.
+ *
+ * If the `hackathon` table has no rows, inserts the default initial state.
+ *
+ * @param sqlite - Bun SQLite database instance
+ */
+export function seedHackathon(sqlite: Database) {
+  const row = sqlite
+    .query<{ count: number }, []>(
+      'SELECT COUNT(*) AS count FROM hackathon',
+    )
+    .get()
+
+  if (row && row.count === 0) {
+    sqlite.run(
+      `
+      INSERT INTO hackathon (
+        id, status, voting_enabled, results_published, submitted_count,
+        max_votes_per_user, judging_open, schedule_start, schedule_end,
+        start_timestamp, end_timestamp, voting_start_timestamp,
+        voting_end_timestamp, results_open_timestamp, theme_name, theme_description
+      ) VALUES (1, 'not_started', 0, 0, 0, 0, 0, NULL, NULL, 0, 0, 0, 0, 0, NULL, NULL)
+    `,
+    )
+    console.log('[Nitro] Seeded default hackathon row')
+  }
+}
+
+function tableExists(sqlite: Database, table: string): boolean {
+  const row = sqlite
+    .query<{ count: number }, [string]>(
+      "SELECT COUNT(*) AS count FROM sqlite_master WHERE type = 'table' AND name = ?",
+    )
+    .get(table)
+  return row ? row.count > 0 : false
+}
+
+function columnExists(sqlite: Database, table: string, column: string): boolean {
+  try {
+    const rows = sqlite
+      .query<{ name: string }, []>(`PRAGMA table_info(${table})`)
+      .all()
+    return rows.some((row) => row.name === column)
+  } catch {
+    return false
+  }
+}
+
+/**
+ * Brings legacy databases (created from sql/archive/init.sql) up to date with
+ * the current Drizzle schema without dropping existing data.
+ *
+ * @param sqlite - Bun SQLite database instance
+ */
+function migrateLegacySchema(sqlite: Database) {
+  // Missing tables from the legacy init.sql schema
+  if (!tableExists(sqlite, 'seasons')) {
+    sqlite.run(`
+      CREATE TABLE IF NOT EXISTS seasons (
+        id INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL,
+        name TEXT NOT NULL,
+        is_active INTEGER DEFAULT 0 NOT NULL,
+        CONSTRAINT "seasons_is_active_check" CHECK("seasons"."is_active" IN (0, 1))
+      )
+    `)
+    sqlite.run('CREATE UNIQUE INDEX IF NOT EXISTS seasons_name_unique ON seasons (name)')
+    console.log('[Nitro] Created legacy-missing table: seasons')
+  }
+
+  if (!tableExists(sqlite, 'team_awards')) {
+    sqlite.run(`
+      CREATE TABLE IF NOT EXISTS team_awards (
+        team_id INTEGER NOT NULL,
+        award TEXT NOT NULL,
+        meta TEXT NOT NULL
+      )
+    `)
+    console.log('[Nitro] Created legacy-missing table: team_awards')
+  }
+
+  if (!tableExists(sqlite, 'peer_voting_scores')) {
+    sqlite.run(`
+      CREATE TABLE IF NOT EXISTS peer_voting_scores (
+        user_id INTEGER NOT NULL,
+        score TEXT NOT NULL,
+        reasoning TEXT
+      )
+    `)
+    console.log('[Nitro] Created legacy-missing table: peer_voting_scores')
+  }
+
+  if (!tableExists(sqlite, 'user_past_teams')) {
+    sqlite.run(`
+      CREATE TABLE IF NOT EXISTS user_past_teams (
+        user_id INTEGER NOT NULL,
+        team_id INTEGER NOT NULL,
+        PRIMARY KEY(user_id, team_id)
+      )
+    `)
+    console.log('[Nitro] Created legacy-missing table: user_past_teams')
+  }
+
+  // Missing columns on the legacy hackathon table
+  const hackathonColumns = [
+    'voting_enabled',
+    'results_published',
+    'submitted_count',
+    'max_votes_per_user',
+    'judging_open',
+    'schedule_start',
+    'schedule_end',
+  ]
+  for (const column of hackathonColumns) {
+    if (!columnExists(sqlite, 'hackathon', column)) {
+      const defaultValue = ['schedule_start', 'schedule_end'].includes(column)
+        ? 'NULL'
+        : '0'
+      sqlite.run(`ALTER TABLE hackathon ADD COLUMN ${column} INTEGER DEFAULT ${defaultValue}`)
+      console.log(`[Nitro] Added legacy-missing column: hackathon.${column}`)
+    }
+  }
+
+  // Missing columns on the legacy teams table
+  if (!columnExists(sqlite, 'teams', 'season_id')) {
+    sqlite.run('ALTER TABLE teams ADD COLUMN season_id INTEGER DEFAULT 1 NOT NULL')
+    console.log('[Nitro] Added legacy-missing column: teams.season_id')
+  }
+
+  // Missing columns on the legacy team_scores table
+  if (!columnExists(sqlite, 'team_scores', 'season_id')) {
+    sqlite.run('ALTER TABLE team_scores ADD COLUMN season_id INTEGER')
+    console.log('[Nitro] Added legacy-missing column: team_scores.season_id')
+  }
+
+  // Legacy oauth2_applications may be missing owner_id
+  if (!columnExists(sqlite, 'oauth2_applications', 'owner_id')) {
+    sqlite.run('ALTER TABLE oauth2_applications ADD COLUMN owner_id INTEGER')
+    console.log('[Nitro] Added legacy-missing column: oauth2_applications.owner_id')
+  }
+}
+
+/**
+ * Creates a bun:sqlite Database instance, applies any pending migrations, and
+ * seeds required initial data.
+ *
+ * @param dbPath - Path to the SQLite database file
+ */
+export function createAndMigrateDatabase(dbPath: string = DEFAULT_DB_PATH) {
+  const sqlite = new Database(dbPath)
+  sqlite.run('PRAGMA journal_mode = WAL')
+  sqlite.run('PRAGMA foreign_keys = ON')
+
+  migrateLegacySchema(sqlite)
+  migrateDatabase(sqlite)
+  seedHackathon(sqlite)
+
+  return sqlite
+}
