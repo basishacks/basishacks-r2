@@ -79,20 +79,7 @@ describe('getClientIdentifier', () => {
     expect(id).toBe('ip:10.0.0.1')
   })
 
-  it('uses cf-connecting-ip header when x-forwarded-for is absent', async () => {
-    ;(globalThis as any).getUserSession = vi.fn().mockResolvedValue({})
-    ;(globalThis as any).getHeader = vi.fn((_event: any, name: string) => {
-      if (name === 'cf-connecting-ip') return '1.2.3.4'
-      return undefined
-    })
-
-    const event = makeMockEvent()
-    const id = await getClientIdentifier(event)
-
-    expect(id).toBe('ip:1.2.3.4')
-  })
-
-  it('falls back to x-real-ip when cf-connecting-ip is absent', async () => {
+  it('uses x-real-ip header when x-forwarded-for is absent', async () => {
     ;(globalThis as any).getUserSession = vi.fn().mockResolvedValue({})
     ;(globalThis as any).getHeader = vi.fn((_event: any, name: string) => {
       if (name === 'x-real-ip') return '5.6.7.8'
