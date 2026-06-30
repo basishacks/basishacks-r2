@@ -473,14 +473,6 @@ async function loginFlowCheck(reattempt: boolean = false) {
   
   usedScopes.value = decodeURI(scope).split(" ")
 
-  // if(!(client_id && response_type && scope && redirect_uri)) {
-  //   await fade();
-  //   status.value = 'error'
-  //   error.value = "invalid_request"
-  //   error_description.value = "Missing one of more of the following parameters: 'client_id', 'response_type', 'scope', 'redirect_uri'"
-    
-  // }
-
   
   if (client_id) {
     const res1: any = await fetch("/api/oauth2/session", {

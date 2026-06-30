@@ -100,12 +100,6 @@ function triggerConfetti(force: boolean = false) {
   confettiTriggered.value = true
 
   import('canvas-confetti').then((confettiModule) => {
-
-    // if (sessionStorage.getItem('confettiShown')) {
-    //   return
-    // }
-
-
     const confetti = (config: any) => {
 
 
