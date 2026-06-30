@@ -81,9 +81,8 @@ The IP address is extracted from the following headers, in priority order:
 | Priority | Header | Notes |
 |:--------:|--------|-------|
 | 1 | `x-forwarded-for` | First value after splitting on comma (leftmost = original client) |
-| 2 | `cf-connecting-ip` | Set by Cloudflare |
-| 3 | `x-real-ip` | Set by reverse proxies |
-| 4 | `unknown` | Fallback if no header is present |
+| 2 | `x-real-ip` | Set by reverse proxies |
+| 3 | `unknown` | Fallback if no header is present |
 
 ```ts
 const ip =
@@ -167,12 +166,12 @@ This removes entries with no requests in the last hour. The probabilistic approa
 
 ### Per-Instance Isolation
 
-::: warning Cloudflare Pages Edge Functions
-Rate limiting is **in-memory and per-instance**. On Cloudflare Pages, edge functions run in isolated workers. Each isolate maintains its own `requestHistory` Map. This means:
+::: warning Single Process
+Rate limiting is **in-memory and per-process**. Each server process maintains its own `requestHistory` Map. This means:
 
-- A client making 60 requests to isolate A and 60 requests to isolate B within the same minute would not be rate-limited
-- The effective rate limit is per-isolate, not globally distributed
-- For global rate limiting, consider using Cloudflare's built-in rate limiting rules or a distributed store (e.g., Durable Objects, KV)
+- A client making 60 requests to process A and 60 requests to process B within the same minute would not be rate-limited
+- The effective rate limit is per-process, not globally distributed
+- For global rate limiting, consider using a distributed store (e.g., Redis)
 :::
 
 ### No Persistent State
@@ -184,4 +183,4 @@ Since the rate limit state is in-memory:
 
 ### IP Spoofing
 
-The `x-forwarded-for` header can be spoofed. In production behind Cloudflare, `cf-connecting-ip` is more reliable as it is set by Cloudflare's edge and cannot be forged by clients.
+The `x-forwarded-for` header can be spoofed. In production behind a reverse proxy (e.g., nginx), `x-real-ip` is more reliable as it is set by the proxy and cannot be forged by clients.
