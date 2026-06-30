@@ -5,7 +5,7 @@ description: How basishacks runs in local development versus production, includi
 
 # Runtime Architecture
 
-basishacks runs in two distinct environments: **local development** with `better-sqlite3`, and **production** on Cloudflare Pages with D1. The codebase is designed so that the same application logic works identically in both.
+basishacks runs in two distinct environments: **local development** with `better-sqlite3`, and **production** on a VPS with the same `better-sqlite3` database. The codebase is designed so that the same application logic works identically in both.
 
 ## Local Development
 
@@ -24,66 +24,27 @@ The local dev server is started with:
 bun dev --https
 ```
 
-## Production (Cloudflare Pages)
+## Production (VPS / Node.js server)
 
 | Setting | Value |
 |---------|-------|
-| Build preset | `cloudflare-pages` |
-| Database | Cloudflare D1 (binding name: `DB`) |
-| Deployment | GitHub Actions → Cloudflare Pages project `basishacks2025` |
+| Build preset | `node-server` |
+| Database | SQLite (better-sqlite3) |
+| Deployment | Manual or CI/CD to VPS |
 
 The production build is generated with:
 
 ```bash
-bun run build --preset cloudflare-pages
+bun run build
 ```
 
 ::: warning
-In production on Cloudflare Pages (edge functions), the in-memory rate limiter is per-isolate, not globally distributed. This means rate limiting is approximate under high concurrency.
+The in-memory rate limiter is per-process. Under high concurrency or with multiple server instances, consider using a shared store (e.g., Redis) for consistent rate limiting.
 :::
 
-## Database Wrapper
+## Drizzle ORM
 
-The `SQLiteDatabase` class (`server/utils/database.ts`) is the core abstraction that makes local and production database access interchangeable.
-
-### Class hierarchy
-
-```
-SQLiteDatabase              # Wraps better-sqlite3, mimics D1Database
- └── prepare(sql)           # Returns SQLiteStatement
-      ├── bind(...params)   # Returns this (chainable)
-      ├── first<T>()        # Returns T | undefined
-      ├── all<T>()          # Returns { results: T[] }
-      └── run()             # Returns { meta: { changed_db: number } }
-```
-
-### Key methods
-
-| Method | Description |
-|--------|-------------|
-| `prepare(sql)` | Creates a prepared statement wrapper |
-| `batch<T>(statements)` | Executes multiple statements in a transaction |
-| `exec(sql)` | Runs raw SQL (for schema creation, migrations) |
-
-### Initialization
-
-```ts
-// server/utils/database.ts
-export function initializeDatabase(): any {
-  if (!dbInstance) {
-    const dbPath = path.resolve(__dirname, '../../database/basishacks.sqlite')
-    dbInstance = new Database(dbPath)
-    dbInstance.pragma('journal_mode = WAL')
-    dbInstance.pragma('foreign_keys = ON')
-  }
-  return dbInstance
-}
-
-export function createDatabaseWrapper(): SQLiteDatabase {
-  const db = getDatabase()
-  return new SQLiteDatabase(db)
-}
-```
+The database layer uses Drizzle ORM (`server/database/`) for type-safe queries.
 
 ## Nitro Plugins
 
@@ -93,22 +54,18 @@ Plugins run at server startup and set up the runtime environment. They are loade
 
 **Purpose**: Initializes the database schema and attaches the DB wrapper to every request.
 
-1. Calls `initializeDatabase()` to create/open the SQLite file
-2. Checks if any tables exist; if not, executes the full schema SQL
-3. Registers a `request` hook that creates a fresh `SQLiteDatabase` wrapper and attaches it to `event.context.db`
+1. Calls `createDrizzleDatabase()` to initialize the SQLite connection
+2. Registers a `request` hook that attaches the Drizzle instance to `event.context.drizzle`
 
 ```ts
 export default defineNitroPlugin((nitroApp) => {
-  const db = initializeDatabase()
+  const db = createDrizzleDatabase()
 
-  const tables = db.prepare("SELECT name FROM sqlite_master WHERE type='table'")
-    .all().map(r => r.name)
-  if (tables.length === 0) {
-    db.exec(SCHEMA_SQL)
-  }
+  const tables = db.all<{ name: string }>(sql`SELECT name FROM sqlite_master WHERE type='table'`)
+  console.log(`[Nitro] Database plugin loaded with ${tables.length} tables (Drizzle ORM)`)
 
   nitroApp.hooks.hook('request', (event) => {
-    event.context.db = createDatabaseWrapper()
+    event.context.drizzle = db
   })
 })
 ```
@@ -143,13 +100,12 @@ All Microsoft Graph API calls **must** be made through functions exported from t
 
 The H3 event context is extended via TypeScript declarations in `server/types/`:
 
-### `cloudflare.d.ts`
+### `h3.d.ts`
 
 ```ts
 declare module 'h3' {
   interface H3EventContext {
-    cf: CfProperties
-    db: SQLiteDatabase
+    drizzle: BetterSQLite3Database<typeof schema>
   }
 }
 ```
@@ -168,8 +124,7 @@ declare module 'h3' {
 
 | Key | Type | Always present? | Set by |
 |-----|------|----------------|--------|
-| `event.context.db` | `SQLiteDatabase` | Yes | `init-database.ts` request hook |
-| `event.context.cf` | `CfProperties` | Production only | Cloudflare runtime |
+| `event.context.drizzle` | `BetterSQLite3Database` | Yes | `init-database.ts` request hook |
 | `event.context.oauth2` | `OAuth2JWTContext` | Only in OAuth2-protected endpoints | `withOAuth2JWT()` wrapper |
 
 ## Request Lifecycle
@@ -178,7 +133,7 @@ declare module 'h3' {
 1. Incoming HTTP request
      │
 2. Nitro request hook (init-database.ts)
-     │  └── event.context.db = createDatabaseWrapper()
+     │  └── event.context.drizzle = db
      │
 3. Server middleware (oauth2-authorize.ts)
      │  └── Validates OAuth2 authorize requests if path matches
