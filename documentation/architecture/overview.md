@@ -17,13 +17,13 @@ basishacks is a **full-stack Nuxt 3 application** that combines a Vue 3 frontend
 | Runtime | Node.js >= v24 |
 | Package Manager | Bun (preferred); npm works |
 | Database (local) | `better-sqlite3` with WAL mode |
-| Database (prod) | Cloudflare D1 (binding name `DB`) |
+| Database (prod) | SQLite (better-sqlite3) |
 | Auth | `nuxt-auth-utils` (session-based) |
 | Validation | Zod 4.x |
 | Fonts | `@nuxt/fonts` (local provider) |
 | Icons | `@iconify-json/lucide`, `@iconify-json/material-symbols` |
 | Linting | `@nuxt/eslint` + Prettier |
-| Deployment | Cloudflare Pages via GitHub Actions |
+| Deployment | Node.js server (VPS) |
 
 ## Directory Structure
 
@@ -40,9 +40,8 @@ basishacks-r2/
 │   ├── api/                # API route handlers (file-based)
 │   ├── middleware/          # Server middleware (OAuth2 authorize)
 │   ├── plugins/            # Nitro plugins (DB init, MS Graph token)
-│   ├── types/              # Type augmentations (H3EventContext, Cloudflare)
+│   ├── types/              # Type augmentations (H3EventContext)
 │   └── utils/              # Server utilities
-│       ├── database.ts     # SQLite wrapper mimicking D1 interface
 │       ├── database/       # Per-table DB helpers (users, teams, scores, etc.)
 │       ├── auth.ts         # requireUser / requireJudge / requireAdmin
 │       ├── convert.ts      # DB row -> public API object transformers
@@ -86,7 +85,7 @@ Nitro API Handler (server/api/**/*.ts)
   │  └── Database access via event.context.db
   │
   ▼
-SQLite (local) / Cloudflare D1 (production)
+SQLite (local) / SQLite (production)
   │
   ▼
 Response (JSON, converted via convertUserToPublic/convertTeamToPublic)
@@ -98,8 +97,7 @@ Every incoming request has the following context attached by plugins and middlew
 
 | Context Key | Type | Set By | Purpose |
 |-------------|------|--------|---------|
-| `event.context.db` | `SQLiteDatabase` | `init-database.ts` plugin | Database access |
-| `event.context.cf` | `CfProperties` | Cloudflare runtime | Cloudflare-specific properties |
+| `event.context.drizzle` | `BetterSQLite3Database` | `init-database.ts` plugin | Database access |
 | `event.context.oauth2` | `OAuth2JWTContext` | `withOAuth2JWT()` wrapper | OAuth2 JWT payload, scopes, user |
 
 ## Key Architectural Decisions
@@ -126,15 +124,9 @@ export const CreateTeamRequest = z.object({
 const body = await readValidatedBody(event, CreateTeamRequest.parse)
 ```
 
-### D1-compatible SQLite wrapper
+### Drizzle ORM database layer
 
-The `SQLiteDatabase` class in `server/utils/database.ts` wraps `better-sqlite3` to mimic the Cloudflare D1 interface. This means the same database code works identically in local development and production:
-
-- `prepare(sql).bind(...).first()` — return first row
-- `prepare(sql).bind(...).all()` — return `{ results: T[] }`
-- `prepare(sql).bind(...).run()` — return `{ meta: { changed_db: number } }`
-- `batch(statements)` — execute in a transaction
-- `exec(sql)` — raw SQL execution
+The database layer uses Drizzle ORM with better-sqlite3. Schema definitions in `server/database/schema.ts` provide type-safe queries and automatic migrations via Drizzle Kit.
 
 ### Session-based auth
 
