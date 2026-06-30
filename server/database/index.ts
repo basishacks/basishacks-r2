@@ -1,19 +1,19 @@
-import { drizzle } from 'drizzle-orm/better-sqlite3'
-import Database from 'better-sqlite3'
+import { drizzle } from 'drizzle-orm/bun-sqlite'
+import { Database } from 'bun:sqlite'
 import * as schema from './schema'
 
 const DEFAULT_DB_PATH = './database/basishacks.sqlite'
 
 /**
- * Creates and returns a Drizzle ORM instance backed by better-sqlite3.
+ * Creates and returns a Drizzle ORM instance backed by bun:sqlite.
  * Enables WAL mode and foreign keys on the underlying connection.
  *
  * @param dbPath - Path to the SQLite database file (defaults to './database/basishacks.sqlite')
  */
 export function createDrizzleDatabase(dbPath: string = DEFAULT_DB_PATH) {
   const sqlite = new Database(dbPath)
-  sqlite.pragma('journal_mode = WAL')
-  sqlite.pragma('foreign_keys = ON')
+  sqlite.run('PRAGMA journal_mode = WAL')
+  sqlite.run('PRAGMA foreign_keys = ON')
 
   return drizzle(sqlite, { schema })
 }
