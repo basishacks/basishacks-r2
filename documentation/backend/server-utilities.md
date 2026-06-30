@@ -58,30 +58,15 @@ Ensures the user has a specific permission (or admin role). Uses `hasPermission`
 
 The database layer uses Drizzle ORM. See `server/database/` for schema definitions and initialization.
 
-| Method | Description |
-|--------|-------------|
-| `prepare(sql)` | Returns an `SQLiteStatement` wrapper |
-| `batch(statements)` | Executes multiple statements in a transaction |
-| `exec(sql)` | Executes raw SQL (for schema initialization) |
+The Drizzle ORM instance is attached to `event.context.drizzle` on every request via the `init-database` Nitro plugin. All database operations go through the Drizzle query builder.
 
-### `SQLiteStatement` class
-
-Wraps a prepared statement to match D1's `D1PreparedStatement` interface:
-
-| Method | D1 Equivalent | Description |
-|--------|--------------|-------------|
-| `bind(...params)` | `bind()` | Binds parameters to the statement |
-| `first<T>()` | `first()` | Returns the first row or `undefined` |
-| `all<T>()` | `all()` | Returns `{ results: T[] }` |
-| `run()` | `run()` | Returns `{ meta: { changed_db: number } }` |
-
-### `createDatabaseWrapper`
+### Creating the Database Wrapper
 
 ```ts
-export function createDatabaseWrapper(): SQLiteDatabase
+export function createDatabaseWrapper(): DrizzleDatabase
 ```
 
-Creates a new `SQLiteDatabase` wrapper instance. Called per-request in the `init-database` plugin.
+Creates a new Drizzle database wrapper instance. Called per-request in the `init-database` plugin.
 
 ---
 
@@ -159,7 +144,7 @@ export async function getClientIdentifier(event: H3Event): Promise<string>
 
 Returns a unique identifier for the client:
 1. If authenticated: `user:{id}`
-2. Otherwise: `ip:{x-forwarded-for | cf-connecting-ip | x-real-ip | 'unknown'}`
+2. Otherwise: `ip:{x-forwarded-for | x-real-ip | 'unknown'}`
 
 ### `applyRateLimit`
 

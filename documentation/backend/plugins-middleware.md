@@ -62,7 +62,7 @@ nitroApp.hooks.hook('request', (event) => {
 })
 ```
 
-Every incoming request receives a fresh `SQLiteDatabase` wrapper attached to `event.context.db`. This ensures each request uses the same D1-compatible interface.
+Every incoming request receives a fresh Drizzle ORM database wrapper attached to `event.context.drizzle`. This ensures each request uses the same database interface.
 
 ---
 
