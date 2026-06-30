@@ -1,4 +1,6 @@
 import type { H3Event } from 'h3'
+import { eq, and, inArray } from 'drizzle-orm'
+import { teamAwards } from '~~/server/database/schema'
 import { AWARD_REGISTRY, type Award } from '~~/shared/awards'
 
 export interface ResolvedAward {
@@ -21,14 +23,13 @@ export async function getAwards(
   event: H3Event,
   teamId: number,
 ): Promise<ResolvedAward[]> {
-  const rows = (
-    event.context.db
-      .prepare('SELECT * FROM team_awards WHERE team_id = ?')
-      .bind(teamId)
-      .all() as { results: TeamAward[] }
-  ).results
+  const rows = event.context.drizzle
+    .select()
+    .from(teamAwards)
+    .where(eq(teamAwards.team_id, teamId))
+    .all()
 
-  return rows.map((row) => {
+  return rows.map((row: { team_id: number; award: string; meta: string }) => {
     const meta = parseMeta(row.meta)
     const definition = AWARD_REGISTRY[row.award] ?? {
       namespace: row.award,
@@ -52,13 +53,11 @@ export async function getAwardsForTeams(
 ): Promise<Record<number, ResolvedAward[]>> {
   if (teamIds.length === 0) return {}
 
-  const placeholders = teamIds.map(() => '?').join(',')
-  const rows = (
-    event.context.db
-      .prepare(`SELECT * FROM team_awards WHERE team_id IN (${placeholders})`)
-      .bind(...teamIds)
-      .all() as { results: TeamAward[] }
-  ).results
+  const rows = event.context.drizzle
+    .select()
+    .from(teamAwards)
+    .where(inArray(teamAwards.team_id, teamIds))
+    .all()
 
   const result: Record<number, ResolvedAward[]> = {}
   for (const row of rows) {
@@ -90,20 +89,19 @@ export async function createAward(
   award: string,
   meta: string,
 ): Promise<TeamAward> {
-  const row = (event.context.db
-    .prepare(
-      'INSERT INTO team_awards(team_id, award, meta) VALUES(?, ?, ?) RETURNING *',
-    )
-    .bind(teamId, award, meta)
-    .first() as TeamAward)!
+  const row = event.context.drizzle
+    .insert(teamAwards)
+    .values({ team_id: teamId, award, meta })
+    .returning()
+    .get()!
 
   return row
 }
 
 export async function deleteTeamAwards(event: H3Event, teamId: number) {
-  event.context.db
-    .prepare('DELETE FROM team_awards WHERE team_id = ?')
-    .bind(teamId)
+  event.context.drizzle
+    .delete(teamAwards)
+    .where(eq(teamAwards.team_id, teamId))
     .run()
 }
 
@@ -112,8 +110,8 @@ export async function deleteAward(
   teamId: number,
   award: string,
 ) {
-  event.context.db
-    .prepare('DELETE FROM team_awards WHERE team_id = ? AND award = ?')
-    .bind(teamId, award)
+  event.context.drizzle
+    .delete(teamAwards)
+    .where(and(eq(teamAwards.team_id, teamId), eq(teamAwards.award, award)))
     .run()
 }
