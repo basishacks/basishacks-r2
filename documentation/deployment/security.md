@@ -17,7 +17,7 @@ All API endpoints are protected by an in-memory rate limiter:
 - **Cleanup:** 1% probabilistic cleanup of entries older than 1 hour
 
 ::: warning
-Rate limiting is in-memory and per-instance. On Cloudflare Pages (edge functions), the limit is per isolate, not globally distributed. A determined attacker could potentially bypass per-IP limits by distributing requests across many IPs.
+Rate limiting is in-memory and per-process. Under high concurrency or with multiple server instances, a determined attacker could potentially bypass per-IP limits by distributing requests across many IPs.
 :::
 
 See [Rate Limiting](./rate-limiting.md) for full details.
@@ -33,7 +33,7 @@ See [Rate Limiting](./rate-limiting.md) for full details.
 
 - **Foreign keys** are enforced with `PRAGMA foreign_keys = ON`
 - All database access goes through parameterized queries (`event.context.db.prepare(sql).bind(...)`) — no raw string interpolation
-- The SQLite wrapper (`server/utils/database.ts`) mimics the D1 interface, ensuring consistent behavior between local and production environments
+- The database layer uses Drizzle ORM with better-sqlite3, ensuring consistent behavior between local and production environments
 
 ## Input Validation
 
