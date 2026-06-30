@@ -11,7 +11,7 @@
  */
 import { createHash, randomBytes } from 'crypto';
 import { SignJWT } from 'jose';
-import { validateOAuth2AuthorizationRequest } from '~/../server/utils/oauth2-validate'
+import { validateOAuth2AuthorizationRequest } from '~~/server/utils/oauth2-validate'
 
 export interface AuthorizeSession {
   ms_verifier: string | null;

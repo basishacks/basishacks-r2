@@ -1,29 +1,32 @@
-export default defineEventHandler(async (event) => {
-    await requireAdmin(event);
+import { scVotes } from '~~/server/database/schema'
+import { eq } from 'drizzle-orm'
 
-    const id = getRouterParam(event, "id");
+export default defineEventHandler(async (event) => {
+    await requireAdmin(event)
+
+    const id = getRouterParam(event, "id")
     if (!id) {
         throw createError({
             statusCode: 400,
             statusMessage: "Missing ballot ID",
-        });
+        })
     }
 
-    const ballotId = Number(id);
+    const ballotId = Number(id)
     if (Number.isNaN(ballotId)) {
         throw createError({
             statusCode: 400,
             statusMessage: "Invalid ballot ID",
-        });
+        })
     }
 
-    const result = event.context.db
-        .prepare("DELETE FROM sc_votes WHERE id = ?")
-        .bind(ballotId)
-        .run();
+    const result = event.context.drizzle
+        .delete(scVotes)
+        .where(eq(scVotes.id, ballotId))
+        .run()
 
     return {
         message: "Ballot deleted",
-        changes: result.meta.changed_db,
-    };
-});
+        changes: result.changes,
+    }
+})
