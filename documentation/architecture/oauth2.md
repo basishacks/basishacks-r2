@@ -11,8 +11,8 @@ basishacks implements a complete OAuth2 authorization server that supports the *
 
 ```
 ┌──────────┐     ┌──────────────┐     ┌──────────────┐     ┌─────────┐
-│  Client   │     │  basishacks  │     │  Microsoft   │     │   D1    │
-│  App      │     │  OAuth2      │     │  Entra ID    │     │   DB    │
+│  Client   │     │  basishacks  │     │  Microsoft   │     │  SQLite  │
+│  App      │     │  OAuth2      │     │  Entra ID    │     │   DB     │
 └────┬──────┘     └──────┬───────┘     └──────┬───────┘     └────┬────┘
      │  1. /authorize       │                    │                 │
      │ ───────────────────► │                    │                 │

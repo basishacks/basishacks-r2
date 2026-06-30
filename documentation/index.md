@@ -170,7 +170,7 @@ const binaryGibberish = computed(() => {
 <div class="network-grid">
   <div class="network-node">
     <div class="node-title">FULL-STACK NUXT 3</div>
-    <div class="node-desc">Vue 3 + Nitro + TypeScript + SQLite/D1</div>
+    <div class="node-desc">Vue 3 + Nitro + TypeScript + SQLite</div>
   </div>
   <div class="network-node">
     <div class="node-title">MULTI-AUTH</div>

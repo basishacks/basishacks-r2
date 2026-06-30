@@ -87,7 +87,6 @@ The IP address is extracted from the following headers, in priority order:
 ```ts
 const ip =
   getHeader(event, 'x-forwarded-for')?.split(',')[0]?.trim() ||
-  getHeader(event, 'cf-connecting-ip') ||
   getHeader(event, 'x-real-ip') ||
   'unknown'
 ```
