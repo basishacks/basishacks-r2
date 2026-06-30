@@ -56,30 +56,7 @@ Ensures the user has a specific permission (or admin role). Uses `hasPermission`
 
 ## database.ts
 
-SQLite wrapper that mimics Cloudflare D1's interface for local development.
-
-### `initializeDatabase`
-
-```ts
-export function initializeDatabase(): any
-```
-
-Initializes the `better-sqlite3` database connection (singleton). Configures:
-- WAL journal mode for concurrent read performance
-- Foreign key enforcement (`PRAGMA foreign_keys = ON`)
-- Database path: `./database/basishacks.sqlite`
-
-### `getDatabase`
-
-```ts
-export function getDatabase(): any
-```
-
-Returns the existing database instance or initializes a new one.
-
-### `SQLiteDatabase` class
-
-Wraps `better-sqlite3` to match the D1 `D1Database` interface:
+The database layer uses Drizzle ORM. See `server/database/` for schema definitions and initialization.
 
 | Method | Description |
 |--------|-------------|
