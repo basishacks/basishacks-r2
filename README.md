@@ -12,13 +12,13 @@ The official website for the BIBS-C Network Hackathon (season 2, 2025–26).
 | Runtime | Node.js >= v24 |
 | Package Manager | Bun (preferred); npm works |
 | Database (local) | better-sqlite3 with WAL mode |
-| Database (prod) | Cloudflare D1 |
+| Database (prod) | SQLite (better-sqlite3) |
 | Auth | nuxt-auth-utils (session-based) |
 | Validation | Zod 4.x |
 | Fonts | @nuxt/fonts (local provider) |
 | Icons | @iconify-json/lucide, @iconify-json/material-symbols |
 | Linting | @nuxt/eslint + Prettier |
-| Deployment | Cloudflare Pages |
+| Deployment | Node.js server (VPS) |
 
 ## Project Structure
 
@@ -38,7 +38,7 @@ server/                 # Nitro backend
   middleware/           # Server middleware
   plugins/              # Nitro plugins (DB init, MS Graph)
   utils/                # Server utilities
-    database.ts         # SQLite wrapper (D1-compatible)
+    database.ts         # SQLite wrapper
     database/*.ts       # Per-table DB helpers
     auth.ts             # Role enforcement helpers
     oauth2-validate.ts  # OAuth2 request validation
