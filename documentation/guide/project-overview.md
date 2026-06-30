@@ -33,7 +33,7 @@ The platform manages the entire hackathon lifecycle:
 | **Runtime** | Node.js >= v24 | Required by tooling and runtime |
 | **Package Manager** | Bun (preferred) | npm also works |
 | **Database (local)** | `better-sqlite3` with WAL mode | SQLite for local development |
-| **Database (prod)** | Cloudflare D1 | Serverless SQL database |
+| **Database (prod)** | SQLite (bun:sqlite) via Drizzle ORM | Same stack as local development |
 | **Auth** | `nuxt-auth-utils` | Session-based authentication |
 | **JWT** | `jose` ^6.2.3 | JWT signing and verification for OAuth2 access tokens |
 | **AI** | `openai` ^6.37.0 | OpenAI SDK used for DeepSeek API integration |
@@ -41,7 +41,7 @@ The platform manages the entire hackathon lifecycle:
 | **Fonts** | `@nuxt/fonts` | Local font provider |
 | **Icons** | `@iconify-json/lucide`, `@iconify-json/material-symbols`, `@iconify-json/simple-icons` | Icon sets |
 | **Linting** | `@nuxt/eslint` + Prettier | No semicolons, single quotes |
-| **Deployment** | Cloudflare Pages | Via GitHub Actions CI/CD |
+| **Deployment** | VPS (Bun) | Node.js server running Bun runtime |
 
 ## Authentication
 
@@ -165,7 +165,7 @@ basishacks-r2/
 │   │   └── seed-hackathon.ts   # Seed hackathon timestamps + default OAuth2 app
 │   ├── types/                  # Type augmentations (H3EventContext, Cloudflare, OAuth2 JWT)
 │   └── utils/                  # Server utilities
-│       ├── database.ts         # SQLite wrapper mimicking D1 interface
+│       ├── database.ts         # Drizzle ORM database wrapper
 │       ├── database/           # Per-table DB helpers
 │       │   ├── ballots.ts
 │       │   ├── hackathon.ts
@@ -258,20 +258,14 @@ bun i
 # Dev server (HTTPS, port 24598)
 bun dev --https
 
-# Production build (local preset)
+# Production build
 bun run build
-
-# Production build (Cloudflare Pages preset)
-bun run build --preset cloudflare-pages
 
 # Preview built app
 bun run preview
 
 # Run tests
 bun test
-
-# Update Cloudflare types
-bun run cf-types
 
 # Format code
 bun run format

@@ -93,8 +93,7 @@ If you need to start fresh:
 
 ```bash
 rm database/basishacks.sqlite
-bunx wrangler d1 execute DB --file sql/init.sql
-bunx wrangler d1 execute DB --command 'INSERT INTO hackathon VALUES(1, "not_started", 0, 0, 0, 0, 0, NULL, NULL) ON CONFLICT DO NOTHING'
+bun run db:migrate
 ```
 
 ## Environment Variables
@@ -263,14 +262,14 @@ const name = "basishacks";
 
 ## Production Configuration
 
-In production on Cloudflare Pages, environment variables are configured through:
+In production on the VPS, environment variables are configured through the server environment (e.g., systemd service file, `.env` file on the server, or a process manager). Set them before starting the server:
 
-1. **Cloudflare Pages Dashboard** → Project → Settings → Environment variables
-2. **Wrangler secrets** via CLI:
-   ```bash
-   bunx wrangler pages secret put NUXT_SESSION_PASSWORD
-   bunx wrangler pages secret put MICROSOFT_CLIENT_SECRET
-   ```
+```bash
+# Example: setting environment variables before starting the server
+NUXT_SESSION_PASSWORD=<your-secret> bun run start
+```
+
+Or configure them in the server's environment file (e.g., `/etc/environment`, systemd `EnvironmentFile`, or a `.env` file in the app directory).
 
 :::: warning
 Never commit `.env` files to version control. The `.gitignore` file excludes `.env` by default.
@@ -285,8 +284,7 @@ After completing all configuration, verify everything works:
 bun i
 
 # 2. Initialize the database
-bunx wrangler d1 execute DB --file sql/init.sql
-bunx wrangler d1 execute DB --command 'INSERT INTO hackathon VALUES(1, "not_started", 0, 0, 0, 0, 0, NULL, NULL) ON CONFLICT DO NOTHING'
+bun run db:migrate
 
 # 3. Start the dev server
 bun dev --https
@@ -324,8 +322,7 @@ If you see database-related errors:
    ```
 2. Re-initialize:
    ```bash
-   bunx wrangler d1 execute DB --file sql/init.sql
-   bunx wrangler d1 execute DB --command 'INSERT INTO hackathon VALUES(1, "not_started", 0, 0, 0, 0, 0, NULL, NULL) ON CONFLICT DO NOTHING'
+   bun run db:migrate
    ```
 
 ### HTTPS Certificate Warnings

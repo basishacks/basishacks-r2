@@ -67,41 +67,37 @@ npm install
 
 ## Initialize the Database
 
-The local development environment uses SQLite via `better-sqlite3`. You need to create the schema and seed the initial hackathon row.
+The local development environment uses SQLite via `better-sqlite3` with Drizzle ORM. The database is initialized automatically by the `init-database.ts` Nitro plugin when the dev server starts.
 
-### Create the Schema
+To manually initialize the database:
 
 ```bash
-bunx wrangler d1 execute DB --file sql/init.sql
+bun run db:migrate
 ```
 
-This runs the base schema from `sql/init.sql`, which creates all required tables (`hackathon`, `teams`, `team_scores`, `users`, `ballots`, `ballot_scores`, `oauth2_applications`).
+This runs the Drizzle migrations, which create all required tables (`hackathon`, `teams`, `team_scores`, `users`, `ballots`, `ballot_scores`, `oauth2_applications`).
 
 ### Seed the Hackathon Row
 
-The `hackathon` table requires a single row with `id = 1` that controls the global event state:
+The `hackathon` table requires a single row with `id = 1` that controls the global event state. The `seed-hackathon` plugin automatically seeds this row when the Nitro dev server starts. If you need to manually seed it, connect to the SQLite database directly:
 
 ```bash
-bunx wrangler d1 execute DB --command 'INSERT INTO hackathon VALUES(1, "not_started", 0, 0, 0, 0, 0, NULL, NULL) ON CONFLICT DO NOTHING'
+sqlite3 database/basishacks.sqlite "INSERT INTO hackathon VALUES(1, 'not_started', 0, 0, 0, 0, 0, NULL, NULL) ON CONFLICT DO NOTHING"
 ```
-
-:::: tip
-When the Nitro dev server starts, the `seed-hackathon` plugin automatically seeds timestamps and the default `basishacks connect` OAuth2 application. You only need to run the seed command above if you're initializing the database outside the dev server.
-::::
 
 ### Apply Migrations
 
-If there are additional migration files in `sql/`, apply them in order:
+Migrations are managed via Drizzle Kit. To apply all pending migrations:
 
 ```bash
-bunx wrangler d1 execute DB --file sql/migration-2026-01-12-07-23Z.sql
-bunx wrangler d1 execute DB --file sql/migration-2026-01-12-10-43Z.sql
-# ... apply remaining migrations in chronological order
+bun run db:migrate
 ```
 
-:::: tip
-There is no automated migration runner. Migrations must be applied manually in order. Check the `sql/` directory for all migration and patch files.
-::::
+To generate a new migration after schema changes:
+
+```bash
+bun run db:generate
+```
 
 ## Configure Environment Variables
 
@@ -152,11 +148,7 @@ The `--https` flag is required because Microsoft OAuth2 and session cookies requ
 Build the application for production:
 
 ```bash
-# Local Node.js server preset
 bun run build
-
-# Cloudflare Pages preset (for deployment)
-bun run build --preset cloudflare-pages
 ```
 
 Preview the production build:
