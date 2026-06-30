@@ -86,7 +86,6 @@ export default defineConfig({
         {
           text: 'Deployment & Operations',
           items: [
-            { text: 'Cloudflare Deployment', link: '/deployment/cloudflare' },
             { text: 'Security', link: '/deployment/security' },
             { text: 'Rate Limiting', link: '/deployment/rate-limiting' },
           ],
