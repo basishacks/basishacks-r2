@@ -32,7 +32,6 @@ export async function getClientIdentifier(event: H3Event): Promise<string> {
   // Fall back to IP address for unauthenticated requests
   const ip =
     getHeader(event, 'x-forwarded-for')?.split(',')[0]?.trim() ||
-    getHeader(event, 'cf-connecting-ip') ||
     getHeader(event, 'x-real-ip') ||
     'unknown'
 
