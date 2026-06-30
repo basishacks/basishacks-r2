@@ -49,7 +49,7 @@ export default defineEventHandler(async (event) => {
 
   const scoreObj: Record<string, number> = {}
   for (let i = 0; i < eligibleProjects.length; i++) {
-    scoreObj[eligibleProjects[i].id] = payload.scores[i]!
+    scoreObj[eligibleProjects[i]!.id] = payload.scores[i]!
   }
 
   await createPeerVote(
