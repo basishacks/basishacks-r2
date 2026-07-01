@@ -6,6 +6,7 @@ export interface OAuth2SessionBody {
   code_challenge: string
   code_challenge_method: string
   redirect_uri: string
+  post_login_redirect?: string | null
 }
 
 export function buildOAuth2SessionBody(params: OAuth2SessionBody) {

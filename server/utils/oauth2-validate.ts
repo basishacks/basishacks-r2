@@ -187,12 +187,16 @@ export function completeConsentFlow(event: any, session: AuthorizeSession): stri
   session.login_state = 'completed'
   deleteCookie(event, 'bridge_id') // only delete after sucessful
   const separator = session.redirect_uri.includes('?') ? '&' : '?'
+  const redirectParam = session.post_login_redirect
+    ? `&redirect=${encodeURIComponent(session.post_login_redirect)}`
+    : ''
   return (
     session.redirect_uri +
     separator +
     'code=' +
     encodeURIComponent(session.code) +
     '&state=' +
-    encodeURIComponent(session.bh_state)
+    encodeURIComponent(session.bh_state) +
+    redirectParam
   )
 }

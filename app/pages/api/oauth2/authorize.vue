@@ -443,7 +443,7 @@ async function fade(duration: number = 700) {
   await delay(duration)
 }
 
-async function submitNewSession(client_id: string, response_type: string, scope: string, oauthState: string, code_challenge: string, code_challenge_method: string, redirect_uri: string) {
+async function submitNewSession(client_id: string, response_type: string, scope: string, oauthState: string, code_challenge: string, code_challenge_method: string, redirect_uri: string, post_login_redirect: string | null) {
   const body = buildOAuth2SessionBody({
     client_id,
     response_type,
@@ -452,6 +452,7 @@ async function submitNewSession(client_id: string, response_type: string, scope:
     code_challenge,
     code_challenge_method,
     redirect_uri,
+    post_login_redirect,
   })
 
   await $fetch('/api/oauth2/session', {
@@ -481,6 +482,7 @@ async function loginFlowCheck(reattempt: boolean = false) {
   const code_challenge = queryString(route.query.code_challenge)
   const code_challenge_method = queryString(route.query.code_challenge_method)
   const redirect_uri = queryString(route.query.redirect_uri)
+  const post_login_redirect = queryString(route.query.post_login_redirect)
   
   usedScopes.value = decodeURI(scope).split(" ")
 
@@ -494,7 +496,7 @@ async function loginFlowCheck(reattempt: boolean = false) {
     if (res1.status != 200) {
       // bad
       if (reattempt) {
-        await submitNewSession(client_id, response_type, scope, state, code_challenge, code_challenge_method, redirect_uri)
+        await submitNewSession(client_id, response_type, scope, state, code_challenge, code_challenge_method, redirect_uri, post_login_redirect)
       } else {
         await fade();
         status.value = 'error'

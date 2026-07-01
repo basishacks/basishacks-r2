@@ -55,5 +55,6 @@ export default defineEventHandler(async (event) => {
 
     
 
-    await sendRedirect(event, '/dashboard', 302)
+    const redirect = getQuery(event).redirect as string | undefined
+    await sendRedirect(event, redirect || '/dashboard', 302)
 })

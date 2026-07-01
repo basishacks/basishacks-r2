@@ -28,6 +28,7 @@ export interface AuthorizeSession {
   bh_verifier_challenge: string,
   bh_verifier_challenge_method: string,
   scopes: string[],
+  post_login_redirect: string | null,
   /**
    * "identification" = just identified the app. user has to login or enter email
    * "requesting" = requesting external resource, from ms oauth or from email/code
@@ -139,7 +140,7 @@ export async function exchangeAuthorizationCode(code: string, clientId?: string,
   throw new Error('Invalid authorization code')
 }
 
-export function constructSession(redirect_uri: string, app: OAuth2Application, state: string, code_challenge: string, code_challenge_method: string, scope: string): AuthorizeSession {
+export function constructSession(redirect_uri: string, app: OAuth2Application, state: string, code_challenge: string, code_challenge_method: string, scope: string, post_login_redirect: string | null = null): AuthorizeSession {
   const sessid = randomBytes(128).toString("base64url")
 
   const session: AuthorizeSession = {
@@ -156,6 +157,7 @@ export function constructSession(redirect_uri: string, app: OAuth2Application, s
     bh_verifier_challenge: code_challenge,
     bh_verifier_challenge_method: code_challenge_method,
     scopes: decodeURI(scope).split(' ').filter(s => s),
+    post_login_redirect,
     login_state: "identification",
     code: null
   }
@@ -205,7 +207,7 @@ export default defineEventHandler(async (event) => {
         body.code_challenge_method as string
     );
 
-    const session: AuthorizeSession = constructSession(body.redirect_uri, req.app, body.state, body.code_challenge, body.code_challenge_method, body.scope)
+    const session: AuthorizeSession = constructSession(body.redirect_uri, req.app, body.state, body.code_challenge, body.code_challenge_method, body.scope, body.post_login_redirect || null)
 
     addAuthorizeSession(session)
 
