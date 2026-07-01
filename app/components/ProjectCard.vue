@@ -12,14 +12,14 @@ const { data: team } = await useFetch<GetTeamResponse>(() => '/api/teams/' + pro
 
 <template>
   <UCard v-if="team"
-    description=teamname
+    :description="team.name"
   >
     <template #header>
       <h3 v-if="team.project.name" class="text-xl bold">{{ team.project.name }}</h3>
       <h3 v-else class="text-muted">(No Project Name)</h3>
       <span class="text-sm">Team: </span>
       <span v-if="team && team.name" class="text-muted text-sm">{{ team.name }}</span>
-      <span v-else class="text-muted text-sm"(No Team Name)></span>
+      <span v-else class="text-muted text-sm">(No Team Name)</span>
     </template>
 
     <template #default>
