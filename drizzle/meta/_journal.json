@@ -8,6 +8,13 @@
       "when": 1782797173776,
       "tag": "0000_lame_silver_fox",
       "breakpoints": true
+    },
+    {
+      "idx": 1,
+      "version": "6",
+      "when": 1782884463924,
+      "tag": "0001_curly_moon_knight",
+      "breakpoints": true
     }
   ]
 }

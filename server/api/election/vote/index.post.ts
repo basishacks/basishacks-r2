@@ -53,6 +53,13 @@ export default defineEventHandler(async (event) => {
             vote: JSON.stringify(voteMap),
             submitted_at: Date.now(),
         })
+        .onConflictDoUpdate({
+            target: scVotes.user_id,
+            set: {
+                vote: JSON.stringify(voteMap),
+                submitted_at: Date.now(),
+            },
+        })
         .run()
 
     return { message: "Vote submitted successfully" }
