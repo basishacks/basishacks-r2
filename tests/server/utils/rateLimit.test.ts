@@ -14,6 +14,13 @@ function makeMockEvent(overrides: Record<string, any> = {}) {
     method: 'GET',
     headers: {} as Record<string, string>,
     context: {},
+    node: {
+      req: {
+        socket: {
+          remoteAddress: '10.0.0.1',
+        },
+      },
+    },
     ...overrides,
   } as any
 }
@@ -34,72 +41,97 @@ describe('getClientIdentifier', () => {
     expect(id).toBe('user:42')
   })
 
-  it('falls back to IP when getUserSession throws', async () => {
-    ;(globalThis as any).getUserSession = vi.fn().mockRejectedValue(new Error('no session'))
-
-    const event = makeMockEvent({
-      headers: { 'x-forwarded-for': '10.0.0.1' },
-    })
-    ;(globalThis as any).getHeader = vi.fn((_event: any, name: string) => {
-      if (name === 'x-forwarded-for') return '10.0.0.1'
-      return undefined
-    })
-
-    const id = await getClientIdentifier(event)
-
-    expect(id).toBe('ip:10.0.0.1')
-  })
-
-  it('falls back to IP when session has no user id', async () => {
+  it('prefers the direct socket peer address for unauthenticated requests', async () => {
     ;(globalThis as any).getUserSession = vi.fn().mockResolvedValue({})
+    ;(globalThis as any).getHeader = vi.fn().mockReturnValue(undefined)
 
     const event = makeMockEvent({
-      headers: { 'x-forwarded-for': '192.168.1.1' },
+      node: { req: { socket: { remoteAddress: '192.168.1.1' } } },
     })
-    ;(globalThis as any).getHeader = vi.fn((_event: any, name: string) => {
-      if (name === 'x-forwarded-for') return '192.168.1.1'
-      return undefined
-    })
-
     const id = await getClientIdentifier(event)
 
     expect(id).toBe('ip:192.168.1.1')
   })
 
-  it('uses x-forwarded-for header (first IP) for unauthenticated requests', async () => {
-    ;(globalThis as any).getUserSession = vi.fn().mockResolvedValue({})
-    ;(globalThis as any).getHeader = vi.fn((_event: any, name: string) => {
-      if (name === 'x-forwarded-for') return '10.0.0.1, 10.0.0.2'
-      return undefined
-    })
-
-    const event = makeMockEvent()
-    const id = await getClientIdentifier(event)
-
-    expect(id).toBe('ip:10.0.0.1')
-  })
-
-  it('uses x-real-ip header when x-forwarded-for is absent', async () => {
+  it('falls back to x-real-ip when no socket address is available', async () => {
     ;(globalThis as any).getUserSession = vi.fn().mockResolvedValue({})
     ;(globalThis as any).getHeader = vi.fn((_event: any, name: string) => {
       if (name === 'x-real-ip') return '5.6.7.8'
       return undefined
     })
 
-    const event = makeMockEvent()
+    const event = makeMockEvent({
+      node: { req: { socket: { remoteAddress: undefined } } },
+    })
     const id = await getClientIdentifier(event)
 
     expect(id).toBe('ip:5.6.7.8')
   })
 
-  it('returns "ip:unknown" when no IP headers are present', async () => {
+  it('returns "ip:unknown" when no IP source is present', async () => {
     ;(globalThis as any).getUserSession = vi.fn().mockResolvedValue({})
     ;(globalThis as any).getHeader = vi.fn().mockReturnValue(undefined)
 
-    const event = makeMockEvent()
+    const event = makeMockEvent({
+      node: { req: { socket: { remoteAddress: undefined } } },
+    })
     const id = await getClientIdentifier(event)
 
     expect(id).toBe('ip:unknown')
+  })
+
+  it('ignores x-forwarded-for when TRUST_PROXY is not set', async () => {
+    ;(globalThis as any).getUserSession = vi.fn().mockResolvedValue({})
+    ;(globalThis as any).getHeader = vi.fn((_event: any, name: string) => {
+      if (name === 'x-forwarded-for') return '10.0.0.1, 10.0.0.2'
+      return undefined
+    })
+    delete process.env.TRUST_PROXY
+
+    const event = makeMockEvent({
+      node: { req: { socket: { remoteAddress: undefined } } },
+    })
+    const id = await getClientIdentifier(event)
+
+    expect(id).toBe('ip:unknown')
+  })
+
+  it('uses the rightmost x-forwarded-for value when TRUST_PROXY is set', async () => {
+    ;(globalThis as any).getUserSession = vi.fn().mockResolvedValue({})
+    ;(globalThis as any).getHeader = vi.fn((_event: any, name: string) => {
+      if (name === 'x-forwarded-for') return '10.0.0.1, 10.0.0.2, 10.0.0.3'
+      return undefined
+    })
+    process.env.TRUST_PROXY = 'true'
+
+    const event = makeMockEvent({
+      node: { req: { socket: { remoteAddress: undefined } } },
+    })
+    const id = await getClientIdentifier(event)
+
+    expect(id).toBe('ip:10.0.0.3')
+  })
+
+  it('rotation of x-forwarded-for does not bypass the limiter', async () => {
+    ;(globalThis as any).getUserSession = vi.fn().mockResolvedValue({})
+    let forwarded = '10.0.0.1, 10.0.0.2'
+    ;(globalThis as any).getHeader = vi.fn((_event: any, name: string) => {
+      if (name === 'x-forwarded-for') return forwarded
+      return undefined
+    })
+    delete process.env.TRUST_PROXY
+
+    const event = makeMockEvent({
+      node: { req: { socket: { remoteAddress: '192.168.1.1' } } },
+    })
+
+    const id1 = await getClientIdentifier(event)
+    forwarded = '10.0.0.2, 10.0.0.1'
+    const id2 = await getClientIdentifier(event)
+
+    expect(id1).toBe('ip:192.168.1.1')
+    expect(id2).toBe('ip:192.168.1.1')
+    expect(id1).toBe(id2)
   })
 })
 

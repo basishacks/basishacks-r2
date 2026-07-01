@@ -31,11 +31,24 @@ export async function getClientIdentifier(event: H3Event): Promise<string> {
     // User not authenticated, fall through to IP
   }
 
-  // Fall back to IP address for unauthenticated requests
-  const ip =
-    getHeader(event, 'x-forwarded-for')?.split(',')[0]?.trim() ||
-    getHeader(event, 'x-real-ip') ||
-    'unknown'
+  // Fall back to IP address for unauthenticated requests.
+  // Prefer the direct socket peer address; only consult x-forwarded-for when
+  // explicitly trusting a proxy, and then use the rightmost untrusted hop.
+  const socketAddress = event.node.req.socket?.remoteAddress
+  let ip = socketAddress || getHeader(event, 'x-real-ip') || 'unknown'
+
+  if (!socketAddress && process.env.TRUST_PROXY) {
+    const forwarded = getHeader(event, 'x-forwarded-for')
+    if (forwarded) {
+      const parts = forwarded
+        .split(',')
+        .map((value) => value.trim())
+        .filter(Boolean)
+      if (parts.length > 0) {
+        ip = parts[parts.length - 1]
+      }
+    }
+  }
 
   return `ip:${ip}`
 }
