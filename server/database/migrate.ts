@@ -45,7 +45,7 @@ function extractCreatedTables(sql: string): string[] {
   return tables
 }
 
-export function migrateDatabase(sqlite: PortableSqlite) {
+export function migrateDatabase(sqlite: PortableSqlite, migrationsDir: string = MIGRATIONS_DIR) {
   sqlite.exec(`
     CREATE TABLE IF NOT EXISTS _drizzle_migrations (
       hash TEXT PRIMARY KEY,
@@ -60,7 +60,7 @@ export function migrateDatabase(sqlite: PortableSqlite) {
       .map((row) => row.hash),
   )
 
-  const migrationFiles = readdirSync(MIGRATIONS_DIR)
+  const migrationFiles = readdirSync(migrationsDir)
     .filter((file) => file.endsWith('.sql'))
     .sort()
 
@@ -69,12 +69,12 @@ export function migrateDatabase(sqlite: PortableSqlite) {
   for (const file of migrationFiles) {
     if (applied.has(file)) continue
 
-    const sql = readFileSync(resolve(MIGRATIONS_DIR, file), 'utf-8')
+    const sql = readFileSync(resolve(migrationsDir, file), 'utf-8')
 
     // If the migration would create tables that already exist, assume it was
     // applied before migration tracking was in place and just record it.
     const createdTables = extractCreatedTables(sql)
-    const alreadyApplied = createdTables.every(
+    const alreadyApplied = createdTables.length > 0 && createdTables.every(
       (table) => table === '_drizzle_migrations' || existingTables.has(table),
     )
 
