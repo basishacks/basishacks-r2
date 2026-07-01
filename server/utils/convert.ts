@@ -1,7 +1,10 @@
 import type { ResolvedAward } from './database/awards'
 
 function parseProfileTheme(input?: string): ProfileTheme {
-  const [rawMode, rawValue] = (input ?? "").split("|")
+  const str = input ?? ""
+  const sepIndex = str.indexOf("|")
+  const rawMode = sepIndex === -1 ? str : str.slice(0, sepIndex)
+  const rawValue = sepIndex === -1 ? "" : str.slice(sepIndex + 1)
 
   const allowedModes: ProfileTheme["mode"][] = ["url", "emoji", "gradient"]
 
@@ -9,9 +12,7 @@ function parseProfileTheme(input?: string): ProfileTheme {
     ? (rawMode as ProfileTheme["mode"])
     : "emoji" // default fallback
 
-  const value: string = rawValue ?? ""
-
-  return { mode, value }
+  return { mode, value: rawValue }
 }
 
 export function convertUserToPublic(user: User): APIUser {

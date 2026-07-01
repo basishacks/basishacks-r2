@@ -27,7 +27,7 @@ const season: HackathonSeason = hackathonSeasons[season_id] || {
       <div class="flex flex-col">
         <span class="text-sm bold text-muted">Rated / Total</span>
         <span class="text-3xl">
-          <span class="text-primary bold">{{ props.season.ballot_count }}</span>
+          <span class="text-primary bold">{{ props.season.scored_count }}</span>
           <span class="text-muted">/</span>
           <span class="bold">{{ props.season.submitted_count }}</span>
         </span>

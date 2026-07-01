@@ -37,7 +37,7 @@ const { data: summary, refresh: refreshSummary } = await useFetch<GetBallotSumma
 
 const currentSummary = computed(() => summary.value?.current ?? null)
 
-const filteredPast = computed(() => summary.value?.past.filter(item => item.ballot_count > 0) ?? [])
+const filteredPast = computed(() => summary.value?.past.filter(item => item.scored_count > 0) ?? [])
 
 async function onScored() {
   await withLoadingIndicator(async () => {

@@ -41,4 +41,21 @@ describe('convert utilities', () => {
     expect(result.project.submitted).toBe(true)
     expect(result.awards[0].text).toBe('Best, Design')
   })
+
+  it('parseProfileTheme preserves the full value when it contains pipes', () => {
+    const user: any = {
+      id: 1,
+      email: 'a@b.com',
+      role: 'participant',
+      name: null,
+      team_id: null,
+      profile_theme: 'url|http://example.com/image?a=1|b=2',
+      profile_picture: null,
+    }
+    const result = convertUserToPublic(user)
+    expect(result.profile_theme).toEqual({
+      mode: 'url',
+      value: 'http://example.com/image?a=1|b=2',
+    })
+  })
 })

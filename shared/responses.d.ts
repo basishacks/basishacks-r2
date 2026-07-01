@@ -70,7 +70,7 @@ interface BallotSummaryItem {
     season_name: string;
     project_count: number;
     submitted_count: number;
-    ballot_count: number;
+    scored_count: number;
 }
 
 type GetBallotSummaryResponse = {

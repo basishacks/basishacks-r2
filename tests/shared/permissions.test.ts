@@ -49,6 +49,16 @@ describe('parsePermissions', () => {
     // which gets decoded back to a space, then split, then filtered
     expect(result).toEqual(['portal.users.view', 'portal.teams.view'])
   })
+
+  it('does not throw on malformed URI sequences', () => {
+    expect(() => parsePermissions('admin%')).not.toThrow()
+    expect(() => parsePermissions('%ZZ')).not.toThrow()
+  })
+
+  it('falls back to raw string on malformed URI sequences', () => {
+    const result = parsePermissions('sc.vote admin%')
+    expect(result).toEqual(['sc.vote', 'admin%'])
+  })
 })
 
 describe('hasPermission', () => {

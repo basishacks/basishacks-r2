@@ -8,7 +8,7 @@ export default defineEventHandler(async (event) => {
   const team = await getTeam(event, id, true)
 
   if (!team) {
-    return createError({
+    throw createError({
       status: 404,
       message: "Team '" + id + "' does not exist"
     })

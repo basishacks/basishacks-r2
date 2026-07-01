@@ -12,7 +12,7 @@ export default defineEventHandler(async (event) => {
       season_name: seasons.name,
       project_count: sql<number>`COUNT(DISTINCT ${teams.id})`,
       submitted_count: sql<number>`COUNT(DISTINCT CASE WHEN ${teams.project_submitted} = 1 THEN ${teams.id} END)`,
-      ballot_count: sql<number>`COUNT(DISTINCT ${teamScores.team_id})`,
+      scored_count: sql<number>`COUNT(DISTINCT ${teamScores.team_id})`,
     })
     .from(seasons)
     .leftJoin(teams, eq(teams.season_id, seasons.id))
