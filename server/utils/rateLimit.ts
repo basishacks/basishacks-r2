@@ -15,9 +15,30 @@ export const DEFAULT_RATE_LIMIT_CONFIG: RateLimitConfig = {
 // Map to store request history: key -> array of timestamps
 const requestHistory = new Map<string, number[]>()
 
+// Cap the Map size to prevent unbounded memory growth
+const MAX_TRACKED_KEYS = 10000
+
+// Interval-based cleanup (runs every 5 minutes)
+const CLEANUP_INTERVAL_MS = 5 * 60 * 1000
+let lastCleanup = 0
+
 /** Clear the rate limit history — exposed for testing. */
 export function clearRateLimitHistory() {
   requestHistory.clear()
+}
+
+function cleanupStaleEntries(now: number) {
+  if (now - lastCleanup < CLEANUP_INTERVAL_MS) return
+  lastCleanup = now
+  const oneHourAgo = now - 60 * 60 * 1000
+  for (const [key, times] of requestHistory.entries()) {
+    const recentTimes = times.filter((t) => t > oneHourAgo)
+    if (recentTimes.length === 0) {
+      requestHistory.delete(key)
+    } else {
+      requestHistory.set(key, recentTimes)
+    }
+  }
 }
 
 export async function getClientIdentifier(event: H3Event): Promise<string> {
@@ -73,6 +94,22 @@ export function applyRateLimit(
 
     const now = Date.now()
 
+    // Run cleanup on a time-based interval instead of probabilistically
+    cleanupStaleEntries(now)
+
+    // Treat maxRequests <= 0 as always-limited
+    if (finalConfig.maxRequests <= 0) {
+      setHeader(event, 'Retry-After', Math.ceil(finalConfig.windowMs / 1000))
+      throw createError({
+        status: 429,
+        statusMessage: 'Too Many Requests',
+        data: {
+          message: `Rate limit exceeded. Max ${finalConfig.maxRequests} requests per ${finalConfig.windowMs / 1000}s.`,
+          retryAfter: Math.ceil(finalConfig.windowMs / 1000),
+        },
+      })
+    }
+
     // Get or initialize request history for this identifier
     let history = requestHistory.get(identifier) || []
 
@@ -82,7 +119,6 @@ export function applyRateLimit(
     // Check if rate limit exceeded
     if (history.length >= finalConfig.maxRequests) {
       const oldestRequest = history[0]
-      if (!oldestRequest) return;
       const resetTime = new Date(oldestRequest + finalConfig.windowMs)
       const retryAfter = Math.ceil(
         (oldestRequest + finalConfig.windowMs - now) / 1000
@@ -105,16 +141,11 @@ export function applyRateLimit(
     history.push(now)
     requestHistory.set(identifier, history)
 
-    // Periodic memory cleanup
-    if (Math.random() < 0.01) {
-      const oneHourAgo = now - 60 * 60 * 1000
-      for (const [key, times] of requestHistory.entries()) {
-        const recentTimes = times.filter((t) => t > oneHourAgo)
-        if (recentTimes.length === 0) {
-          requestHistory.delete(key)
-        } else {
-          requestHistory.set(key, recentTimes)
-        }
+    // Enforce Map size cap by evicting the oldest entry
+    if (requestHistory.size > MAX_TRACKED_KEYS) {
+      const firstKey = requestHistory.keys().next().value
+      if (firstKey !== undefined) {
+        requestHistory.delete(firstKey)
       }
     }
 

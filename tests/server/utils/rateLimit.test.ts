@@ -290,4 +290,28 @@ describe('applyRateLimit', () => {
 
     expect(handler).toHaveBeenCalledTimes(2)
   })
+
+  it('throws 429 immediately when maxRequests is 0', async () => {
+    const handler = vi.fn().mockResolvedValue({ ok: true })
+    const wrapped = applyRateLimit(handler, { maxRequests: 0, windowMs: 60_000 })
+
+    const event = makeMockEvent()
+
+    await expect(wrapped(event)).rejects.toMatchObject({
+      statusCode: 429,
+    })
+    expect(handler).not.toHaveBeenCalled()
+  })
+
+  it('throws 429 immediately when maxRequests is negative', async () => {
+    const handler = vi.fn().mockResolvedValue({ ok: true })
+    const wrapped = applyRateLimit(handler, { maxRequests: -1, windowMs: 60_000 })
+
+    const event = makeMockEvent()
+
+    await expect(wrapped(event)).rejects.toMatchObject({
+      statusCode: 429,
+    })
+    expect(handler).not.toHaveBeenCalled()
+  })
 })
