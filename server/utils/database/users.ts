@@ -1,6 +1,15 @@
 import type { H3Event } from 'h3'
-import { eq, and, sql, gt } from 'drizzle-orm'
-import { users, teamScores, ballots, userPastTeams } from '~~/server/database/schema'
+import { eq, and, inArray, sql, gt } from 'drizzle-orm'
+import {
+  users,
+  teamScores,
+  ballots,
+  ballotScores,
+  userPastTeams,
+  peerVotingScores,
+  scVotes,
+  oauth2Applications,
+} from '~~/server/database/schema'
 import { hasPermission } from '~~/shared/permissions'
 
 export async function getUser(
@@ -140,25 +149,43 @@ export async function updateUserRole(event: H3Event, userID: number, role: strin
 
 export async function deleteUsers(event: H3Event, userIDs: number[]) {
   for (const id of userIDs) {
-    // Remove related records first to avoid FK violations
-    event.context.drizzle
-      .delete(teamScores)
-      .where(eq(teamScores.judge_user_id, id))
-      .run()
+    event.context.drizzle.transaction((tx) => {
+      tx.delete(teamScores)
+        .where(eq(teamScores.judge_user_id, id))
+        .run()
 
-    event.context.drizzle
-      .delete(ballots)
-      .where(eq(ballots.user_id, id))
-      .run()
+      tx.delete(ballotScores)
+        .where(
+          inArray(
+            ballotScores.ballot_id,
+            tx.select({ id: ballots.id }).from(ballots).where(eq(ballots.user_id, id)),
+          ),
+        )
+        .run()
 
-    event.context.drizzle
-      .delete(userPastTeams)
-      .where(eq(userPastTeams.user_id, id))
-      .run()
+      tx.delete(ballots)
+        .where(eq(ballots.user_id, id))
+        .run()
 
-    event.context.drizzle
-      .delete(users)
-      .where(eq(users.id, id))
-      .run()
+      tx.delete(peerVotingScores)
+        .where(eq(peerVotingScores.user_id, id))
+        .run()
+
+      tx.delete(scVotes)
+        .where(eq(scVotes.user_id, id))
+        .run()
+
+      tx.delete(userPastTeams)
+        .where(eq(userPastTeams.user_id, id))
+        .run()
+
+      tx.delete(oauth2Applications)
+        .where(eq(oauth2Applications.owner_id, id))
+        .run()
+
+      tx.delete(users)
+        .where(eq(users.id, id))
+        .run()
+    })
   }
 }

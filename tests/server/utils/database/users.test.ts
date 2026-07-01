@@ -293,10 +293,22 @@ describe('users database helpers', () => {
         'INSERT INTO ballots(user_id) VALUES(1)',
       ).run()
       event.context.db.prepare(
+        'INSERT INTO ballot_scores(ballot_id, project_id) VALUES(1, 1)',
+      ).run()
+      event.context.db.prepare(
         "INSERT INTO team_scores(team_id, judge_user_id, scores) VALUES(1, 1, '{}')",
       ).run()
       event.context.db.prepare(
         'INSERT INTO user_past_teams(user_id, team_id) VALUES(1, 1)',
+      ).run()
+      event.context.db.prepare(
+        "INSERT INTO peer_voting_scores(user_id, score, reasoning) VALUES(1, '{}', 'nice')",
+      ).run()
+      event.context.db.prepare(
+        "INSERT INTO sc_votes(user_id, vote) VALUES(1, 'yes')",
+      ).run()
+      event.context.db.prepare(
+        "INSERT INTO oauth2_applications(client_id, client_secret, name, owner_id) VALUES('client-1', '', 'App', 1)",
       ).run()
 
       await deleteUsers(event, [1])
@@ -315,10 +327,30 @@ describe('users database helpers', () => {
       ).all() as { results: any[] }
       expect(ballots.results).toHaveLength(0)
 
+      const ballotScores = event.context.db.prepare(
+        'SELECT * FROM ballot_scores WHERE ballot_id = 1',
+      ).all() as { results: any[] }
+      expect(ballotScores.results).toHaveLength(0)
+
       const pastTeams = event.context.db.prepare(
         'SELECT * FROM user_past_teams WHERE user_id = 1',
       ).all() as { results: any[] }
       expect(pastTeams.results).toHaveLength(0)
+
+      const peerVotes = event.context.db.prepare(
+        'SELECT * FROM peer_voting_scores WHERE user_id = 1',
+      ).all() as { results: any[] }
+      expect(peerVotes.results).toHaveLength(0)
+
+      const scVotes = event.context.db.prepare(
+        'SELECT * FROM sc_votes WHERE user_id = 1',
+      ).all() as { results: any[] }
+      expect(scVotes.results).toHaveLength(0)
+
+      const apps = event.context.db.prepare(
+        'SELECT * FROM oauth2_applications WHERE owner_id = 1',
+      ).all() as { results: any[] }
+      expect(apps.results).toHaveLength(0)
     })
   })
 })
