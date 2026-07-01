@@ -104,5 +104,19 @@ describe('seasons database helpers', () => {
         'Season not found',
       )
     })
+
+    it('leaves the active season unchanged when the target season does not exist', async () => {
+      event.context.db.prepare(
+        "INSERT INTO seasons(name, is_active) VALUES('Active', 1)",
+      ).run()
+
+      await expect(setActiveSeason(event, 999)).rejects.toThrow(
+        'Season not found',
+      )
+
+      const season = await getActiveSeason(event)
+      expect(season).not.toBeNull()
+      expect(season!.name).toBe('Active')
+    })
   })
 })

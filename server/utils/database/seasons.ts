@@ -31,23 +31,31 @@ export async function getActiveSeason(event: H3Event): Promise<Season | null> {
 }
 
 export async function setActiveSeason(event: H3Event, seasonId: number | null) {
-  event.context.drizzle
-    .update(seasons)
-    .set({ is_active: 0 })
-    .run()
+  event.context.drizzle.transaction((tx) => {
+    if (seasonId !== null) {
+      const season = tx
+        .select()
+        .from(seasons)
+        .where(eq(seasons.id, seasonId))
+        .get()
 
-  if (seasonId !== null) {
-    const result = event.context.drizzle
-      .update(seasons)
-      .set({ is_active: 1 })
-      .where(eq(seasons.id, seasonId))
+      if (!season) {
+        throw createError({
+          status: 404,
+          message: 'Season not found',
+        })
+      }
+    }
+
+    tx.update(seasons)
+      .set({ is_active: 0 })
       .run()
 
-    if (result.changes === 0) {
-      throw createError({
-        status: 404,
-        message: 'Season not found',
-      })
+    if (seasonId !== null) {
+      tx.update(seasons)
+        .set({ is_active: 1 })
+        .where(eq(seasons.id, seasonId))
+        .run()
     }
-  }
+  })
 }
