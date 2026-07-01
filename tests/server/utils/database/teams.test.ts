@@ -357,6 +357,12 @@ describe('teams database helpers', () => {
       event.context.db.prepare(
         'INSERT INTO ballot_scores(ballot_id, project_id) VALUES(1, 1)',
       ).run()
+      event.context.db.prepare(
+        "INSERT INTO team_awards(team_id, award, meta) VALUES(1, 'best', '{}')",
+      ).run()
+      event.context.db.prepare(
+        'INSERT INTO user_past_teams(user_id, team_id) VALUES(1, 1)',
+      ).run()
 
       await deleteTeams(event, [1])
 
@@ -379,6 +385,16 @@ describe('teams database helpers', () => {
         'SELECT * FROM ballot_scores WHERE project_id = 1',
       ).all() as { results: any[] }
       expect(ballotScores.results).toHaveLength(0)
+
+      const awards = event.context.db.prepare(
+        'SELECT * FROM team_awards WHERE team_id = 1',
+      ).all() as { results: any[] }
+      expect(awards.results).toHaveLength(0)
+
+      const pastTeams = event.context.db.prepare(
+        'SELECT * FROM user_past_teams WHERE team_id = 1',
+      ).all() as { results: any[] }
+      expect(pastTeams.results).toHaveLength(0)
     })
   })
 })

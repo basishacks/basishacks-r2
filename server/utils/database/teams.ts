@@ -1,6 +1,13 @@
 import type { H3Event } from 'h3'
 import { eq, and, notExists } from 'drizzle-orm'
-import { teams, teamScores, ballotScores, users } from '~~/server/database/schema'
+import {
+  teams,
+  teamScores,
+  ballotScores,
+  teamAwards,
+  userPastTeams,
+  users,
+} from '~~/server/database/schema'
 
 // --- Active season filtered (default behavior) ---
 
@@ -162,25 +169,31 @@ export async function updateTeam(event: H3Event, team: Team) {
 
 export async function deleteTeams(event: H3Event, teamIDs: number[]) {
   for (const id of teamIDs) {
-    event.context.drizzle
-      .delete(ballotScores)
-      .where(eq(ballotScores.project_id, id))
-      .run()
+    event.context.drizzle.transaction((tx) => {
+      tx.delete(ballotScores)
+        .where(eq(ballotScores.project_id, id))
+        .run()
 
-    event.context.drizzle
-      .delete(teamScores)
-      .where(eq(teamScores.team_id, id))
-      .run()
+      tx.delete(teamScores)
+        .where(eq(teamScores.team_id, id))
+        .run()
 
-    event.context.drizzle
-      .update(users)
-      .set({ team_id: null })
-      .where(eq(users.team_id, id))
-      .run()
+      tx.delete(teamAwards)
+        .where(eq(teamAwards.team_id, id))
+        .run()
 
-    event.context.drizzle
-      .delete(teams)
-      .where(eq(teams.id, id))
-      .run()
+      tx.delete(userPastTeams)
+        .where(eq(userPastTeams.team_id, id))
+        .run()
+
+      tx.update(users)
+        .set({ team_id: null })
+        .where(eq(users.team_id, id))
+        .run()
+
+      tx.delete(teams)
+        .where(eq(teams.id, id))
+        .run()
+    })
   }
 }
