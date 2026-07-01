@@ -77,8 +77,6 @@ async function requestMicrosoft(endpoint: string, method: string = "GET", body: 
 
 async function requestUserMicrosoft(endpoint: string, method: string = "GET", body: string | Object | null = null) {
 
-    console.log(getDummyUserAccessToken())
-
     const res = await fetch("https://graph.microsoft.com/v1.0" + endpoint, {
         method,
         headers: {
@@ -149,7 +147,7 @@ export async function initializeDummyUserAccessToken() {
 
     
 
-    console.log("[MS Graph] Response from Dummy User Token Endpoint: " + res.status + " Token:" + (data.access_token as string).substring(0, 20) + "..." + " Refresh Token:" + (data.refresh_token as string).substring(0, 20) + "...");
+    console.log('[MS Graph] Response from Dummy User Token Endpoint: ' + res.status)
 
     if (res.status == 400) {
 
