@@ -61,7 +61,7 @@ export async function getMSAccessToken() {
  If you need any api usage, create a wrapper inside this function and export it.
  */
 
-async function requestMicrosoft(endpoint: string, method: string = "GET", body: string | Object | null = null) {
+export async function requestMicrosoft(endpoint: string, method: string = "GET", body: string | Object | null = null, retried: boolean = false) {
 
     const res = await fetch("https://graph.microsoft.com/v1.0" + endpoint, {
         method,
@@ -72,10 +72,18 @@ async function requestMicrosoft(endpoint: string, method: string = "GET", body: 
         body: method === "GET" ? null : (typeof body === "string" ? body : JSON.stringify(body))
     });
 
+    if (res.status === 401 && !retried) {
+        console.warn("[MS Graph] Application token unauthorized, refreshing...")
+        metadata.access_token = null
+        initPromise = null
+        await initializeMSAccessToken()
+        return requestMicrosoft(endpoint, method, body, true)
+    }
+
     return res;
 }
 
-async function requestUserMicrosoft(endpoint: string, method: string = "GET", body: string | Object | null = null) {
+export async function requestUserMicrosoft(endpoint: string, method: string = "GET", body: string | Object | null = null, retried: boolean = false) {
 
     const res = await fetch("https://graph.microsoft.com/v1.0" + endpoint, {
         method,
@@ -87,10 +95,13 @@ async function requestUserMicrosoft(endpoint: string, method: string = "GET", bo
     });
 
     if (res.status == 401) {
+        if (retried) {
+            throw new Error('[MS Graph] User token refresh failed after retry')
+        }
         console.warn("[MS Graph] User token unauthorized, refreshing dummy user access token...")
         metadata.user_access_token = null
         await initializeDummyUserAccessToken()
-        return requestUserMicrosoft(endpoint, method, body)
+        return requestUserMicrosoft(endpoint, method, body, true)
     }
 
     return res;
