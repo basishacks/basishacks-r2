@@ -5,14 +5,14 @@ description: How basishacks runs in local development versus production, includi
 
 # Runtime Architecture
 
-basishacks runs in two distinct environments: **local development** with `better-sqlite3`, and **production** on a VPS with the same `better-sqlite3` database. The codebase is designed so that the same application logic works identically in both.
+basishacks runs in two distinct environments: **local development** and **production** on a VPS. The codebase supports dual-runtime operation — under Bun it uses `bun:sqlite`, under Node.js it uses `better-sqlite3`. Drizzle ORM provides the unified query layer.
 
 ## Local Development
 
 | Setting | Value |
 |---------|-------|
-| Nitro preset | `bun` |
-| Database | `better-sqlite3` against `./database/basishacks.sqlite` |
+| Nitro preset | `node-server` |
+| Database | SQLite via Drizzle ORM (`bun:sqlite` under Bun, `better-sqlite3` under Node.js) |
 | WAL mode | Enabled |
 | Foreign keys | Enforced (`PRAGMA foreign_keys = ON`) |
 | Dev server port | 24598 |
@@ -29,7 +29,7 @@ bun dev --https
 | Setting | Value |
 |---------|-------|
 | Build preset | `node-server` |
-| Database | SQLite (better-sqlite3) |
+| Database | SQLite via Drizzle ORM (`bun:sqlite` under Bun, `better-sqlite3` under Node.js) |
 | Deployment | Manual or CI/CD to VPS |
 
 The production build is generated with:
@@ -58,8 +58,8 @@ Plugins run at server startup and set up the runtime environment. They are loade
 2. Registers a `request` hook that attaches the Drizzle instance to `event.context.drizzle`
 
 ```ts
-export default defineNitroPlugin((nitroApp) => {
-  const db = createDrizzleDatabase()
+export default defineNitroPlugin(async (nitroApp) => {
+  const db = await createDrizzleDatabase()
 
   const tables = db.all<{ name: string }>(sql`SELECT name FROM sqlite_master WHERE type='table'`)
   console.log(`[Nitro] Database plugin loaded with ${tables.length} tables (Drizzle ORM)`)
@@ -105,7 +105,7 @@ The H3 event context is extended via TypeScript declarations in `server/types/`:
 ```ts
 declare module 'h3' {
   interface H3EventContext {
-    drizzle: BetterSQLite3Database<typeof schema>
+    drizzle: BaseSQLiteDatabase<typeof schema>
   }
 }
 ```
@@ -124,7 +124,7 @@ declare module 'h3' {
 
 | Key | Type | Always present? | Set by |
 |-----|------|----------------|--------|
-| `event.context.drizzle` | `BetterSQLite3Database` | Yes | `init-database.ts` request hook |
+| `event.context.drizzle` | `BaseSQLiteDatabase` | Yes | `init-database.ts` request hook |
 | `event.context.oauth2` | `OAuth2JWTContext` | Only in OAuth2-protected endpoints | `withOAuth2JWT()` wrapper |
 
 ## Request Lifecycle

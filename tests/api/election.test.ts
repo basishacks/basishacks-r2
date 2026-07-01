@@ -7,8 +7,11 @@ import {
   mockSession,
   seedHackathon,
   seedSeason,
+  seedUser,
   type TestContext,
 } from './helpers'
+import { scVotes, hackathon } from '~~/server/database/schema'
+import { eq } from 'drizzle-orm'
 
 vi.mock('~~/server/utils/rateLimit', () => ({
   applyRateLimit: (fn: any) => fn,
@@ -18,11 +21,12 @@ let ctx: TestContext
 let candidatesHandler: any
 let voteGetHandler: any
 let votePostHandler: any
+let electionPositions: any
 
 beforeAll(async () => {
   setupNitroGlobals()
 
-  const { electionPositions } = await import('~~/server/utils/election')
+  ;({ electionPositions } = await import('~~/server/utils/election'))
   vi.stubGlobal('electionPositions', electionPositions)
 
   candidatesHandler = (await import('~~/server/api/election/candidates.get')).default
@@ -35,6 +39,7 @@ beforeEach(async () => {
   ctx = await createTestContext()
   seedHackathon(ctx)
   seedSeason(ctx)
+  seedUser(ctx, { email: 'voter@basischina.com' })
 })
 
 afterEach(() => {
@@ -78,6 +83,62 @@ describe('GET /api/election/vote', () => {
     expect(result).toHaveProperty('totalBallots', 0)
     expect(result).toHaveProperty('positions')
     expect(Array.isArray(result.positions)).toBe(true)
+  })
+})
+
+describe('GET /api/election/vote (results gating)', () => {
+  // Helper: seed a single ballot voting for the President candidate (id 10926)
+  function seedBallot(ctx: TestContext, userId = 1) {
+    ctx.drizzle
+      .insert(scVotes)
+      .values({
+        user_id: userId,
+        vote: JSON.stringify({ '10926': 1 }),
+        submitted_at: Math.floor(Date.now() / 1000),
+      })
+      .run()
+  }
+
+  it('returns no_votes status with no winner when results_open_timestamp is in the future', async () => {
+    vi.mocked(globalThis.requirePermission).mockResolvedValue({ id: 1, role: 'participant' })
+
+    // Default seeded hackathon has results_open_timestamp well in the future
+    seedBallot(ctx)
+
+    const result = await voteGetHandler(createEvent())
+
+    expect(result.totalBallots).toBe(1)
+    expect(result.positions).toHaveLength(electionPositions.length)
+    for (const position of result.positions) {
+      expect(position.status).toBe('no_votes')
+      expect(position.winner).toBeUndefined()
+      expect(position.details).toBeUndefined()
+    }
+  })
+
+  it('returns full IRV results when results_open_timestamp is in the past', async () => {
+    vi.mocked(globalThis.requirePermission).mockResolvedValue({ id: 1, role: 'participant' })
+
+    // Move results_open_timestamp into the past so results are unlocked
+    ctx.drizzle
+      .update(hackathon)
+      .set({ results_open_timestamp: Date.now() - 1000 })
+      .where(eq(hackathon.id, 1))
+      .run()
+
+    seedBallot(ctx)
+
+    const result = await voteGetHandler(createEvent())
+
+    expect(result.totalBallots).toBe(1)
+    expect(result.positions).toHaveLength(electionPositions.length)
+
+    // The President position has a single candidate (Alice Wu), so with one
+    // ballot she must be elected outright.
+    const president = result.positions.find((p: any) => p.title === 'President')
+    expect(president).toBeDefined()
+    expect(president.status).toBe('elected')
+    expect(president.winner).toBe('Alice Wu')
   })
 })
 

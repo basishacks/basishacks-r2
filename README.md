@@ -9,10 +9,9 @@ The official website for the BIBS-C Network Hackathon (season 2, 2025–26).
 | Framework | Nuxt 3 |
 | UI | @nuxt/ui ^4.6.1 (Tailwind CSS v4) |
 | Language | TypeScript 5.6+ |
-| Runtime | Node.js >= v24 |
+| Runtime | Node.js >= v24 or Bun (dual-runtime support) |
 | Package Manager | Bun (preferred); npm works |
-| Database (local) | better-sqlite3 with WAL mode |
-| Database (prod) | SQLite (better-sqlite3) |
+| Database | SQLite via Drizzle ORM (bun:sqlite under Bun, better-sqlite3 under Node.js) |
 | Auth | nuxt-auth-utils (session-based) |
 | Validation | Zod 4.x |
 | Fonts | @nuxt/fonts (local provider) |
@@ -37,11 +36,13 @@ server/                 # Nitro backend
   api/                  # API route handlers
   middleware/           # Server middleware
   plugins/              # Nitro plugins (DB init, MS Graph)
+  database/             # Drizzle ORM schema, migrations, dual-runtime init
   utils/                # Server utilities
-    database.ts         # SQLite wrapper
-    database/*.ts       # Per-table DB helpers
+    database/*.ts       # Per-table DB helpers (Drizzle ORM)
     auth.ts             # Role enforcement helpers
+    rateLimit.ts        # In-memory rate limiter
     oauth2-validate.ts  # OAuth2 request validation
+    oauth2-jwt.ts       # OAuth2 JWT verification + scope checks
 
 shared/                 # Code shared between client and server
   schemas.ts            # Zod validation schemas

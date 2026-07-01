@@ -226,6 +226,20 @@ describe('addMessage', () => {
     expect(updated!.messages).toHaveLength(1)
     expect(updated!.messages[0]).toEqual(message)
   })
+
+  it('caps message history at MAX_MESSAGES_PER_SESSION (200)', () => {
+    const session = createSession('Cap Chat')
+    // Add 205 messages; only the last 200 should be retained
+    for (let i = 0; i < 205; i++) {
+      addMessage(session.id, { role: 'user' as const, content: `msg-${i}` })
+    }
+
+    const messages = getMessages(session.id)
+    expect(messages).toHaveLength(200)
+    // The first 5 messages (msg-0 .. msg-4) should have been evicted
+    expect(messages[0]!.content).toBe('msg-5')
+    expect(messages[messages.length - 1]!.content).toBe('msg-204')
+  })
 })
 
 // ---------------------------------------------------------------------------
@@ -274,5 +288,49 @@ describe('getMessages', () => {
       'B',
       'C',
     ])
+  })
+
+  it('returns a copy, not the internal array reference', () => {
+    const session = createSession('Copy Check')
+    addMessage(session.id, { role: 'user' as const, content: 'original' })
+
+    const first = getMessages(session.id)
+    const second = getMessages(session.id)
+
+    // Each call returns a distinct array instance
+    expect(first).not.toBe(second)
+    expect(first).toEqual(second)
+
+    // Mutating the returned array must not affect subsequent calls
+    first.push({ role: 'user' as const, content: 'injected' })
+    const third = getMessages(session.id)
+    expect(third).toHaveLength(1)
+    expect(third[0]!.content).toBe('original')
+  })
+})
+
+// ---------------------------------------------------------------------------
+// MAX_SESSIONS eviction
+// ---------------------------------------------------------------------------
+
+describe('MAX_SESSIONS eviction', () => {
+  it('evicts the oldest session when creating a new one at capacity (100)', () => {
+    // Fill the store up to the maximum of 100 sessions
+    const created = []
+    for (let i = 0; i < 100; i++) {
+      created.push(createSession(`Session ${i}`))
+    }
+    expect(getAllSessions()).toHaveLength(100)
+
+    const oldestId = created[0]!.id
+    expect(getDeepSeekSession(oldestId)).toBeDefined()
+
+    // Creating one more should evict the oldest session
+    const overflow = createSession('Overflow Session')
+    expect(getDeepSeekSession(overflow.id)).toBeDefined()
+    expect(getDeepSeekSession(oldestId)).toBeUndefined()
+
+    // Total count should remain at the cap
+    expect(getAllSessions()).toHaveLength(100)
   })
 })
