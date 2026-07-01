@@ -3,6 +3,8 @@ import type { H3Event } from 'h3'
 interface RateLimitConfig {
   maxRequests: number
   windowMs: number
+  keyPrefix?: string
+  keyGenerator?: (event: H3Event) => Promise<string | null> | string | null
 }
 
 export const DEFAULT_RATE_LIMIT_CONFIG: RateLimitConfig = {
@@ -45,7 +47,17 @@ export function applyRateLimit(
   const finalConfig = { ...DEFAULT_RATE_LIMIT_CONFIG, ...config }
 
   return async (event: H3Event) => {
-    const identifier = await getClientIdentifier(event)
+    let identifier: string
+    if (finalConfig.keyGenerator) {
+      const generated = await finalConfig.keyGenerator(event)
+      identifier = generated ?? (await getClientIdentifier(event))
+    } else {
+      identifier = await getClientIdentifier(event)
+    }
+    if (finalConfig.keyPrefix) {
+      identifier = `${finalConfig.keyPrefix}:${identifier}`
+    }
+
     const now = Date.now()
 
     // Get or initialize request history for this identifier

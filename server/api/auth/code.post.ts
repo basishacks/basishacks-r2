@@ -1,7 +1,7 @@
 import { SendCodeRequest } from '~~/shared/schemas'
 import { getAuthorizeSession } from '../oauth2/session.post'
 
-export default defineEventHandler(async (event) => {
+async function handler(event: any) {
   const { sendCodeURL } = useRuntimeConfig(event)
   if (!sendCodeURL) {
     throw createError({
@@ -60,4 +60,22 @@ export default defineEventHandler(async (event) => {
   session.login_state = "requesting"
 
   return { message: 'Sent code to your Teams account' }
+}
+
+export default applyRateLimit(handler, {
+  maxRequests: 3,
+  windowMs: 60_000,
+  keyPrefix: 'auth:code',
+  keyGenerator: async (event) => {
+    try {
+      const body = await readBody(event)
+      const email = (body as any)?.email
+      if (typeof email === 'string') {
+        return `email:${email.toLowerCase().trim()}`
+      }
+    } catch {
+      // ignore and fall back to IP
+    }
+    return null
+  },
 })

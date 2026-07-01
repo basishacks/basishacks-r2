@@ -180,6 +180,10 @@ async function readBodyMock(_event: any, _schema: any) {
   return mockBody.value
 }
 
+function readRawBodyMock(_event: any) {
+  return Promise.resolve(mockBody.value)
+}
+
 async function readQueryMock(_event: any, _schema: any) {
   return mockQueryState.value
 }
@@ -194,6 +198,14 @@ function paramMock(_event: any, name: string) {
 
 function queryMock(_event: any) {
   return mockQueryState.value
+}
+
+function headerMock(_event: any, _name: string) {
+  return undefined
+}
+
+function setHeaderMock(_event: any, _name: string, _value: string) {
+  return undefined
 }
 
 function createErrMock(err: { status?: number; statusCode?: number; message?: string; statusMessage?: string }) {
@@ -236,10 +248,13 @@ function clearUserSessionMock(_event: any) {
 export function setupNitroGlobals() {
   vi.stubGlobal('defineEventHandler', (fn: any) => fn)
   vi.stubGlobal('readValidatedBody', readBodyMock)
+  vi.stubGlobal('readBody', readRawBodyMock)
   vi.stubGlobal('getValidatedQuery', readQueryMock)
   vi.stubGlobal('getCookie', cookieMock)
   vi.stubGlobal('getRouterParam', paramMock)
   vi.stubGlobal('getQuery', queryMock)
+  vi.stubGlobal('getHeader', headerMock)
+  vi.stubGlobal('setHeader', setHeaderMock)
   vi.stubGlobal('createError', createErrMock)
   vi.stubGlobal('useRuntimeConfig', configMock)
   vi.stubGlobal('getUserSession', getUserSessionMock)

@@ -3,7 +3,7 @@ import { LoginRequest } from '~~/shared/schemas'
 import { completeAuthorizeSession, generateExchangeCode, getAuthorizeSession } from '../oauth2/session.post'
 import { determinePostMicrosoft, usedSensitiveScopes } from '~~/server/utils/oauth2-validate'
 
-export default defineEventHandler(async (event) => {
+async function handler(event: any) {
 
   const { email, code } = await readValidatedBody(event, LoginRequest.parse)
 
@@ -46,4 +46,22 @@ export default defineEventHandler(async (event) => {
     }
 
   
+}
+
+export default applyRateLimit(handler, {
+  maxRequests: 5,
+  windowMs: 60_000,
+  keyPrefix: 'auth:login',
+  keyGenerator: async (event) => {
+    try {
+      const body = await readBody(event)
+      const email = (body as any)?.email
+      if (typeof email === 'string') {
+        return `email:${email.toLowerCase().trim()}`
+      }
+    } catch {
+      // ignore and fall back to IP
+    }
+    return null
+  },
 })
