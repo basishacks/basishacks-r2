@@ -32,7 +32,7 @@ beforeAll(async () => {
 beforeEach(() => {
   resetMockState()
   ctx = createTestContext()
-  seedHackathon(ctx)
+  seedHackathon(ctx, { status: 'voting' })
   seedSeason(ctx)
   // Seed a judge user for FK constraints
   seedUser(ctx, { email: 'judge@basischina.com', role: 'judge' })
@@ -114,5 +114,74 @@ describe('POST /api/teams/:id/scores', () => {
     }
 
     await expect(scoresHandler(createEvent())).rejects.toMatchObject({ statusCode: 409 })
+  })
+
+  it('returns 409 when scoring is not open', async () => {
+    resetTestContext(ctx)
+    seedHackathon(ctx, { status: 'in_progress' })
+    seedSeason(ctx)
+    seedUser(ctx, { email: 'judge@basischina.com', role: 'judge' })
+    ;(globalThis as any).requireJudge.mockResolvedValue({ id: 1, role: 'judge' })
+
+    const team = seedTeam(ctx, { name: 'Target Team', project_submitted: 1, pathway: 'junior' })
+    mockParams.values['id'] = String(team.id)
+    mockBody.value = {
+      scores: {
+        originality: 3,
+        presentation: 3,
+        technicality: 3,
+        theme: 3,
+        impact: 3,
+      },
+      reasoning: 'Not voting phase.',
+    }
+
+    await expect(scoresHandler(createEvent())).rejects.toMatchObject({ statusCode: 409 })
+  })
+
+  it('returns 404 for a team that is not in the active season', async () => {
+    ;(globalThis as any).requireJudge.mockResolvedValue({ id: 1, role: 'judge' })
+
+    const inactiveSeason = seedSeason(ctx, { name: 'Old Season', is_active: 0 })
+    const team = seedTeam(ctx, {
+      name: 'Old Team',
+      project_submitted: 1,
+      pathway: 'junior',
+      season_id: inactiveSeason.id,
+    })
+
+    mockParams.values['id'] = String(team.id)
+    mockBody.value = {
+      scores: {
+        originality: 3,
+        presentation: 3,
+        technicality: 3,
+        theme: 3,
+        impact: 3,
+      },
+      reasoning: 'Wrong season.',
+    }
+
+    await expect(scoresHandler(createEvent())).rejects.toMatchObject({ statusCode: 404 })
+  })
+
+  it('returns 400 when the team has not submitted a project', async () => {
+    ;(globalThis as any).requireJudge.mockResolvedValue({ id: 1, role: 'judge' })
+
+    const team = seedTeam(ctx, { name: 'Unsubmitted Team', project_submitted: 0, pathway: 'junior' })
+
+    mockParams.values['id'] = String(team.id)
+    mockBody.value = {
+      scores: {
+        originality: 3,
+        presentation: 3,
+        technicality: 3,
+        theme: 3,
+        impact: 3,
+      },
+      reasoning: 'No submission.',
+    }
+
+    await expect(scoresHandler(createEvent())).rejects.toMatchObject({ statusCode: 400 })
   })
 })

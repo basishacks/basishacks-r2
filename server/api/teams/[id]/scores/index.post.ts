@@ -5,6 +5,28 @@ export default defineEventHandler(async (event) => {
 
   const { id: userID } = await requireJudge(event)
 
+  const hackathon = await getHackathon(event)
+  if (hackathon?.status !== 'voting') {
+    throw createError({
+      status: 409,
+      message: 'Scoring is not open',
+    })
+  }
+
+  const team = await getTeam(event, teamID)
+  if (!team) {
+    throw createError({
+      status: 404,
+      message: 'Team not found',
+    })
+  }
+  if (!team.project_submitted) {
+    throw createError({
+      status: 400,
+      message: 'Team has not submitted a project',
+    })
+  }
+
   const payload = await readValidatedBody(event, CreateTeamScoresRequest.parse)
 
   try {
