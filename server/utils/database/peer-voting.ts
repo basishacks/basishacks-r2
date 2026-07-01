@@ -15,7 +15,7 @@ export async function getPeerVoteByUser(
   return row ?? null
 }
 
-export async function createPeerVote(
+export async function upsertPeerVote(
   event: H3Event,
   vote: { user_id: number; score: string; reasoning: string },
 ): Promise<void> {

@@ -44,7 +44,7 @@ export default defineEventHandler(async (event) => {
     scoreObj[eligibleProjects[i]!.id] = payload.scores[i]!
   }
 
-  await createPeerVote(event, {
+  await upsertPeerVote(event, {
     user_id: user.id,
     score: JSON.stringify(scoreObj),
     reasoning: payload.reasoning,

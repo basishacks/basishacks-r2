@@ -44,7 +44,7 @@ beforeAll(async () => {
 
   const peerDb = await import('~~/server/utils/database/peer-voting')
   vi.stubGlobal('getPeerVoteByUser', peerDb.getPeerVoteByUser)
-  vi.stubGlobal('createPeerVote', peerDb.createPeerVote)
+  vi.stubGlobal('upsertPeerVote', peerDb.upsertPeerVote)
 
   const { convertTeamToPublic } = await import('~~/server/utils/convert')
   vi.stubGlobal('convertTeamToPublic', convertTeamToPublic)

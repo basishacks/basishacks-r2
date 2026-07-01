@@ -1,7 +1,7 @@
 import { createMockEvent } from './helpers'
 import {
   getPeerVoteByUser,
-  createPeerVote,
+  upsertPeerVote,
 } from '~~/server/utils/database/peer-voting'
 
 describe('peer-voting database helpers', () => {
@@ -30,9 +30,9 @@ describe('peer-voting database helpers', () => {
     })
   })
 
-  describe('createPeerVote', () => {
+  describe('upsertPeerVote', () => {
     it('creates a peer vote successfully', async () => {
-      await createPeerVote(event, {
+      await upsertPeerVote(event, {
         user_id: 1,
         score: '{"team1":5,"team2":3}',
         reasoning: 'Well reasoned',
@@ -46,12 +46,12 @@ describe('peer-voting database helpers', () => {
     })
 
     it('upserts an existing peer vote', async () => {
-      await createPeerVote(event, {
+      await upsertPeerVote(event, {
         user_id: 1,
         score: '{"team1":5}',
         reasoning: 'First',
       })
-      await createPeerVote(event, {
+      await upsertPeerVote(event, {
         user_id: 1,
         score: '{"team1":4}',
         reasoning: 'Second',

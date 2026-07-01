@@ -227,7 +227,7 @@ export const peerVotingScores = sqliteTable(
     score: text('score').notNull(),
     reasoning: text('reasoning'),
   },
-  (table) => [uniqueIndex('idx_peer_voting_user_id').on(table.user_id)],
+  (table) => [uniqueIndex('peer_voting_scores_user_id_unique').on(table.user_id)],
 )
 
 // ---------------------------------------------------------------------------
