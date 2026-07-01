@@ -163,6 +163,7 @@ import { OAuth2ScopeDescriptions, OAuth2Scopes } from '~~/shared/oauth2-scopes'
 
 import { LoginRequest, SendCodeRequest } from '~~/shared/schemas'
 import { buildOAuth2SessionBody } from '~~/app/utils/oauth2'
+import { escapeHtml } from '~~/app/utils/sanitize'
 
 
 const showLoading = ref(true)
@@ -234,7 +235,7 @@ const swapQuotesToCode = (message: string): string => {
       result += inside ? '</code>' : '<code>'
       inside = !inside
     } else {
-      result += char
+      result += escapeHtml(char)
     }
   }
   return result
