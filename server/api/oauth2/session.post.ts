@@ -13,6 +13,7 @@
 import { createHash, randomBytes } from 'crypto';
 import { SignJWT } from 'jose';
 import { validateOAuth2AuthorizationRequest } from '~~/server/utils/oauth2-validate'
+import { applyRateLimit } from '~~/server/utils/rateLimit'
 
 export interface AuthorizeSession {
   ms_verifier: string | null;
@@ -41,7 +42,23 @@ export interface AuthorizeSession {
 
 const AUTHORIZE_SESSION_STORE: Record<string, AuthorizeSession> = {}
 
+// Periodic sweep of expired sessions (every 5 minutes)
+const SWEEP_INTERVAL = 5 * 60 * 1000
+let lastSweep = 0
+
+function sweepExpiredSessions() {
+  const now = Date.now()
+  if (now - lastSweep < SWEEP_INTERVAL) return
+  lastSweep = now
+  for (const token of Object.keys(AUTHORIZE_SESSION_STORE)) {
+    if (AUTHORIZE_SESSION_STORE[token] && now > AUTHORIZE_SESSION_STORE[token]!.expire_time) {
+      delete AUTHORIZE_SESSION_STORE[token]
+    }
+  }
+}
+
 export function addAuthorizeSession(session: AuthorizeSession) {
+  sweepExpiredSessions()
   AUTHORIZE_SESSION_STORE[session.token] = session
 }
 
@@ -182,7 +199,7 @@ export function attachAuthorizeSessionCookie(session: AuthorizeSession, event: a
   })
 }
 // Used for session refreshes only
-export default defineEventHandler(async (event) => {
+export default defineEventHandler(applyRateLimit(async (event) => {
 
   // throw createError({
   //   statusCode: 410,
@@ -192,7 +209,7 @@ export default defineEventHandler(async (event) => {
 
   const body = await readBody(event)
 
-  
+
 
 
   try {
@@ -212,7 +229,7 @@ export default defineEventHandler(async (event) => {
     addAuthorizeSession(session)
 
     attachAuthorizeSessionCookie(session, event)
-    
+
 
     return {
         client_id: req.app.client_id,
@@ -222,7 +239,7 @@ export default defineEventHandler(async (event) => {
         session: session.token
     };
 
-    
+
   } catch (err: any) {
     throw createError({
       statusCode: err.statusCode || 500,
@@ -230,5 +247,5 @@ export default defineEventHandler(async (event) => {
     })
   }
 
-  
-})
+
+}, { maxRequests: 20, windowMs: 60 * 1000 }))

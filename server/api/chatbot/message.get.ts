@@ -10,5 +10,5 @@ export default withOAuth2JWT(
 
     return {test: "ok"}
   },
-  { loadUser: true }
+  { requiredScopes: ['chat.readwrite'], loadUser: true }
 )

@@ -1,5 +1,6 @@
 import { VotePermissions } from "~~/shared/permissions"
 import { scVotes } from '~~/server/database/schema'
+import { getHackathon } from '~~/server/utils/database/hackathon'
 
 function runIRV(
     candidates: ElectionCandidate[],
@@ -90,6 +91,22 @@ export default defineEventHandler(async (event): Promise<ElectionResult> => {
         .all()
 
     const totalBallots = rows.length;
+
+    // Only return full IRV results after the election close (results_open_timestamp)
+    const hackathon = await getHackathon(event)
+    const now = Date.now()
+    const resultsOpen = hackathon && hackathon.results_open_timestamp > 0 && now >= hackathon.results_open_timestamp
+
+    if (!resultsOpen) {
+        // Return only totalBallots with empty positions before results are open
+        return {
+            totalBallots,
+            positions: electionPositions.map((position) => ({
+                title: position.title,
+                status: "no_votes" as const,
+            })),
+        }
+    }
 
     const positionResults = electionPositions.map((position) => {
         const ballots: string[][] = [];
