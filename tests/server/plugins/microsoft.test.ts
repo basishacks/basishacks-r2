@@ -79,3 +79,54 @@ describe('microsoft token logging', () => {
     await expect(initializeDummyUserAccessToken()).resolves.toBeUndefined()
   })
 })
+
+describe('microsoft token request encoding', () => {
+  let originalFetch: typeof globalThis.fetch
+
+  beforeEach(() => {
+    originalFetch = globalThis.fetch
+    vi.resetModules()
+  })
+
+  afterEach(() => {
+    globalThis.fetch = originalFetch
+  })
+
+  it('encodes client_credentials client_secret containing special characters', async () => {
+    const specialSecret = '&=+%#'
+    process.env.MICROSOFT_CLIENT_SECRET = specialSecret
+
+    const fetchMock = vi.fn().mockResolvedValue({
+      status: 200,
+      json: async () => ({ access_token: 'token' }),
+    } as unknown as Response)
+    globalThis.fetch = fetchMock
+
+    const { default: initializeMSAccessToken } = await import('~~/server/plugins/microsoft.ts')
+    await initializeMSAccessToken()
+
+    const body = new URLSearchParams(fetchMock.mock.calls[0][1].body as string)
+    expect(body.get('client_secret')).toBe(specialSecret)
+    expect(fetchMock.mock.calls[0][1].body).not.toContain('client_secret=&=+%#')
+  })
+
+  it('encodes ROPC client_secret and password containing special characters', async () => {
+    const specialSecret = '&=+%#'
+    const specialPassword = 'p@ss&w=ord+#'
+    process.env.MICROSOFT_CLIENT_SECRET = specialSecret
+    process.env.MICROSOFT_DUMMY_USER_PASSWORD = specialPassword
+
+    const fetchMock = vi.fn().mockResolvedValue({
+      status: 200,
+      json: async () => ({ access_token: 'token', refresh_token: 'refresh' }),
+    } as unknown as Response)
+    globalThis.fetch = fetchMock
+
+    const { initializeDummyUserAccessToken } = await import('~~/server/plugins/microsoft.ts')
+    await initializeDummyUserAccessToken()
+
+    const body = new URLSearchParams(fetchMock.mock.calls[0][1].body as string)
+    expect(body.get('client_secret')).toBe(specialSecret)
+    expect(body.get('password')).toBe(specialPassword)
+  })
+})

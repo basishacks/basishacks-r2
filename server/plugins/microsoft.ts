@@ -26,12 +26,12 @@ export default async function initializeMSAccessToken() {
         headers: {
             'Content-Type': 'application/x-www-form-urlencoded'
         },
-        body: encodeURI(
-            "client_id=868b989e-6574-4795-bcfb-8db37bee1c37&" +
-            "scope=https://graph.microsoft.com/.default&" +
-            "client_secret=" + env.MICROSOFT_CLIENT_SECRET + "&" +
-            "grant_type=client_credentials"
-        )
+        body: new URLSearchParams({
+            client_id: '868b989e-6574-4795-bcfb-8db37bee1c37',
+            scope: 'https://graph.microsoft.com/.default',
+            client_secret: env.MICROSOFT_CLIENT_SECRET ?? '',
+            grant_type: 'client_credentials',
+        }).toString()
     })
 
     const code = req.status
@@ -133,14 +133,14 @@ export async function initializeDummyUserAccessToken() {
         headers: {
             'Content-Type': 'application/x-www-form-urlencoded'
         },
-        body: encodeURI(
-            "client_id=868b989e-6574-4795-bcfb-8db37bee1c37&" +
-            "scope=https://graph.microsoft.com/Chat.ReadWrite openid profile offline_access" + "&" +
-            "username=" + env.MICROSOFT_DUMMY_USER_NAME + "&" +
-            "password=" + env.MICROSOFT_DUMMY_USER_PASSWORD + "&" +
-            "grant_type=password&" +
-            "client_secret=" + env.MICROSOFT_CLIENT_SECRET
-        )
+        body: new URLSearchParams({
+            client_id: '868b989e-6574-4795-bcfb-8db37bee1c37',
+            scope: 'https://graph.microsoft.com/Chat.ReadWrite openid profile offline_access',
+            username: env.MICROSOFT_DUMMY_USER_NAME ?? '',
+            password: env.MICROSOFT_DUMMY_USER_PASSWORD ?? '',
+            grant_type: 'password',
+            client_secret: env.MICROSOFT_CLIENT_SECRET ?? '',
+        }).toString()
     });
 
     const data: any = await res.json();
