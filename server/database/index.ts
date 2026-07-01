@@ -1,4 +1,4 @@
-import type * as schema from './schema'
+import * as schema from './schema'
 import { createAndMigrateDatabase } from './migrate'
 
 const DEFAULT_DB_PATH = './database/basishacks.sqlite'
