@@ -13,71 +13,70 @@ describe('structureLink', () => {
     process.env.CURRENT_URL_ORIGIN = 'http://localhost:3000'
   })
 
+  function getParam(link: string, name: string): string | null {
+    const parsed = new URL(link)
+    return parsed.searchParams.get(name)
+  }
+
   it('builds a URL with default scope and redirect_uri', () => {
     const link = structureLink('test-state', 'test-challenge')
 
-    expect(link).toContain(expectedBase)
-    expect(link).toContain('client_id=868b989e-6574-4795-bcfb-8db37bee1c37')
-    expect(link).toContain('response_type=code')
-    expect(link).toContain('redirect_uri=http://localhost:3000/api/oauth2/mscallback')
-    expect(link).toContain('state=test-state')
-    expect(link).toContain('code_challenge=test-challenge')
-    expect(link).toContain('code_challenge_method=S256')
+    expect(link.startsWith(expectedBase + '?')).toBe(true)
+    expect(getParam(link, 'client_id')).toBe('868b989e-6574-4795-bcfb-8db37bee1c37')
+    expect(getParam(link, 'response_type')).toBe('code')
+    expect(getParam(link, 'redirect_uri')).toBe(
+      'http://localhost:3000/api/oauth2/mscallback',
+    )
+    expect(getParam(link, 'state')).toBe('test-state')
+    expect(getParam(link, 'code_challenge')).toBe('test-challenge')
+    expect(getParam(link, 'code_challenge_method')).toBe('S256')
   })
 
   it('includes the default scope "openid profile email" URL-encoded', () => {
     const link = structureLink('s1', 'c1')
 
-    // The space in "openid profile email" should be URL-encoded
-    expect(link).toContain('scope=openid%20profile%20email')
-    // Or it could be encoded as +
-    const scopeMatch = link.match(/scope=([^&]+)/)
-    expect(scopeMatch).toBeTruthy()
-    expect(decodeURIComponent(scopeMatch![1])).toBe('openid profile email')
+    expect(getParam(link, 'scope')).toBe('openid profile email')
   })
 
   it('accepts a custom scope', () => {
     const link = structureLink('s1', 'c1', 'openid email')
 
-    const scopeMatch = link.match(/scope=([^&]+)/)
-    expect(scopeMatch).toBeTruthy()
-    expect(decodeURIComponent(scopeMatch![1])).toBe('openid email')
+    expect(getParam(link, 'scope')).toBe('openid email')
   })
 
   it('accepts a custom redirect_uri', () => {
     const link = structureLink('s1', 'c1', 'openid', '/custom/callback')
 
-    expect(link).toContain('redirect_uri=http://localhost:3000/custom/callback')
+    expect(getParam(link, 'redirect_uri')).toBe(
+      'http://localhost:3000/custom/callback',
+    )
   })
 
   it('prepends CURRENT_URL_ORIGIN to the redirect_uri', () => {
     process.env.CURRENT_URL_ORIGIN = 'https://example.com'
     const link = structureLink('s1', 'c1', 'openid', '/my/callback')
 
-    expect(link).toContain('redirect_uri=https://example.com/my/callback')
+    expect(getParam(link, 'redirect_uri')).toBe('https://example.com/my/callback')
   })
 
   it('falls back to http://localhost:3000 when CURRENT_URL_ORIGIN is not set', () => {
     delete process.env.CURRENT_URL_ORIGIN
     const link = structureLink('s1', 'c1', 'openid', '/fallback')
 
-    expect(link).toContain('redirect_uri=http://localhost:3000/fallback')
+    expect(getParam(link, 'redirect_uri')).toBe('http://localhost:3000/fallback')
   })
 
   it('URL-encodes scope values with special characters', () => {
     const link = structureLink('s1', 'c1', 'openid profile email offline_access')
 
-    const scopeMatch = link.match(/scope=([^&]+)/)
-    expect(scopeMatch).toBeTruthy()
-    // Spaces should be encoded
-    expect(decodeURIComponent(scopeMatch![1])).toBe('openid profile email offline_access')
+    expect(getParam(link, 'scope')).toBe('openid profile email offline_access')
   })
 
   it('preserves state and code_challenge values exactly', () => {
     const link = structureLink('abc123-xyz', 'challenge_value_!@#')
 
-    expect(link).toContain('state=abc123-xyz')
-    expect(link).toContain('code_challenge=challenge_value_!@#')
+    expect(getParam(link, 'state')).toBe('abc123-xyz')
+    expect(getParam(link, 'code_challenge')).toBe('challenge_value_!@#')
   })
 
   it('produces a URL that starts with the correct Microsoft OAuth2 base', () => {
@@ -88,6 +87,7 @@ describe('structureLink', () => {
 
   it('includes all required query parameters', () => {
     const link = structureLink('s1', 'c1')
+    const parsed = new URL(link)
 
     const requiredParams = [
       'client_id',
@@ -100,7 +100,22 @@ describe('structureLink', () => {
     ]
 
     for (const param of requiredParams) {
-      expect(link).toContain(`${param}=`)
+      expect(parsed.searchParams.has(param)).toBe(true)
     }
+  })
+
+  it('URL-encodes redirect_uri, state and code_challenge values', () => {
+    const link = structureLink(
+      'state with spaces/slashes',
+      'challenge with spaces/slashes',
+      'openid',
+      '/callback?extra=1',
+    )
+
+    expect(getParam(link, 'redirect_uri')).toBe(
+      'http://localhost:3000/callback?extra=1',
+    )
+    expect(getParam(link, 'state')).toBe('state with spaces/slashes')
+    expect(getParam(link, 'code_challenge')).toBe('challenge with spaces/slashes')
   })
 })
