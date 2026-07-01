@@ -1,4 +1,3 @@
-@ -1,336 +0,0 @@
 <script setup lang="ts">
 import type { ButtonProps } from '@nuxt/ui'
 
