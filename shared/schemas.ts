@@ -175,8 +175,11 @@ export const ManageRedirectUriRequest = z.object({
         .min(1, "Redirect URI is required")
         .url("Invalid URL format")
         .refine(
-            (val) => val.startsWith("https://") || val.startsWith("http://localhost"),
-            "Redirect URIs must start with http://localhost or https://",
+            (u) => {
+                if (u.startsWith('https://')) return true
+                return /^http:\/\/localhost(\/|:|$)/.test(u)
+            },
+            { message: 'Redirect URI must use https:// or http://localhost' },
         ),
 });
 export type ManageRedirectUriRequest = z.infer<typeof ManageRedirectUriRequest>;

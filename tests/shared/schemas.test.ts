@@ -566,6 +566,30 @@ describe('ManageRedirectUriRequest', () => {
     ).not.toThrow()
   })
 
+  it('accepts localhost with a path', () => {
+    expect(() =>
+      ManageRedirectUriRequest.parse({ uri: 'http://localhost/callback' }),
+    ).not.toThrow()
+  })
+
+  it('accepts localhost with a port', () => {
+    expect(() =>
+      ManageRedirectUriRequest.parse({ uri: 'http://localhost:8080' }),
+    ).not.toThrow()
+  })
+
+  it('accepts bare localhost origin', () => {
+    expect(() =>
+      ManageRedirectUriRequest.parse({ uri: 'http://localhost' }),
+    ).not.toThrow()
+  })
+
+  it('rejects http://localhost.evil.com', () => {
+    expect(() =>
+      ManageRedirectUriRequest.parse({ uri: 'http://localhost.evil.com/callback' }),
+    ).toThrow()
+  })
+
   it('rejects a plain HTTP URL', () => {
     expect(() =>
       ManageRedirectUriRequest.parse({ uri: 'http://example.com/callback' }),
