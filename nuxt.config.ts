@@ -51,7 +51,9 @@ export default defineNuxtConfig({
     }
   },
   nitro: {
-    preset: 'bun',
+    // Bun dev uses the bun preset implicitly; production defaults to node-server
+    // so the same build runs under Node.js (better-sqlite3) or Bun (bun:sqlite).
+    preset: process.env.NITRO_PRESET ?? 'node-server',
     externals: {
       // trace: true
       trace: false
