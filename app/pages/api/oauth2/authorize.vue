@@ -162,6 +162,7 @@ import { computed, onBeforeUnmount, onMounted, reactive, ref } from 'vue'
 import { OAuth2ScopeDescriptions, OAuth2Scopes } from '~~/shared/oauth2-scopes'
 
 import { LoginRequest, SendCodeRequest } from '~~/shared/schemas'
+import { buildOAuth2SessionBody } from '~~/app/utils/oauth2'
 
 
 const showLoading = ref(true)
@@ -440,12 +441,20 @@ async function fade(duration: number = 700) {
   await delay(duration)
 }
 
-async function submitNewSession(client_id: string, response_type: string, scope: string, code_challenge: string, code_challenge_method: string, redirect_uri: string) {
-  const js: any = await $fetch("/api/oauth2/session", {
-    method: "POST",
-    body: {
-      client_id, response_type, scope, state, code_challenge, code_challenge_method, redirect_uri
-    }
+async function submitNewSession(client_id: string, response_type: string, scope: string, oauthState: string, code_challenge: string, code_challenge_method: string, redirect_uri: string) {
+  const body = buildOAuth2SessionBody({
+    client_id,
+    response_type,
+    scope,
+    state: oauthState,
+    code_challenge,
+    code_challenge_method,
+    redirect_uri,
+  })
+
+  await $fetch('/api/oauth2/session', {
+    method: 'POST',
+    body,
   })
 }
 
@@ -483,7 +492,7 @@ async function loginFlowCheck(reattempt: boolean = false) {
     if (res1.status != 200) {
       // bad
       if (reattempt) {
-        await submitNewSession(client_id, response_type, scope, code_challenge, code_challenge_method, redirect_uri)
+        await submitNewSession(client_id, response_type, scope, state, code_challenge, code_challenge_method, redirect_uri)
       } else {
         await fade();
         status.value = 'error'
