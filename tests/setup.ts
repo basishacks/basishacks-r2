@@ -119,7 +119,7 @@ export function createTestDatabase(): SQLiteDatabase {
 
     ALTER TABLE team_scores ADD COLUMN season_id INTEGER;
 
-    CREATE UNIQUE INDEX IF NOT EXISTS idx_sc_votes_user_id ON sc_votes(user_id);
+    CREATE UNIQUE INDEX IF NOT EXISTS sc_votes_user_id_unique ON sc_votes(user_id);
 
     CREATE TABLE IF NOT EXISTS peer_voting_scores (
       user_id INTEGER PRIMARY KEY,

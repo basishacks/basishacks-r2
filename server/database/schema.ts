@@ -187,7 +187,7 @@ export const scVotes = sqliteTable(
     vote: text('vote'),
     submitted_at: integer('submitted_at'),
   },
-  (table) => [uniqueIndex('idx_sc_votes_user_id').on(table.user_id)],
+  (table) => [uniqueIndex('sc_votes_user_id_unique').on(table.user_id)],
 )
 
 // ---------------------------------------------------------------------------
