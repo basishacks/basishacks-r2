@@ -54,7 +54,13 @@ describe('GET /api/users', () => {
 
     expect(Array.isArray(result)).toBe(true)
     expect(result).toHaveLength(1)
+    expect(result[0]).toHaveProperty('id')
     expect(result[0]).toHaveProperty('email', 'alice@basischina.com')
+    expect(result[0]).toHaveProperty('name', 'Alice')
+    expect(result[0]).toHaveProperty('role')
+    expect(result[0]).toHaveProperty('team_id')
+    expect(result[0]).toHaveProperty('profile_theme')
+    expect(result[0]).toHaveProperty('profile_picture')
     expect(result[0]).not.toHaveProperty('login_code')
     expect(result[0]).not.toHaveProperty('login_expiry')
   })
