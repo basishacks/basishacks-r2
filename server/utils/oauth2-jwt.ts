@@ -44,7 +44,9 @@ export async function verifyAccessToken(token: string): Promise<OAuth2JWTPayload
   }
 
   try {
-    const { payload } = await jwtVerify(token, getJWTSecret())
+    const { payload } = await jwtVerify(token, getJWTSecret(), {
+      issuer: 'basishacks',
+    })
     return payload as OAuth2JWTPayload
   } catch {
     throw createError({
