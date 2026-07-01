@@ -1,6 +1,7 @@
 import type { H3Event } from 'h3'
 import { eq } from 'drizzle-orm'
 import { teamScores } from '~~/server/database/schema'
+import { getActiveSeason } from '~~/server/utils/database/seasons'
 
 export async function createTeamScores(
   event: H3Event,
@@ -10,7 +11,7 @@ export async function createTeamScores(
   >,
 ): Promise<TeamScores> {
 
-  const season = await getHackathon(event)
+  const season = await getActiveSeason(event)
 
   return event.context.drizzle
     .insert(teamScores)

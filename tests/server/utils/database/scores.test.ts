@@ -9,16 +9,16 @@ describe('scores database helpers', () => {
 
   beforeEach(() => {
     event = createMockEvent()
-    // Seed hackathon
+    // Seed hackathon with id 1 (different from active season to catch the bug)
     event.context.db.prepare(
       "INSERT INTO hackathon(id, status, start_timestamp, end_timestamp, voting_start_timestamp, voting_end_timestamp, results_open_timestamp) VALUES(1, 'not_started', 0, 0, 0, 0, 0)",
     ).run()
-    // Seed season and team
+    // Seed an active season with a non-1 id
     event.context.db.prepare(
-      "INSERT INTO seasons(name, is_active) VALUES('S1', 1)",
+      "INSERT INTO seasons(id, name, is_active) VALUES(42, 'S42', 1)",
     ).run()
     event.context.db.prepare(
-      "INSERT INTO teams(name, season_id) VALUES('Team A', 1)",
+      'INSERT INTO teams(name, season_id) VALUES(\'Team A\', 42)',
     ).run()
     // Seed a judge user
     event.context.db.prepare(
@@ -27,7 +27,7 @@ describe('scores database helpers', () => {
   })
 
   describe('createTeamScores', () => {
-    it('creates team scores and returns them with the season_id', async () => {
+    it('creates team scores and tags them with the active season id', async () => {
       const scores = await createTeamScores(event, {
         team_id: 1,
         judge_user_id: 1,
@@ -40,7 +40,7 @@ describe('scores database helpers', () => {
       expect(scores.judge_user_id).toBe(1)
       expect(scores.scores).toBe('{"innovation":5,"impact":4}')
       expect(scores.reasoning).toBe('Great project overall')
-      expect(scores.season_id).toBe(1)
+      expect(scores.season_id).toBe(42)
     })
   })
 
