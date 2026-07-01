@@ -153,21 +153,39 @@ export function usedSensitiveScopes(session: AuthorizeSession): boolean {
  * immediately redirect to the uri.
  * IF AN APPLICATION IS REQUESTING SENSITIVE SCOPES OAuth2Scopes.sensitive, redirect to authorization consent page
  */
-export function determinePostMicrosoft(event: any,session: AuthorizeSession): string {
-
+export function determinePostMicrosoft(event: any, session: AuthorizeSession): string {
   const sensitive = usedSensitiveScopes(session)
   if (sensitive) {
-    session.login_state = "consent"
-    return "/api/oauth2/authorize?client_id=" + session.application.client_id + "&scope=" + session.scopes.join(' ') + "&redirect_uri=" + session.redirect_uri + "&state=" + session.bh_state + "&response_type=code" + (session.bh_verifier_challenge ? ("&code_challenge=" + session.bh_verifier_challenge) : "") + (session.bh_verifier_challenge_method ? ("&code_challenge_method=" + session.bh_verifier_challenge_method) : "")
+    session.login_state = 'consent'
+    const params = new URLSearchParams()
+    params.set('client_id', session.application.client_id)
+    params.set('scope', session.scopes.join(' '))
+    params.set('redirect_uri', session.redirect_uri)
+    params.set('state', session.bh_state)
+    params.set('response_type', 'code')
+    if (session.bh_verifier_challenge) {
+      params.set('code_challenge', session.bh_verifier_challenge)
+    }
+    if (session.bh_verifier_challenge_method) {
+      params.set('code_challenge_method', session.bh_verifier_challenge_method)
+    }
+    return '/api/oauth2/authorize?' + params.toString()
   }
-  
 
   return completeConsentFlow(event, session)
 }
 
 export function completeConsentFlow(event: any, session: AuthorizeSession): string {
   generateExchangeCode(session)
-  session.login_state = "completed"
-  deleteCookie(event, "bridge_id") // only delete after sucessful
-  return session.redirect_uri + "?code=" + session.code + "&state=" + session.bh_state
+  session.login_state = 'completed'
+  deleteCookie(event, 'bridge_id') // only delete after sucessful
+  const separator = session.redirect_uri.includes('?') ? '&' : '?'
+  return (
+    session.redirect_uri +
+    separator +
+    'code=' +
+    encodeURIComponent(session.code) +
+    '&state=' +
+    encodeURIComponent(session.bh_state)
+  )
 }
