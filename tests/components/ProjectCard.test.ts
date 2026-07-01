@@ -17,5 +17,7 @@ describe('ProjectCard.vue regressions', () => {
     expect(source).toContain('<span v-else class="text-muted text-sm">(No Team Name)</span>')
   })
 
-
+  it('disables the Demo button based on the demo URL', () => {
+    expect(source).toContain(':disabled="!team.project.demo_url"')
+  })
 })

@@ -47,7 +47,7 @@ const { data: team } = await useFetch<GetTeamResponse>(() => '/api/teams/' + pro
           :href="team.project.demo_url!"
           external
           target="_blank"
-          :disabled="!team.project.repo_url"
+          :disabled="!team.project.demo_url"
           >Demo</UButton
         >
       </UTooltip>
