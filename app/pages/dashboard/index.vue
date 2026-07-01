@@ -194,13 +194,6 @@ const actions = ref([
   },
 ])
 
-const { data: teamData, error: teamError, refresh: teamRefresh } = await useFetch<GetTeamMembersResponse>(
-  () => `/api/teams/${data.value?.team?.id}/users`,
-)
-if (teamError.value) {
-  throw teamError.value
-}
-
 </script>
 
 <template>
@@ -248,7 +241,7 @@ if (teamError.value) {
 
       <h2 class="text-3xl bold mb-4">Your project</h2>
 
-      <ProjectCard v-if="data.team_id" :id="data.team_id" :members="teamData"></ProjectCard>
+      <ProjectCard v-if="data.team_id" :id="data.team_id"></ProjectCard>
 
       <h2 class="text-3xl bold my-4">Continue...</h2>
       

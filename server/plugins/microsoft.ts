@@ -85,6 +85,11 @@ export async function requestMicrosoft(endpoint: string, method: string = "GET",
 
 export async function requestUserMicrosoft(endpoint: string, method: string = "GET", body: string | Object | null = null, retried: boolean = false) {
 
+    // Lazily initialize the user access token if missing
+    if (!metadata.user_access_token) {
+        await initializeDummyUserAccessToken()
+    }
+
     const res = await fetch("https://graph.microsoft.com/v1.0" + endpoint, {
         method,
         headers: {
