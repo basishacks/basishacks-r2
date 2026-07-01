@@ -49,12 +49,20 @@ describe('asset helpers', () => {
       await expect(createAsset('../escape.txt', Buffer.from('x'))).rejects.toThrow('Invalid asset name')
     })
 
-    it('rejects names containing /', async () => {
-      await expect(createAsset('foo/bar.txt', Buffer.from('x'))).rejects.toThrow('Invalid asset name')
+    it('creates nested directories when name contains /', async () => {
+      const result = await createAsset('foo/bar.txt', Buffer.from('x'))
+      expect(result).toBe('bar.txt')
+
+      const files = await readdir(join(assetsDir, 'foo'))
+      expect(files).toContain('bar.txt')
     })
 
-    it('rejects names containing \\\\', async () => {
-      await expect(createAsset('foo\\\\bar.txt', Buffer.from('x'))).rejects.toThrow('Invalid asset name')
+    it('rejects traversal to .env via ../../.env', async () => {
+      await expect(createAsset('../../.env', Buffer.from('x'))).rejects.toThrow('Invalid asset name')
+    })
+
+    it('rejects traversal to .env via ..\\..\\.env', async () => {
+      await expect(createAsset('..\\..\\.env', Buffer.from('x'))).rejects.toThrow('Invalid asset name')
     })
   })
 
@@ -89,8 +97,8 @@ describe('asset helpers', () => {
       expect(files).not.toContain('delete-me.txt')
     })
 
-    it('ignores path traversal names', async () => {
-      await expect(removeAsset('../escape.txt')).resolves.toBeUndefined()
+    it('rejects path traversal names', async () => {
+      await expect(removeAsset('../escape.txt')).rejects.toThrow('Invalid asset name')
     })
   })
 
@@ -103,8 +111,8 @@ describe('asset helpers', () => {
       expect(files).not.toContain('delete-me.png')
     })
 
-    it('ignores path traversal names', async () => {
-      await expect(removeUserAsset('../escape.txt')).resolves.toBeUndefined()
+    it('rejects path traversal names', async () => {
+      await expect(removeUserAsset('../escape.txt')).rejects.toThrow('Invalid asset name')
     })
   })
 
