@@ -7,15 +7,18 @@ import {
   mockSession,
   seedHackathon,
   seedSeason,
+  seedUser,
   type TestContext,
-} from '../helpers'
+} from '~~/tests/api/helpers'
+import { scVotes } from '~~/server/database/schema'
 
 let ctx: TestContext
-let votePostHandler: any
+let voteHandler: any
 
 beforeAll(async () => {
   setupNitroGlobals()
-  votePostHandler = (await import('~~/server/api/election/vote/index.post')).default
+
+  voteHandler = (await import('~~/server/api/election/vote/index.post')).default
 })
 
 beforeEach(() => {
@@ -23,6 +26,7 @@ beforeEach(() => {
   ctx = createTestContext()
   seedHackathon(ctx)
   seedSeason(ctx)
+  seedUser(ctx, { email: 'voter@basischina.com' })
 })
 
 afterEach(() => {
@@ -36,46 +40,36 @@ function createEvent(overrides: Record<string, unknown> = {}) {
   }
 }
 
-async function buildValidPositions() {
-  const { electionPositions } = await import('~~/server/utils/election')
-  return electionPositions.map((pos: any) => ({
-    title: pos.title,
-    candidates: pos.candidates.map((c: any, i: number) => ({
-      id: c.id,
-      rank: i + 1,
-    })),
-  }))
+function buildVote(candidateRanks: Record<string, number | null>) {
+  return {
+    positions: [
+      {
+        title: 'President',
+        candidates: Object.entries(candidateRanks).map(([id, rank]) => ({
+          id,
+          rank,
+        })),
+      },
+    ],
+  }
 }
 
 describe('POST /api/election/vote', () => {
-  it('upserts duplicate votes instead of creating duplicates', async () => {
+  it('upserts a vote so only the latest submission is kept', async () => {
     vi.mocked(globalThis.requirePermission).mockResolvedValue({ id: 1, role: 'participant' })
     mockSession.value = { user: { id: 1 } }
 
-    const positions = await buildValidPositions()
-    mockBody.value = { positions }
+    mockBody.value = buildVote({ alice: 1, bob: 2 })
+    await voteHandler(createEvent())
 
-    await votePostHandler(createEvent())
+    mockBody.value = buildVote({ alice: 2, bob: 1 })
+    await voteHandler(createEvent())
 
-    const newPositions = positions.map((pos: any) => ({
-      ...pos,
-      candidates: pos.candidates
-        .map((c: any) => c.rank)
-        .sort((a: number, b: number) => b - a)
-        .map((rank: number, i: number) => ({ ...pos.candidates[i], rank })),
-    }))
-    mockBody.value = { positions: newPositions }
-
-    await votePostHandler(createEvent())
-
-    const rows = ctx.drizzle.select().from((await import('~~/server/database/schema')).scVotes).all()
+    const rows = ctx.drizzle.select().from(scVotes).all()
     expect(rows).toHaveLength(1)
-    expect(JSON.parse(rows[0].vote ?? '{}')).toEqual(
-      Object.fromEntries(
-        newPositions.flatMap((pos: any) =>
-          pos.candidates.map((c: any) => [c.id, c.rank]),
-        ),
-      ),
-    )
+    expect(rows[0].user_id).toBe(1)
+
+    const vote = JSON.parse(rows[0].vote!)
+    expect(vote).toEqual({ alice: 2, bob: 1 })
   })
 })
