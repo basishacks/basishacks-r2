@@ -192,6 +192,25 @@ describe('oauth2_applications database helpers', () => {
         removeOAuth2ApplicationSecret(event, clientId, 'bad-format'),
       ).rejects.toThrow('Invalid abbreviated secret format')
     })
+
+    it('keeps both secrets when two are added concurrently', async () => {
+      const [first, second] = await Promise.all([
+        addOAuth2ApplicationSecret(event, clientId),
+        addOAuth2ApplicationSecret(event, clientId),
+      ])
+
+      const abbreviated = await getOAuth2ApplicationSecretAbbreviated(
+        event,
+        clientId,
+      )
+      expect(abbreviated).toHaveLength(2)
+      expect(
+        await validateOAuth2ApplicationSecret(event, clientId, first.plainSecret),
+      ).toBe(true)
+      expect(
+        await validateOAuth2ApplicationSecret(event, clientId, second.plainSecret),
+      ).toBe(true)
+    })
   })
 
   describe('redirect URI management', () => {
@@ -254,6 +273,18 @@ describe('oauth2_applications database helpers', () => {
         ),
       ).rejects.toThrow('No redirect URIs found')
     })
+
+    it('keeps both redirect URIs when two are added concurrently', async () => {
+      await Promise.all([
+        addOAuth2ApplicationRedirectUri(event, clientId, 'https://a.com/cb'),
+        addOAuth2ApplicationRedirectUri(event, clientId, 'https://b.com/cb'),
+      ])
+
+      const uris = await getOAuth2ApplicationRedirectUris(event, clientId)
+      expect(uris).toHaveLength(2)
+      expect(uris).toContain('https://a.com/cb')
+      expect(uris).toContain('https://b.com/cb')
+    })
   })
 
   describe('scope management', () => {
@@ -295,6 +326,18 @@ describe('oauth2_applications database helpers', () => {
       await expect(
         removeOAuth2ApplicationScope(event, clientId, 'nonexistent'),
       ).rejects.toThrow('No scopes found')
+    })
+
+    it('keeps both scopes when two batches are added concurrently', async () => {
+      await Promise.all([
+        addOAuth2ApplicationScopes(event, clientId, ['read']),
+        addOAuth2ApplicationScopes(event, clientId, ['write']),
+      ])
+
+      const scopes = await getOAuth2ApplicationScopes(event, clientId)
+      expect(scopes).toHaveLength(2)
+      expect(scopes).toContain('read')
+      expect(scopes).toContain('write')
     })
   })
 })

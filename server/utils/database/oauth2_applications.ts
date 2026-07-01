@@ -105,17 +105,22 @@ export async function addOAuth2ApplicationSecret(
   const plainSecret = randomBytes(32).toString('hex')
   const secretHash = createHash('sha256').update(plainSecret).digest('hex')
 
-  const app = await getOAuth2Application(event, clientID)
-  const existing = app?.client_secret ? app.client_secret.split(' ').filter(h => h) : []
-  const newValue = [...existing, secretHash].join(' ')
+  return event.context.drizzle.transaction((tx) => {
+    const app = tx
+      .select()
+      .from(oauth2Applications)
+      .where(eq(oauth2Applications.client_id, clientID))
+      .get()
+    const existing = app?.client_secret ? app.client_secret.split(' ').filter(h => h) : []
+    const newValue = [...existing, secretHash].join(' ')
 
-  event.context.drizzle
-    .update(oauth2Applications)
-    .set({ client_secret: newValue })
-    .where(eq(oauth2Applications.client_id, clientID))
-    .run()
+    tx.update(oauth2Applications)
+      .set({ client_secret: newValue })
+      .where(eq(oauth2Applications.client_id, clientID))
+      .run()
 
-  return { plainSecret }
+    return { plainSecret }
+  })
 }
 
 export async function removeOAuth2ApplicationSecret(
@@ -188,20 +193,25 @@ export async function addOAuth2ApplicationRedirectUri(
   clientID: string,
   uri: string
 ): Promise<void> {
-  const app = await getOAuth2Application(event, clientID)
-  const existing = app?.redirect_uris ? app.redirect_uris.split(' ').filter(u => u) : []
+  event.context.drizzle.transaction((tx) => {
+    const app = tx
+      .select()
+      .from(oauth2Applications)
+      .where(eq(oauth2Applications.client_id, clientID))
+      .get()
+    const existing = app?.redirect_uris ? app.redirect_uris.split(' ').filter(u => u) : []
 
-  if (existing.includes(uri)) {
-    throw createError({ status: 409, message: 'Redirect URI already exists' })
-  }
+    if (existing.includes(uri)) {
+      throw createError({ status: 409, message: 'Redirect URI already exists' })
+    }
 
-  const newValue = [...existing, uri].join(' ')
+    const newValue = [...existing, uri].join(' ')
 
-  event.context.drizzle
-    .update(oauth2Applications)
-    .set({ redirect_uris: newValue })
-    .where(eq(oauth2Applications.client_id, clientID))
-    .run()
+    tx.update(oauth2Applications)
+      .set({ redirect_uris: newValue })
+      .where(eq(oauth2Applications.client_id, clientID))
+      .run()
+  })
 }
 
 export async function removeOAuth2ApplicationRedirectUri(
@@ -244,18 +254,23 @@ export async function addOAuth2ApplicationScopes(
   clientID: string,
   scopes: string[]
 ): Promise<void> {
-  const app = await getOAuth2Application(event, clientID)
-  const existing = app?.permissions ? app.permissions.split(' ').filter((s) => s) : []
-  const combined = [...existing]
-  for (const s of scopes) {
-    if (!combined.includes(s)) combined.push(s)
-  }
+  event.context.drizzle.transaction((tx) => {
+    const app = tx
+      .select()
+      .from(oauth2Applications)
+      .where(eq(oauth2Applications.client_id, clientID))
+      .get()
+    const existing = app?.permissions ? app.permissions.split(' ').filter((s) => s) : []
+    const combined = [...existing]
+    for (const s of scopes) {
+      if (!combined.includes(s)) combined.push(s)
+    }
 
-  event.context.drizzle
-    .update(oauth2Applications)
-    .set({ permissions: combined.join(' ') || null })
-    .where(eq(oauth2Applications.client_id, clientID))
-    .run()
+    tx.update(oauth2Applications)
+      .set({ permissions: combined.join(' ') || null })
+      .where(eq(oauth2Applications.client_id, clientID))
+      .run()
+  })
 }
 
 export async function removeOAuth2ApplicationScope(
