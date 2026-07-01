@@ -171,6 +171,7 @@ const status = ref('load')
 const error_description = ref('')
 const error_description_initial = ref(true)
 const error = ref('')
+let canvasIntervalId: ReturnType<typeof setInterval> | undefined
 const isLoading = ref(false) // basically making all buttons uninteractable
 const userId = ref<number | null>(null)
 const apiUser = ref<APIUser | null>(null)
@@ -637,7 +638,7 @@ function handleResize() {
 
 onMounted(async () => {
   setupCanvas()
-  setInterval(() => {animate()}, 33)
+  canvasIntervalId = setInterval(() => {animate()}, 33)
   window.addEventListener('resize', handleResize)
   
   
@@ -648,6 +649,9 @@ onMounted(async () => {
 onBeforeUnmount(() => {
   window.cancelAnimationFrame(animationFrameId)
   window.removeEventListener('resize', handleResize)
+  if (canvasIntervalId) {
+    clearInterval(canvasIntervalId)
+  }
 })
 
 definePageMeta({
