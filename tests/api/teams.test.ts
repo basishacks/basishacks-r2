@@ -188,6 +188,36 @@ describe('POST /api/teams', () => {
 
     await expect(createHandler(createEvent())).rejects.toMatchObject({ statusCode: 403 })
   })
+
+  it('deletes the created team when adding the creator fails', async () => {
+    seedUser(ctx, { email: 'user@basischina.com' })
+
+    mockSession.value = { user: { id: 1 } }
+    mockBody.value = { name: 'Race Team' }
+    mockQueryState.value = { add: 'true' }
+
+    vi.stubGlobal(
+      'addTeamMember',
+      vi.fn().mockRejectedValue({
+        statusCode: 404,
+        message: 'User not found or already in a team',
+      }),
+    )
+
+    await expect(createHandler(createEvent())).rejects.toMatchObject({
+      statusCode: 404,
+    })
+
+    const team = ctx.drizzle
+      .select()
+      .from(teams)
+      .where(eq(teams.name, 'Race Team'))
+      .get()
+    expect(team).toBeUndefined()
+
+    const membersDb = await import('~~/server/utils/database/members')
+    vi.stubGlobal('addTeamMember', membersDb.addTeamMember)
+  })
 })
 
 describe('GET /api/teams/:id', () => {

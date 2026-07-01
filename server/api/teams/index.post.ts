@@ -1,4 +1,5 @@
 import { CreateTeamQuery, CreateTeamRequest } from '~~/shared/schemas'
+import { deleteTeams } from '~~/server/utils/database/teams'
 
 export default defineEventHandler(async (event) => {
   const {
@@ -35,7 +36,12 @@ export default defineEventHandler(async (event) => {
 
   const team = await createTeam(event, name)
   if (add) {
-    await addTeamMember(event, team.id, userID)
+    try {
+      await addTeamMember(event, team.id, userID)
+    } catch (error) {
+      await deleteTeams(event, [team.id])
+      throw error
+    }
   }
 
   return convertTeamToPublic(team, false, [])
