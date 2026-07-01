@@ -1,6 +1,7 @@
 import { getDeepSeekSession, addMessage, getMessages } from '~~/server/utils/deepseek-store'
 import { requirePermission } from '~~/server/utils/auth'
 import { DevPermissions } from '~~/shared/permissions'
+import { fetchExternalHtml } from '~~/server/utils/url-validation'
 import OpenAI from 'openai'
 
 import { NodeHtmlMarkdown } from "node-html-markdown"
@@ -270,26 +271,6 @@ const tools = [
   },
 ]
 
-async function fetchUrlHtml(url: string) {
-  try {
-    const response = await fetch(url, {
-      headers: {
-        'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36'
-      }
-    });
-
-    if (!response.ok) {
-      return `Error: Failed to fetch. Status: ${response.status}`;
-    }
-
-    const html = await response.text();
-    // Optional: Truncate if the HTML is massive, as LLMs have context limits
-    return html.substring(0, 15000); 
-  } catch (error: any) {
-    return `Error: ${error.message}`;
-  }
-}
-
 // Tool execution functions
 async function executeTool(toolName: string, toolArgs: Record<string, any>): Promise<string> {
   try {
@@ -307,9 +288,17 @@ async function executeTool(toolName: string, toolArgs: Record<string, any>): Pro
       const gmt8Time = new Date(now.getTime() + (8 - now.getTimezoneOffset() / 60) * 60 * 60 * 1000)
       return gmt8Time.toISOString()
     } else if (toolName == "crawl_web") {
-        return await fetchUrlHtml(toolArgs.url)
+        return await fetchExternalHtml(toolArgs.url, {
+          headers: {
+            'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36'
+          }
+        })
     } else if (toolName == "view_web") {
-        const html = await fetchUrlHtml(toolArgs.url)
+        const html = await fetchExternalHtml(toolArgs.url, {
+          headers: {
+            'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36'
+          }
+        })
         return NodeHtmlMarkdown.translate(html)
     } else if (toolName == "end_conversation") {
         return "<|SESSION_END_FLAG_qweiurohoanciwcoinwaskcn> <|SESSION_END_SEVERITY:" + toolArgs.severity + ">"
