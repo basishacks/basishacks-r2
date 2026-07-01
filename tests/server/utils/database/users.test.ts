@@ -133,6 +133,19 @@ describe('users database helpers', () => {
       const result = await getUserByCode(event, 'wrong@example.com', '111111')
       expect(result).toBeNull()
     })
+
+    it('returns null when the code has expired and leaves the code intact', async () => {
+      event.context.db.prepare(
+        "INSERT INTO users(email, login_code, login_expiry) VALUES('user@example.com', '222222', ?)",
+      ).bind(Date.now() - 1).run()
+
+      const result = await getUserByCode(event, 'user@example.com', '222222')
+      expect(result).toBeNull()
+
+      // Expired codes should not be consumed by a failed validation
+      const user = await getUserByEmail(event, 'user@example.com')
+      expect(user!.login_code).toBe('222222')
+    })
   })
 
   describe('updateUserName', () => {

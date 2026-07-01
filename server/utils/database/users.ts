@@ -1,5 +1,5 @@
 import type { H3Event } from 'h3'
-import { eq, and, sql } from 'drizzle-orm'
+import { eq, and, sql, gt } from 'drizzle-orm'
 import { users, teamScores, ballots, userPastTeams } from '~~/server/database/schema'
 import { hasPermission } from '~~/shared/permissions'
 
@@ -69,6 +69,7 @@ export async function getUserByCode(
       and(
         eq(sql`lower(${users.email})`, email.toLowerCase()),
         eq(users.login_code, code),
+        gt(users.login_expiry, Date.now()),
       ),
     )
     .returning({ id: users.id })
