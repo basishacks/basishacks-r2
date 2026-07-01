@@ -133,15 +133,18 @@ describe('determinePostMicrosoft', () => {
     })
 
     const url = determinePostMicrosoft({}, session)
+    const parsed = new URL('https://example.com' + url)
 
     expect(url.startsWith('/api/oauth2/authorize?')).toBe(true)
-    expect(url).toContain('client_id=test-client')
-    expect(url).toContain('scope=openid%20chat.read')
-    expect(url).toContain('redirect_uri=https%3A%2F%2Fexample.com%2Fcallback%3Fextra%3D1')
-    expect(url).toContain('state=state%20with%20spaces')
-    expect(url).toContain('response_type=code')
-    expect(url).toContain('code_challenge=challenge')
-    expect(url).toContain('code_challenge_method=S256')
+    expect(parsed.searchParams.get('client_id')).toBe('test-client')
+    expect(parsed.searchParams.get('scope')).toBe('openid chat.read')
+    expect(parsed.searchParams.get('redirect_uri')).toBe(
+      'https://example.com/callback?extra=1',
+    )
+    expect(parsed.searchParams.get('state')).toBe('state with spaces')
+    expect(parsed.searchParams.get('response_type')).toBe('code')
+    expect(parsed.searchParams.get('code_challenge')).toBe('challenge')
+    expect(parsed.searchParams.get('code_challenge_method')).toBe('S256')
   })
 
   it('completes the consent flow when no sensitive scopes are requested', () => {

@@ -64,6 +64,13 @@ afterEach(() => {
 function createEvent(overrides: Record<string, unknown> = {}) {
   return {
     context: { db: ctx.db, drizzle: ctx.drizzle },
+    node: {
+      req: {
+        socket: {
+          remoteAddress: '10.0.0.1',
+        },
+      },
+    },
     ...overrides,
   }
 }

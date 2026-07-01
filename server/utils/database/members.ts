@@ -68,7 +68,7 @@ export async function removeTeamMember(
   teamID: number,
   userID: number
 ) {
-  await event.context.drizzle.transaction(async (tx) => {
+  event.context.drizzle.transaction((tx) => {
     const result = tx
       .update(users)
       .set({ team_id: null })

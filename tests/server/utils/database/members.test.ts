@@ -137,7 +137,7 @@ describe('members database helpers', () => {
           'SELECT * FROM user_past_teams WHERE user_id = 3 AND team_id = 1',
         )
         .all()
-      expect(pastTeams).toHaveLength(0)
+      expect(pastTeams.results).toHaveLength(0)
     })
   })
 
