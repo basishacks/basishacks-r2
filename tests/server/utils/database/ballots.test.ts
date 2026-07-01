@@ -73,6 +73,12 @@ describe('ballots database helpers', () => {
       expect(ballot!.reasoning).toBe('My reasoning')
       expect(ballot!.submitted).toBe(1)
     })
+
+    it('throws a 404 error when the ballot does not exist', async () => {
+      await expect(
+        updateBallot(event, { id: 999, reasoning: 'Ghost', submitted: 1 } as any),
+      ).rejects.toThrow('Ballot not found')
+    })
   })
 
   describe('createBallotScore', () => {
@@ -149,6 +155,12 @@ describe('ballots database helpers', () => {
 
       const scores = await getBallotScores(event, 1)
       expect(scores[0]!.score).toBe(5)
+    })
+
+    it('throws a 404 error when the ballot score does not exist', async () => {
+      await expect(
+        updateBallotScore(event, { id: 999, score: 5 } as any),
+      ).rejects.toThrow('Ballot score not found')
     })
   })
 })

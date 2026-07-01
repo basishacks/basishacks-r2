@@ -21,11 +21,18 @@ export async function getBallotByUser(event: H3Event, userID: number): Promise<B
 }
 
 export async function updateBallot(event: H3Event, ballot: Ballot): Promise<void> {
-  event.context.drizzle
+  const result = event.context.drizzle
     .update(ballots)
     .set({ reasoning: ballot.reasoning, submitted: ballot.submitted })
     .where(eq(ballots.id, ballot.id))
     .run()
+
+  if (result.changes === 0) {
+    throw createError({
+      status: 404,
+      message: 'Ballot not found',
+    })
+  }
 }
 
 export async function createBallotScore(
@@ -57,9 +64,16 @@ export async function getBallotScoresByTeamID(event: H3Event, teamID: number): P
 }
 
 export async function updateBallotScore(event: H3Event, score: BallotScore) {
-  event.context.drizzle
+  const result = event.context.drizzle
     .update(ballotScores)
     .set({ score: score.score })
     .where(eq(ballotScores.id, score.id))
     .run()
+
+  if (result.changes === 0) {
+    throw createError({
+      status: 404,
+      message: 'Ballot score not found',
+    })
+  }
 }
