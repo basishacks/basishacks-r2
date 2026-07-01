@@ -107,8 +107,8 @@ Peer voting page. Protected by `auth` middleware. Only accessible during the `vo
 **Flow:**
 1. Fetches ballot data from `/api/ballot`
 2. Displays 4 `VotingProjectCard` components in a grid
-3. User distributes **12 stars** among 4 projects (1–5 per project)
-4. Increment/decrement buttons with validation (total must equal 12)
+3. User distributes **10 stars** among eligible projects (0–5 per project)
+4. Increment/decrement buttons with validation (total must equal 10)
 5. Reasoning textarea
 6. Submit with browser `confirm()` dialog
 

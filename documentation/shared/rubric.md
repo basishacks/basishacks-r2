@@ -124,4 +124,4 @@ The active season is tracked in the `hackathon` table and can be set via `PATCH 
 
 - `CreateTeamScoresRequest` — validates judge scoring input (reasoning + ScoreValues)
 - `ScoreValues` — dynamically generated object schema from rubric criteria keys
-- `SubmitVoteRequest` — validates peer voting (scores must sum to 12)
+- `SubmitVoteRequest` — validates peer voting (scores must sum to 10)

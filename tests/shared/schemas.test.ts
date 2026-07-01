@@ -471,6 +471,15 @@ describe('SubmitVoteRequest', () => {
       }),
     ).toThrow()
   })
+
+  it('rejects scores that sum to 12 (schema requires 10)', () => {
+    expect(() =>
+      SubmitVoteRequest.parse({
+        scores: [6, 6],
+        reasoning: 'Great work',
+      }),
+    ).toThrow('Stars must sum to 10')
+  })
 })
 
 describe('CreateApplicationRequest', () => {

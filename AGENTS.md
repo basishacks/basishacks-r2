@@ -247,7 +247,7 @@ In production, these are configured in the server environment.
 
 - The `hackathon` table has a single row (`id = 1`) that controls the global event state (`not_started`, `in_progress`, `voting`, `finished`, `paused`).
 - Team project submissions are only accepted while the hackathon status is `not_started` or `in_progress`.
-- Peer voting scores must sum to exactly 12.
+- Peer voting scores must sum to exactly 10.
 - Judge scoring uses rubric criteria defined in `shared/rubric.ts` with scores 0–5 per criterion.
 - The `/api/debug/*` routes expose DeepSeek chat sessions and file upload utilities; these are intended for development only.
 
