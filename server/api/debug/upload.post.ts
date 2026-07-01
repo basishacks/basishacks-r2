@@ -1,10 +1,16 @@
 import { randomUUID } from 'crypto'
 import { createAsset, createUserAsset } from '~~/server/utils/assets'
 import { DevPermissions } from '~~/shared/permissions'
+import { requireUser } from '~~/server/utils/auth'
+
+const ALLOWED_EXTENSIONS = new Set([
+  'png', 'jpg', 'jpeg', 'gif', 'webp', 'svg', 'pdf', 'txt', 'md', 'json', 'zip', 'mp4',
+])
 
 export default defineEventHandler(async (event) => {
   const query = getQuery(event)
 
+  await requireUser(event)
   await requirePermission(event, DevPermissions.DEBUG)
 
   const formData = await readMultipartFormData(event)
@@ -19,7 +25,10 @@ export default defineEventHandler(async (event) => {
 
   const uuid = randomUUID()
   const extension = file.filename.split('.').pop()?.toLowerCase() || ''
-  
+  if (!extension || !ALLOWED_EXTENSIONS.has(extension)) {
+    throw createError({ statusCode: 400, message: 'File extension not allowed' })
+  }
+
   const keepName = query.keepName === 'true'
   const fileName = keepName ? file.filename : `${uuid}.${extension}`
 
