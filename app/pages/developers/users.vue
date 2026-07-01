@@ -35,8 +35,8 @@ const { data, status, refresh } = await useFetch<AdminUser[]>('/api/users', {
 // Client-side permission guard
 const { user: me } = await useApiUser()
 if (!hasPermission(me.value?.role, DevPermissions.PORTAL_USERS_VIEW) && !hasPermission(me.value?.role, 'admin')) {
-  await navigateTo('/developers')
-  useToast().add({ title: 'Access denied', description: 'You do not have permission to view users.', color: 'error' })
+    useToast().add({ title: 'Access denied', description: 'You do not have permission to view users.', color: 'error' })
+    throw await navigateTo('/developers')
 }
 
 const selectedRows = computed<any[]>(() => {

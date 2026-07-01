@@ -12,7 +12,7 @@ useHead({
 
 const { user: me } = await useApiUser();
 if (!hasPermission(me.value?.role, "admin")) {
-    await navigateTo("/");
+    throw await navigateTo("/");
 }
 
 const toast = useToast();

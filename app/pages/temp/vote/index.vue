@@ -20,7 +20,7 @@ if (
     !hasPermission(me.value?.role, VotePermissions.VOTE) &&
     !hasPermission(me.value?.role, "admin")
 ) {
-    await navigateTo("/");
+    throw await navigateTo("/");
 }
 
 const { data, error } = await useFetch<ElectionPosition[]>("/api/election/candidates");

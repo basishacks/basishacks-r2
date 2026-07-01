@@ -9,8 +9,8 @@ definePageMeta({
 // Client-side permission guard
 const { user: me } = await useApiUser()
 if (!hasPermission(me.value?.role, DevPermissions.PORTAL_DEBUG_VIEW) && !hasPermission(me.value?.role, 'admin')) {
-  await navigateTo('/developers')
-  useToast().add({ title: 'Access denied', description: 'You do not have permission to view debug tools.', color: 'error' })
+    useToast().add({ title: 'Access denied', description: 'You do not have permission to view debug tools.', color: 'error' })
+    throw await navigateTo('/developers')
 }
 
 // File upload state

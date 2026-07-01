@@ -11,8 +11,8 @@ const toast = useToast()
 
 const { user: me } = await useApiUser()
 if (!hasPermission(me.value?.role, DevPermissions.PORTAL_SEASONS_VIEW) && !hasPermission(me.value?.role, 'admin')) {
-  await navigateTo('/developers')
-  useToast().add({ title: 'Access denied', description: 'You do not have permission to view seasons.', color: 'error' })
+    useToast().add({ title: 'Access denied', description: 'You do not have permission to view seasons.', color: 'error' })
+    throw await navigateTo('/developers')
 }
 
 const { data: seasons, refresh } = await useFetch<Season[]>('/api/seasons', {

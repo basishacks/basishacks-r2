@@ -32,8 +32,8 @@ const { data, status, refresh } = await useFetch<AdminTeam[]>('/api/admin/teams'
 // Client-side permission guard
 const { user: me } = await useApiUser()
 if (!hasPermission(me.value?.role, DevPermissions.PORTAL_TEAMS_VIEW) && !hasPermission(me.value?.role, 'admin')) {
-  await navigateTo('/developers')
-  useToast().add({ title: 'Access denied', description: 'You do not have permission to view teams.', color: 'error' })
+    useToast().add({ title: 'Access denied', description: 'You do not have permission to view teams.', color: 'error' })
+    throw await navigateTo('/developers')
 }
 
 const selectedRows = computed<any[]>(() => {

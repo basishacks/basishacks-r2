@@ -8,8 +8,8 @@ definePageMeta({
 // Client-side permission guard
 const { user: me } = await useApiUser()
 if (!hasPermission(me.value?.role, DevPermissions.PORTAL_DEEPSEEK_VIEW) && !hasPermission(me.value?.role, 'admin')) {
-  await navigateTo('/developers')
-  useToast().add({ title: 'Access denied', description: 'You do not have permission to view DeepSeek.', color: 'error' })
+    useToast().add({ title: 'Access denied', description: 'You do not have permission to view DeepSeek.', color: 'error' })
+    throw await navigateTo('/developers')
 }
 
 const toast = useToast()
