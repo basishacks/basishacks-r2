@@ -1,5 +1,6 @@
 
 
+
 /**
  * OAuth2 getApp Endpoint (POST)
  * 
@@ -78,8 +79,11 @@ export async function exchangeAuthorizationCode(code: string, clientId?: string,
     if (!session) continue
 
     if (session.code === code) {
+      // Invalidate IMMEDIATELY before any await to prevent double exchange (RFC 6749 4.1.2)
+      session.code = null
+      completeAuthorizeSession(session.token)
+
       if (Date.now() > session.expire_time) {
-        delete AUTHORIZE_SESSION_STORE[token]
         throw new Error('Authorization code has expired')
       }
 
@@ -128,7 +132,6 @@ export async function exchangeAuthorizationCode(code: string, clientId?: string,
         .setExpirationTime('1h')
         .sign(key)
 
-      completeAuthorizeSession(session.token)
       return jwt
     }
   }
