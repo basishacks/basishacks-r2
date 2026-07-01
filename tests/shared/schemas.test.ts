@@ -31,6 +31,10 @@ describe('SendCodeRequest', () => {
     expect(() => SendCodeRequest.parse({ email: 'test@gmail.com' })).toThrow()
   })
 
+  it('rejects a lookalike domain that only contains basischina.com', () => {
+    expect(() => SendCodeRequest.parse({ email: 'test@notbasischina.com' })).toThrow()
+  })
+
   it('rejects an invalid email format', () => {
     expect(() => SendCodeRequest.parse({ email: 'not-an-email' })).toThrow()
   })
