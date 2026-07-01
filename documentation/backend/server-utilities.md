@@ -351,12 +351,12 @@ File system helpers for managing static and user assets.
 | Function | Description |
 |----------|-------------|
 | `createAsset(name, data)` | Writes a Buffer to `public/assets/{name}` |
-| `createUserAsset(name, data)` | Writes a Buffer to `public/userast/{name}` |
+| `createUserAsset(name, data)` | Writes a Buffer to `public/userassets/{name}` |
 | `removeAsset(name)` | Deletes a file from `public/assets/` |
-| `removeUserAsset(name)` | Deletes a file from `public/userast/` |
-| `getUserAsset(name)` | Reads a file from `public/userast/` as a Buffer |
+| `removeUserAsset(name)` | Deletes a file from `public/userassets/` |
+| `getUserAsset(name)` | Reads a file from `public/userassets/` as a Buffer |
 
-All functions create directories recursively if they do not exist. Remove functions silently catch errors (file may not exist).
+All functions validate the asset name to prevent path traversal, create parent directories recursively, and remove functions silently catch missing-file errors. Invalid names throw a 400 error.
 
 ---
 
