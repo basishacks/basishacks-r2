@@ -170,7 +170,7 @@ export const CreateApplicationRequest = z.object({
 export type CreateApplicationRequest = z.infer<typeof CreateApplicationRequest>;
 
 export const DeleteApplicationsRequest = z.object({
-    ids: z.array(z.string().min(1)).max(50, "Cannot delete more than 50 applications at once"),
+    ids: z.array(z.string().min(1)).max(100, "Cannot delete more than 100 applications at once"),
 });
 export type DeleteApplicationsRequest = z.infer<typeof DeleteApplicationsRequest>;
 
