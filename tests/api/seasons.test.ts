@@ -30,9 +30,9 @@ beforeAll(async () => {
   activePatchHandler = (await import('~~/server/api/seasons/active.patch')).default
 })
 
-beforeEach(() => {
+beforeEach(async () => {
   resetMockState()
-  ctx = createTestContext()
+  ctx = await createTestContext()
   seedHackathon(ctx)
   seedSeason(ctx)
 })

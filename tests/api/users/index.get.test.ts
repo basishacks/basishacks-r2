@@ -21,9 +21,9 @@ beforeAll(async () => {
   listHandler = (await import('~~/server/api/users/index.get')).default
 })
 
-beforeEach(() => {
+beforeEach(async () => {
   resetMockState()
-  ctx = createTestContext()
+  ctx = await createTestContext()
   seedHackathon(ctx)
   seedSeason(ctx)
 })

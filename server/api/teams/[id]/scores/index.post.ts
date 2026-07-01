@@ -1,4 +1,5 @@
 import { CreateTeamScoresRequest } from '~~/shared/schemas'
+import { getTeam } from '~~/server/utils/database/teams'
 
 export default defineEventHandler(async (event) => {
   const teamID = parseInt(getRouterParam(event, 'id')!)

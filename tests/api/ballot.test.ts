@@ -54,9 +54,9 @@ beforeAll(async () => {
   summaryHandler = (await import('~~/server/api/ballot/summary.get')).default
 })
 
-beforeEach(() => {
+beforeEach(async () => {
   resetMockState()
-  ctx = createTestContext()
+  ctx = await createTestContext()
   seedHackathon(ctx)
   seedSeason(ctx)
 })

@@ -6,7 +6,7 @@
     "start": "cross-env NODE_ENV=production bun start-fix.mjs",
     "build": "cross-env NODE_OPTIONS=--no-deprecation nuxt build",
     "dev": "cross-env NODE_OPTIONS=--no-deprecation nuxt dev",
-    "test": "vitest run",
+    "test": "vitest run --pool=forks",
     "test:watch": "vitest",
     "test:coverage": "vitest run --coverage",
     "generate": "nuxt generate",

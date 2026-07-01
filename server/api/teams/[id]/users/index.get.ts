@@ -1,6 +1,6 @@
 import { getTeamById } from '~~/server/utils/database/teams'
 import { getActiveSeason } from '~~/server/utils/database/seasons'
-import { getAllTeamMembers } from '~~/server/utils/database/members'
+import { getAllTeamMembers, getTeamMembers } from '~~/server/utils/database/members'
 
 export default defineEventHandler(async (event) => {
   await requireUser(event)

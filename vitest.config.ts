@@ -2,7 +2,7 @@ import { fileURLToPath } from 'node:url'
 import { resolve } from 'node:path'
 import { defineConfig } from 'vitest/config'
 
-const rootDir = resolve(fileURLToPath(new URL('.', import.meta.url)))
+const rootDir = resolve(fileURLToPath(new URL('.', import.meta.url))).replace(/\\/g, '/')
 
 export default defineConfig({
   test: {

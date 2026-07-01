@@ -30,9 +30,9 @@ beforeAll(async () => {
   votePostHandler = (await import('~~/server/api/election/vote/index.post')).default
 })
 
-beforeEach(() => {
+beforeEach(async () => {
   resetMockState()
-  ctx = createTestContext()
+  ctx = await createTestContext()
   seedHackathon(ctx)
   seedSeason(ctx)
 })

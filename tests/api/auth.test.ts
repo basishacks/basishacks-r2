@@ -62,9 +62,9 @@ beforeAll(async () => {
   impersonateHandler = (await import('~~/server/api/auth/impersonate.post')).default
 })
 
-beforeEach(() => {
+beforeEach(async () => {
   resetMockState()
-  ctx = createTestContext()
+  ctx = await createTestContext()
   seedHackathon(ctx)
   seedSeason(ctx)
 })

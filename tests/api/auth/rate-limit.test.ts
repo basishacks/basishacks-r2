@@ -49,10 +49,10 @@ beforeAll(async () => {
   loginHandler = (await import('~~/server/api/auth/login.post')).default
 })
 
-beforeEach(() => {
+beforeEach(async () => {
   resetMockState()
   clearRateLimitHistory()
-  ctx = createTestContext()
+  ctx = await createTestContext()
   seedHackathon(ctx)
   seedSeason(ctx)
 })

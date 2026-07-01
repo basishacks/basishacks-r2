@@ -32,9 +32,9 @@ beforeAll(async () => {
   getHandler = (await import('~~/server/api/applications/[id]/index.get')).default
 })
 
-beforeEach(() => {
+beforeEach(async () => {
   resetMockState()
-  ctx = createTestContext()
+  ctx = await createTestContext()
   seedHackathon(ctx)
   seedSeason(ctx)
 })

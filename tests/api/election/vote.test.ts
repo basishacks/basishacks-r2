@@ -21,9 +21,9 @@ beforeAll(async () => {
   voteHandler = (await import('~~/server/api/election/vote/index.post')).default
 })
 
-beforeEach(() => {
+beforeEach(async () => {
   resetMockState()
-  ctx = createTestContext()
+  ctx = await createTestContext()
   seedHackathon(ctx)
   seedSeason(ctx)
   seedUser(ctx, { email: 'voter@basischina.com' })

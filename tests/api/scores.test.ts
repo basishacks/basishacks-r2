@@ -23,15 +23,18 @@ beforeAll(async () => {
   const hackathonDb = await import('~~/server/utils/database/hackathon')
   vi.stubGlobal('getHackathon', hackathonDb.getHackathon)
 
+  const seasonsDb = await import('~~/server/utils/database/seasons')
+  vi.stubGlobal('getActiveSeason', seasonsDb.getActiveSeason)
+
   const scoresDb = await import('~~/server/utils/database/scores')
   vi.stubGlobal('createTeamScores', scoresDb.createTeamScores)
 
   scoresHandler = (await import('~~/server/api/teams/[id]/scores/index.post')).default
 })
 
-beforeEach(() => {
+beforeEach(async () => {
   resetMockState()
-  ctx = createTestContext()
+  ctx = await createTestContext()
   seedHackathon(ctx, { status: 'voting' })
   seedSeason(ctx)
   // Seed a judge user for FK constraints

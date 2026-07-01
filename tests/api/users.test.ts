@@ -55,9 +55,9 @@ beforeAll(async () => {
   deleteHandler = (await import('~~/server/api/users/index.delete')).default
 })
 
-beforeEach(() => {
+beforeEach(async () => {
   resetMockState()
-  ctx = createTestContext()
+  ctx = await createTestContext()
   seedHackathon(ctx)
   seedSeason(ctx)
 })

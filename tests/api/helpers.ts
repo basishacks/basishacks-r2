@@ -289,4 +289,15 @@ export function resetMockState() {
   mockParams.values = {}
   mockSession.value = undefined
   mockConfig.value = {}
+
+  // Reset auto-imported auth mocks to their default resolved values so a
+  // previous rejected-value test does not leak into the next one.
+  ;(globalThis as any).requireUser?.mockReset?.()
+  ;(globalThis as any).requireUser?.mockResolvedValue({ id: 1, team_id: null, role: 'participant' })
+  ;(globalThis as any).requireJudge?.mockReset?.()
+  ;(globalThis as any).requireJudge?.mockResolvedValue({ id: 1, role: 'judge' })
+  ;(globalThis as any).requireAdmin?.mockReset?.()
+  ;(globalThis as any).requireAdmin?.mockResolvedValue({ id: 1, role: 'admin' })
+  ;(globalThis as any).requirePermission?.mockReset?.()
+  ;(globalThis as any).requirePermission?.mockResolvedValue(undefined)
 }

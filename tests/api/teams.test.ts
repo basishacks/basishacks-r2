@@ -84,9 +84,9 @@ beforeAll(async () => {
   removeMemberHandler = (await import('~~/server/api/teams/[id]/users/[user]/index.delete')).default
 })
 
-beforeEach(() => {
+beforeEach(async () => {
   resetMockState()
-  ctx = createTestContext()
+  ctx = await createTestContext()
   seedHackathon(ctx)
   seedSeason(ctx)
 })

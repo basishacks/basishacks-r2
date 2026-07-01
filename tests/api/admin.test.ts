@@ -39,9 +39,9 @@ beforeAll(async () => {
   teamsHandler = (await import('~~/server/api/admin/teams.get')).default
 })
 
-beforeEach(() => {
+beforeEach(async () => {
   resetMockState()
-  ctx = createTestContext()
+  ctx = await createTestContext()
   seedHackathon(ctx)
   seedSeason(ctx)
 })
