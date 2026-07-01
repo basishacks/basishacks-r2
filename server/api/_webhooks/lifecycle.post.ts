@@ -22,7 +22,7 @@ export default defineEventHandler(async (event) => {
   const value = body.value
   if (value == null || !Array.isArray(value) || value.length == 0) {
     console.warn('[MS Graph] Invalid MS Lifecycle')
-    return createError({
+    throw createError({
       statusCode: 400,
       message: 'Bad Request',
     })
@@ -31,7 +31,7 @@ export default defineEventHandler(async (event) => {
   const state = value[0].clientState
   if (state !== getMicrosoftWebhookState()) {
     console.warn('[MS Graph] Invalid MS Lifecycle state:', state)
-    return createError({
+    throw createError({
       statusCode: 403,
       message: 'Forbidden',
     })

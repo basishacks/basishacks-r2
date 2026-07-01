@@ -40,7 +40,7 @@ export default defineEventHandler(async (event) => {
     }
     throw createError({
       statusCode: 500,
-      statusMessage: 'Failed to delete session: ' + error.message,
+      statusMessage: 'Failed to delete session',
     })
   }
 })

@@ -22,7 +22,7 @@ export default defineEventHandler(async (event) => {
     console.error('Error creating deepseek session:', error)
     throw createError({
       statusCode: 500,
-      statusMessage: 'Failed to create session: ' + error.message,
+      statusMessage: 'Failed to create session',
     })
   }
 })

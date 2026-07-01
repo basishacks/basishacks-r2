@@ -32,7 +32,7 @@ export default defineEventHandler(async (event) => {
     }
     throw createError({
       statusCode: 500,
-      statusMessage: 'Failed to retrieve session: ' + error.message,
+      statusMessage: 'Failed to retrieve session',
     })
   }
 })

@@ -92,7 +92,7 @@ export default defineEventHandler(async (event) => {
     throw createError({
       statusCode: 400,
       statusMessage: 'invalid_grant',
-      message: e.message || 'Failed to exchange authorization code'
+      message: 'Failed to exchange authorization code'
     })
   }
 })
