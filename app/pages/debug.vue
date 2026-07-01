@@ -178,6 +178,16 @@
 
 <script setup lang="ts">
 import { onMounted } from 'vue'
+import { hasPermission } from '~~/shared/permissions'
+
+definePageMeta({
+  middleware: ['auth'],
+})
+
+const { user: me } = await useApiUser()
+if (!hasPermission(me.value?.role, 'admin')) {
+  throw await navigateTo('/')
+}
 
 // Tab management
 const activeTab = ref<'upload' | 'deepseek'>('upload')
