@@ -68,21 +68,25 @@ export async function removeTeamMember(
   teamID: number,
   userID: number
 ) {
-  // Record the team as past before removing
-  await addUserPastTeam(event, userID, teamID)
+  await event.context.drizzle.transaction(async (tx) => {
+    const result = tx
+      .update(users)
+      .set({ team_id: null })
+      .where(and(eq(users.id, userID), eq(users.team_id, teamID)))
+      .run()
 
-  const result = event.context.drizzle
-    .update(users)
-    .set({ team_id: null })
-    .where(and(eq(users.id, userID), eq(users.team_id, teamID)))
-    .run()
+    if (result.changes === 0) {
+      throw createError({
+        status: 404,
+        message: 'User not found or not in team',
+      })
+    }
 
-  if (result.changes === 0) {
-    throw createError({
-      status: 404,
-      message: 'User not found or not in team',
-    })
-  }
+    tx.insert(userPastTeams)
+      .values({ user_id: userID, team_id: teamID })
+      .onConflictDoNothing()
+      .run()
+  })
 }
 
 export async function addTeamMember(

@@ -130,6 +130,14 @@ describe('members database helpers', () => {
       await expect(removeTeamMember(event, 1, 3)).rejects.toThrow(
         'User not found or not in team',
       )
+
+      // Removing a non-member must not create a past-team entry
+      const pastTeams = event.context.db
+        .prepare(
+          'SELECT * FROM user_past_teams WHERE user_id = 3 AND team_id = 1',
+        )
+        .all()
+      expect(pastTeams).toHaveLength(0)
     })
   })
 
