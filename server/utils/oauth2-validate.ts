@@ -27,6 +27,14 @@ export async function validateOAuth2AuthorizationRequest(
 
   let protocol: number = 3; // 2.1
 
+  // Validate response_type
+  if (response_type && response_type !== 'code') {
+    throw createError({
+      statusCode: 400,
+      statusMessage: 'unsupported_response_type'
+    })
+  }
+
   // Validate required parameters
   if (!clientId) {
     throw createError({

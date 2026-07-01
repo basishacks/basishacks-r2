@@ -28,6 +28,7 @@ import {
   usedSensitiveScopes,
   determinePostMicrosoft,
   completeConsentFlow,
+  validateOAuth2AuthorizationRequest,
 } from '~~/server/utils/oauth2-validate'
 
 // ---------------------------------------------------------------------------
@@ -196,5 +197,46 @@ describe('completeConsentFlow', () => {
     expect(url).toBe(
       'https://example.com/callback?code=code%2Fwith%20spaces&state=state%2Fwith%20spaces',
     )
+  })
+})
+
+// ---------------------------------------------------------------------------
+// validateOAuth2AuthorizationRequest
+// ---------------------------------------------------------------------------
+
+describe('validateOAuth2AuthorizationRequest', () => {
+  it('rejects unsupported response_type values', async () => {
+    await expect(
+      validateOAuth2AuthorizationRequest(
+        {} as any,
+        'test-client',
+        'openid',
+        'https://example.com/callback',
+        'state',
+        'token',
+        'challenge',
+        'S256',
+      ),
+    ).rejects.toMatchObject({
+      statusCode: 400,
+      statusMessage: 'unsupported_response_type',
+    })
+  })
+
+  it('allows response_type "code"', async () => {
+    await expect(
+      validateOAuth2AuthorizationRequest(
+        {} as any,
+        'test-client',
+        'openid',
+        'https://example.com/callback',
+        'state',
+        'code',
+        'challenge',
+        'S256',
+      ),
+    ).rejects.not.toMatchObject({
+      statusMessage: 'unsupported_response_type',
+    })
   })
 })
