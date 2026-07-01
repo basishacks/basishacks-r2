@@ -239,4 +239,39 @@ describe('validateOAuth2AuthorizationRequest', () => {
       statusMessage: 'unsupported_response_type',
     })
   })
+
+  it('rejects authorization requests without PKCE', async () => {
+    await expect(
+      validateOAuth2AuthorizationRequest(
+        {} as any,
+        'test-client',
+        'openid',
+        'https://example.com/callback',
+        'state',
+        'code',
+        '',
+        '',
+      ),
+    ).rejects.toMatchObject({
+      statusCode: 400,
+      statusMessage: 'invalid_request: PKCE required',
+    })
+  })
+
+  it('allows authorization requests with PKCE', async () => {
+    await expect(
+      validateOAuth2AuthorizationRequest(
+        {} as any,
+        'test-client',
+        'openid',
+        'https://example.com/callback',
+        'state',
+        'code',
+        'challenge',
+        'S256',
+      ),
+    ).rejects.not.toMatchObject({
+      statusMessage: 'invalid_request: PKCE required',
+    })
+  })
 })
