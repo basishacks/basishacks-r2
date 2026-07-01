@@ -36,3 +36,13 @@ describe('authorize.vue error description sanitization', () => {
     expect(escaped).toBe('&lt;script&gt;alert(1)&lt;/script&gt;')
   })
 })
+
+describe('index.vue theme_description sanitization', () => {
+  it('escapes script tags in the hackathon theme description', () => {
+    const malicious = "<img src=x onerror=alert(1)>"
+    const escaped = escapeHtml(malicious)
+    expect(escaped).not.toContain('<img')
+    expect(escaped).toContain('&lt;img')
+    expect(escaped).toBe('&lt;img src=x onerror=alert(1)&gt;')
+  })
+})

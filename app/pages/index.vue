@@ -21,6 +21,12 @@ const votingEndDate = computed(
 const resultsOpenDate = computed(
   () => new Date(hackathon.value.results_open_timestamp)
 )
+
+const themeDescription = computed(() =>
+  hackathon.value.theme_description
+    ? escapeHtml(hackathon.value.theme_description)
+    : ''
+)
 </script>
 
 <template>
@@ -116,7 +122,7 @@ const resultsOpenDate = computed(
         <span class="bold glow text-primary">{{ hackathon.theme_name }}</span
         >!
       </p>
-      <p class="mb-4" v-html="hackathon.theme_description" />
+      <p class="mb-4" v-html="themeDescription" />
     </template>
 
     <h2 class="text-3xl bold mb-4 glow-sm">Resources</h2>
