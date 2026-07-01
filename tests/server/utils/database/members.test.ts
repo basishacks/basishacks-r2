@@ -62,6 +62,17 @@ describe('members database helpers', () => {
       expect(members).toHaveLength(3)
       expect(members.map((m) => m.name)).toEqual(['Alice', 'Bob', 'Carol'])
     })
+
+    it('deduplicates a current member who also has past-team history', async () => {
+      // Alice is a current member of Team A and also has a past-team record
+      event.context.db.prepare(
+        'INSERT INTO user_past_teams(user_id, team_id) VALUES(1, 1)',
+      ).run()
+
+      const members = await getAllTeamMembers(event, 1)
+      expect(members).toHaveLength(2)
+      expect(members.map((m) => m.name)).toEqual(['Alice', 'Bob'])
+    })
   })
 
   describe('getUserPastTeams', () => {

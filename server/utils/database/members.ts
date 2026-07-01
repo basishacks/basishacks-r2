@@ -11,19 +11,33 @@ export async function getTeamMembers(event: H3Event, teamID: number): Promise<Us
 }
 
 export async function getAllTeamMembers(event: H3Event, teamID: number): Promise<User[]> {
-  const rows = event.context.drizzle
-    .selectDistinct()
+  const current = await event.context.drizzle
+    .select()
     .from(users)
-    .leftJoin(userPastTeams, eq(users.id, userPastTeams.user_id))
-    .where(
-      or(
-        eq(users.team_id, teamID),
-        eq(userPastTeams.team_id, teamID),
-      ),
-    )
+    .where(eq(users.team_id, teamID))
     .orderBy(asc(users.id))
     .all()
-  return rows.map((r: { users: User }) => ({ ...r.users }))
+
+  const pastRows = await event.context.drizzle
+    .select()
+    .from(users)
+    .innerJoin(userPastTeams, eq(users.id, userPastTeams.user_id))
+    .where(eq(userPastTeams.team_id, teamID))
+    .orderBy(asc(users.id))
+    .all()
+  const past = pastRows.map((r: { users: User }) => ({ ...r.users }))
+
+  const seen = new Map<number, User>()
+  for (const user of current) {
+    seen.set(user.id, user)
+  }
+  for (const user of past) {
+    if (!seen.has(user.id)) {
+      seen.set(user.id, user)
+    }
+  }
+
+  return Array.from(seen.values()).sort((a, b) => a.id - b.id)
 }
 
 export async function getUserPastTeams(event: H3Event, userID: number): Promise<Team[]> {
