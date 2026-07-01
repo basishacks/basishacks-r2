@@ -1,5 +1,5 @@
 import { eq } from 'drizzle-orm'
-import { drizzle } from 'drizzle-orm/better-sqlite3'
+import type { BaseSQLiteDatabase } from 'drizzle-orm/sqlite-core'
 import * as schema from '~~/server/database/schema'
 import { createTestDatabase } from '~~/tests/setup'
 
@@ -12,9 +12,19 @@ function createErrorMock(err: { status?: number; statusCode?: number; message?: 
   throw error
 }
 
-export function createMockEvent() {
-  const db = createTestDatabase()
-  const drizzleDb = drizzle(db.getRawDb(), { schema })
+export async function createMockEvent() {
+  const db = await createTestDatabase()
+
+  async function createDrizzle(raw: any): Promise<BaseSQLiteDatabase<'sync', any, typeof schema>> {
+    if (typeof Bun !== 'undefined') {
+      const { drizzle } = await import('drizzle-orm/bun-sqlite')
+      return drizzle(raw, { schema }) as any
+    }
+    const { drizzle } = await import('drizzle-orm/better-sqlite3')
+    return drizzle(raw, { schema }) as any
+  }
+
+  const drizzleDb = await createDrizzle(db.getRawDb())
 
   // Stub Nitro auto-imports used by database helpers
   vi.stubGlobal('createError', createErrorMock)

@@ -7,10 +7,10 @@ import {
 } from '~~/server/utils/database/seasons'
 
 describe('seasons database helpers', () => {
-  let event: ReturnType<typeof createMockEvent>
+  let event: Awaited<ReturnType<typeof createMockEvent>>
 
-  beforeEach(() => {
-    event = createMockEvent()
+  beforeEach(async () => {
+    event = await createMockEvent()
   })
 
   describe('getSeasons', () => {

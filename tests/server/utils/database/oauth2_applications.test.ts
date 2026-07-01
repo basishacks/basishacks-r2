@@ -17,10 +17,10 @@ import {
 } from '~~/server/utils/database/oauth2_applications'
 
 describe('oauth2_applications database helpers', () => {
-  let event: ReturnType<typeof createMockEvent>
+  let event: Awaited<ReturnType<typeof createMockEvent>>
 
-  beforeEach(() => {
-    event = createMockEvent()
+  beforeEach(async () => {
+    event = await createMockEvent()
     // Seed a user for the owner_id foreign key
     event.context.db.prepare(
       "INSERT INTO users(email) VALUES('owner@example.com')",

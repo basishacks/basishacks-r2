@@ -1,9 +1,7 @@
 import { readFileSync } from 'node:fs'
 import { resolve } from 'node:path'
-import Database from 'better-sqlite3'
-import { drizzle } from 'drizzle-orm/better-sqlite3'
+import type { BaseSQLiteDatabase } from 'drizzle-orm/sqlite-core'
 import * as schema from '~~/server/database/schema'
-import { SQLiteDatabase } from '~~/tests/setup'
 
 const schemaPath = resolve(import.meta.dirname, '..', '..', 'sql', 'archive', 'init.sql')
 const initSQL = readFileSync(schemaPath, 'utf-8')
@@ -57,20 +55,36 @@ const migrationSQL = `
   ALTER TABLE hackathon ADD COLUMN schedule_end TEXT;
 `
 
-export interface TestContext {
-  db: SQLiteDatabase
-  drizzle: ReturnType<typeof drizzle>
-  sqlite: Database.Database
+async function createRawDatabase(): Promise<any> {
+  if (typeof Bun !== 'undefined') {
+    const { Database } = await import('bun:sqlite')
+    return new Database(':memory:')
+  }
+  const { default: Database } = await import('better-sqlite3')
+  return new Database(':memory:')
 }
 
-export function createTestContext(): TestContext {
-  const sqlite = new Database(':memory:')
-  sqlite.pragma('foreign_keys = ON')
+async function createDrizzle(sqlite: any): Promise<BaseSQLiteDatabase<'sync', any, typeof schema>> {
+  if (typeof Bun !== 'undefined') {
+    const { drizzle } = await import('drizzle-orm/bun-sqlite')
+    return drizzle(sqlite, { schema }) as any
+  }
+  const { drizzle } = await import('drizzle-orm/better-sqlite3')
+  return drizzle(sqlite, { schema }) as any
+}
+
+export interface TestContext {
+  drizzle: BaseSQLiteDatabase<'sync', any, typeof schema>
+  sqlite: any
+}
+
+export async function createTestContext(): Promise<TestContext> {
+  const sqlite = await createRawDatabase()
+  sqlite.exec('PRAGMA foreign_keys = ON')
   sqlite.exec(initSQL)
   sqlite.exec(migrationSQL)
-  const drizzleDb = drizzle(sqlite, { schema })
-  const dbWrapper = new SQLiteDatabase(sqlite)
-  return { db: dbWrapper, drizzle: drizzleDb, sqlite }
+  const drizzleDb = await createDrizzle(sqlite)
+  return { drizzle: drizzleDb, sqlite }
 }
 
 export function resetTestContext(ctx: TestContext): void {

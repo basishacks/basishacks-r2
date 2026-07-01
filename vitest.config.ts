@@ -1,5 +1,8 @@
 import { fileURLToPath } from 'node:url'
+import { resolve } from 'node:path'
 import { defineConfig } from 'vitest/config'
+
+const rootDir = resolve(fileURLToPath(new URL('.', import.meta.url)))
 
 export default defineConfig({
   test: {
@@ -15,10 +18,10 @@ export default defineConfig({
   resolve: {
     alias: {
       // Nuxt-style project root aliases so tests can use ~~/ and ~/
-      '~~': fileURLToPath(new URL('.', import.meta.url)),
-      '~~/': fileURLToPath(new URL('./', import.meta.url)),
-      '~': fileURLToPath(new URL('.', import.meta.url)),
-      '~/': fileURLToPath(new URL('./', import.meta.url)),
+      '~~/': `${rootDir}/`,
+      '~~': rootDir,
+      '~/': `${rootDir}/`,
+      '~': rootDir,
     },
   },
 })

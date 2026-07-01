@@ -5,10 +5,10 @@ import {
 } from '~~/server/utils/database/peer-voting'
 
 describe('peer-voting database helpers', () => {
-  let event: ReturnType<typeof createMockEvent>
+  let event: Awaited<ReturnType<typeof createMockEvent>>
 
-  beforeEach(() => {
-    event = createMockEvent()
+  beforeEach(async () => {
+    event = await createMockEvent()
   })
 
   describe('getPeerVoteByUser', () => {

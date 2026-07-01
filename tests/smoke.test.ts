@@ -18,8 +18,8 @@ describe('test framework smoke test', () => {
 describe('in-memory SQLite database', () => {
   let db: SQLiteDatabase
 
-  beforeAll(() => {
-    db = createTestDatabase()
+  beforeAll(async () => {
+    db = await createTestDatabase()
   })
 
   afterAll(() => {

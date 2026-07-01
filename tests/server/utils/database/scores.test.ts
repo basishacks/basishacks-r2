@@ -5,10 +5,10 @@ import {
 } from '~~/server/utils/database/scores'
 
 describe('scores database helpers', () => {
-  let event: ReturnType<typeof createMockEvent>
+  let event: Awaited<ReturnType<typeof createMockEvent>>
 
-  beforeEach(() => {
-    event = createMockEvent()
+  beforeEach(async () => {
+    event = await createMockEvent()
     // Seed hackathon with id 1 (different from active season to catch the bug)
     event.context.db.prepare(
       "INSERT INTO hackathon(id, status, start_timestamp, end_timestamp, voting_start_timestamp, voting_end_timestamp, results_open_timestamp) VALUES(1, 'not_started', 0, 0, 0, 0, 0)",

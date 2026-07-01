@@ -2,10 +2,10 @@ import { createMockEvent } from './helpers'
 import { getHackathon } from '~~/server/utils/database/hackathon'
 
 describe('hackathon database helpers', () => {
-  let event: ReturnType<typeof createMockEvent>
+  let event: Awaited<ReturnType<typeof createMockEvent>>
 
-  beforeEach(() => {
-    event = createMockEvent()
+  beforeEach(async () => {
+    event = await createMockEvent()
   })
 
   describe('getHackathon', () => {

@@ -10,10 +10,10 @@ import {
 } from '~~/server/utils/database/ballots'
 
 describe('ballots database helpers', () => {
-  let event: ReturnType<typeof createMockEvent>
+  let event: Awaited<ReturnType<typeof createMockEvent>>
 
-  beforeEach(() => {
-    event = createMockEvent()
+  beforeEach(async () => {
+    event = await createMockEvent()
     // Seed a user
     event.context.db.prepare(
       "INSERT INTO users(email) VALUES('user@example.com')",

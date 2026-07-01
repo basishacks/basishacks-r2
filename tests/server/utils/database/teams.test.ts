@@ -13,23 +13,23 @@ import {
   deleteTeams,
 } from '~~/server/utils/database/teams'
 
-function seedHackathon(event: ReturnType<typeof createMockEvent>) {
+function seedHackathon(event: Awaited<ReturnType<typeof createMockEvent>>) {
   event.context.db.prepare(
     "INSERT INTO hackathon(id, status, start_timestamp, end_timestamp, voting_start_timestamp, voting_end_timestamp, results_open_timestamp) VALUES(1, 'not_started', 0, 0, 0, 0, 0)",
   ).run()
 }
 
-function seedSeason(event: ReturnType<typeof createMockEvent>, name: string, isActive: number) {
+function seedSeason(event: Awaited<ReturnType<typeof createMockEvent>>, name: string, isActive: number) {
   event.context.db.prepare(
     'INSERT INTO seasons(name, is_active) VALUES(?, ?)',
   ).bind(name, isActive).run()
 }
 
 describe('teams database helpers', () => {
-  let event: ReturnType<typeof createMockEvent>
+  let event: Awaited<ReturnType<typeof createMockEvent>>
 
-  beforeEach(() => {
-    event = createMockEvent()
+  beforeEach(async () => {
+    event = await createMockEvent()
     seedHackathon(event)
   })
 

@@ -1,17 +1,14 @@
 import { readFileSync } from 'node:fs'
 import { resolve } from 'node:path'
-import Database from 'better-sqlite3'
-import type { Statement } from 'better-sqlite3'
 
-/**
- * D1-compatible Statement wrapper, mirroring the one in server/utils/database.ts.
- * This lets tests use the same `db.prepare(sql).bind(...).all() / .first() / .run()` API.
- */
+// Runtime-agnostic sqlite statement wrapper.
+// Under Bun we use bun:sqlite; under Node.js we use better-sqlite3.
+// Both expose a near-identical prepare().run/all/get API.
 class SQLiteStatement {
-  private statement: Statement
+  private statement: any
   private bindings: unknown[] = []
 
-  constructor(statement: Statement) {
+  constructor(statement: any) {
     this.statement = statement
   }
 
@@ -30,17 +27,24 @@ class SQLiteStatement {
 
   run(): { meta: { changed_db: number } } {
     const result = this.statement.run(...this.bindings)
-    return { meta: { changed_db: result.changes } }
+    return { meta: { changed_db: result.changes ?? 0 } }
   }
+}
+
+// Thin runtime abstraction for the test database wrapper.
+interface RawDatabase {
+  exec(sql: string): void
+  prepare(sql: string): any
+  close(): void
 }
 
 /**
  * D1-compatible Database wrapper, mirroring the SQLiteDatabase class in server/utils/database.ts.
  */
 export class SQLiteDatabase {
-  private db: Database.Database
+  private db: RawDatabase
 
-  constructor(db: Database.Database) {
+  constructor(db: RawDatabase) {
     this.db = db
   }
 
@@ -50,7 +54,8 @@ export class SQLiteDatabase {
 
   batch<T = unknown>(statements: Array<{ sql: string; params: unknown[] }>): T[] {
     const results: T[] = []
-    const transaction = this.db.transaction(() => {
+    this.exec('BEGIN')
+    try {
       for (const stmt of statements) {
         const prepared = this.db.prepare(stmt.sql)
         const result = prepared.all(...stmt.params)
@@ -60,8 +65,11 @@ export class SQLiteDatabase {
           results.push(result as T)
         }
       }
-    })
-    transaction()
+      this.exec('COMMIT')
+    } catch (e) {
+      this.exec('ROLLBACK')
+      throw e
+    }
     return results
   }
 
@@ -69,12 +77,12 @@ export class SQLiteDatabase {
     this.db.exec(sql)
   }
 
-  /** Return the underlying better-sqlite3 instance (for Drizzle ORM) */
-  getRawDb(): Database.Database {
+  /** Return the underlying raw sqlite instance (for Drizzle ORM) */
+  getRawDb(): RawDatabase {
     return this.db
   }
 
-  /** Return the underlying better-sqlite3 instance (for teardown) */
+  /** Close the database connection */
   close(): void {
     this.db.close()
   }
@@ -88,10 +96,19 @@ const schemaSQL = readFileSync(schemaPath, 'utf-8')
  * Create a fresh in-memory SQLite database with the full schema applied.
  * Use this in tests to get a clean, isolated database instance.
  */
-export function createTestDatabase(): SQLiteDatabase {
-  const db = new Database(':memory:')
+export async function createTestDatabase(): Promise<SQLiteDatabase> {
+  let db: RawDatabase
+
+  if (typeof Bun !== 'undefined') {
+    const { Database } = await import('bun:sqlite')
+    db = new Database(':memory:') as RawDatabase
+  } else {
+    const { default: Database } = await import('better-sqlite3')
+    db = new Database(':memory:') as RawDatabase
+  }
+
   // Enable foreign keys just like the real app does
-  db.pragma('foreign_keys = ON')
+  db.exec('PRAGMA foreign_keys = ON')
   // Run the schema to create all tables and indexes
   db.exec(schemaSQL)
 
@@ -149,7 +166,7 @@ export function createTestDatabase(): SQLiteDatabase {
 }
 
 /**
- * Reset a test database to a clean state by dropping and re-creating all tables.
+ * Reset a test database to a clean state by deleting all rows.
  * Faster than closing and re-opening for between-test resets.
  */
 export function resetTestDatabase(wrapper: SQLiteDatabase): void {
@@ -169,5 +186,5 @@ export function resetTestDatabase(wrapper: SQLiteDatabase): void {
   `)
 }
 
-// Re-export for convenience in test files
-export { Database }
+// Re-export a placeholder; tests that need the raw driver class should not rely on it.
+export const Database = null as any
