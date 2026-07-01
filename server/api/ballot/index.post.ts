@@ -25,14 +25,6 @@ export default defineEventHandler(async (event) => {
     })
   }
 
-  const existingVote = await getPeerVoteByUser(event, user.id)
-  if (existingVote) {
-    throw createError({
-      status: 403,
-      message: 'You have already submitted your vote',
-    })
-  }
-
   const payload = await readValidatedBody(event, SubmitVoteRequest.parse)
 
   const projects = await getSubmittedTeams(event)
@@ -52,12 +44,11 @@ export default defineEventHandler(async (event) => {
     scoreObj[eligibleProjects[i]!.id] = payload.scores[i]!
   }
 
-  await createPeerVote(
-    event,
-    user.id,
-    JSON.stringify(scoreObj),
-    payload.reasoning,
-  )
+  await createPeerVote(event, {
+    user_id: user.id,
+    score: JSON.stringify(scoreObj),
+    reasoning: payload.reasoning,
+  })
 
   return { message: 'Successfully submitted vote!' }
 })

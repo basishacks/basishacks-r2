@@ -1,0 +1,1 @@
+CREATE UNIQUE INDEX `idx_peer_voting_user_id` ON `peer_voting_scores` (`user_id`);

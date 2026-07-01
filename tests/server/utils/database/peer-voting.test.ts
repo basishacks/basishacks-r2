@@ -32,13 +32,40 @@ describe('peer-voting database helpers', () => {
 
   describe('createPeerVote', () => {
     it('creates a peer vote successfully', async () => {
-      await createPeerVote(event, 1, '{"team1":5,"team2":3}', 'Well reasoned')
+      await createPeerVote(event, {
+        user_id: 1,
+        score: '{"team1":5,"team2":3}',
+        reasoning: 'Well reasoned',
+      })
 
       const vote = await getPeerVoteByUser(event, 1)
       expect(vote).not.toBeNull()
       expect(vote!.user_id).toBe(1)
       expect(vote!.score).toBe('{"team1":5,"team2":3}')
       expect(vote!.reasoning).toBe('Well reasoned')
+    })
+
+    it('upserts an existing peer vote', async () => {
+      await createPeerVote(event, {
+        user_id: 1,
+        score: '{"team1":5}',
+        reasoning: 'First',
+      })
+      await createPeerVote(event, {
+        user_id: 1,
+        score: '{"team1":4}',
+        reasoning: 'Second',
+      })
+
+      const rows = event.context.db
+        .prepare('SELECT * FROM peer_voting_scores WHERE user_id = 1')
+        .all() as { results: any[] }
+      expect(rows.results).toHaveLength(1)
+
+      const vote = await getPeerVoteByUser(event, 1)
+      expect(vote).not.toBeNull()
+      expect(vote!.score).toBe('{"team1":4}')
+      expect(vote!.reasoning).toBe('Second')
     })
   })
 })

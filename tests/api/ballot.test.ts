@@ -143,7 +143,7 @@ describe('POST /api/ballot', () => {
     expect(vote!.reasoning).toBe('Great project overall.')
   })
 
-  it('returns 403 when user has already voted', async () => {
+  it('upserts when user has already voted', async () => {
     resetTestContext(ctx)
     seedHackathon(ctx, { status: 'voting' })
     const season = seedSeason(ctx)
@@ -162,11 +162,17 @@ describe('POST /api/ballot', () => {
     vi.mocked(globalThis.requireUser).mockResolvedValue({ id: 1, team_id: userTeam.id, role: 'participant' })
 
     mockBody.value = {
-      scores: [5],
+      scores: [10],
       reasoning: 'Great project.',
     }
 
-    await expect(postBallotHandler(createEvent())).rejects.toMatchObject({ statusCode: 403 })
+    const result = await postBallotHandler(createEvent())
+
+    expect(result).toEqual({ message: 'Successfully submitted vote!' })
+
+    const rows = ctx.drizzle.select().from(peerVotingScores).all()
+    expect(rows).toHaveLength(1)
+    expect(rows[0].reasoning).toBe('Great project.')
   })
 })
 

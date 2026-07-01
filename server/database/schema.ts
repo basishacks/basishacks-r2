@@ -220,11 +220,15 @@ export const teamAwards = sqliteTable('team_awards', {
 // ---------------------------------------------------------------------------
 // Peer-voting scores – each user submits one structured peer vote.
 // ---------------------------------------------------------------------------
-export const peerVotingScores = sqliteTable('peer_voting_scores', {
-  user_id: integer('user_id').notNull(),
-  score: text('score').notNull(),
-  reasoning: text('reasoning'),
-})
+export const peerVotingScores = sqliteTable(
+  'peer_voting_scores',
+  {
+    user_id: integer('user_id').notNull(),
+    score: text('score').notNull(),
+    reasoning: text('reasoning'),
+  },
+  (table) => [uniqueIndex('idx_peer_voting_user_id').on(table.user_id)],
+)
 
 // ---------------------------------------------------------------------------
 // Tracks which teams a user was previously a member of (for history).

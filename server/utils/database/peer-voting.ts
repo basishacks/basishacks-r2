@@ -17,12 +17,17 @@ export async function getPeerVoteByUser(
 
 export async function createPeerVote(
   event: H3Event,
-  userID: number,
-  score: string,
-  reasoning: string,
+  vote: { user_id: number; score: string; reasoning: string },
 ): Promise<void> {
   event.context.drizzle
     .insert(peerVotingScores)
-    .values({ user_id: userID, score, reasoning })
+    .values(vote)
+    .onConflictDoUpdate({
+      target: peerVotingScores.user_id,
+      set: {
+        score: vote.score,
+        reasoning: vote.reasoning,
+      },
+    })
     .run()
 }

@@ -38,6 +38,7 @@ const migrationSQL = `
     score TEXT NOT NULL,
     reasoning TEXT
   );
+  CREATE UNIQUE INDEX IF NOT EXISTS idx_peer_voting_user_id ON peer_voting_scores(user_id);
 
   CREATE TABLE IF NOT EXISTS team_awards (
     team_id INTEGER NOT NULL,

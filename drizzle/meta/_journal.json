@@ -15,6 +15,13 @@
       "when": 1782884463924,
       "tag": "0001_curly_moon_knight",
       "breakpoints": true
+    },
+    {
+      "idx": 2,
+      "version": "6",
+      "when": 1782884914352,
+      "tag": "0002_numerous_professor_monster",
+      "breakpoints": true
     }
   ]
 }
