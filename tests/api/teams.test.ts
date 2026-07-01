@@ -341,6 +341,20 @@ describe('POST /api/teams/:id/submit', () => {
 })
 
 describe('GET /api/teams/:id/users', () => {
+  it('returns 401 when not authenticated', async () => {
+    ;(globalThis as any).requireUser.mockRejectedValue({
+      statusCode: 401,
+      message: 'Unauthorized',
+    })
+
+    const team = seedTeam(ctx, { name: 'Team' })
+    mockParams.values['id'] = String(team.id)
+
+    await expect(membersHandler(createEvent())).rejects.toMatchObject({
+      statusCode: 401,
+    })
+  })
+
   it('returns team members', async () => {
     const team = seedTeam(ctx, { name: 'Team' })
     seedUser(ctx, { email: 'alice@basischina.com', name: 'Alice', team_id: team.id })
@@ -354,6 +368,30 @@ describe('GET /api/teams/:id/users', () => {
     expect(result).toHaveLength(2)
     expect(result[0]).toHaveProperty('name', 'Alice')
     expect(result[1]).toHaveProperty('name', 'Bob')
+  })
+
+  it('only exposes id, email, name, and team_id', async () => {
+    const team = seedTeam(ctx, { name: 'Team' })
+    seedUser(ctx, {
+      email: 'alice@basischina.com',
+      name: 'Alice',
+      team_id: team.id,
+      role: 'participant',
+      profile_theme: 'emoji|🚀',
+      profile_picture: 'https://example.com/avatar.png',
+    })
+
+    mockParams.values['id'] = String(team.id)
+
+    const result = await membersHandler(createEvent())
+
+    expect(result).toHaveLength(1)
+    expect(result[0]).toEqual({
+      id: 1,
+      email: 'alice@basischina.com',
+      name: 'Alice',
+      team_id: team.id,
+    })
   })
 })
 
