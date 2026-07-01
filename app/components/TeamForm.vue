@@ -38,32 +38,27 @@ const removeMemberMessage = (user: Pick<User, 'id' | 'name' | 'email'>) => {
 }
 
 async function removeUser(user: Pick<User, 'id' | 'name' | 'email'>) {
-
-  console.log(1)
-  
-  if (true) {
-    try {
-      await withLoadingIndicator(async () => {
-        const { message } = await $fetch(`/api/teams/${id}/users/${user.id}`, {
-          method: 'DELETE',
-        })
-        toast.add({
-          color: 'success',
-          title: message,
-        })
-        if (user.id === currentUser.value?.id) {
-          emit('refresh')
-        } else {
-          await refresh()
-        }
+  try {
+    await withLoadingIndicator(async () => {
+      const { message } = await $fetch(`/api/teams/${id}/users/${user.id}`, {
+        method: 'DELETE',
       })
-    } catch (e) {
       toast.add({
-        color: 'error',
-        title: 'Failed to remove member',
-        description: getErrorMessage(e),
+        color: 'success',
+        title: message,
       })
-    }
+      if (user.id === currentUser.value?.id) {
+        emit('refresh')
+      } else {
+        await refresh()
+      }
+    })
+  } catch (e) {
+    toast.add({
+      color: 'error',
+      title: 'Failed to remove member',
+      description: getErrorMessage(e),
+    })
   }
 }
 

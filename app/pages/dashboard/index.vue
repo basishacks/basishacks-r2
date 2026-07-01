@@ -201,8 +201,6 @@ if (teamError.value) {
   throw teamError.value
 }
 
-console.log(teamData.value)
-
 </script>
 
 <template>
