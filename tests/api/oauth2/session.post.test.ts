@@ -1,4 +1,5 @@
 import { vi, describe, it, expect, beforeAll, afterEach } from 'vitest'
+import { createHash } from 'crypto'
 import type { AuthorizeSession } from '~~/server/api/oauth2/session.post'
 
 vi.stubGlobal('defineEventHandler', (fn: any) => fn)
@@ -103,5 +104,106 @@ describe('exchangeAuthorizationCode', () => {
     await exchangeAuthorizationCode(code)
 
     await expect(exchangeAuthorizationCode(code)).rejects.toThrow('Invalid authorization code')
+  })
+})
+
+describe('exchangeAuthorizationCode PKCE verification', () => {
+  const verifier = 'my-secret-pkce-verifier-value'
+
+  function s256Challenge(v: string): string {
+    return createHash('sha256').update(v).digest('base64url')
+  }
+
+  it('succeeds with correct code_verifier using S256', async () => {
+    const session = createSession({
+      bh_verifier_challenge: s256Challenge(verifier),
+      bh_verifier_challenge_method: 'S256',
+    })
+    generateExchangeCode(session)
+
+    const jwt = await exchangeAuthorizationCode(session.code!, undefined, undefined, undefined, verifier)
+
+    expect(typeof jwt).toBe('string')
+    expect(jwt.length).toBeGreaterThan(0)
+  })
+
+  it('rejects wrong code_verifier using S256', async () => {
+    const session = createSession({
+      bh_verifier_challenge: s256Challenge(verifier),
+      bh_verifier_challenge_method: 'S256',
+    })
+    generateExchangeCode(session)
+
+    await expect(
+      exchangeAuthorizationCode(session.code!, undefined, undefined, undefined, 'wrong-verifier'),
+    ).rejects.toThrow('Invalid code_verifier')
+  })
+
+  it('rejects missing code_verifier when PKCE challenge is set', async () => {
+    const session = createSession({
+      bh_verifier_challenge: s256Challenge(verifier),
+      bh_verifier_challenge_method: 'S256',
+    })
+    generateExchangeCode(session)
+
+    await expect(
+      exchangeAuthorizationCode(session.code!),
+    ).rejects.toThrow('code_verifier is required for PKCE')
+  })
+
+  it('succeeds with correct code_verifier using plain method', async () => {
+    const session = createSession({
+      bh_verifier_challenge: verifier,
+      bh_verifier_challenge_method: 'plain',
+    })
+    generateExchangeCode(session)
+
+    const jwt = await exchangeAuthorizationCode(session.code!, undefined, undefined, undefined, verifier)
+
+    expect(typeof jwt).toBe('string')
+    expect(jwt.length).toBeGreaterThan(0)
+  })
+
+  it('rejects wrong code_verifier using plain method', async () => {
+    const session = createSession({
+      bh_verifier_challenge: verifier,
+      bh_verifier_challenge_method: 'plain',
+    })
+    generateExchangeCode(session)
+
+    await expect(
+      exchangeAuthorizationCode(session.code!, undefined, undefined, undefined, 'wrong-verifier'),
+    ).rejects.toThrow('Invalid code_verifier')
+  })
+
+  it('skips PKCE check when no challenge was stored (non-PKCE flow)', async () => {
+    const session = createSession({
+      bh_verifier_challenge: '',
+      bh_verifier_challenge_method: '',
+    })
+    generateExchangeCode(session)
+
+    const jwt = await exchangeAuthorizationCode(session.code!)
+
+    expect(typeof jwt).toBe('string')
+    expect(jwt.length).toBeGreaterThan(0)
+  })
+
+  it('still invalidates the code synchronously even with PKCE mismatch', async () => {
+    const session = createSession({
+      bh_verifier_challenge: s256Challenge(verifier),
+      bh_verifier_challenge_method: 'S256',
+    })
+    generateExchangeCode(session)
+    const code = session.code!
+
+    await expect(
+      exchangeAuthorizationCode(code, undefined, undefined, undefined, 'wrong'),
+    ).rejects.toThrow()
+
+    // Code must already be invalidated — a second attempt should not succeed
+    await expect(
+      exchangeAuthorizationCode(code, undefined, undefined, undefined, verifier),
+    ).rejects.toThrow('Invalid authorization code')
   })
 })

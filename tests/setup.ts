@@ -1,6 +1,13 @@
 import { readFileSync } from 'node:fs'
 import { resolve } from 'node:path'
 
+// Microsoft OAuth2 env vars used by server/utils/oauth2.ts and
+// server/plugins/microsoft.ts. These are read at module load time, so they
+// must be set before any test imports those modules. The values mirror the
+// previously hardcoded configuration so existing assertions still hold.
+process.env.MICROSOFT_TENANT_ID = 'cbc6e1e2-a6bb-4002-bbdc-6da892a051a7'
+process.env.MICROSOFT_CLIENT_ID = '868b989e-6574-4795-bcfb-8db37bee1c37'
+
 // Runtime-agnostic sqlite statement wrapper.
 // Under Bun we use bun:sqlite; under Node.js we use better-sqlite3.
 // Both expose a near-identical prepare().run/all/get API.

@@ -1,8 +1,26 @@
 import { structureLink } from '~~/server/utils/oauth2'
+import { createHash } from 'crypto'
+import { vi, describe, it, expect, beforeAll, beforeEach } from 'vitest'
+
+// Stub defineEventHandler so importing the API route module doesn't fail.
+// to_microsoft.post.ts calls defineEventHandler() at module load for its default export.
+vi.stubGlobal('defineEventHandler', (fn: any) => fn)
+
+let generateMicrosoftOAuth2Link: typeof import('~~/server/api/oauth2/to_microsoft.post').generateMicrosoftOAuth2Link
+
+beforeAll(async () => {
+  const mod = await import('~~/server/api/oauth2/to_microsoft.post')
+  generateMicrosoftOAuth2Link = mod.generateMicrosoftOAuth2Link
+})
 
 // ---------------------------------------------------------------------------
 // structureLink
 // ---------------------------------------------------------------------------
+
+function getParam(link: string, name: string): string | null {
+  const parsed = new URL(link)
+  return parsed.searchParams.get(name)
+}
 
 describe('structureLink', () => {
   const expectedBase =
@@ -12,11 +30,6 @@ describe('structureLink', () => {
     // Ensure a consistent base URL for testing
     process.env.CURRENT_URL_ORIGIN = 'http://localhost:3000'
   })
-
-  function getParam(link: string, name: string): string | null {
-    const parsed = new URL(link)
-    return parsed.searchParams.get(name)
-  }
 
   it('builds a URL with default scope and redirect_uri', () => {
     const link = structureLink('test-state', 'test-challenge')
@@ -117,5 +130,77 @@ describe('structureLink', () => {
     )
     expect(getParam(link, 'state')).toBe('state with spaces/slashes')
     expect(getParam(link, 'code_challenge')).toBe('challenge with spaces/slashes')
+  })
+})
+
+// ---------------------------------------------------------------------------
+// generateMicrosoftOAuth2Link
+// ---------------------------------------------------------------------------
+
+describe('generateMicrosoftOAuth2Link', () => {
+  beforeEach(() => {
+    process.env.CURRENT_URL_ORIGIN = 'http://localhost:3000'
+  })
+
+  function makeSession(): any {
+    return {
+      token: 'test-session-token',
+      ms_state: null,
+      ms_verifier: null,
+    }
+  }
+
+  it('returns a Microsoft authorize URL string', () => {
+    const session = makeSession()
+    const link = generateMicrosoftOAuth2Link(session)
+
+    expect(typeof link).toBe('string')
+    expect(link.startsWith('https://login.microsoftonline.com/')).toBe(true)
+    expect(link.includes('/oauth2/v2.0/authorize')).toBe(true)
+  })
+
+  it('sets ms_state and ms_verifier on the session', () => {
+    const session = makeSession()
+    generateMicrosoftOAuth2Link(session)
+
+    expect(session.ms_state).toBeTruthy()
+    expect(typeof session.ms_state).toBe('string')
+    expect(session.ms_verifier).toBeTruthy()
+    expect(typeof session.ms_verifier).toBe('string')
+  })
+
+  it('sets the state query param to match session.ms_state', () => {
+    const session = makeSession()
+    const link = generateMicrosoftOAuth2Link(session)
+
+    expect(getParam(link, 'state')).toBe(session.ms_state)
+  })
+
+  it('sets code_challenge to SHA256(ms_verifier) base64url', () => {
+    const session = makeSession()
+    const link = generateMicrosoftOAuth2Link(session)
+
+    const expectedChallenge = createHash('sha256')
+      .update(session.ms_verifier)
+      .digest('base64url')
+
+    expect(getParam(link, 'code_challenge')).toBe(expectedChallenge)
+  })
+
+  it('always uses S256 as the code_challenge_method', () => {
+    const session = makeSession()
+    const link = generateMicrosoftOAuth2Link(session)
+
+    expect(getParam(link, 'code_challenge_method')).toBe('S256')
+  })
+
+  it('generates unique state and verifier on each call', () => {
+    const session1 = makeSession()
+    const session2 = makeSession()
+    generateMicrosoftOAuth2Link(session1)
+    generateMicrosoftOAuth2Link(session2)
+
+    expect(session1.ms_state).not.toBe(session2.ms_state)
+    expect(session1.ms_verifier).not.toBe(session2.ms_verifier)
   })
 })

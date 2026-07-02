@@ -4,13 +4,21 @@ vi.stubGlobal('defineEventHandler', (fn: any) => fn)
 vi.stubGlobal('getQuery', () => ({}))
 vi.stubGlobal('sendRedirect', () => {})
 vi.stubGlobal('deleteCookie', () => {})
+vi.stubGlobal('setCookie', () => {})
+vi.stubGlobal('createError', (err: any) => new Error(err.message))
+
+process.env.ONSITE_LOGIN_CLIENT_ID = 'test-onsite-client-id'
 
 const { constructOnSiteLoginURL } = await import('~~/server/api/login.get')
 const { completeConsentFlow } = await import('~~/server/utils/oauth2-validate')
 
 describe('OAuth2 post-login redirect preservation', () => {
   it('constructOnSiteLoginURL forwards the post-login redirect', () => {
-    const url = constructOnSiteLoginURL('/dashboard/teams')
+    const event = {
+      context: {},
+      node: { req: {}, res: {} },
+    } as any
+    const url = constructOnSiteLoginURL(event, '/dashboard/teams')
     expect(url).toContain('post_login_redirect=')
     expect(url).toContain(encodeURIComponent('/dashboard/teams'))
   })

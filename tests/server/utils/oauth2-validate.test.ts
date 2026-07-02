@@ -277,4 +277,57 @@ describe('validateOAuth2AuthorizationRequest', () => {
       statusMessage: 'invalid_request: PKCE required',
     })
   })
+
+  it('rejects invalid code_challenge_method values (not S256 or plain)', async () => {
+    await expect(
+      validateOAuth2AuthorizationRequest(
+        {} as any,
+        'test-client',
+        'openid',
+        'https://example.com/callback',
+        'state',
+        'code',
+        'challenge',
+        'SHA1',
+      ),
+    ).rejects.toMatchObject({
+      statusCode: 400,
+      statusMessage: 'invalid_request: code_challenge_method must be S256 or plain',
+    })
+  })
+
+  it('rejects code_challenge_method with arbitrary string value', async () => {
+    await expect(
+      validateOAuth2AuthorizationRequest(
+        {} as any,
+        'test-client',
+        'openid',
+        'https://example.com/callback',
+        'state',
+        'code',
+        'challenge',
+        'custom',
+      ),
+    ).rejects.toMatchObject({
+      statusCode: 400,
+      statusMessage: 'invalid_request: code_challenge_method must be S256 or plain',
+    })
+  })
+
+  it('allows plain code_challenge_method (does not throw PKCE method error)', async () => {
+    await expect(
+      validateOAuth2AuthorizationRequest(
+        {} as any,
+        'test-client',
+        'openid',
+        'https://example.com/callback',
+        'state',
+        'code',
+        'challenge',
+        'plain',
+      ),
+    ).rejects.not.toMatchObject({
+      statusMessage: 'invalid_request: code_challenge_method must be S256 or plain',
+    })
+  })
 })
