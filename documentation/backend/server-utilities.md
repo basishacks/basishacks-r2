@@ -176,12 +176,12 @@ const oAuth2Config = {
   tenant: process.env.MICROSOFT_TENANT_ID || '',
   clientId: process.env.MICROSOFT_CLIENT_ID || '',
   responseType: 'code',
-  redirectUri: '/api/oauth2/mscallback',
+  redirectUri: process.env.MICROSOFT_REDIRECT_URI || '/api/oauth2/mscallback',
   scope: 'openid profile email',
 }
 ```
 
-The `tenant` and `clientId` are read from the `MICROSOFT_TENANT_ID` and `MICROSOFT_CLIENT_ID` environment variables. If either is unset, the value defaults to an empty string and Microsoft OAuth2 / Graph features are disabled gracefully.
+The `tenant`, `clientId`, and `redirectUri` are read from `MICROSOFT_TENANT_ID`, `MICROSOFT_CLIENT_ID`, and `MICROSOFT_REDIRECT_URI`. If the tenant or client ID is unset, Microsoft OAuth2 / Graph features are disabled gracefully. The redirect URI defaults to `/api/oauth2/mscallback`; an alias handler is also exposed at `/api/auth` for convenience.
 
 ### `structureLink`
 
@@ -392,6 +392,83 @@ interface ChatSession {
 
 ---
 
+## election.ts
+
+**File:** `server/utils/election.ts`
+
+Defines the student-council election positions/candidates and implements an instant-runoff voting (IRV) tally.
+
+```ts
+export const electionPositions: ElectionPosition[]
+```
+
+Hard-coded list of positions (President, Vice President, Treasurer, Secretary, Activities Coordinator, Director of Communications) and their candidates.
+
+```ts
+function runIRV(
+  candidates: ElectionCandidate[],
+  ballots: string[][]
+): { status: 'elected' | 'tie' | 'no_votes'; winner?: string; details?: string }
+```
+
+- Each ballot is an ordered list of candidate IDs (rank 1 → rank N)
+- The candidate with the fewest first-preference votes is eliminated each round
+- Votes transfer to the next still-active preference
+- A winner is declared when a candidate receives more than 50% of valid ballots
+- Returns `tie` if two candidates tie for elimination or the final two tie
+
+::: info
+The IRV algorithm is used by `/api/election/vote` GET results. Ballots are stored in `scVotes` as JSON maps of candidate ID → rank.
+:::
+
+---
+
+## url-validation.ts
+
+**File:** `server/utils/url-validation.ts`
+
+Centralized helpers for validating redirect URIs and other URLs used in OAuth2 flows.
+
+```ts
+export function isValidRedirectUri(uri: string): boolean
+```
+
+Returns `true` if the URI is a valid HTTP/HTTPS URL.
+
+```ts
+export function isLocalhostRedirectUri(uri: string): boolean
+```
+
+Returns `true` if the URI uses `http://localhost`.
+
+```ts
+export function assertValidRedirectUri(uri: string): void
+```
+
+Throws a 400 error if the URI is not valid for application redirect URIs (must be `https://` or `http://localhost`).
+
+---
+
+## validate-oauth2-jwt-secret.ts
+
+**File:** `server/utils/validate-oauth2-jwt-secret.ts`
+
+Shared guard used by the `validate-oauth2-jwt-secret.ts` Nitro plugin and tests.
+
+```ts
+export const DEV_OAUTH2_JWT_SECRET_FALLBACK: string
+```
+
+The documented dev-only fallback (exactly 32 bytes).
+
+```ts
+export function validateOAuth2JWTSecret(options?: ValidateOAuth2JWTSecretOptions): void
+```
+
+Validates `NUXT_OAUTH2_JWT_SECRET` length and either exits (production) or applies the fallback (development/test).
+
+---
+
 ## Database Helpers
 
 Per-table database helper modules in `server/utils/database/`.
@@ -469,6 +546,29 @@ Per-table database helper modules in `server/utils/database/`.
 | `getSeasonById(event, seasonId)` | Get a season by ID |
 | `getActiveSeason(event)` | Get the currently active season |
 | `setActiveSeason(event, seasonId)` | Set the active season (deactivates all others) |
+
+### peer-voting.ts
+
+**File:** `server/utils/database/peer-voting.ts`
+
+| Function | Description |
+|----------|-------------|
+| `getPeerVoteByUser(event, userID)` | Get a peer voting record by user ID |
+| `upsertPeerVote(event, vote)` | Insert or update a peer vote (`peer_voting_scores` table) |
+
+### awards.ts
+
+**File:** `server/utils/database/awards.ts`
+
+| Function | Description |
+|----------|-------------|
+| `getAwards(event, teamId)` | Get resolved awards for a single team |
+| `getAwardsForTeams(event, teamIds)` | Get resolved awards for multiple teams |
+| `createAward(event, teamId, award, meta)` | Create a team award |
+| `deleteTeamAwards(event, teamId)` | Delete all awards for a team |
+| `deleteAward(event, teamId, award)` | Delete a specific award for a team |
+
+Award definitions live in `shared/awards.ts`.
 
 ### oauth2_applications.ts
 
