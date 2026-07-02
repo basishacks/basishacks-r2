@@ -228,7 +228,7 @@ async function submit() {
 
 <template>
     <div class="min-h-screen p-6">
-        <UContainer>
+        <UContainer class="max-w-none">
             <h1 class="text-4xl bold glow mb-2">Preference Voting</h1>
 
             <div class="flex items-center justify-between mb-8">

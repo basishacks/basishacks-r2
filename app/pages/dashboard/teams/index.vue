@@ -74,7 +74,7 @@ async function onSubmit(event: FormSubmitEvent<CreateTeamRequest>) {
         <UForm
             :state="state"
             :schema="CreateTeamRequest"
-            class="space-y-2 max-w-[600px]"
+            class="space-y-2 w-full"
             @submit="onSubmit"
         >
             <UFormField name="name" label="Team name">

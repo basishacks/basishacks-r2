@@ -63,7 +63,7 @@ const items = ref<NavigationMenuItem[][]>([
 
     <RoleHeader />
 
-    <UContainer class="flex flex-col">
+    <UContainer class="flex flex-col max-w-none">
         <div class="fixed -translate-x-full -mx-12 mt-12">
             <UCard>
                 <template #header>
@@ -93,7 +93,7 @@ const items = ref<NavigationMenuItem[][]>([
             />
         </div>
 
-        <div class="mt-12 mx-auto max-w-(--ui-container)">
+        <div class="mt-12 w-full">
             <UBanner
                 id="hoverdashnotif"
                 color="neutral"

@@ -167,7 +167,7 @@ async function confirmSubmit() {
         :state="state"
         :schema="intent === 'save' ? UpdateTeamRequest : SubmitTeamRequest"
         :disabled="disabled"
-        class="max-w-[600px] space-y-4 mb-4"
+        class="w-full space-y-4 mb-4"
         @submit="onSubmit"
     >
         <UFormField name="project.name" label="Project name" help="Make it sound even cooler!">

@@ -78,7 +78,7 @@ async function onDelete(ballotId: number) {
 
 <template>
     <div class="min-h-screen p-6">
-        <UContainer>
+        <UContainer class="max-w-none">
             <div class="flex items-center justify-between mb-6">
                 <h1 class="text-4xl bold glow">All Ballots</h1>
                 <UButton to="/temp/vote" variant="ghost" color="neutral">Back to voting</UButton>

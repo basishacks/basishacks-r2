@@ -3,9 +3,9 @@
         <RoleHeader />
 
         <UMain>
-            <UContainer class="max-w-none">
+            <div class="px-4 sm:px-6 lg:px-8">
                 <slot />
-            </UContainer>
+            </div>
         </UMain>
 
         <Footer />
