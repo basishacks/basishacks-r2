@@ -39,17 +39,19 @@ basishacks-r2/
 ├── server/                 # Nitro backend
 │   ├── api/                # API route handlers (file-based)
 │   ├── middleware/          # Server middleware (OAuth2 authorize)
-│   ├── plugins/            # Nitro plugins (DB init, MS Graph token)
+│   ├── plugins/            # Nitro plugins (DB init, MS Graph token, JWT secret guard)
 │   ├── types/              # Type augmentations (H3EventContext)
 │   └── utils/              # Server utilities
 │       ├── database/       # Per-table DB helpers (users, teams, scores, etc.)
-│       ├── auth.ts         # requireUser / requireJudge / requireAdmin
+│       ├── auth.ts         # requireUser / requireJudge / requireAdmin / requirePermission
 │       ├── convert.ts      # DB row -> public API object transformers
 │       ├── rateLimit.ts    # In-memory rate limiter
 │       ├── oauth2.ts       # Microsoft OAuth2 config
 │       ├── oauth2-validate.ts  # OAuth2 authorization request validation
 │       ├── oauth2-jwt.ts   # JWT verification and withOAuth2JWT() wrapper
-│       └── profile.ts      # Profile picture helpers
+│       ├── profile.ts      # Profile picture helpers
+│       ├── assets.ts       # Static and user asset helpers
+│       └── deepseek-store.ts   # DeepSeek AI chat session store
 ├── shared/                 # Code shared between client and server
 │   ├── schemas.ts          # Zod schemas for API input validation
 │   ├── database.d.ts       # TypeScript types matching DB schema exactly
@@ -82,10 +84,10 @@ Nitro Server Middleware (OAuth2 authorize, rate limiting)
 Nitro API Handler (server/api/**/*.ts)
   │  ├── Input validation via Zod schemas
   │  ├── Role/permission checks via requireUser/requireAdmin/etc.
-  │  └── Database access via event.context.db
+  │  └── Database access via event.context.drizzle
   │
   ▼
-SQLite (local) / SQLite (production)
+SQLite (bun:sqlite under Bun / better-sqlite3 under Node.js)
   │
   ▼
 Response (JSON, converted via convertUserToPublic/convertTeamToPublic)
