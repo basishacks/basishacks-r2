@@ -104,7 +104,7 @@ onMounted(() => {
                         System Online
                     </span>
                     <span class="status-center">HACKATHON_STATUS: READY</span>
-                    <span>Nodes: 54</span>
+                    <span>Nodes: 130</span>
                 </div>
 
                 <div class="hero-actions">
