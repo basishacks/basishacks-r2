@@ -58,55 +58,38 @@ On first run (when no tables exist), creates the following tables:
 
 ```ts
 nitroApp.hooks.hook('request', (event) => {
-  event.context.db = createDatabaseWrapper()
+  event.context.drizzle = db
 })
 ```
 
-Every incoming request receives a fresh Drizzle ORM database wrapper attached to `event.context.drizzle`. This ensures each request uses the same database interface.
+Every incoming request receives the same Drizzle ORM instance attached to `event.context.drizzle`. The instance is created once at server startup and shared across requests because SQLite handles concurrent readers safely and the migration/seeding work has already completed.
 
 ---
 
-### seed-hackathon.ts
+### validate-oauth2-jwt-secret.ts
 
-**File:** `server/plugins/seed-hackathon.ts`
+**File:** `server/plugins/validate-oauth2-jwt-secret.ts`
 
-Schema migration and seed data plugin. Runs after `init-database.ts`.
+Startup guard for `NUXT_OAUTH2_JWT_SECRET`. The secret is used by `jose` to sign and verify OAuth2 access tokens (HS256) and must be at least 32 bytes long.
 
-#### Schema Migrations
+#### Behavior
 
-Performs `ALTER TABLE` migrations by checking for missing columns:
+| Environment | Secret Missing/Too Short | Action |
+|-------------|--------------------------|--------|
+| `NODE_ENV=production` | Missing or `< 32 bytes` | Logs a fatal error and exits the process immediately |
+| Development / Test | Missing or `< 32 bytes` | Logs a prominent warning and applies a documented dev-only fallback so local work can continue |
 
-**Users table migrations:**
-- `profile_theme` (TEXT)
-- `profile_picture` (TEXT)
+::: warning
+The dev-only fallback (`"dev-only-placeholder-32-bytes!!"`) is **only** for local development and tests. Never use it in production.
+:::
 
-**Hackathon table migrations:**
-- `voting_enabled`, `results_published`, `submitted_count`, `max_votes_per_user`, `judging_open` (INTEGER)
-- `schedule_start`, `schedule_end` (TEXT)
-- `start_timestamp`, `end_timestamp`, `voting_start_timestamp`, `voting_end_timestamp`, `results_open_timestamp` (TEXT)
+#### Implementation
 
-#### Seed Data
-
-**Hackathon row:**
-- Upserts the hackathon row (id=1) with default timestamps
-- Uses `ON CONFLICT DO UPDATE` to always refresh schedule/timestamp data
-
-**Built-in OAuth2 application:**
-```sql
-INSERT OR IGNORE INTO oauth2_applications VALUES (
-  '97e435f4-17e8-42ef-9b12-9684fd656de9',  -- client_id
-  'local-dev-secret',                         -- client_secret
-  'openid profile email',                     -- permissions
-  'http://localhost:3000/api/oauth2/dccallback', -- redirect_uris
-  'basishacks connect',                       -- name
-  'BIBS-C Network internal OAuth2...',        -- description
-  0,                                          -- proxy_microsoft
-  'first',                                    -- type
-  NULL                                        -- profile_picture
-)
+```ts
+export function validateOAuth2JWTSecret(options?: ValidateOAuth2JWTSecretOptions): void
 ```
 
-This is the first-party "basishacks connect" application used for the main site's login flow.
+The function reads `process.env.NUXT_OAUTH2_JWT_SECRET`, measures its UTF-8 length, and either exits (production) or writes the fallback back to the env object (development/test).
 
 ---
 
@@ -207,20 +190,7 @@ Manually polls chat messages via delta endpoint (fallback for webhook failures).
 
 ---
 
-### validate-oauth2-jwt-secret.ts
 
-**File:** `server/plugins/validate-oauth2-jwt-secret.ts`
-
-Startup guard for the `NUXT_OAUTH2_JWT_SECRET` environment variable. It delegates to `validateOAuth2JWTSecret()` in `server/utils/validate-oauth2-jwt-secret.ts`.
-
-#### Behavior
-
-- **Production (`NODE_ENV=production`):** exits the process with a fatal error if the secret is missing or shorter than 32 bytes.
-- **Development/test:** logs a prominent warning and applies a documented dev-only fallback so local development and tests continue to work.
-
-This prevents the `400 invalid_grant: NUXT_OAUTH2_JWT_SECRET is not set` error from ever reaching production.
-
----
 
 ## Middleware
 
