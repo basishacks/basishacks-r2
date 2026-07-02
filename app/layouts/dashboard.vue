@@ -63,8 +63,8 @@ const items = ref<NavigationMenuItem[][]>([
 
     <RoleHeader />
 
-    <UContainer class="flex flex-col max-w-none">
-        <div class="fixed -translate-x-full -mx-12 mt-12">
+    <UContainer class="flex flex-col lg:flex-row max-w-none gap-8 mt-12">
+        <aside class="lg:w-64 shrink-0">
             <UCard>
                 <template #header>
                     <span
@@ -89,11 +89,11 @@ const items = ref<NavigationMenuItem[][]>([
             <UNavigationMenu
                 orientation="vertical"
                 :items="items"
-                class="data-[orientation=vertical]:w-48 mt-12"
+                class="data-[orientation=vertical]:w-full mt-8"
             />
-        </div>
+        </aside>
 
-        <div class="mt-12 w-full">
+        <div class="w-full min-w-0">
             <UBanner
                 id="hoverdashnotif"
                 color="neutral"
