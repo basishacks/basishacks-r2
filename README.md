@@ -6,17 +6,17 @@ The official website for the BIBS-C Network Hackathon (season 2, 2025–26).
 
 | Layer           | Technology                                                                  |
 | --------------- | --------------------------------------------------------------------------- |
-| Framework       | Nuxt 3                                                                      |
-| UI              | @nuxt/ui ^4.6.1 (Tailwind CSS v4)                                           |
-| Language        | TypeScript 5.6+                                                             |
+| Framework       | Nuxt 3 (^4.4.8)                                                             |
+| UI              | @nuxt/ui ^4.9.0 (Tailwind CSS v4)                                           |
+| Language        | TypeScript ^5.9.3                                                           |
 | Runtime         | Node.js >= v24 or Bun (dual-runtime support)                                |
 | Package Manager | Bun (preferred); npm works                                                  |
 | Database        | SQLite via Drizzle ORM (bun:sqlite under Bun, better-sqlite3 under Node.js) |
-| Auth            | nuxt-auth-utils (session-based)                                             |
-| Validation      | Zod 4.x                                                                     |
-| Fonts           | @nuxt/fonts (local provider)                                                |
+| Auth            | nuxt-auth-utils 0.5.25 (session-based)                                      |
+| Validation      | Zod 4.x (^4.4.3)                                                            |
+| Fonts           | @nuxt/fonts ^0.14.0 (local provider)                                        |
 | Icons           | @iconify-json/lucide, @iconify-json/material-symbols                        |
-| Linting         | @nuxt/eslint + Prettier                                                     |
+| Linting         | @nuxt/eslint 1.10.0 + Prettier ^3.9.4                                       |
 | Deployment      | Node.js server (VPS)                                                        |
 
 ## Prerequisites
