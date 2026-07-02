@@ -7,6 +7,8 @@ description: Get the basishacks hackathon platform running on your local machine
 
 This guide walks you through setting up the **basishacks** development environment from scratch. By the end, you will have the app running locally with HTTPS on port 24598.
 
+<StatusBadge status="online" text="Docs build status: passing" />
+
 ## Prerequisites
 
 Before you begin, ensure you have the following installed:
@@ -46,10 +48,14 @@ If you need to manage multiple Node.js versions, consider using [fnm](https://gi
 
 ## Clone the Repository
 
+<TerminalWindow title="basishacks@setup:~" prompt="$">
+
 ```bash
 git clone <repository-url> basishacks-r2
 cd basishacks-r2
 ```
+
+</TerminalWindow>
 
 ## Install Dependencies
 
@@ -64,6 +70,8 @@ If you prefer npm:
 ```bash
 npm install
 ```
+
+<CopyButton content="bun i" label="copy bun install" />
 
 ## Initialize the Database
 
