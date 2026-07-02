@@ -141,12 +141,16 @@ On every request, timestamps outside the current window are filtered out:
 history = history.filter((timestamp) => now - timestamp < finalConfig.windowMs)
 ```
 
-### Probabilistic Full Cleanup
+### Periodic Full Cleanup
 
-To prevent memory leaks from inactive clients, a **1% probabilistic cleanup** runs on each request:
+To prevent memory leaks from inactive clients, a full cleanup runs at most once every 5 minutes:
 
 ```ts
-if (Math.random() < 0.01) {
+const CLEANUP_INTERVAL_MS = 5 * 60 * 1000
+// ...
+function cleanupStaleEntries(now: number) {
+  if (now - lastCleanup < CLEANUP_INTERVAL_MS) return
+  lastCleanup = now
   const oneHourAgo = now - 60 * 60 * 1000
   for (const [key, times] of requestHistory.entries()) {
     const recentTimes = times.filter((t) => t > oneHourAgo)
@@ -159,7 +163,22 @@ if (Math.random() < 0.01) {
 }
 ```
 
-This removes entries with no requests in the last hour. The probabilistic approach (1% chance per request) avoids the overhead of running cleanup on every single request while still ensuring stale entries are eventually removed.
+This removes entries with no requests in the last hour.
+
+### Map Size Cap
+
+To prevent unbounded growth under high traffic or attack, the `Map` is capped at **10,000 keys**. When the cap is exceeded, the oldest entry is evicted:
+
+```ts
+const MAX_TRACKED_KEYS = 10000
+// ...
+if (requestHistory.size > MAX_TRACKED_KEYS) {
+  const firstKey = requestHistory.keys().next().value
+  if (firstKey !== undefined) {
+    requestHistory.delete(firstKey)
+  }
+}
+```
 
 ## Limitations
 
