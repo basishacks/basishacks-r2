@@ -34,66 +34,11 @@
                     <h3 class="text-xl bold mb-0">Sign in</h3>
                     <span v-if="app" class="text-sm">To <span class="text-primary">{{ app.name ? app.name : "continue to Application" }}</span></span>
                   </div>
-                  <UForm
-                    :state="state"
-                    :schema="SendCodeRequest"
-                    class="flex flex-col w-full items-start gap-4 text-left"
-                    @submit="onSendCodeSubmit"
-                    
-                  >
-                    <UFormField name="email" label="via your School Email" class="w-full">
-                      <UInput v-model="state.email" type="email" class="w-full" />
-                    </UFormField>
 
-                    <UButton :disabled="isLoading" type="submit"
-                      >Send verification code</UButton
-                    >
-                  </UForm>
-
-                  <USeparator class="w-full"/>
-
-                  <UForm class="w-full flex flex-col items-start gap-4 text-left">
-                    
-
-                      <UFormField name="email" label="or use the following...">
-                        <UButton :disabled="isLoading" @click="navigateToOAuth2"> 
-                          <img src="/assets/Microsoft_logo.svg" alt="Microsoft Logo" class="w-5 h-5 mr-2" >
-                          Login with Microsoft
-                        </UButton>
-                      </UFormField>
-                  </UForm>
-                </div>
-              </Transition>
-
-              <Transition name="fade">
-                <div v-if="status == 'code_sent'" class="w-full flex flex-col gap-4 items-start justify-start">
-                  
-                  <UForm
-                    :state="stateLogin"
-                    :schema="LoginRequest"
-                    class="flex flex-col w-full items-start gap-4 text-left"
-                    @submit="onSendCodeLoginSubmit"
-                    
-                  >
-                    <h3 class="text-xl bold">Enter a code...</h3>
-                    <span class="text-sm">A <span class="text-primary bold">6-digit</span> verification code has been sent to your 
-                      <ULink class="text-primary bold inline" href="https://teams.microsoft.com" target="_blank">
-                        Teams Chat
-                        <UIcon name="i-material-symbols-link-2" class="w-4 h-4"/>
-                      </ULink>
-                      
-                       (not email).</span>
-                    <UFormField name="code" label="Enter verification code" class="w-full">
-                      <UPinInput v-model="stateLogin.code" size="xl" type="number" class="w-full" :disabled="isLoading" :length="6" @complete="codeInputComplete"/>
-                    </UFormField>
-
-                    <div class="flex flex-row items-start gap-4">
-                      <UButton :disabled="isLoading" type="submit">Log In</UButton>
-                      <UButton color="neutral" :disabled="isLoading" @click="restartLoginProcess">
-                        <UIcon name="i-material-symbols-arrow-back" class="w-4 h-4 mr-1"/>
-                        Back</UButton>
-                    </div>
-                  </UForm>
+                  <UButton :disabled="isLoading" @click="navigateToOAuth2"> 
+                    <img src="/assets/Microsoft_logo.svg" alt="Microsoft Logo" class="w-5 h-5 mr-2" >
+                    Login with Microsoft
+                  </UButton>
                 </div>
               </Transition>
 
@@ -157,11 +102,9 @@
 </template>
 
 <script setup lang="ts">
-import type { FormSubmitEvent } from '@nuxt/ui'
-import { computed, onBeforeUnmount, onMounted, reactive, ref } from 'vue'
+import { computed, onBeforeUnmount, onMounted, ref } from 'vue'
 import { OAuth2ScopeDescriptions, OAuth2Scopes } from '~~/shared/oauth2-scopes'
 
-import { LoginRequest, SendCodeRequest } from '~~/shared/schemas'
 import { buildOAuth2SessionBody } from '~~/app/utils/oauth2'
 import { escapeHtml } from '~~/app/utils/sanitize'
 
@@ -251,23 +194,7 @@ const applicationAvatarUrl = computed(() => {
   return clientId ? `/api/applications/${clientId}/profile_picture` : ''
 })
 
-const state = reactive({
-  email: '',
-  token: ''
-})
-
-const stateLogin = reactive({
-  email: '',
-  code: [] as number[],
-  token: ''
-})
-
 const restartLoginProcess = async () => {
-  state.email = ""
-  state.token = ""
-  stateLogin.email = ""
-  stateLogin.code = []
-  stateLogin.token = ""
   isLoading.value = true
   status.value = "none"
   await loginFlowCheck(true)
@@ -348,93 +275,11 @@ const animatedChange = async (newStatus: string) => {
 
 const toast = useToast()
 
-async function onSendCodeSubmit(event: FormSubmitEvent<SendCodeRequest>) {
-  const { email } = event.data
-
-  isLoading.value = true
-
-  try {
-    await withLoadingIndicator(async () => {
-      const res = await $fetch('/api/auth/code', {
-        method: 'POST',
-        body: { email },
-      })
-      stateLogin.email = email
-      // console.log(1)
-      status.value = 'none'
-      await delay(600)
-      // console.log(2)
-      status.value = 'code_sent'
-      isLoading.value = false
-    })
-  } catch (e: any) {
-    if (getErrorMessage(e) == "session_expired") {
-      await showLoginError(e, true)
-    } else {
-      toast.add({
-        title: "Login Failed",
-        description: getErrorMessage(e),
-        color: "error"
-      })
-    }
-    
-  } finally {
-    isLoading.value = false
-  }
-}
-
-async function submitCode(code: number[]) {
-  isLoading.value = true
-
-  try {
-    await withLoadingIndicator(async () => {
-      const res: any = await $fetch('/api/auth/login', {
-        method: 'POST',
-        body: { email: stateLogin.email, code },
-      })
-      userId.value = res.user.id
-      apiUser.value = res.user
-      if (!res.sensitive) {
-        await animatedChange("none")
-        showLoading.value = true
-        returnToApp({result: "assume_consent"}) // stupid function but ill tell u here: it just redirects to res.redirect_to lol
-      } else {
-        animatedChange('sensitive_consent')
-      }
-    })
-  } catch (e: any) {
-    if (getErrorMessage(e) == "session_expired") {
-      await showLoginError(e, true)
-    } else {
-      toast.add({
-        title: "Login Failed",
-        description: getErrorMessage(e),
-        color: "error"
-      })
-    }
-  } finally {
-    isLoading.value = false
-  }
-}
-
 async function showLoginError(error: any, allow_back: boolean = true) {
   error_description.value = swapQuotesToCode(getErrorMessage(error) == "session_expired" ? "Your login session has expired. Please restart the login process." : getErrorMessage(error))
   error_description_initial.value = !allow_back
   animatedChange("error")
 }
-
-async function onSendCodeLoginSubmit(event: FormSubmitEvent<LoginRequest>) {
-  const { code } = event.data
-
-  await submitCode(code)
-}
-
-const codeInputComplete = () => {
-  if (stateLogin.code.length == 6) {
-    submitCode(stateLogin.code)
-  }
-}
-
 
 const delay = (ms: number) => new Promise(resolve => setTimeout(resolve, ms));
 
