@@ -97,7 +97,7 @@ INSERT OR IGNORE INTO oauth2_applications VALUES (
   '97e435f4-17e8-42ef-9b12-9684fd656de9',  -- client_id
   'local-dev-secret',                         -- client_secret
   'openid profile email',                     -- permissions
-  'http://localhost:3000/api/auth',           -- redirect_uris
+  'http://localhost:3000/api/oauth2/dccallback', -- redirect_uris
   'basishacks connect',                       -- name
   'BIBS-C Network internal OAuth2...',        -- description
   0,                                          -- proxy_microsoft

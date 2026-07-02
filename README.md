@@ -54,9 +54,9 @@ The canonical list of variables lives in `.env.example`. The table below summari
 | `MICROSOFT_CLIENT_ID` | Required for MS login | Microsoft Entra ID application (client) ID. Must be paired with `MICROSOFT_TENANT_ID` |
 | `MICROSOFT_CLIENT_SECRET` | Optional | Microsoft Entra ID app secret for MS Graph API integration |
 | `CURRENT_URL_ORIGIN` | Optional | Base origin for OAuth2 redirect callbacks (no trailing slash). Defaults to `http://localhost:3000`; set to your real domain in production |
-| `MICROSOFT_REDIRECT_URI` | Optional | Microsoft OAuth2 redirect URI path (must start with `/`). Defaults to `/api/oauth2/mscallback`; `/api/auth` is also supported as an alias |
+| `MICROSOFT_REDIRECT_URI` | Optional | Microsoft OAuth2 redirect URI path (must start with `/`). Defaults to `/api/oauth2/mscallback` |
 | `NUXT_OAUTH2_JWT_SECRET` | Optional | JWT signing secret for OAuth2 token exchange. Generate with `openssl rand -base64 32` |
-| `REDIRECT_URI` | Optional | Onsite OAuth2 redirect URI path used by `/api/login`. Defaults to `api/oauth2/dccallback`; do not set to `/api/auth` (reserved for the MS callback alias) |
+| `REDIRECT_URI` | Optional | Onsite OAuth2 redirect URI path used by `/api/login`. Defaults to `api/oauth2/dccallback`. The server auto-registers it for `ONSITE_LOGIN_CLIENT_ID` |
 | `DEEPSEEK_API_KEY` | Optional | DeepSeek API key for AI chat features (debug routes only) |
 | `PORT` / `HOST` | Optional | Server port/host override (defaults: `3000` / `0.0.0.0`) |
 
