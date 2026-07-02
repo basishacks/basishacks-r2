@@ -111,7 +111,7 @@ export default defineConfig({
             label: "On this page",
         },
         editLink: {
-            pattern: "https://github.com/edit/main/documentation/:path",
+            pattern: "https://github.com/basishacks/basishacks-r2/edit/main/documentation/:path",
             text: "Edit this page",
         },
     },
