@@ -6,7 +6,7 @@ This file contains project-specific context for AI coding agents. The reader is 
 
 ## Project Overview
 
-`basishacks` is the official website for the BIBS-C Network Hackathon (season 2, 2025–26). It is a full-stack Nuxt 3 application that manages:
+`basishacks` is the official website for the BIBS-C Network Hackathon (season 2, 2025–26). It is a full-stack Nuxt 4 application that manages:
 
 - Hackathon registration and scheduling
 - Team creation and management
@@ -22,7 +22,7 @@ The stack is Vue 3 (frontend) + Nitro (backend) + SQLite via Drizzle ORM (`bun:s
 
 | Layer | Technology |
 | --- | --- |
-| Framework | Nuxt 3 (^4.4.8) |
+| Framework | Nuxt 4 (^4.4.8) |
 | UI | `@nuxt/ui` ^4.9.0 (Tailwind CSS v4 based) |
 | Language | TypeScript (^5.9.3) |
 | Runtime | Node.js >= v24 or Bun (dual-runtime support) |

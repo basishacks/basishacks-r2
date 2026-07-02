@@ -6,7 +6,7 @@ The official website for the BIBS-C Network Hackathon (season 2, 2025–26).
 
 | Layer           | Technology                                                                  |
 | --------------- | --------------------------------------------------------------------------- |
-| Framework       | Nuxt 3 (^4.4.8)                                                             |
+| Framework       | Nuxt 4 (^4.4.8)                                                             |
 | UI              | @nuxt/ui ^4.9.0 (Tailwind CSS v4)                                           |
 | Language        | TypeScript ^5.9.3                                                           |
 | Runtime         | Node.js >= v24 or Bun (dual-runtime support)                                |
