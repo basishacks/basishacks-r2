@@ -130,11 +130,10 @@ bun test
 
 ## Auth & Roles
 
-Three auth methods are supported:
+Two auth methods are supported:
 
-1. **Magic code** — user enters `@basischina.com` email, receives a 6-digit code (10-minute expiry), and exchanges it for a session.
-2. **Microsoft OAuth2** — delegates to Microsoft Entra ID (tenant `cbc6e1e2-a6bb-4002-bbdc-6da892a051a7`).
-3. **basishacks connect** — custom OAuth2 integration.
+1. **Microsoft OAuth2** — delegates to Microsoft Entra ID (tenant configured via `MICROSOFT_TENANT_ID`). This is the only login method for the hackathon registry.
+2. **basishacks connect** — custom OAuth2 integration.
 
 Session storage is handled by `nuxt-auth-utils`. The session cookie stores only `{ user: { id: number } }`.
 
@@ -234,7 +233,7 @@ Copy `.env.example` to `.env` and fill in:
 | Variable | Purpose |
 |----------|---------|
 | `NUXT_SESSION_PASSWORD` | Session encryption key (>= 32 bytes) |
-| `NUXT_SEND_CODE_URL` | External webhook/service URL for sending login codes |
+| `NUXT_OAUTH2_JWT_SECRET` | JWT signing secret for OAuth2 token exchange (>= 32 bytes). Validated at startup. |
 | `MICROSOFT_CLIENT_SECRET` | MS Entra app secret for Graph API |
 | `MICROSOFT_DUMMY_USER_NAME` | ROPC test user (rarely used) |
 | `MICROSOFT_DUMMY_USER_PASSWORD` | ROPC test password (rarely used) |
