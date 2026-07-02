@@ -3,7 +3,6 @@
 import oAuth2Config, { structureLink } from '~~/server/utils/oauth2';
 import { generateExchangeCode, getAuthorizeSession } from './session.post';
 import { createHash } from 'crypto';
-import { constructOnSiteLoginURL } from '../login.get';
 import { determinePostMicrosoft } from '~~/server/utils/oauth2-validate';
 
 
@@ -96,7 +95,7 @@ export default defineEventHandler(async (event: any) => {
       const error: any = await tokenResponse.json()
       console.error('[Authorize -> MSCallBack] Token exchange failed:', error.error, error.error_description)
 
-      return redirectWithOAuth2Error(event, errorRedirectUri, "access_denied", 'Failed to exchange authorization code: ' + error.error_description || 'Unknown error', errorState)
+      return redirectWithOAuth2Error(event, errorRedirectUri, "access_denied", 'Failed to exchange authorization code: ' + (error.error_description || 'Unknown error'), errorState)
     }
 
     const tokenData: any = await tokenResponse.json()

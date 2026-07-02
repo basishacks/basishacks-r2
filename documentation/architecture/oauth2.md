@@ -64,8 +64,8 @@ The client redirects the user to `/api/oauth2/authorize` with standard OAuth2 pa
 | `redirect_uri` | Yes | Must match a registered redirect URI |
 | `state` | Yes | Client-provided anti-CSRF token |
 | `response_type` | Yes | Must be `code` |
-| `code_challenge` | For PKCE | SHA-256 hash of the code verifier |
-| `code_challenge_method` | For PKCE | Must be `S256` |
+| `code_challenge` | Yes (PKCE) | SHA-256 hash of the code verifier |
+| `code_challenge_method` | Yes (PKCE) | Must be `S256` or `plain` (per RFC 7636) |
 
 The `oauth2-authorize.ts` middleware validates the request, creates an `AuthorizeSession`, and sets a `bridge_id` cookie.
 
@@ -259,6 +259,21 @@ This allows external applications to leverage basishacks as a proxy for Microsof
 | `proxy_microsoft` | `0` |
 
 This application is used for site login via the custom OAuth2 flow.
+
+### Onsite login PKCE flow
+
+The onsite login (`server/api/login.get.ts`) initiates a full OAuth2 + PKCE flow against basishacks itself. `constructOnSiteLoginURL`:
+
+1. Generates a `code_verifier` (random 32 bytes, base64url)
+2. Computes `code_challenge = SHA-256(code_verifier)` (base64url)
+3. Includes `code_challenge` and `code_challenge_method=S256` in the authorize URL
+4. Sets a `pkce_verifier` cookie containing the `code_verifier` (httpOnly, secure, sameSite lax, 10-minute maxAge)
+
+The authorize middleware stores the `code_challenge` in `session.bh_verifier_challenge`. When the OAuth2 flow completes, the callback at `server/api/oauth2/dccallback.get.ts` reads the `pkce_verifier` cookie and passes it as the `code_verifier` to `exchangeAuthorizationCode`, which verifies it hashes (S256) to `session.bh_verifier_challenge`. The cookie is cleared immediately after the exchange.
+
+::: warning Verifier selection
+The `pkce_verifier` cookie (basishacks flow) must not be confused with `session.ms_verifier`, which is the PKCE verifier for the Microsoft proxy flow (basishacks → Microsoft). The `dccallback` endpoint uses the cookie value, never `session.ms_verifier`.
+:::
 
 ## JWT Verification Middleware
 

@@ -1,20 +1,46 @@
-import { randomBytes } from "crypto"
-import { AuthorizeSession } from "./oauth2/session.post"
+import { createHash, randomBytes } from "crypto";
+import { AuthorizeSession } from "./oauth2/session.post";
 
-export function constructOnSiteLoginURL(postLoginRedirect?: string) {
-    /* Constructs DevConnect OAuth URL
-    */
-    const state = randomBytes(128).toString("base64url")
-    const origin = process.env.CURRENT_URL_ORIGIN || 'http://localhost:3000'
-    const redirectUri = encodeURIComponent(`${origin}/${process.env.REDIRECT_URI}`)
-    let url = `/api/oauth2/authorize?client_id=97e435f4-17e8-42ef-9b12-9684fd656de9&response_type=code&redirect_uri=${redirectUri}&scope=openid%20profile%20email&state=` + state
-    if (postLoginRedirect) {
-        url += `&post_login_redirect=${encodeURIComponent(postLoginRedirect)}`
+export function constructOnSiteLoginURL(event: any, postLoginRedirect?: string) {
+    /* Constructs DevConnect OAuth URL with PKCE
+     */
+    const clientId = process.env.ONSITE_LOGIN_CLIENT_ID;
+    if (!clientId) {
+        throw createError({ statusCode: 500, message: "ONSITE_LOGIN_CLIENT_ID is not set" });
     }
-    return url
+
+    const state = randomBytes(128).toString("base64url");
+    const code_verifier = randomBytes(32).toString("base64url");
+    const code_challenge = createHash("sha256").update(code_verifier).digest("base64url");
+
+    setCookie(event, "pkce_verifier", code_verifier, {
+        maxAge: 10 * 60, // 10 mins, matching session expiry
+        httpOnly: true,
+        secure: true,
+        sameSite: "lax",
+    });
+
+    const origin = process.env.CURRENT_URL_ORIGIN || "http://localhost:3000";
+    const redirectPath = process.env.REDIRECT_URI || "api/oauth2/dccallback";
+    const url = new URL("/api/oauth2/authorize", origin);
+    url.searchParams.set("client_id", clientId);
+    url.searchParams.set("response_type", "code");
+    url.searchParams.set("redirect_uri", `${origin}/${redirectPath}`);
+    url.searchParams.set("scope", "openid profile email");
+    url.searchParams.set("state", state);
+    url.searchParams.set("code_challenge", code_challenge);
+    url.searchParams.set("code_challenge_method", "S256");
+    if (postLoginRedirect) {
+        url.searchParams.set("post_login_redirect", postLoginRedirect);
+    }
+    return url.pathname + url.search;
 }
 
 export default defineEventHandler(async (event) => {
-    const query = getQuery(event)
-    await sendRedirect(event, constructOnSiteLoginURL(query.redirect as string | undefined), 302)
-})
+    const query = getQuery(event);
+    await sendRedirect(
+        event,
+        constructOnSiteLoginURL(event, query.redirect as string | undefined),
+        302,
+    );
+});

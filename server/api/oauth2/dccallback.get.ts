@@ -52,6 +52,18 @@ export default defineEventHandler(async (event) => {
 
     console.log('[Authorize -> OAuth2] Dummy code: ' + getQuery(event).code)
 
+    // The PKCE verifier for the basishacks OAuth2 flow (client -> basishacks)
+    // is stored in the pkce_verifier cookie set by constructOnSiteLoginURL.
+    // session.ms_verifier is the verifier for the Microsoft flow (basishacks -> MS),
+    // which is NOT the correct verifier to use here.
+    const pkceVerifier = getCookie(event, 'pkce_verifier')
+    if (!pkceVerifier) {
+        throw createError({
+            statusCode: 400,
+            message: 'Missing PKCE verifier cookie. Please try logging in again.'
+        })
+    }
+
     let result: string
     try {
         result = await exchangeAuthorizationCode(
@@ -59,7 +71,7 @@ export default defineEventHandler(async (event) => {
             session.application.client_id,
             session.redirect_uri,
             session.scopes.join(' '),
-            session.ms_verifier ?? undefined,
+            pkceVerifier,
         )
     } catch (e: any) {
         throw createError({
@@ -67,6 +79,8 @@ export default defineEventHandler(async (event) => {
             message: "invalid_grant: " + e.message
         })
     }
+    // Clear the PKCE verifier cookie now that it's been used
+    deleteCookie(event, 'pkce_verifier')
     // this function can be used externally like in another website
 
     const secret = process.env.NUXT_OAUTH2_JWT_SECRET
