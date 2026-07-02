@@ -16,11 +16,12 @@ The platform manages the entire hackathon lifecycle:
 | **Hackathon Management & Scheduling** | Control event state (`not_started`, `in_progress`, `voting`, `finished`, `paused`), schedule start/end times, and manage the event timeline |
 | **Team Creation & Management** | Participants create teams, invite members via `@basischina.com` email, and manage team membership |
 | **Project Submission** | Teams submit projects with name, description, demo URL, repo URL, and sourcing info. Submissions are only accepted during `not_started` or `in_progress` states |
-| **Peer Voting** | Participants vote on projects by distributing stars (scores must sum to exactly 12). Voting occurs during the `voting` state |
+| **Peer Voting** | Participants vote on projects by distributing 10 stars across eligible projects (scores must sum to exactly 10). Voting occurs during the `voting` state |
 | **Judge Scoring** | Judges score projects using a weighted rubric system with criteria scored 0–5 per criterion. Separate rubrics for junior and senior pathways |
 | **OAuth2 Application Integrations** | Full OAuth2 2.0/2.1 authorization server with PKCE support, allowing third-party and first-party applications to integrate with the platform |
 | **Developer Portal** | Admin dashboard for managing OAuth2 applications, users, teams, seasons, and debug tools |
 | **Microsoft Graph API** | Integration with Microsoft Entra ID for OAuth2 login, meeting scheduling, and Teams chat via the Graph API |
+| **Election Voting** | Student-council election interface with ranked-choice ballots and instant-runoff voting (IRV) tally |
 | **DeepSeek AI Chatbot** | In-memory chat session store powered by the OpenAI SDK for DeepSeek AI interactions (debug routes) |
 
 ## Technology Stack
@@ -155,18 +156,23 @@ basishacks-r2/
 │   │   ├── users/              # User CRUD + profile pictures
 │   │   └── _webhooks/          # Lifecycle and update webhooks
 │   ├── middleware/             # Server middleware (OAuth2 authorize validation)
+│   ├── database/               # Drizzle ORM schema, migration runner, and DB wrapper
+│   │   ├── schema.ts           # Drizzle table definitions
+│   │   ├── migrate.ts          # Custom migration runner + legacy schema repair + seeding
+│   │   └── index.ts            # Runtime-agnostic SQLite driver selection
 │   ├── plugins/                # Nitro plugins
-│   │   ├── init-database.ts    # Database schema initialization + wrapper attachment
+│   │   ├── init-database.ts    # Database initialization + attach Drizzle to event context
 │   │   ├── microsoft.ts        # MS Graph API token initialization + centralized API calls
-│   │   └── seed-hackathon.ts   # Seed hackathon timestamps + default OAuth2 app
+│   │   └── validate-oauth2-jwt-secret.ts # Startup guard for NUXT_OAUTH2_JWT_SECRET
 │   ├── types/                  # Type augmentations (H3EventContext, Cloudflare, OAuth2 JWT)
 │   └── utils/                  # Server utilities
-│       ├── database.ts         # Drizzle ORM database wrapper
 │       ├── database/           # Per-table DB helpers
+│       │   ├── awards.ts
 │       │   ├── ballots.ts
 │       │   ├── hackathon.ts
 │       │   ├── members.ts
 │       │   ├── oauth2_applications.ts
+│       │   ├── peer-voting.ts
 │       │   ├── scores.ts
 │       │   ├── seasons.ts
 │       │   ├── teams.ts
@@ -243,7 +249,7 @@ Each pathway has five criteria scored 0–5 by judges:
 
 ### Peer Voting
 
-During the voting phase, participants distribute stars across projects. The total stars assigned must sum to exactly 12, enforced by the `SubmitVoteRequest` Zod schema.
+During the voting phase, participants distribute 10 stars across eligible projects in the same pathway. The total stars assigned must sum to exactly 10, enforced by the `SubmitVoteRequest` Zod schema.
 
 ## Build & Development Commands
 
