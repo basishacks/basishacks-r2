@@ -1,0 +1,42 @@
+name: Lint
+
+on:
+    push:
+        branches: [main, enhance-and-debloat]
+    pull_request:
+        branches: [main, enhance-and-debloat]
+
+concurrency:
+    group: ${{ github.workflow }}-${{ github.ref }}
+    cancel-in-progress: true
+
+jobs:
+    prettier:
+        name: Prettier Format Check
+        runs-on: ubuntu-latest
+        timeout-minutes: 10
+
+        steps:
+            - name: Checkout
+              uses: actions/checkout@v4
+
+            - name: Setup Bun
+              uses: oven-sh/setup-bun@v2
+              with:
+                  bun-version: latest
+
+            - name: Cache Bun dependencies
+              uses: actions/cache@v4
+              with:
+                  path: |
+                      ~/.bun/install/cache
+                      node_modules
+                  key: ${{ runner.os }}-bun-${{ hashFiles('package.json', '**/bun.lockb') }}
+                  restore-keys: |
+                      ${{ runner.os }}-bun-
+
+            - name: Install dependencies
+              run: bun install
+
+            - name: Check formatting
+              run: bun run format:check

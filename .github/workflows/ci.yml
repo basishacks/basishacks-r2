@@ -1,0 +1,66 @@
+name: CI
+
+on:
+    push:
+        branches: [main, enhance-and-debloat]
+    pull_request:
+        branches: [main, enhance-and-debloat]
+
+concurrency:
+    group: ${{ github.workflow }}-${{ github.ref }}
+    cancel-in-progress: true
+
+jobs:
+    build-and-test:
+        name: Build, Test & Docs
+        runs-on: ubuntu-latest
+        timeout-minutes: 15
+
+        steps:
+            - name: Checkout
+              uses: actions/checkout@v4
+
+            - name: Setup Bun
+              uses: oven-sh/setup-bun@v2
+              with:
+                  bun-version: latest
+
+            - name: Cache Bun dependencies
+              uses: actions/cache@v4
+              with:
+                  path: |
+                      ~/.bun/install/cache
+                      node_modules
+                  key: ${{ runner.os }}-bun-${{ hashFiles('package.json', '**/bun.lockb') }}
+                  restore-keys: |
+                      ${{ runner.os }}-bun-
+
+            - name: Install dependencies
+              run: bun install
+
+            - name: Run tests
+              run: bun run test
+
+            - name: Build Nuxt app
+              run: bun run build
+
+            - name: Setup Node.js for docs
+              uses: actions/setup-node@v4
+              with:
+                  node-version: 22
+
+            - name: Cache docs dependencies
+              uses: actions/cache@v4
+              with:
+                  path: documentation/node_modules
+                  key: ${{ runner.os }}-docs-npm-${{ hashFiles('documentation/package.json') }}
+                  restore-keys: |
+                      ${{ runner.os }}-docs-npm-
+
+            - name: Install docs dependencies
+              working-directory: documentation
+              run: npm install
+
+            - name: Build documentation
+              working-directory: documentation
+              run: npm run build
