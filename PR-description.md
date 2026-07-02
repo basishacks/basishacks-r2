@@ -61,6 +61,7 @@ This branch modernizes the basishacks platform for the 2025–26 season without 
 - Made `demoLink` optional in `ResultsProjectLinks.vue` to eliminate missing-required-prop warnings.
 - Removed an undeclared `ProjectCard` prop and sanitized identicon names.
 - Added `app/utils/oauth2.ts` and `app/utils/sanitize.ts` helpers.
+- Fixed the main hackathon site layout so the default page container uses the full viewport width instead of leaving black bars on the sides. Updated `app/layouts/default.vue` to add `max-w-none` to `UContainer` while preserving horizontal padding.
 
 ### 6. Testing Infrastructure
 
@@ -76,7 +77,7 @@ This branch modernizes the basishacks platform for the 2025–26 season without 
     - Frontend components and pages
 - Added `tests/setup.ts` and `vitest.config.ts`.
 
-### 7. Documentation
+### 7. Documentation and VitePress Terminal Theme
 
 - Rewrote `README.md` with current environment variables, run commands, and architecture notes.
 - Added `documentation/guide/migration-from-main.md`.
@@ -87,6 +88,12 @@ This branch modernizes the basishacks platform for the 2025–26 season without 
     - `documentation/shared/awards.md`
     - `documentation/shared/seasons.md`
 - Registered all new pages in `documentation/.vitepress/config.ts`.
+- Replaced the "AREMENA" ASCII banner on the documentation home page with a `HACKATHON` banner in `documentation/.vitepress/theme/components/InteractiveHero.vue`.
+- Improved the VitePress theme to feel like a real UNIX terminal session:
+    - Set `appearance: "dark"` in `documentation/.vitepress/config.ts` so the site defaults to a classic dark terminal palette.
+    - Updated `documentation/.vitepress/theme/style.css` with true-black backgrounds, classic terminal green text, square corners, and no decorative shadows.
+    - Added a VT323 font import for the display typeface while keeping IBM Plex Mono for body text.
+    - Removed CRT scanlines and glow effects from the hero and interactive components.
 - Verified `cd documentation && npm run build` succeeds.
 
 ### 8. Code Style and Formatting
@@ -355,26 +362,27 @@ Copy `.env.example` to `.env` and fill in at least the required values:
 
 ### VitePress Documentation Site
 
-This branch ships a new VitePress 1.6.4 documentation site in the `documentation/` directory. The site provides interactive features, including local full-text search, a light and dark mode toggle, clean URLs, code-block line numbers, and GitHub edit links. The sidebar and top navigation are organized into five sections: Guide, Architecture, Frontend, Backend, and Shared Code. New pages cover peer voting and elections, debug and AI endpoints, awards, and seasons.
+This branch ships a new VitePress 1.6.4 documentation site in the `documentation/` directory. The site provides interactive features, including local full-text search, a dark terminal appearance, clean URLs, code-block line numbers, and GitHub edit links. The sidebar and top navigation are organized into five sections: Guide, Architecture, Frontend, Backend, and Shared Code. New pages cover peer voting and elections, debug and AI endpoints, awards, and seasons.
 
-The documentation theme was rebuilt for a technical, readable experience:
+The documentation theme was rebuilt to feel like a real UNIX terminal session:
 
-- **CRT-green monochrome palette** with high-contrast light and dark modes, WCAG-aligned text colors, and a custom scrollbar.
+- **Dark terminal palette** with a true-black background (`#000000`), classic terminal green text (`#33ff33`), and no decorative shadows or rounded corners.
+- **VT323 display typeface** for headings, combined with IBM Plex Mono body text for readability.
 - **Custom Vue components** registered globally in `documentation/.vitepress/theme/index.ts`:
     - `AnimatedCounter` — animates numbers into view, used for rubric score ranges.
     - `CollapsibleDetails` — accessible, styled disclosure blocks.
     - `CopyButton` — one-click copying of code snippets and commands.
     - `EasterEggOverlay` — full-screen overlays for keyboard-triggered surprises.
-    - `InteractiveHero` — animated landing hero with status indicators and action buttons.
+    - `InteractiveHero` — animated landing hero with a `HACKATHON` ASCII banner, status indicators, and action buttons.
     - `QuoteCycler` — clickable rotating quotes on the home page and security page.
     - `StatusBadge` — live-status pills for online, warning, error, and info states.
-    - `TerminalWindow` — macOS-style terminal windows for command examples.
+    - `TerminalWindow` — UNIX-style terminal windows for command examples.
 - **Keyboard easter eggs** handled by `useEasterEggs.ts`:
     - Konami code (`↑ ↑ ↓ ↓ ← → ← → B A`) triggers a retro "system breach" ASCII art overlay.
     - `Ctrl+Shift+H` opens a "Hack the Planet" mainframe screen.
     - `Ctrl+Shift+M` drops a Matrix-style digital rain overlay.
 - **Responsive design** with breakpoints at 768px, 480px, and 360px, plus `prefers-reduced-motion` support.
-- **Utility classes** for glowing text, blinking cursors, scanlines, terminal blocks, network grids, and ASCII art.
+- **Utility classes** for blinking cursors, terminal blocks, network grids, and ASCII art.
 
 The site uses its own `package.json` and builds with `npm run build`.
 
