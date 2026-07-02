@@ -5,6 +5,6 @@
  * /api/oauth2/mscallback. This endpoint delegates to the canonical handler so
  * both paths work.
  */
-import mscallbackHandler from '../oauth2/mscallback.get'
+import mscallbackHandler from "../oauth2/mscallback.get";
 
-export default mscallbackHandler
+export default mscallbackHandler;

@@ -1,6 +1,6 @@
-import { VotePermissions } from "~~/shared/permissions"
-import { scVotes } from '~~/server/database/schema'
-import { getHackathon } from '~~/server/utils/database/hackathon'
+import { VotePermissions } from "~~/shared/permissions";
+import { scVotes } from "~~/server/database/schema";
+import { getHackathon } from "~~/server/utils/database/hackathon";
 
 function runIRV(
     candidates: ElectionCandidate[],
@@ -29,7 +29,7 @@ function runIRV(
                 }
             }
             if (vote !== null) {
-                counts[vote] = (counts[vote] ?? 0) + 1
+                counts[vote] = (counts[vote] ?? 0) + 1;
                 validBallots++;
             }
         }
@@ -85,17 +85,17 @@ function runIRV(
 export default defineEventHandler(async (event): Promise<ElectionResult> => {
     await requirePermission(event, VotePermissions.VOTE);
 
-    const rows = event.context.drizzle
-        .select({ vote: scVotes.vote })
-        .from(scVotes)
-        .all()
+    const rows = event.context.drizzle.select({ vote: scVotes.vote }).from(scVotes).all();
 
     const totalBallots = rows.length;
 
     // Only return full IRV results after the election close (results_open_timestamp)
-    const hackathon = await getHackathon(event)
-    const now = Date.now()
-    const resultsOpen = hackathon && hackathon.results_open_timestamp > 0 && now >= hackathon.results_open_timestamp
+    const hackathon = await getHackathon(event);
+    const now = Date.now();
+    const resultsOpen =
+        hackathon &&
+        hackathon.results_open_timestamp > 0 &&
+        now >= hackathon.results_open_timestamp;
 
     if (!resultsOpen) {
         // Return only totalBallots with empty positions before results are open
@@ -105,7 +105,7 @@ export default defineEventHandler(async (event): Promise<ElectionResult> => {
                 title: position.title,
                 status: "no_votes" as const,
             })),
-        }
+        };
     }
 
     const positionResults = electionPositions.map((position) => {
