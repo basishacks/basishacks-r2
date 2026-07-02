@@ -182,6 +182,7 @@ Parsed from the database `"mode|value"` string format.
 | `project.repo_url` | `string \| null` | Repository URL |
 | `project.submitted` | `boolean` | Whether project is submitted |
 | `project.sourcing` | `string` | AI/tooling sourcing disclosure |
+| `awards` | `APIAward[]` | Resolved team awards |
 
 ### `GetUserResponse`
 
@@ -226,10 +227,70 @@ An array of lightweight member objects.
 
 | Field | Type | Description |
 |-------|------|-------------|
-| `id` | `number` | Ballot ID |
-| `projects` | `(APITeam['project'] & { id: number })[]` | Projects to vote on, each with an `id` |
-| `scores` | `(1 \| 2 \| 3 \| 4 \| 5)[] \| null` | Star ratings, or null if not yet voted |
+| `submitted` | `boolean` | Whether the user has already submitted a peer vote |
+| `projects` | `APITeam[]` | Eligible projects to vote on |
+| `scores` | `number[]` | Star ratings parallel to `projects` |
 | `reasoning` | `string \| null` | Voter's reasoning |
+
+### `BallotSummaryItem`
+
+| Field | Type | Description |
+|-------|------|-------------|
+| `season_id` | `number` | Season ID |
+| `season_name` | `string` | Season display name |
+| `project_count` | `number` | Total projects in the season |
+| `submitted_count` | `number` | Submitted projects |
+| `scored_count` | `number` | Projects that have been judged |
+
+### `GetBallotSummaryResponse`
+
+| Field | Type | Description |
+|-------|------|-------------|
+| `current` | `BallotSummaryItem \| null` | Summary for the active season |
+| `past` | `BallotSummaryItem[]` | Summaries for past seasons |
+
+### `APIAward`
+
+| Field | Type | Description |
+|-------|------|-------------|
+| `namespace` | `string` | Award identifier |
+| `name` | `string` | Display name |
+| `meta` | `Record<string, unknown>` | Stored metadata |
+| `text` | `string` | Resolved display text |
+
+### `ElectionCandidate`
+
+| Field | Type | Description |
+|-------|------|-------------|
+| `id` | `string` | Candidate ID |
+| `shortName` | `string` | Ballot display name |
+| `fullName` | `string` | Official full name |
+| `email` | `string` | School email |
+
+### `ElectionPosition`
+
+| Field | Type | Description |
+|-------|------|-------------|
+| `title` | `string` | Position title |
+| `candidates` | `ElectionCandidate[]` | Candidates for the position |
+
+### `ElectionResult`
+
+| Field | Type | Description |
+|-------|------|-------------|
+| `totalBallots` | `number` | Number of cast ballots |
+| `positions` | `{ title, status, winner?, details? }[]` | Per-position IRV result |
+
+### `ElectionBallot`
+
+| Field | Type | Description |
+|-------|------|-------------|
+| `id` | `number` | Ballot record ID |
+| `user_id` | `number` | Voter user ID |
+| `name` | `string \| null` | Voter name |
+| `email` | `string \| null` | Voter email |
+| `submitted_at` | `number \| null` | Submission timestamp |
+| `vote` | `Record<string, number \| null>` | Candidate ID → rank |
 
 ---
 
