@@ -1,5 +1,5 @@
 import type { H3Event } from 'h3'
-import { eq, and, inArray, sql, gt } from 'drizzle-orm'
+import { eq, and, inArray, sql } from 'drizzle-orm'
 import {
   users,
   teamScores,
@@ -64,27 +64,6 @@ export async function addCodeToUser(event: H3Event, email: string): Promise<User
     .get()!
 
   return user
-}
-
-export async function getUserByCode(
-  event: H3Event,
-  email: string,
-  code: string
-): Promise<Pick<User, 'id'> | null> {
-  const row = event.context.drizzle
-    .update(users)
-    .set({ login_code: null })
-    .where(
-      and(
-        eq(sql`lower(${users.email})`, email.toLowerCase()),
-        eq(users.login_code, code),
-        gt(users.login_expiry, Date.now()),
-      ),
-    )
-    .returning({ id: users.id })
-    .get()
-
-  return row ?? null
 }
 
 export async function updateUserName(event: H3Event, user: User) {

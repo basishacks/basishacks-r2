@@ -3,7 +3,6 @@ import {
   getUser,
   getUserByEmail,
   addCodeToUser,
-  getUserByCode,
   updateUserName,
   updateUserProfileTheme,
   updateUserProfilePicture,
@@ -98,53 +97,6 @@ describe('users database helpers', () => {
       expect(user.login_code).toBeDefined()
       // Admin should get a new code, not the old one
       expect(user.login_code).not.toBe('123456')
-    })
-  })
-
-  describe('getUserByCode', () => {
-    it('returns the user id when the code matches and clears the code', async () => {
-      event.context.db.prepare(
-        "INSERT INTO users(email, login_code, login_expiry) VALUES('user@example.com', '654321', ?)",
-      ).bind(Date.now() + 10 * 60 * 1000).run()
-
-      const result = await getUserByCode(event, 'user@example.com', '654321')
-      expect(result).not.toBeNull()
-      expect(result!.id).toBe(1)
-
-      // Verify the code was cleared
-      const user = await getUserByEmail(event, 'user@example.com')
-      expect(user!.login_code).toBeNull()
-    })
-
-    it('returns null when the code does not match', async () => {
-      event.context.db.prepare(
-        "INSERT INTO users(email, login_code, login_expiry) VALUES('user@example.com', '999999', ?)",
-      ).bind(Date.now() + 10 * 60 * 1000).run()
-
-      const result = await getUserByCode(event, 'user@example.com', '000000')
-      expect(result).toBeNull()
-    })
-
-    it('returns null when the email does not match', async () => {
-      event.context.db.prepare(
-        "INSERT INTO users(email, login_code, login_expiry) VALUES('user@example.com', '111111', ?)",
-      ).bind(Date.now() + 10 * 60 * 1000).run()
-
-      const result = await getUserByCode(event, 'wrong@example.com', '111111')
-      expect(result).toBeNull()
-    })
-
-    it('returns null when the code has expired and leaves the code intact', async () => {
-      event.context.db.prepare(
-        "INSERT INTO users(email, login_code, login_expiry) VALUES('user@example.com', '222222', ?)",
-      ).bind(Date.now() - 1).run()
-
-      const result = await getUserByCode(event, 'user@example.com', '222222')
-      expect(result).toBeNull()
-
-      // Expired codes should not be consumed by a failed validation
-      const user = await getUserByEmail(event, 'user@example.com')
-      expect(user!.login_code).toBe('222222')
     })
   })
 
