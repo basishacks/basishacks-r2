@@ -5,7 +5,7 @@ description: Vue components used across the basishacks frontend — navigation, 
 
 # Components
 
-The basishacks frontend contains **22 Vue components** organized in `app/components/`. All components use `<script setup lang="ts">` and the `@nuxt/ui` component library.
+The basishacks frontend contains **24 Vue components** organized in `app/components/`. All components use `<script setup lang="ts">` and the `@nuxt/ui` component library.
 
 ## Navigation & Layout
 
@@ -51,6 +51,16 @@ Site-wide footer using `UFooter`. Contains three sections:
 
 ```vue
 <Footer />
+```
+
+### TeamsIcon
+
+**File:** `app/components/TeamsIcon.vue`
+
+Inline SVG component for the Microsoft Teams icon used in the footer. Renders the official Teams logo with gradient fills at a default size of `w-6 h-6`.
+
+```vue
+<TeamsIcon />
 ```
 
 ## Project & Team Forms
@@ -156,25 +166,42 @@ Judge scoring card for evaluating a team's project against rubric criteria.
 
 **File:** `app/components/VotingProjectCard.vue`
 
-Read-only card displaying a project for peer voting. Shows project name, description, and repo/demo links.
+Interactive card displaying a project for peer voting. Shows project name, description, pathway badge, and repo/demo links, plus star increment/decrement controls.
 
 **Props:**
 
 | Prop | Type | Description |
 |------|------|-------------|
-| `project` | `APITeam['project']` | The project to display |
+| `team` | `APITeam` | The team/project to display |
+| `score` | `number` | Current star count for this project |
+| `canIncrement` | `boolean` | Whether the user can add another star |
+| `canDecrement` | `boolean` | Whether the user can remove a star |
+
+**Emits:**
+
+| Event | Description |
+|-------|-------------|
+| `increment` | User clicked the increment button |
+| `decrement` | User clicked the decrement button |
 
 ```vue
-<VotingProjectCard :project="project" />
+<VotingProjectCard
+  :team="team"
+  :score="state.scores[index]"
+  :can-increment="state.scores[index] < 5 && totalStars < 10"
+  :can-decrement="state.scores[index] > 0"
+  @increment="increment(index)"
+  @decrement="decrement(index)"
+/>
 ```
 
 ## Results & Display
 
-### ResultCard
+### ResultCard / ScoreCard
 
-**File:** `app/components/ResultCard.vue`
+**Files:** `app/components/ResultCard.vue`, `app/components/ScoreCard.vue`
 
-Season results card with metallic shimmer effects for top placements.
+Both cards display season results with metallic shimmer effects for top placements. `ScoreCard` is the primary implementation used on the dashboard results page.
 
 **Props:**
 
@@ -191,10 +218,26 @@ Season results card with metallic shimmer effects for top placements.
 | #3 | `metallic-bronze` | Bronze gradient shimmer animation |
 | Score = 800 | `rainbow-once` | One-time rainbow sweep animation |
 
-The card displays season date and name (from `~~/shared/seasons`), score out of 800, ranking, team name, and member avatars via `UserAvatarGroup`.
+The card displays season date and name (from `~~/shared/seasons`), score out of 800, ranking, team name, member avatars via `UserAvatarGroup`, and a link to season details. When a project has not been submitted, the score and rank are blurred with an overlay message.
 
 ```vue
-<ResultCard :team="team" />
+<ScoreCard :team="team" />
+```
+
+### JudgeProgressCard
+
+**File:** `app/components/JudgeProgressCard.vue`
+
+Compact card showing judging progress for a single season: how many projects have been scored versus how many were submitted.
+
+**Props:**
+
+| Prop | Type | Description |
+|------|------|-------------|
+| `season` | `BallotSummaryItem` | Season summary with `submitted_count` and `scored_count` |
+
+```vue
+<JudgeProgressCard :season="season" />
 ```
 
 ### ResultsCard
@@ -225,11 +268,33 @@ Icon-based project link buttons for GitHub, demo, and video. The video button op
 | Prop | Type | Description |
 |------|------|-------------|
 | `githubLink` | `string` | GitHub repository URL |
-| `demoLink` | `string` | Demo URL |
+| `demoLink` | `string` | Demo URL (optional) |
 | `videoLink` | `string` | Video URL |
 
 ```vue
 <ResultsProjectLinks github-link="..." demo-link="..." video-link="..." />
+```
+
+### ShowcaseMarqueeCard
+
+**File:** `app/components/ShowcaseMarqueeCard.vue`
+
+Horizontal scroll card used in the showcase marquee. Displays project rank, pathway badge, project name, description, and member avatars. Applies metallic gradient text for ranks 1–3.
+
+**Props:**
+
+| Prop | Type | Description |
+|------|------|-------------|
+| `team` | `GetTeamResponse` | The team to display |
+
+**Emits:**
+
+| Event | Description |
+|-------|-------------|
+| `click` | Fired when the card is clicked |
+
+```vue
+<ShowcaseMarqueeCard :team="team" @click="openDetail(team)" />
 ```
 
 ### ProjectCard
