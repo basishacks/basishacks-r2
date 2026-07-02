@@ -1,38 +1,15 @@
 ---
 title: Authentication & Authorization
-description: How basishacks handles user authentication (magic code, Microsoft OAuth2, basishacks connect) and authorization (RBAC with fine-grained permissions).
+description: How basishacks handles user authentication (Microsoft OAuth2, basishacks connect) and authorization (RBAC with fine-grained permissions).
 ---
 
 # Authentication & Authorization
 
-basishacks supports three authentication methods and a fine-grained permission system that extends beyond simple role checks.
+basishacks supports two authentication methods and a fine-grained permission system that extends beyond simple role checks.
 
 ## Authentication Methods
 
-### 1. Magic Code
-
-The primary authentication method for participants:
-
-1. User enters their `@basischina.com` email
-2. Server generates a 6-digit PIN code (valid for 10 minutes)
-3. PIN is sent to the user via an external webhook (Microsoft Teams message)
-4. User submits email + PIN to exchange for a session
-
-```ts
-// Step 1: Request a code
-POST /api/auth/code
-Body: { email: "user@basischina.com" }
-
-// Step 2: Verify the code and establish session
-POST /api/auth/login
-Body: { email: "user@basischina.com", code: "123456" }
-```
-
-::: tip
-Admins can request codes more frequently (bypassing the 1-minute cooldown) for testing purposes.
-:::
-
-### 2. Microsoft OAuth2
+### 1. Microsoft OAuth2
 
 Delegates authentication to Microsoft Entra ID (Azure AD):
 
@@ -44,7 +21,7 @@ Delegates authentication to Microsoft Entra ID (Azure AD):
 
 The flow redirects the user to Microsoft's login page, then back to the basishacks callback endpoint where the authorization code is exchanged for a session.
 
-### 3. basishacks connect
+### 2. basishacks connect
 
 A custom OAuth2 integration that allows users to log in through the basishacks OAuth2 provider itself. This is the internal first-party application (`client_id: 97e435f4-17e8-42ef-9b12-9684fd656de9`) seeded during initialization.
 

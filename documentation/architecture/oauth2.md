@@ -73,8 +73,7 @@ The `oauth2-authorize.ts` middleware validates the request, creates an `Authoriz
 
 The user authenticates through one of:
 
-- **basishacks login**: Email + magic code flow
-- **Microsoft OAuth2**: Redirect to Microsoft Entra ID (for proxy apps)
+- **Microsoft OAuth2**: Redirect to Microsoft Entra ID (the only login method for the hackathon registry)
 - **basishacks connect**: Internal first-party OAuth2 flow
 
 ### Step 3: Consent and code generation
