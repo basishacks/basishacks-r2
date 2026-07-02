@@ -52,7 +52,7 @@ const terminalCommands = [
   { type: 'output', text: '[+] 6 layouts registered' },
   { type: 'output', text: '[+] 8 OAuth2 scopes available' },
   { type: 'output', text: '[+] 5 rubric criteria (scores 0-5)' },
-  { type: 'output', text: '[+] 3 auth methods: magic_code, ms_oauth2, devconnect' },
+  { type: 'output', text: '[+] 2 auth methods: ms_oauth2, devconnect' },
   { type: 'output', text: '[+] Zod validation: ALL endpoints hardened' },
   { type: 'output', text: '[+] Rate limit: 60 req/min per IP' },
   { type: 'output', text: '' },
@@ -174,7 +174,7 @@ const binaryGibberish = computed(() => {
   </div>
   <div class="network-node">
     <div class="node-title">MULTI-AUTH</div>
-    <div class="node-desc">Magic code, Microsoft OAuth2, DevConnect PKCE</div>
+    <div class="node-desc">Microsoft OAuth2, DevConnect PKCE</div>
   </div>
   <div class="network-node">
     <div class="node-title">HACKATHON ENGINE</div>

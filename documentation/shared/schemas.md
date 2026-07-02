@@ -82,23 +82,6 @@ An object whose keys are the rubric criteria (`originality`, `presentation`, `te
 
 ## Authentication Schemas
 
-### `SendCodeRequest`
-
-| Field | Type | Constraints |
-|-------|------|-------------|
-| `email` | `BasisEmail` | Must be a `@basischina.com` email |
-
-**API endpoint:** `POST /api/auth/code`
-
-### `LoginRequest`
-
-| Field | Type | Constraints |
-|-------|------|-------------|
-| `email` | `BasisEmail` | Must be a `@basischina.com` email |
-| `code` | `number[]` | Array of exactly 6 digits, each 0–9 |
-
-**API endpoint:** `POST /api/auth/login`
-
 ### `MicrosoftRedirectRequest`
 
 | Field | Type | Constraints |

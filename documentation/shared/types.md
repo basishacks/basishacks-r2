@@ -99,8 +99,8 @@ These interfaces match the SQL schema exactly. They include all columns, includi
 | `role` | `string` | Space-separated URI-encoded permission strings |
 | `name` | `string \| null` | Display name |
 | `team_id` | `number \| null` | Foreign key to team |
-| `login_code` | `string \| null` | Current magic login code |
-| `login_expiry` | `number \| null` | Login code expiry timestamp |
+| `login_code` | `string \| null` | Legacy login code (unused by current authentication) |
+| `login_expiry` | `number \| null` | Legacy login code expiry timestamp (unused by current authentication) |
 | `profile_theme` | `string \| null` | Profile theme as `"mode\|value"` string |
 | `profile_picture` | `string \| null` | Profile picture path |
 

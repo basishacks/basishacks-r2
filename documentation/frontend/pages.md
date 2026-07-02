@@ -309,14 +309,12 @@ Full OAuth2 authorization page with login + consent flow. Uses **no layout** (`l
 | State | Description |
 |-------|-------------|
 | `load` | Initial loading state |
-| `login` | Email input form (`SendCodeRequest`) + Microsoft OAuth2 button |
-| `code_sent` | 6-digit PIN input (`UPinInput`) with auto-submit on completion |
+| `login` | Microsoft OAuth2 sign-in button |
 | `sensitive_consent` | Consent screen showing scope descriptions, user avatar, and app avatar with preloaded images |
 | `error` | Error display with optional "Try Again" button |
 
 **Login methods:**
-1. **Magic code** — Enter `@basischina.com` email, receive 6-digit code, enter code
-2. **Microsoft OAuth2** — Redirects to Microsoft login via `/api/oauth2/to_microsoft`
+1. **Microsoft OAuth2** — Redirects to Microsoft login via `/api/oauth2/to_microsoft`
 
 **Consent screen:**
 - Shows user avatar and app avatar connection
