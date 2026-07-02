@@ -46,7 +46,7 @@ On first run (when no tables exist), creates the following tables:
 
 **users table:**
 - Unique email with case-insensitive index
-- Login code with expiry for magic code auth
+- Legacy `login_code` / `login_expiry` columns (unused by current Microsoft-only authentication)
 - Profile theme and picture fields
 - Foreign key to teams
 
@@ -204,6 +204,21 @@ Manually polls chat messages via delta endpoint (fallback for webhook failures).
 |----------|-------------|
 | `requestMicrosoft(endpoint, method, body)` | Makes an authenticated request using the app-level token |
 | `requestUserMicrosoft(endpoint, method, body)` | Makes an authenticated request using the user-level token (auto-refreshes on 401) |
+
+---
+
+### validate-oauth2-jwt-secret.ts
+
+**File:** `server/plugins/validate-oauth2-jwt-secret.ts`
+
+Startup guard for the `NUXT_OAUTH2_JWT_SECRET` environment variable. It delegates to `validateOAuth2JWTSecret()` in `server/utils/validate-oauth2-jwt-secret.ts`.
+
+#### Behavior
+
+- **Production (`NODE_ENV=production`):** exits the process with a fatal error if the secret is missing or shorter than 32 bytes.
+- **Development/test:** logs a prominent warning and applies a documented dev-only fallback so local development and tests continue to work.
+
+This prevents the `400 invalid_grant: NUXT_OAUTH2_JWT_SECRET is not set` error from ever reaching production.
 
 ---
 

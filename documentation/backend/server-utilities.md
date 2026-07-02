@@ -402,8 +402,7 @@ Per-table database helper modules in `server/utils/database/`.
 |----------|-------------|
 | `getUser(event, userID)` | Get user by ID |
 | `getUserByEmail(event, email)` | Get user by email (case-insensitive) |
-| `addCodeToUser(event, email)` | Generate and store a 6-digit login code (10-min expiry, 1-min cooldown) |
-| `getUserByCode(event, email, code)` | Verify a login code and clear it (one-time use) |
+| `addCodeToUser(event, email)` | Create or update a user record for the given email |
 | `updateUserName(event, user)` | Update user's name |
 | `updateUserProfileTheme(event, user)` | Update user's profile theme |
 | `updateUserProfilePicture(event, user)` | Update user's profile picture |

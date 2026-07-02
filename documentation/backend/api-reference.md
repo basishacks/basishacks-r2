@@ -11,27 +11,6 @@ All API routes live in `server/api/` and use Nitro's file-based routing. Input v
 
 ## Auth
 
-### POST `/api/auth/code`
-
-Send a 6-digit verification code to a user's email.
-
-| Field | Details |
-|-------|---------|
-| **Auth** | None |
-| **Validation** | `SendCodeRequest` — `{ email: string }` (must be `@basischina.com`) |
-| **Rate limit** | 1 code per minute per email (9-minute cooldown enforced in DB) |
-| **Response** | `{ message: string }` |
-
-### POST `/api/auth/login`
-
-Verify a login code and establish a session.
-
-| Field | Details |
-|-------|---------|
-| **Auth** | None |
-| **Validation** | `LoginRequest` — `{ email: string, code: number[] }` (6-digit code) |
-| **Response** | `{ user: APIUser }` — Sets session cookie |
-
 ### POST `/api/auth/impersonate`
 
 Admin-only: log in as another user.
