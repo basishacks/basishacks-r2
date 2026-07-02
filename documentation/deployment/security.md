@@ -140,5 +140,3 @@ This prevents applications from silently accessing sensitive user data such as c
 ---
 
 <QuoteCycler />
-
-::: info **Operator note:** The docs respond to a few classic combos. Try the Konami code, or press `Ctrl+Shift+H` for a retro mainframe moment. `Ctrl+Shift+M` drops you into the stream. :::

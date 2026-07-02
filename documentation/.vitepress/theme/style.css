@@ -1,5 +1,5 @@
 /* ═══════════════════════════════════════════════════════════════
-   BASISHACKS — CRT Green Monochrome Theme
+   BASISHACKS — Modern Terminal Emulator Theme
    Network Hackathon Documentation
    ═══════════════════════════════════════════════════════════════ */
 
@@ -14,30 +14,30 @@
     --bh-brand-dark: #006638;
 
     /* Light mode — light terminal emulator */
-    --bh-green: #006600;
-    --bh-green-dim: #3a5a3a;
-    --bh-green-subtle: rgba(0, 102, 0, 0.06);
-    --bh-text: #1a1a1a;
-    --bh-text-muted: #4a4a4a;
-    --bh-bg: #f5f5f5;
-    --bh-bg-soft: #eeeeee;
-    --bh-bg-mute: #e5e5e5;
-    --bh-border: #b8c4b8;
+    --bh-green: #00884a;
+    --bh-green-dim: #3a6e4f;
+    --bh-green-subtle: rgba(0, 136, 74, 0.08);
+    --bh-text: #1f2328;
+    --bh-text-muted: #57606a;
+    --bh-bg: #ffffff;
+    --bh-bg-soft: #f6f8fa;
+    --bh-bg-mute: #eaeef2;
+    --bh-border: #d0d7de;
     --bh-code-bg: #ffffff;
-    --bh-selection-bg: rgba(0, 102, 0, 0.18);
-    --bh-selection-text: #1a1a1a;
-    --bh-shadow: transparent;
-    --bh-scrollbar-thumb: #a0b0a0;
-    --bh-scrollbar-track: #e5e5e5;
-    --bh-btn-bg: #006600;
+    --bh-selection-bg: rgba(0, 136, 74, 0.12);
+    --bh-selection-text: #1f2328;
+    --bh-shadow: rgba(31, 35, 40, 0.08);
+    --bh-scrollbar-thumb: #c1c9d0;
+    --bh-scrollbar-track: #f6f8fa;
+    --bh-btn-bg: #00884a;
     --bh-btn-text: #ffffff;
-    --bh-btn-hover: #008800;
-    --bh-table-stripe: #eeeeee;
+    --bh-btn-hover: #00aa5e;
+    --bh-table-stripe: #f6f8fa;
     --bh-crt-glow: none;
     --bh-terminal-bg: #ffffff;
-    --bh-terminal-border: #b8c4b8;
-    --bh-terminal-header: #e8e8e8;
-    --bh-terminal-text: #1a1a1a;
+    --bh-terminal-border: #d0d7de;
+    --bh-terminal-header: #f6f8fa;
+    --bh-terminal-text: #1f2328;
 
     /* Typography */
     --bh-font-mono: "IBM Plex Mono", "Space Mono", "Courier New", Courier, monospace;
@@ -88,31 +88,31 @@
 }
 
 .dark {
-    /* Dark mode — classic UNIX terminal */
-    --bh-green: #33ff33;
-    --bh-green-dim: #22aa22;
-    --bh-green-subtle: rgba(51, 255, 51, 0.08);
-    --bh-text: #33ff33;
-    --bh-text-muted: #22aa22;
-    --bh-bg: #000000;
-    --bh-bg-soft: #0a0a0a;
-    --bh-bg-mute: #111111;
-    --bh-border: #1a331a;
-    --bh-code-bg: #000000;
-    --bh-selection-bg: rgba(51, 255, 51, 0.25);
-    --bh-selection-text: #000000;
-    --bh-shadow: transparent;
-    --bh-scrollbar-thumb: #1a331a;
-    --bh-scrollbar-track: #000000;
-    --bh-btn-bg: #33ff33;
-    --bh-btn-text: #000000;
-    --bh-btn-hover: #66ff66;
-    --bh-table-stripe: #0a0a0a;
+    /* Dark mode — modern terminal emulator */
+    --bh-green: #23d18b;
+    --bh-green-dim: #16a34a;
+    --bh-green-subtle: rgba(35, 209, 139, 0.1);
+    --bh-text: #d4d4d4;
+    --bh-text-muted: #8b949e;
+    --bh-bg: #0d1117;
+    --bh-bg-soft: #161b22;
+    --bh-bg-mute: #21262d;
+    --bh-border: #30363d;
+    --bh-code-bg: #0d1117;
+    --bh-selection-bg: rgba(35, 209, 139, 0.2);
+    --bh-selection-text: #d4d4d4;
+    --bh-shadow: rgba(0, 0, 0, 0.35);
+    --bh-scrollbar-thumb: #30363d;
+    --bh-scrollbar-track: #0d1117;
+    --bh-btn-bg: #238636;
+    --bh-btn-text: #ffffff;
+    --bh-btn-hover: #2ea043;
+    --bh-table-stripe: #161b22;
     --bh-crt-glow: none;
-    --bh-terminal-bg: #000000;
-    --bh-terminal-border: #1a331a;
-    --bh-terminal-header: #111111;
-    --bh-terminal-text: #33ff33;
+    --bh-terminal-bg: #0d1117;
+    --bh-terminal-border: #30363d;
+    --bh-terminal-header: #161b22;
+    --bh-terminal-text: #d4d4d4;
 
     /* Legacy CRT aliases */
     --crt-green: var(--bh-green);
@@ -594,11 +594,7 @@ tr:hover td {
 }
 
 .dark .crt-text {
-    animation: glow-pulse 3s ease-in-out infinite;
-    text-shadow:
-        0 0 4px currentColor,
-        0 0 11px currentColor,
-        0 0 19px currentColor;
+    text-shadow: none;
 }
 
 /* Blinking cursor */
@@ -627,9 +623,9 @@ tr:hover td {
     background: repeating-linear-gradient(
         0deg,
         transparent,
-        transparent 2px,
-        rgba(0, 0, 0, 0.15) 2px,
-        rgba(0, 0, 0, 0.15) 4px
+        transparent 3px,
+        rgba(0, 0, 0, 0.04) 3px,
+        rgba(0, 0, 0, 0.04) 6px
     );
     pointer-events: none;
     z-index: 1;
@@ -643,7 +639,6 @@ tr:hover td {
 
 .dark .crt-border {
     border-color: var(--bh-green);
-    animation: border-glow 4s ease-in-out infinite;
 }
 
 /* Terminal block */
@@ -661,7 +656,7 @@ tr:hover td {
 }
 
 .dark .terminal-block {
-    box-shadow: var(--bh-crt-glow);
+    box-shadow: 0 2px 8px var(--bh-shadow);
 }
 
 /* ASCII art block */
@@ -676,9 +671,7 @@ tr:hover td {
 }
 
 .dark .ascii-art {
-    text-shadow:
-        0 0 4px currentColor,
-        0 0 11px currentColor;
+    text-shadow: none;
 }
 
 /* Network grid */
@@ -709,9 +702,7 @@ tr:hover td {
 }
 
 .dark .network-node:hover {
-    box-shadow:
-        0 4px 12px var(--bh-shadow),
-        0 0 15px rgba(51, 255, 102, 0.15);
+    box-shadow: 0 4px 12px var(--bh-shadow);
 }
 
 .network-node .node-title {
@@ -748,53 +739,7 @@ tr:hover td {
 }
 
 .dark .status-dot {
-    box-shadow:
-        0 0 6px var(--bh-green),
-        0 0 12px var(--bh-green);
-    animation: glow-pulse 2s ease-in-out infinite;
-}
-
-/* Binary stream */
-.binary-stream {
-    font-family: var(--bh-font-mono);
-    font-size: 0.65em;
-    color: var(--bh-text-muted);
-    opacity: 0.4;
-    line-height: 1.4;
-    word-break: break-all;
-    overflow: hidden;
-    user-select: none;
-}
-
-/* Assembly block */
-.asm-block {
-    font-family: var(--bh-font-mono);
-    font-size: 0.8em;
-    line-height: 1.7;
-    color: var(--bh-text-muted);
-    padding: 1em 1.25em;
-    background: var(--bh-code-bg);
-    border: 1px solid var(--bh-border);
-    border-radius: 6px;
-    overflow-x: auto;
-}
-
-.asm-block .asm-comment {
-    color: var(--bh-green);
-    opacity: 0.7;
-}
-
-.asm-block .asm-label {
-    color: var(--bh-green);
-    font-weight: 600;
-}
-
-.asm-block .asm-instr {
-    color: var(--bh-text);
-}
-
-.asm-block .asm-reg {
-    color: var(--bh-text-muted);
+    box-shadow: none;
 }
 
 /* ── Home Page Specific ─────────────────────────────────────── */
@@ -854,11 +799,7 @@ tr:hover td {
 }
 
 .dark .bh-hero .hero-banner {
-    text-shadow:
-        0 0 6px currentColor,
-        0 0 14px currentColor,
-        0 0 28px currentColor;
-    animation: glow-pulse 4s ease-in-out infinite;
+    text-shadow: none;
 }
 
 .bh-hero .hero-subtitle {
@@ -915,7 +856,7 @@ tr:hover td {
 }
 
 .dark .bh-actions .bh-btn:hover {
-    box-shadow: 0 0 15px rgba(51, 255, 102, 0.4);
+    box-shadow: none;
 }
 
 .bh-actions .bh-btn.primary {
@@ -940,7 +881,7 @@ tr:hover td {
 }
 
 .dark .bh-terminal {
-    box-shadow: var(--bh-crt-glow);
+    box-shadow: 0 2px 8px var(--bh-shadow);
 }
 
 .bh-terminal .terminal-titlebar {
@@ -1039,7 +980,7 @@ tr:hover td {
 }
 
 .dark .bh-terminal .term-cursor {
-    box-shadow: 0 0 6px var(--bh-green);
+    box-shadow: none;
 }
 
 /* Footer ASCII */
@@ -1055,7 +996,7 @@ tr:hover td {
 }
 
 .dark .bh-footer-ascii {
-    text-shadow: 0 0 4px currentColor;
+    text-shadow: none;
 }
 
 /* ── Custom Theme Components ────────────────────────────────── */
@@ -1073,7 +1014,7 @@ tr:hover td {
 }
 
 .dark .vp-terminal-window {
-    box-shadow: var(--bh-crt-glow);
+    box-shadow: 0 2px 10px var(--bh-shadow);
 }
 
 .vp-terminal-titlebar {
@@ -1266,8 +1207,7 @@ tr:hover td {
 
 /* InteractiveHero.vue */
 .vp-interactive-hero {
-    max-width: 980px;
-    margin: 0 auto;
+    width: 100%;
     padding: 1rem;
     overflow-x: hidden;
 }
@@ -1284,10 +1224,7 @@ tr:hover td {
 }
 
 .dark .vp-interactive-hero .hero-title {
-    text-shadow:
-        0 0 8px currentColor,
-        0 0 16px rgba(51, 255, 102, 0.2);
-    animation: glow-pulse 4s ease-in-out infinite;
+    text-shadow: none;
 }
 
 .vp-interactive-hero .hero-subtitle {
@@ -1388,7 +1325,7 @@ tr:hover td {
     overflow: auto;
     font-family: var(--bh-font-mono);
     color: var(--bh-green);
-    box-shadow: var(--bh-crt-glow);
+    box-shadow: 0 4px 24px var(--bh-shadow);
     animation: fade-in-up 0.3s ease;
 }
 
@@ -1611,44 +1548,9 @@ tr:hover td {
     }
 }
 
-/* ── Terminal Authenticity Overrides ──────────────────────────
-   Strip decorative rounding and glow so the docs feel like a real
-   UNIX terminal session rather than a styled marketing page. */
-
-/* Square corners on chrome and content surfaces */
-.VPNav,
-.VPSidebar,
-.VPFooter,
-.VPButton,
-.DocSearch-Button,
-pre,
-code,
-table,
-.custom-block,
-.vp-quote-cycler,
-.vp-terminal-window,
-.vp-easter-close,
-.bh-terminal,
-.network-node,
-.bh-actions .bh-btn,
-.vp-interactive-hero .hero-btn,
-.vp-interactive-hero .bh-terminal,
-.VPNavBarMenuLink,
-.VPSidebarItem.is-active .item {
-    border-radius: 0 !important;
-}
-
-/* No decorative shadows */
-pre,
-.VPButton,
-.vp-terminal-window,
-.bh-terminal,
-.network-node,
-.vp-quote-cycler,
-.vp-interactive-hero .hero-btn,
-.vp-interactive-hero .bh-terminal {
-    box-shadow: none !important;
-}
+/* ── Terminal Finishing Touches ───────────────────────────────
+   Subtle terminal cues that keep the docs cohesive without looking
+   like a retro screensaver. */
 
 /* Remove CRT scanlines and glow on the hero */
 .crt-scanlines::before,
@@ -1656,7 +1558,7 @@ pre,
     display: none !important;
 }
 
-/* Use classic terminal cursor */
+/* Terminal cursor */
 .term-cursor,
 .crt-cursor-inline {
     background: var(--bh-green);
@@ -1665,7 +1567,7 @@ pre,
     animation: cursor-blink 1s step-end infinite;
 }
 
-/* Make the hero ASCII banner feel like a login banner */
+/* Flat ASCII banner */
 .ascii-art {
     text-shadow: none !important;
     letter-spacing: 0;

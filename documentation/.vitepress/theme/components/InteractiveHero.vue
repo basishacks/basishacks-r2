@@ -1,5 +1,13 @@
 <script setup lang="ts">
-import { ref, onMounted, computed } from "vue";
+import { ref, onMounted } from "vue";
+import figlet from "figlet";
+import ansiShadow from "figlet/importable-fonts/ANSI Shadow.js";
+
+figlet.parseFont("ANSI Shadow", ansiShadow);
+const asciiBanner = figlet.textSync("HACKATHON", {
+    font: "ANSI Shadow",
+    horizontalLayout: "fitted",
+});
 
 const bootLines = ref<string[]>([]);
 const showMain = ref(false);
@@ -7,62 +15,41 @@ const terminalLines = ref<{ type: string; text: string }[]>([]);
 const terminalDone = ref(false);
 
 const bootSequence = [
-    "BIOS v2.0.26 — BIBS-C Network Systems Inc.",
-    "POST: Memory test... 640K OK",
-    "Loading basishacks_kernel.bin at 0x7C00...",
-    "0x7C00: B8 00 10 8E D8 8E C0 8E D0 BC 00 90 FB",
-    "Initializing network interface... OK",
-    "DHCP lease acquired: 10.0.0.42",
-    "ARP cache: 3 entries resolved",
-    "Connecting to hackathon subnet... OK",
-    "Loading modules: [oauth2] [rubric] [ballot] [teams]",
-    "  MOV AX, 0x0026  ; season 2, 2026",
-    "  INT 0x21        ; dispatch",
-    "All systems nominal.",
+    "basishacks-docs v1.0.0",
+    "Loading configuration... OK",
+    "Resolving sidebar navigation... OK",
+    "Mounting API reference... OK",
+    "Mounting architecture guides... OK",
+    "Mounting shared schemas... OK",
+    "Building search index... OK",
+    "All documentation systems ready.",
     "",
-    "> hackathon --status=READY",
+    "> docs --status=READY",
     "> Season 2 — 2025/26",
     "> Awaiting operators...",
 ];
 
 const terminalCommands = [
-    { type: "prompt", text: "$ nmap -sV 10.0.0.0/24 --top-ports 1024" },
+    { type: "prompt", text: "$ ls -la docs/" },
     { type: "output", text: "" },
-    { type: "output", text: "Starting Nmap 7.94 ( https://nmap.org )" },
-    { type: "output", text: "Scanning 256 hosts... [################################] 100%" },
+    { type: "output", text: "drwxr-xr-x  guide" },
+    { type: "output", text: "drwxr-xr-x  architecture" },
+    { type: "output", text: "drwxr-xr-x  frontend" },
+    { type: "output", text: "drwxr-xr-x  backend" },
+    { type: "output", text: "drwxr-xr-x  shared" },
+    { type: "output", text: "drwxr-xr-x  deployment" },
     { type: "output", text: "" },
-    { type: "output", text: "PORT     STATE  SERVICE       VERSION" },
-    { type: "output", text: "80/tcp   open   http          Nitro/2.x (h3 server)" },
-    { type: "output", text: "443/tcp  open   https         Nitro/2.x (TLS 1.3)" },
-    { type: "output", text: "5432/tcp open   postgresql    SQLite proxy" },
-    { type: "output", text: "8080/tcp open   http-proxy    Vite HMR dev server" },
+    { type: "prompt", text: "$ cat docs/welcome.txt" },
     { type: "output", text: "" },
-    { type: "output", text: "Nmap done: 256 IP addresses (54 hosts up)" },
+    { type: "output", text: "BIBS-C Network Hackathon Platform" },
+    { type: "output", text: "Season 2 — 2025/26" },
     { type: "output", text: "" },
-    { type: "prompt", text: "$ basishacks recon --deep" },
-    { type: "output", text: "" },
-    { type: "output", text: "[*] Enumerating attack surface..." },
-    { type: "output", text: "[+] 54 API endpoints discovered" },
-    { type: "output", text: "[+] 18 Vue components loaded" },
-    { type: "output", text: "[+] 23 page routes mapped" },
-    { type: "output", text: "[+] 6 layouts registered" },
-    { type: "output", text: "[+] 8 OAuth2 scopes available" },
-    { type: "output", text: "[+] 5 rubric criteria (scores 0-5)" },
-    { type: "output", text: "[+] 2 auth methods: ms_oauth2, devconnect" },
-    { type: "output", text: "[+] Zod validation: ALL endpoints hardened" },
-    { type: "output", text: "[+] Rate limit: 60 req/min per IP" },
-    { type: "output", text: "" },
-    { type: "output", text: "[*] Vulnerability scan: 0 critical | 0 high | 0 medium" },
-    { type: "output", text: "[OK] System is locked down. Ready for operators." },
+    { type: "output", text: "Stack: Nuxt 3 + Nitro + Vue 3 + SQLite" },
+    { type: "output", text: "Auth: Microsoft OAuth2, basishacks connect" },
+    { type: "output", text: "Features: teams, submissions, peer voting, judge rubrics" },
     { type: "output", text: "" },
     { type: "prompt", text: "$ _" },
 ];
-
-const asciiBanner = `██   ██  █████   █████  ██   ██ ███████ ██   ██  █████  ██   ██
-██   ██ ██   ██ ██      ██  ██     ██  ██   ██ ██   ██ ███  ██
-███████ ███████ ██      █████      ██  ██   ██ ██   ██ ████ ██
-██   ██ ██   ██ ██      ██  ██     ██  ██   ██ ██   ██ ██ ████
-██   ██ ██   ██  █████  ██   ██    ██    █████   █████  ██   ██`;
 
 onMounted(() => {
     bootSequence.forEach((line, i) => {
@@ -90,28 +77,15 @@ onMounted(() => {
         );
     });
 });
-
-const binaryGibberish = computed(() => {
-    const lines = [];
-    for (let i = 0; i < 8; i++) {
-        let line = "";
-        for (let j = 0; j < 48; j++) {
-            line += Math.random() > 0.5 ? "1" : "0";
-            if (j % 8 === 7) line += " ";
-        }
-        lines.push(line);
-    }
-    return lines.join("\n");
-});
 </script>
 
 <template>
-    <div class="vp-interactive-hero crt-scanlines">
+    <div class="vp-interactive-hero">
         <div v-if="!showMain" class="boot-sequence">
             <div class="ascii-art boot-art">{{ asciiBanner }}</div>
             <div class="boot-lines">
                 <p v-for="(line, i) in bootLines" :key="i" class="boot-line">
-                    <span v-if="line.startsWith('>')" class="prompt">█</span>
+                    <span v-if="line.startsWith('>')" class="prompt">$</span>
                     {{ line }}
                     <span v-if="i === bootLines.length - 1" class="crt-cursor-inline">_</span>
                 </p>
@@ -140,10 +114,6 @@ const binaryGibberish = computed(() => {
                 </div>
             </div>
 
-            <div class="binary-section">
-                <div class="binary-stream">{{ binaryGibberish }}</div>
-            </div>
-
             <div class="bh-terminal">
                 <div class="terminal-titlebar">
                     <div class="terminal-dots">
@@ -151,7 +121,7 @@ const binaryGibberish = computed(() => {
                         <span class="dot-yellow"></span>
                         <span class="dot-green"></span>
                     </div>
-                    <span class="terminal-title">basishacks@recon:~</span>
+                    <span class="terminal-title">basishacks@docs:~</span>
                     <span class="terminal-size">bash — 80×24</span>
                 </div>
                 <div class="terminal-body">
@@ -162,7 +132,7 @@ const binaryGibberish = computed(() => {
                     >
                         <template v-if="line.type === 'prompt'">
                             <span class="ps1-user">basishacks</span>
-                            <span class="ps1-host">@recon</span>
+                            <span class="ps1-host">@docs</span>
                             <span class="ps1-path">:~</span>
                             <span class="ps1-cmd">{{ line.text.replace("$ ", "") }}</span>
                         </template>
@@ -200,34 +170,6 @@ const binaryGibberish = computed(() => {
                     <div class="node-desc">Node.js server + SQLite + CI/CD</div>
                 </div>
             </div>
-
-            <div class="asm-section">
-                <div class="asm-block">
-                    <span class="asm-comment">; basishacks_kernel.bin — bootstrap routine</span>
-                    <span class="asm-label">_start:</span>
-                    <span class="asm-instr">MOV</span>
-                    <span class="asm-reg">AX</span>
-                    , 0x0026
-                    <span class="asm-comment">; season 2, 2026</span>
-                    <span class="asm-instr">MOV</span>
-                    <span class="asm-reg">DS</span>
-                    , AX
-                    <span class="asm-instr">MOV</span>
-                    <span class="asm-reg">SI</span>
-                    , hackathon
-                    <span class="asm-comment">; ptr to event state</span>
-                    <span class="asm-instr">MOV</span>
-                    <span class="asm-reg">CX</span>
-                    , 0x0036
-                    <span class="asm-comment">; 54 endpoints</span>
-                    <span class="asm-instr">REPZ</span>
-                    <span class="asm-reg">MOVSB</span>
-                    <span class="asm-comment">; load all routes</span>
-                    <span class="asm-instr">INT</span>
-                    <span class="asm-reg">0x21</span>
-                    <span class="asm-comment">; dispatch to Nitro</span>
-                </div>
-            </div>
         </div>
     </div>
 </template>
@@ -235,8 +177,8 @@ const binaryGibberish = computed(() => {
 <style scoped>
 .boot-art,
 .hero-art {
-    font-size: clamp(0.3rem, 1.1vw, 0.65rem);
-    line-height: 1.15;
+    font-size: clamp(0.35rem, 1.2vw, 0.7rem);
+    line-height: 1.05;
     overflow-x: auto;
     margin-bottom: 1rem;
 }
@@ -254,6 +196,7 @@ const binaryGibberish = computed(() => {
 
 .prompt {
     opacity: 0.6;
+    margin-right: 0.4em;
 }
 
 .crt-cursor-inline {
@@ -270,18 +213,5 @@ const binaryGibberish = computed(() => {
 
 .hero-section .hero-actions {
     margin-top: 1.5rem;
-}
-
-.binary-section {
-    margin: 0.75rem 0;
-    overflow: hidden;
-}
-
-.asm-section {
-    margin: 1rem 0;
-}
-
-.asm-block {
-    white-space: pre;
 }
 </style>
