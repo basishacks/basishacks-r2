@@ -48,14 +48,13 @@ The canonical list of variables lives in `.env.example`. The table below summari
 | Variable | Required? | Purpose |
 | --- | --- | --- |
 | `NUXT_SESSION_PASSWORD` | Required | Session encryption key. Must be at least 32 bytes. Generate with `openssl rand -base64 32` |
-| `NUXT_SEND_CODE_URL` | Required | Webhook/service URL for sending magic-code login codes |
+| `NUXT_OAUTH2_JWT_SECRET` | Required | JWT signing secret for OAuth2 token exchange. Must be at least 32 bytes. Generate with `openssl rand -base64 32` |
 | `ONSITE_LOGIN_CLIENT_ID` | Required for onsite login | OAuth2 `client_id` of the basishacks app used by the `/api/login` -> `/api/oauth2/authorize` onsite flow. The server auto-adds `${CURRENT_URL_ORIGIN}/${REDIRECT_URI}` to this app's allowed redirect URIs on startup |
 | `MICROSOFT_TENANT_ID` | Required for MS login | Microsoft Entra ID tenant (directory) ID. Must be paired with `MICROSOFT_CLIENT_ID` |
 | `MICROSOFT_CLIENT_ID` | Required for MS login | Microsoft Entra ID application (client) ID. Must be paired with `MICROSOFT_TENANT_ID` |
 | `MICROSOFT_CLIENT_SECRET` | Optional | Microsoft Entra ID app secret for MS Graph API integration |
 | `CURRENT_URL_ORIGIN` | Optional | Base origin for OAuth2 redirect callbacks (no trailing slash). Defaults to `http://localhost:3000`; set to your real domain in production |
 | `MICROSOFT_REDIRECT_URI` | Optional | Microsoft OAuth2 redirect URI path (must start with `/`). Defaults to `/api/oauth2/mscallback` |
-| `NUXT_OAUTH2_JWT_SECRET` | Optional | JWT signing secret for OAuth2 token exchange. Generate with `openssl rand -base64 32` |
 | `REDIRECT_URI` | Optional | Onsite OAuth2 redirect URI path used by `/api/login`. Defaults to `api/oauth2/dccallback`. The server auto-registers it for `ONSITE_LOGIN_CLIENT_ID` |
 | `DEEPSEEK_API_KEY` | Optional | DeepSeek API key for AI chat features (debug routes only) |
 | `PORT` / `HOST` | Optional | Server port/host override (defaults: `3000` / `0.0.0.0`) |
@@ -230,7 +229,7 @@ The following variables were hardcoded on `main` and **must now be set explicitl
 - `MICROSOFT_CLIENT_ID` — previously hardcoded Microsoft Entra client ID
 - `ONSITE_LOGIN_CLIENT_ID` — previously hardcoded OAuth2 client_id for the onsite login flow
 
-Without these, Microsoft OAuth2 login and the onsite login flow will not function. Magic-code login still works with just `NUXT_SESSION_PASSWORD` and `NUXT_SEND_CODE_URL`.
+Without these, Microsoft OAuth2 login and the onsite login flow will not function.
 
 ### Conflict-free merge
 
