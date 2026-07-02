@@ -44,7 +44,7 @@ const terminalCommands = [
     { type: "output", text: "BIBS-C Network Hackathon Platform" },
     { type: "output", text: "Season 2 — 2025/26" },
     { type: "output", text: "" },
-    { type: "output", text: "Stack: Nuxt 3 + Nitro + Vue 3 + SQLite" },
+    { type: "output", text: "Stack: Nuxt 4 + Nitro + Vue 3 + SQLite" },
     { type: "output", text: "Auth: Microsoft OAuth2, basishacks connect" },
     { type: "output", text: "Features: teams, submissions, peer voting, judge rubrics" },
     { type: "output", text: "" },
@@ -146,7 +146,7 @@ onMounted(() => {
 
             <div class="network-grid">
                 <div class="network-node">
-                    <div class="node-title">Full-Stack Nuxt 3</div>
+                    <div class="node-title">Full-Stack Nuxt 4</div>
                     <div class="node-desc">Vue 3 + Nitro + TypeScript + SQLite</div>
                 </div>
                 <div class="network-node">

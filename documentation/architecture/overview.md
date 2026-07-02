@@ -5,15 +5,15 @@ description: High-level overview of the basishacks full-stack architecture, dire
 
 # Architecture Overview
 
-basishacks is a **full-stack Nuxt 3 application** that combines a Vue 3 frontend with a Nitro backend in a single deployable unit. It manages hackathon registration, team creation, project submission, peer voting, and judge scoring for the BIBS-C Network Hackathon (season 2, 2025–26).
+basishacks is a **full-stack Nuxt 4 application** that combines a Vue 3 frontend with a Nitro backend in a single deployable unit. It manages hackathon registration, team creation, project submission, peer voting, and judge scoring for the BIBS-C Network Hackathon (season 2, 2025–26).
 
-<StatusBadge status="info" text="Stack: Nuxt 3 + SQLite" />
+<StatusBadge status="info" text="Stack: Nuxt 4 + SQLite" />
 
 ## Technology Stack
 
 | Layer | Technology |
 | --- | --- |
-| Framework | Nuxt 3 (^4.4.8) |
+| Framework | Nuxt 4 (^4.4.8) |
 | UI | `@nuxt/ui` ^4.9.0 (Tailwind CSS v4 based) |
 | Language | TypeScript (^5.9.3) |
 | Runtime | Node.js >= v24 or Bun (dual-runtime support) |

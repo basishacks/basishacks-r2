@@ -5,7 +5,7 @@ description: High-level overview of the basishacks hackathon platform — what i
 
 # Project Overview
 
-**basishacks** is the official website for the **BIBS-C Network Hackathon** (season 2, 2025–26). It is a full-stack Nuxt 3 application that serves as the central platform for organizing and running the hackathon event.
+**basishacks** is the official website for the **BIBS-C Network Hackathon** (season 2, 2025–26). It is a full-stack Nuxt 4 application that serves as the central platform for organizing and running the hackathon event.
 
 ## What basishacks Does
 
@@ -28,7 +28,7 @@ The platform manages the entire hackathon lifecycle:
 
 | Layer | Technology | Notes |
 | --- | --- | --- |
-| **Framework** | Nuxt 3 (^4.4.8) | Full-stack Vue framework with SSR, file-based routing |
+| **Framework** | Nuxt 4 (^4.4.8) | Full-stack Vue framework with SSR, file-based routing |
 | **UI** | `@nuxt/ui` ^4.9.0 | Tailwind CSS v4 based component library |
 | **Language** | TypeScript (^5.9.3) | Strict typing throughout |
 | **Runtime** | Node.js >= v24 or Bun | Dual-runtime support; Bun is preferred |
