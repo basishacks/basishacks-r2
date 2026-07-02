@@ -3,7 +3,7 @@
         <RoleHeader />
 
         <UMain>
-            <UContainer>
+            <UContainer class="max-w-none">
                 <slot />
             </UContainer>
         </UMain>
