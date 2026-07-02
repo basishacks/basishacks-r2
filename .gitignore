@@ -179,3 +179,4 @@ vite.config.ts.timestamp-*
 
 docs
 .trae
+.agents
