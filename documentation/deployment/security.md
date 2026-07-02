@@ -32,8 +32,8 @@ See [Rate Limiting](./rate-limiting.md) for full details.
 ## Database Security
 
 - **Foreign keys** are enforced with `PRAGMA foreign_keys = ON`
-- All database access goes through parameterized queries (`event.context.db.prepare(sql).bind(...)`) — no raw string interpolation
-- The database layer uses Drizzle ORM with better-sqlite3, ensuring consistent behavior between local and production environments
+- All database access goes through Drizzle ORM (`event.context.drizzle.select()/insert()/update()/delete()`) — no raw string interpolation
+- The database layer uses Drizzle ORM with `bun:sqlite` under Bun and `better-sqlite3` under Node.js, ensuring consistent behavior between local and production environments
 
 ## Input Validation
 
