@@ -67,7 +67,9 @@ npm install
 
 ## Initialize the Database
 
-The local development environment uses SQLite with Drizzle ORM. The driver is selected automatically based on your runtime: `bun:sqlite` under Bun, or `better-sqlite3` under Node.js. The database is initialized automatically by the `init-database.ts` Nitro plugin when the dev server starts.
+The local development environment uses SQLite with Drizzle ORM. The driver is selected automatically based on your runtime: `bun:sqlite` under Bun, or `better-sqlite3` under Node.js.
+
+Migrations and seeding run **automatically** when the Nitro dev server starts via the `init-database.ts` plugin, which calls `createDrizzleDatabase()` and `createAndMigrateDatabase()` from `server/database/migrate.ts`.
 
 To manually initialize the database:
 
@@ -75,28 +77,29 @@ To manually initialize the database:
 bun run db:migrate
 ```
 
-This runs the Drizzle migrations, which create all required tables (`hackathon`, `teams`, `team_scores`, `users`, `ballots`, `ballot_scores`, `oauth2_applications`).
+This runs Drizzle Kit migrations, which create all required tables (`hackathon`, `teams`, `team_scores`, `users`, `ballots`, `ballot_scores`, `oauth2_applications`, `seasons`, `user_past_teams`).
 
 ### Seed the Hackathon Row
 
-The `hackathon` table requires a single row with `id = 1` that controls the global event state. The `seed-hackathon` plugin automatically seeds this row when the Nitro dev server starts. If you need to manually seed it, connect to the SQLite database directly:
+The `hackathon` table requires a single row with `id = 1` that controls the global event state. `seedHackathon()` in `server/database/migrate.ts` automatically inserts this row when the dev server starts. If you need to manually seed it, connect to the SQLite database directly:
 
 ```bash
-sqlite3 database/basishacks.sqlite "INSERT INTO hackathon VALUES(1, 'not_started', 0, 0, 0, 0, 0, NULL, NULL) ON CONFLICT DO NOTHING"
+sqlite3 database/basishacks.sqlite "INSERT INTO hackathon VALUES(1, 'not_started', 0, 0, 0, 0, 0, NULL, NULL, 0, 0, 0, 0, 0, NULL, NULL) ON CONFLICT DO NOTHING"
 ```
 
 ### Apply Migrations
 
-Migrations are managed via Drizzle Kit. To apply all pending migrations:
+Migrations are generated with Drizzle Kit:
+
+```bash
+# Generate a migration after schema changes
+bun run db:generate
+```
+
+The `db:migrate` script applies pending migrations via Drizzle Kit. In practice, the server also applies migrations automatically on startup, so manual runs are usually unnecessary:
 
 ```bash
 bun run db:migrate
-```
-
-To generate a new migration after schema changes:
-
-```bash
-bun run db:generate
 ```
 
 ## Configure Environment Variables
