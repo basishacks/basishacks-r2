@@ -66,6 +66,7 @@ This branch modernizes the basishacks platform for the 2025–26 season without 
     - Updated `app/layouts/default.vue` to wrap content in a full-width padded container.
     - Updated `app/layouts/dashboard.vue` and `app/pages/user/[id].vue` to remove remaining max-width containers.
     - Widened forms in `app/pages/profile.vue`, `app/pages/dashboard/teams/index.vue`, `app/components/ProjectForm.vue`, and `app/components/TeamForm.vue` to `w-full`.
+    - Preserved the dashboard sidebar in `app/layouts/dashboard.vue` as a visible two-column layout with the active phase card and vertical navigation.
 
 ### 6. Testing Infrastructure
 
