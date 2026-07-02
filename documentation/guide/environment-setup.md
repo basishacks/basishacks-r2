@@ -64,7 +64,7 @@ bun i
 
 ## Database Initialization
 
-The local development environment uses `better-sqlite3` with a SQLite database file at `./database/basishacks.sqlite`. The database is initialized automatically by the `init-database.ts` Nitro plugin when the dev server starts.
+The local development environment uses SQLite with a database file at `./database/basishacks.sqlite`. The underlying driver is selected automatically: `bun:sqlite` under Bun and `better-sqlite3` under Node.js. The database is initialized, migrated, and seeded automatically by the `init-database.ts` Nitro plugin when the dev server starts.
 
 To manually initialize the database:
 
@@ -75,12 +75,16 @@ bun run db:migrate
 
 ### Applying Migrations
 
-Migrations are managed via Drizzle Kit:
+Migrations are generated with Drizzle Kit:
 
 ```bash
 # Generate a migration after schema changes
 bun run db:generate
+```
 
+Applying migrations is normally handled automatically on server startup via the custom runner in `server/database/migrate.ts`. You can still invoke Drizzle Kit directly:
+
+```bash
 # Apply migrations
 bun run db:migrate
 ```
@@ -215,9 +219,9 @@ devServer: {
 
 ## Database
 
-The project uses Drizzle ORM with `better-sqlite3` for both local development and production. The database file is stored at `./database/basishacks.sqlite` with WAL mode enabled.
+The project uses Drizzle ORM with a runtime-agnostic SQLite driver. Under Bun the driver is `bun:sqlite`; under Node.js it falls back to `better-sqlite3`. The database file is stored at `./database/basishacks.sqlite` with WAL mode enabled.
 
-The Drizzle ORM instance is attached to `event.context.drizzle` on every request via the `init-database.ts` Nitro plugin.
+The Drizzle ORM instance is created once at startup and attached to `event.context.drizzle` on every request via the `init-database.ts` Nitro plugin.
 
 ## IDE Setup
 
