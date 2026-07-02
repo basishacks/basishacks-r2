@@ -13,11 +13,11 @@ Hackathon seasons are defined by static metadata and activated through the datab
 
 ```ts
 export interface HackathonSeason {
-  id: number
-  theme_name: string | null
-  theme_description: string | null
-  date: string | null
-  docs: string | null
+    id: number;
+    theme_name: string | null;
+    theme_description: string | null;
+    date: string | null;
+    docs: string | null;
 }
 ```
 
@@ -25,26 +25,24 @@ Example:
 
 ```ts
 const hackathonSeasons: Record<number, HackathonSeason> = {
-  2: {
-    id: 2,
-    theme_name: 'Signal',
-    theme_description: 'signal',
-    date: 'February 2026',
-    docs: 'https://slack-files.com/T09V59WQY1E-F0A8LUTHZHQ-0eb4891888',
-  },
-  1: {
-    id: 1,
-    theme_name: 'Beneath the Surface',
-    theme_description: 'Explore the hidden depths of our world',
-    date: 'May 2026',
-    docs: null,
-  },
-}
+    2: {
+        id: 2,
+        theme_name: "Signal",
+        theme_description: "signal",
+        date: "February 2026",
+        docs: "https://slack-files.com/T09V59WQY1E-F0A8LUTHZHQ-0eb4891888",
+    },
+    1: {
+        id: 1,
+        theme_name: "Beneath the Surface",
+        theme_description: "Explore the hidden depths of our world",
+        date: "May 2026",
+        docs: null,
+    },
+};
 ```
 
-::: info
-Season metadata is checked into source control. To add a new season, edit `shared/seasons.ts` and redeploy.
-:::
+::: info Season metadata is checked into source control. To add a new season, edit `shared/seasons.ts` and redeploy. :::
 
 ## Active Season
 
@@ -53,7 +51,7 @@ The database tracks the currently active season in the `hackathon` table (`activ
 ### API Endpoints
 
 | Method | Path | Auth | Description |
-|--------|------|------|-------------|
+| --- | --- | --- | --- |
 | GET | `/api/seasons` | `PORTAL_SEASONS_VIEW` or admin | List all seasons |
 | GET | `/api/seasons/active` | None | Get the currently active season |
 | PATCH | `/api/seasons/active` | `PORTAL_SEASONS_EDIT` or admin | Set the active season |
@@ -62,7 +60,7 @@ The database tracks the currently active season in the `hackathon` table (`activ
 
 ```ts
 {
-  season_id: number | null
+    season_id: number | null;
 }
 ```
 
@@ -72,11 +70,11 @@ Passing `null` deactivates all seasons.
 
 `server/utils/database/seasons.ts` provides:
 
-| Function | Description |
-|----------|-------------|
-| `getSeasons(event)` | List all seasons ordered by ID |
-| `getSeasonById(event, seasonId)` | Get a season by ID |
-| `getActiveSeason(event)` | Get the currently active season |
+| Function                           | Description                                   |
+| ---------------------------------- | --------------------------------------------- |
+| `getSeasons(event)`                | List all seasons ordered by ID                |
+| `getSeasonById(event, seasonId)`   | Get a season by ID                            |
+| `getActiveSeason(event)`           | Get the currently active season               |
 | `setActiveSeason(event, seasonId)` | Activate one season and deactivate all others |
 
 ## Usage in the UI

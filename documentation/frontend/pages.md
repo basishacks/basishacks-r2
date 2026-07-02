@@ -19,13 +19,13 @@ The home page. Fetches the active hackathon season from `/api/seasons/active` an
 - **Status alert** — links to `/dashboard` when the hackathon has started or finished
 - **Schedule section** — conditionally renders `LargeCountdown` components based on hackathon status:
 
-| Status | Countdowns shown |
-|--------|-----------------|
+| Status        | Countdowns shown                 |
+| ------------- | -------------------------------- |
 | `not_started` | Hackathon starts, Hackathon ends |
-| `in_progress` | Hackathon ends, Voting starts |
-| `voting` | Voting ends, Results released |
-| `paused` | Maintenance message |
-| `finished` | No countdowns |
+| `in_progress` | Hackathon ends, Voting starts    |
+| `voting`      | Voting ends, Results released    |
+| `paused`      | Maintenance message              |
+| `finished`    | No countdowns                    |
 
 - **Detailed schedule** — collapsible section with `DateTime` components for all timestamps
 - **Theme section** — reveals theme name and description once set, otherwise shows a countdown to the start date
@@ -44,6 +44,7 @@ The home page. Fetches the active hackathon season from `/api/seasons/active` an
 User profile editing page. Protected by `auth` middleware.
 
 **Features:**
+
 - Displays greeting with user name/email
 - **Name editing** — text input validated by `UpdateUserRequest`
 - **Avatar upload** — `UFileUpload` with live preview via `UserAvatar`. Supports removing the current avatar. Converts uploaded files to base64 before sending.
@@ -79,13 +80,14 @@ Animated showcase page for the top 3 projects from the current season. A highly 
 **Sections:**
 
 | Section | Description |
-|---------|-------------|
+| --- | --- |
 | Title | Full-screen landscape background with "When there is Signal" title, neon flicker animation |
 | Team #1 | Scroll-driven video playback, cursor-following gold aura effect, slide-right description transition |
 | Team #2 | Word-by-word shake animation for project name, metallic silver styling, dual image layout |
 | Team #3 | Slide-left transition, metallic bronze styling, window mockup with screenshot |
 
 **Scroll-driven animations:**
+
 - Team #1 video: `currentTime` is set proportional to scroll position within the section
 - Team #2 and #3: visibility triggers when elements enter the viewport
 - "Scroll for more" indicator fades out after scrolling past 25% viewport height
@@ -94,9 +96,7 @@ Animated showcase page for the top 3 projects from the current season. A highly 
 
 **Components used:** `GoBackUp`, `LoaderAnimation`, `ResultsProjectLinks`
 
-::: tip
-This page uses custom CSS animations including `metallic-gold`, `metallic-silver`, `metallic-bronze`, `neon` flicker, and `appearAndShake` word animations.
-:::
+::: tip This page uses custom CSS animations including `metallic-gold`, `metallic-silver`, `metallic-bronze`, `neon` flicker, and `appearAndShake` word animations. :::
 
 ### `/voting`
 
@@ -105,6 +105,7 @@ This page uses custom CSS animations including `metallic-gold`, `metallic-silver
 Peer voting page. Protected by `auth` middleware. Only accessible during the `voting` hackathon status.
 
 **Flow:**
+
 1. Fetches ballot data from `/api/ballot`
 2. Displays eligible `VotingProjectCard` components in a grid
 3. User distributes **10 stars** among eligible projects in the same pathway (0–5 per project)
@@ -125,6 +126,7 @@ Peer voting page. Protected by `auth` middleware. Only accessible during the `vo
 Student-council election voting page. Protected by `auth` middleware. Requires `VotePermissions.VOTE` or `admin` permission.
 
 **Flow:**
+
 1. Fetches candidates from `/api/election/candidates`
 2. Fetches current IRV results from `/api/election/vote`
 3. User enters a rank (1 = first preference) for each candidate via `UPinInput`
@@ -135,6 +137,7 @@ Student-council election voting page. Protected by `auth` middleware. Requires `
 **Validation:** Client-side checks for duplicate ranks and skipped ranks; server validates with `ElectionVoteRequest`.
 
 **Keybinds:**
+
 - `X` — check / submit
 - `Tab` / `Shift+Tab` — navigate candidates
 - `ArrowDown` / `ArrowUp` — move between pin inputs
@@ -156,10 +159,12 @@ Admin-only ballot listing page for the election. Shows every cast ballot with vo
 Judge scoring page. Protected by `auth` middleware. Accessible only by judges/admins during `voting` status.
 
 **Guards:**
+
 - Redirects to `/` if hackathon status is not `voting`
 - Redirects to `/` if user lacks judge or admin permissions
 
 **Flow:**
+
 1. Fetches teams for judging from `/api/teams?judging=1`
 2. Renders a `JudgingCard` for each team
 3. After scoring, refreshes the list
@@ -175,14 +180,15 @@ Judge scoring page. Protected by `auth` middleware. Accessible only by judges/ad
 Main dashboard overview. Protected by `auth` middleware. Uses `dashboard` layout.
 
 **Features:**
+
 - Welcome message with status-dependent text (not started, in progress, voting, finished, paused)
 - If no team: prompt to create or join a team
 - If has team: `ProjectCard` showing the current project
 - Action cards linking to General, Teams, and Results pages
 - **Confetti animation** — triggers on mount if the user's team ranks in the top 10:
-  - Ranks 1–3: metallic-colored pride + fireworks effects via `canvas-confetti`
-  - Ranks 4–10: RGB pride effect
-  - Uses `sessionStorage` to prevent repeat triggers
+    - Ranks 1–3: metallic-colored pride + fireworks effects via `canvas-confetti`
+    - Ranks 4–10: RGB pride effect
+    - Uses `sessionStorage` to prevent repeat triggers
 
 **Unsaved changes protection:** Listens for `onBeforeRouteLeave` and `beforeunload` events.
 
@@ -195,6 +201,7 @@ Main dashboard overview. Protected by `auth` middleware. Uses `dashboard` layout
 Project editing page. Protected by `auth` middleware.
 
 **States:**
+
 - No team and hackathon not started → "Hackathon not started yet!" CTA
 - No team and hackathon started → "You don't have a team yet!" CTA
 - Has team and hackathon in progress → `ProjectForm` (enabled)
@@ -211,6 +218,7 @@ Project editing page. Protected by `auth` middleware.
 Team creation and management. Protected by `auth` middleware.
 
 **States:**
+
 - No team → `CreateTeamRequest` form (team name only)
 - Has team → `TeamForm` component
 
@@ -223,6 +231,7 @@ Team creation and management. Protected by `auth` middleware.
 Season results page. Protected by `auth` middleware.
 
 **Content:**
+
 - Current season results via `ResultCard`
 - Past season results via `ResultCard` for each `past_teams` entry
 
@@ -285,6 +294,7 @@ OAuth2 application creation form.
 OAuth2 application editor with two tabs: **General details** and **Authorization (DevConnect)**.
 
 **General tab:**
+
 - Application name, client ID, description
 - Type badge (first-party / third-party)
 - Proxy Microsoft badge
@@ -293,7 +303,7 @@ OAuth2 application editor with two tabs: **General details** and **Authorization
 **Authorization tab:**
 
 | Section | Description |
-|---------|-------------|
+| --- | --- |
 | Client Secrets | Create/delete secrets. New secrets shown once in a modal with copy button. Abbreviated versions stored. |
 | Redirect URIs | Add/remove URIs with `ManageRedirectUriRequest` validation. Must start with `http://localhost` or `https://`. |
 | Scope Permissions | Add scopes from `OAuth2Scopes` registry. Admin-only scopes require elevated permissions. Sensitive scopes show "User Consent" badge. |
@@ -340,16 +350,18 @@ Full OAuth2 authorization page with login + consent flow. Uses **no layout** (`l
 **Flow states:**
 
 | State | Description |
-|-------|-------------|
+| --- | --- |
 | `load` | Initial loading state |
 | `login` | Microsoft OAuth2 sign-in button |
 | `sensitive_consent` | Consent screen showing scope descriptions, user avatar, and app avatar with preloaded images |
 | `error` | Error display with optional "Try Again" button |
 
 **Login methods:**
+
 1. **Microsoft OAuth2** — Redirects to Microsoft login via `/api/oauth2/to_microsoft`
 
 **Consent screen:**
+
 - Shows user avatar and app avatar connection
 - Lists scope descriptions with sensitive/non-sensitive indicators
 - "Consent" or "Deny" buttons
@@ -357,9 +369,7 @@ Full OAuth2 authorization page with login + consent flow. Uses **no layout** (`l
 
 **Session management:** Uses `/api/oauth2/session` (GET/POST/DELETE) to manage the OAuth2 authorization session state.
 
-::: warning
-This page handles the complete OAuth2 authorization code flow. The `bridge_error` cookie is used to pass error states from server middleware to the client page.
-:::
+::: warning This page handles the complete OAuth2 authorization code flow. The `bridge_error` cookie is used to pass error states from server middleware to the client page. :::
 
 ## User Profile
 
@@ -370,6 +380,7 @@ This page handles the complete OAuth2 authorization code flow. The `bridge_error
 Public user profile page. Sets layout to `fullwidth`.
 
 **Features:**
+
 - Fetches user data from `/api/users/{id}`
 - If the user has a `profile_theme` with mode `url`, sets the background image from `/userast/{value}`
 - Full-height container with default background overlay

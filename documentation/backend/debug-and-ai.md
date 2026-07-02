@@ -16,7 +16,7 @@ Debug file endpoints let authorized users upload and list static assets without 
 ### Endpoints
 
 | Method | Path | Auth | Description |
-|--------|------|------|-------------|
+| --- | --- | --- | --- |
 | POST | `/api/debug/upload` | `PORTAL_DEBUG_VIEW` or admin | Upload a file to `public/assets/` or `public/userassets/` |
 | GET | `/api/debug/files` | `PORTAL_DEBUG_VIEW` or admin | List uploaded assets |
 
@@ -24,17 +24,17 @@ Debug file endpoints let authorized users upload and list static assets without 
 
 `POST /api/debug/upload` accepts `multipart/form-data`:
 
-| Field | Description |
-|-------|-------------|
-| `file` | The file to upload |
-| `mode` (query) | `static` → `public/assets/`, `user` → `public/userassets/` |
+| Field              | Description                                                                |
+| ------------------ | -------------------------------------------------------------------------- |
+| `file`             | The file to upload                                                         |
+| `mode` (query)     | `static` → `public/assets/`, `user` → `public/userassets/`                 |
 | `keepName` (query) | `true` to keep the original filename, otherwise a random name is generated |
 
 Response:
 
 ```json
 {
-  "permalink": "/assets/<filename>"
+    "permalink": "/assets/<filename>"
 }
 ```
 
@@ -52,8 +52,8 @@ The OpenAI client is initialized lazily on first use. If `DEEPSEEK_API_KEY` is m
 
 ```json
 {
-  "statusCode": 503,
-  "statusMessage": "DEEPSEEK_API_KEY is not configured"
+    "statusCode": 503,
+    "statusMessage": "DEEPSEEK_API_KEY is not configured"
 }
 ```
 
@@ -62,7 +62,7 @@ This prevents the server from crashing at startup when the key is not provided.
 ### Endpoints
 
 | Method | Path | Auth | Description |
-|--------|------|------|-------------|
+| --- | --- | --- | --- |
 | POST | `/api/debug/deepseek/sessions` | `DevPermissions.DEEPSEEK` | Create a new chat session |
 | GET | `/api/debug/deepseek/sessions/:id` | `DevPermissions.DEEPSEEK` | Get session and messages |
 | DELETE | `/api/debug/deepseek/sessions/:id` | `DevPermissions.DEEPSEEK` | Delete a session |
@@ -74,16 +74,14 @@ Sessions are stored in memory via `server/utils/deepseek-store.ts`:
 
 ```ts
 interface ChatSession {
-  id: number
-  sessionName: string
-  createdAt: number
-  messages: ChatCompletionMessage[]
+    id: number;
+    sessionName: string;
+    createdAt: number;
+    messages: ChatCompletionMessage[];
 }
 ```
 
-::: warning
-All chat data is lost when the server restarts.
-:::
+::: warning All chat data is lost when the server restarts. :::
 
 ### Character Prompt
 
@@ -101,13 +99,13 @@ The system prompt also injects context about the Developers' Club (`biszweb.club
 
 The chatbot can invoke functions in a loop (max 10 iterations):
 
-| Tool | Purpose |
-|------|---------|
-| `get_time` | Returns the current GMT+8 time |
-| `crawl_web` | Fetches raw HTML from a URL |
-| `view_web` | Fetches a markdown conversion of a URL |
-| `end_conversation` | Ends the session with a severity flag |
-| `foward_message` | Forwards a message to club admins |
+| Tool               | Purpose                                |
+| ------------------ | -------------------------------------- |
+| `get_time`         | Returns the current GMT+8 time         |
+| `crawl_web`        | Fetches raw HTML from a URL            |
+| `view_web`         | Fetches a markdown conversion of a URL |
+| `end_conversation` | Ends the session with a severity flag  |
+| `foward_message`   | Forwards a message to club admins      |
 
 Tool results are appended to the session as `role: 'tool'` messages and the conversation continues until no more tool calls are requested.
 
@@ -124,7 +122,7 @@ The chatbot endpoints integrate with Microsoft Graph to send and receive Teams c
 ### Endpoints
 
 | Method | Path | Auth | Description |
-|--------|------|------|-------------|
+| --- | --- | --- | --- |
 | GET | `/api/chatbot/message` | OAuth2 JWT with `chat.readwrite` scope | Sends a test rich-text message to a hard-coded admin user |
 | GET | `/api/chatbot/index` | None | Empty placeholder / health-check endpoint |
 
@@ -143,10 +141,10 @@ The underlying Graph API calls live in `server/plugins/microsoft.ts` and are cen
 
 Microsoft Graph change notifications are received at:
 
-| Method | Path | Description |
-|--------|------|-------------|
-| POST | `/api/_webhooks/update` | Chat message change notifications |
-| POST | `/api/_webhooks/lifecycle` | Subscription lifecycle notifications |
+| Method | Path                       | Description                          |
+| ------ | -------------------------- | ------------------------------------ |
+| POST   | `/api/_webhooks/update`    | Chat message change notifications    |
+| POST   | `/api/_webhooks/lifecycle` | Subscription lifecycle notifications |
 
 See [Plugins & Middleware](./plugins-middleware) for details on webhook validation and subscription management.
 
@@ -154,11 +152,11 @@ See [Plugins & Middleware](./plugins-middleware) for details on webhook validati
 
 ## Permissions
 
-| Permission | Allows |
-|------------|--------|
-| `dev_debug` | Direct access to debug API routes |
-| `portal.debug.view` | View the Debug Files page in the developer portal |
-| `dev_deepseek` | Direct access to DeepSeek API routes |
+| Permission             | Allows                                              |
+| ---------------------- | --------------------------------------------------- |
+| `dev_debug`            | Direct access to debug API routes                   |
+| `portal.debug.view`    | View the Debug Files page in the developer portal   |
+| `dev_deepseek`         | Direct access to DeepSeek API routes                |
 | `portal.deepseek.view` | View the DeepSeek chat page in the developer portal |
 
 Admins implicitly have all of the above.

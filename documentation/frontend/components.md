@@ -16,6 +16,7 @@ The basishacks frontend contains **24 Vue components** organized in `app/compone
 The main navigation header rendered at the top of every page. Uses `UHeader` from `@nuxt/ui`.
 
 **Features:**
+
 - Displays `basishacks_2026` as the site title
 - Navigation menu with conditional items based on user role and hackathon status
 - Color mode toggle button
@@ -24,7 +25,7 @@ The main navigation header rendered at the top of every page. Uses `UHeader` fro
 **Conditional navigation items:**
 
 | Item | Condition |
-|------|-----------|
+| --- | --- |
 | Home | Always visible |
 | Dashboard (with children: Overview, General, Teams, Results) | Always visible |
 | Showcase | Always visible |
@@ -44,7 +45,7 @@ Permission checks use `hasPermission()` from `~~/shared/permissions`.
 Site-wide footer using `UFooter`. Contains three sections:
 
 | Section | Content |
-|---------|---------|
+| --- | --- |
 | Left | Copyright notice (auto-updates year), link to contributing page, link to developer portal |
 | Center | Navigation links to [biszweb.club](https://biszweb.club/club_sites/developers_club) and [binj.dev](https://binj.dev) |
 | Right | Microsoft Teams button (inline SVG), GitHub button linking to the repository |
@@ -73,21 +74,22 @@ Edit/submit project details with auto-save functionality. Used on the dashboard 
 
 **Props:**
 
-| Prop | Type | Default | Description |
-|------|------|---------|-------------|
-| `team` | `APITeam \| null \| undefined` | — | The team whose project is being edited |
-| `disabled` | `boolean` | `false` | Disables all form fields |
+| Prop       | Type                           | Default | Description                            |
+| ---------- | ------------------------------ | ------- | -------------------------------------- |
+| `team`     | `APITeam \| null \| undefined` | —       | The team whose project is being edited |
+| `disabled` | `boolean`                      | `false` | Disables all form fields               |
 
 **Events:**
 
-| Event | Payload | Description |
-|-------|---------|-------------|
-| `dirty` | `boolean` | Emitted when form dirty state changes |
-| `refresh` | — | Emitted after a successful save or submit |
+| Event     | Payload   | Description                               |
+| --------- | --------- | ----------------------------------------- |
+| `dirty`   | `boolean` | Emitted when form dirty state changes     |
+| `refresh` | —         | Emitted after a successful save or submit |
 
 **Auto-save:** Runs every **10 seconds** via `setInterval`. Only saves when the form is dirty and a team exists. Sends a `PATCH` to `/api/teams/{id}`.
 
 **Form fields:**
+
 - Project name (`project.name`)
 - Project description (`project.description`) — textarea with guidance template
 - Demo URL (`project.demo_url`)
@@ -110,18 +112,19 @@ Team management component for renaming, adding, and removing members.
 
 **Props:**
 
-| Prop | Type | Description |
-|------|------|-------------|
-| `team` | `APITeam` | The team to manage |
+| Prop       | Type      | Description          |
+| ---------- | --------- | -------------------- |
+| `team`     | `APITeam` | The team to manage   |
 | `disabled` | `boolean` | Disables all actions |
 
 **Events:**
 
-| Event | Payload | Description |
-|-------|---------|-------------|
-| `refresh` | — | Emitted after any mutation (rename, add, remove) |
+| Event     | Payload | Description                                      |
+| --------- | ------- | ------------------------------------------------ |
+| `refresh` | —       | Emitted after any mutation (rename, add, remove) |
 
 **Features:**
+
 - **Rename team** — Opens a `UModal` with a form validated by `UpdateTeamRequest`
 - **Add member** — Opens a `UModal` with an email field validated by `AddTeamMemberRequest`
 - **Remove member** — Each member card has a `ModalConfirm` button; self-removal triggers a "leave" message, and removing the last member warns about team deletion
@@ -140,17 +143,18 @@ Judge scoring card for evaluating a team's project against rubric criteria.
 
 **Props:**
 
-| Prop | Type | Description |
-|------|------|-------------|
+| Prop   | Type      | Description           |
+| ------ | --------- | --------------------- |
 | `team` | `APITeam` | The team being judged |
 
 **Events:**
 
-| Event | Payload | Description |
-|-------|---------|-------------|
-| `scored` | — | Emitted after successful score submission |
+| Event    | Payload | Description                               |
+| -------- | ------- | ----------------------------------------- |
+| `scored` | —       | Emitted after successful score submission |
 
 **Scoring interface:**
+
 - Displays project name, team name, pathway, description, AI sourcing statement, and repo/demo links
 - For each rubric criterion (from `~~/shared/rubric`), shows abbreviation, weight percentage, description tooltip, and a `URadioGroup` with values **0–5**
 - Reasoning textarea for score justification
@@ -170,28 +174,28 @@ Interactive card displaying a project for peer voting. Shows project name, descr
 
 **Props:**
 
-| Prop | Type | Description |
-|------|------|-------------|
-| `team` | `APITeam` | The team/project to display |
-| `score` | `number` | Current star count for this project |
+| Prop           | Type      | Description                           |
+| -------------- | --------- | ------------------------------------- |
+| `team`         | `APITeam` | The team/project to display           |
+| `score`        | `number`  | Current star count for this project   |
 | `canIncrement` | `boolean` | Whether the user can add another star |
-| `canDecrement` | `boolean` | Whether the user can remove a star |
+| `canDecrement` | `boolean` | Whether the user can remove a star    |
 
 **Emits:**
 
-| Event | Description |
-|-------|-------------|
+| Event       | Description                       |
+| ----------- | --------------------------------- |
 | `increment` | User clicked the increment button |
 | `decrement` | User clicked the decrement button |
 
 ```vue
 <VotingProjectCard
-  :team="team"
-  :score="state.scores[index]"
-  :can-increment="state.scores[index] < 5 && totalStars < 10"
-  :can-decrement="state.scores[index] > 0"
-  @increment="increment(index)"
-  @decrement="decrement(index)"
+    :team="team"
+    :score="state.scores[index]"
+    :can-increment="state.scores[index] < 5 && totalStars < 10"
+    :can-decrement="state.scores[index] > 0"
+    @increment="increment(index)"
+    @decrement="decrement(index)"
 />
 ```
 
@@ -205,18 +209,18 @@ Both cards display season results with metallic shimmer effects for top placemen
 
 **Props:**
 
-| Prop | Type | Description |
-|------|------|-------------|
+| Prop   | Type              | Description                       |
+| ------ | ----------------- | --------------------------------- |
 | `team` | `GetTeamResponse` | The team with score and rank data |
 
 **Visual effects:**
 
-| Rank | CSS Class | Effect |
-|------|-----------|--------|
-| #1 | `metallic-gold` | Gold gradient shimmer animation |
-| #2 | `metallic-silver` | Silver gradient shimmer animation |
-| #3 | `metallic-bronze` | Bronze gradient shimmer animation |
-| Score = 800 | `rainbow-once` | One-time rainbow sweep animation |
+| Rank        | CSS Class         | Effect                            |
+| ----------- | ----------------- | --------------------------------- |
+| #1          | `metallic-gold`   | Gold gradient shimmer animation   |
+| #2          | `metallic-silver` | Silver gradient shimmer animation |
+| #3          | `metallic-bronze` | Bronze gradient shimmer animation |
+| Score = 800 | `rainbow-once`    | One-time rainbow sweep animation  |
 
 The card displays season date and name (from `~~/shared/seasons`), score out of 800, ranking, team name, member avatars via `UserAvatarGroup`, and a link to season details. When a project has not been submitted, the score and rank are blurred with an overlay message.
 
@@ -232,8 +236,8 @@ Compact card showing judging progress for a single season: how many projects hav
 
 **Props:**
 
-| Prop | Type | Description |
-|------|------|-------------|
+| Prop     | Type                | Description                                              |
+| -------- | ------------------- | -------------------------------------------------------- |
 | `season` | `BallotSummaryItem` | Season summary with `submitted_count` and `scored_count` |
 
 ```vue
@@ -248,9 +252,9 @@ Simpler results card showing ranked project with name, team, description, and li
 
 **Props:**
 
-| Prop | Type | Description |
-|------|------|-------------|
-| `team` | `APITeam` | The team data |
+| Prop   | Type             | Description        |
+| ------ | ---------------- | ------------------ |
+| `team` | `APITeam`        | The team data      |
 | `rank` | `number \| null` | The team's ranking |
 
 ```vue
@@ -265,11 +269,11 @@ Icon-based project link buttons for GitHub, demo, and video. The video button op
 
 **Props:**
 
-| Prop | Type | Description |
-|------|------|-------------|
+| Prop         | Type     | Description           |
+| ------------ | -------- | --------------------- |
 | `githubLink` | `string` | GitHub repository URL |
-| `demoLink` | `string` | Demo URL (optional) |
-| `videoLink` | `string` | Video URL |
+| `demoLink`   | `string` | Demo URL (optional)   |
+| `videoLink`  | `string` | Video URL             |
 
 ```vue
 <ResultsProjectLinks github-link="..." demo-link="..." video-link="..." />
@@ -283,14 +287,14 @@ Horizontal scroll card used in the showcase marquee. Displays project rank, path
 
 **Props:**
 
-| Prop | Type | Description |
-|------|------|-------------|
+| Prop   | Type              | Description         |
+| ------ | ----------------- | ------------------- |
 | `team` | `GetTeamResponse` | The team to display |
 
 **Emits:**
 
-| Event | Description |
-|-------|-------------|
+| Event   | Description                    |
+| ------- | ------------------------------ |
 | `click` | Fired when the card is clicked |
 
 ```vue
@@ -305,8 +309,8 @@ Fetches and displays a team's project card by ID. Shows project name, team name,
 
 **Props:**
 
-| Prop | Type | Description |
-|------|------|-------------|
+| Prop | Type     | Description          |
+| ---- | -------- | -------------------- |
 | `id` | `number` | The team ID to fetch |
 
 ```vue
@@ -324,7 +328,7 @@ Single user avatar with skeleton loading state. Resolves the image source from t
 **Props:**
 
 | Prop | Type | Default | Description |
-|------|------|---------|-------------|
+| --- | --- | --- | --- |
 | `user` | `object \| null \| undefined` | — | User object with `name`, `email`, `profile_picture` |
 | `previewSrc` | `string` | — | Override source (e.g., for upload preview) |
 | `size` | `'3xs' \| '2xs' \| 'xs' \| 'sm' \| 'md' \| 'lg' \| 'xl' \| '2xl' \| '3xl'` | `'md'` | Avatar size |
@@ -343,11 +347,11 @@ Renders multiple `UserAvatar` components in a `UAvatarGroup` with a hover popove
 
 **Props:**
 
-| Prop | Type | Default | Description |
-|------|------|---------|-------------|
-| `users` | `Array` | — | Array of user objects |
-| `size` | `string` | — | Avatar size (passed through) |
-| `max` | `number \| string` | — | Maximum visible avatars |
+| Prop    | Type               | Default | Description                  |
+| ------- | ------------------ | ------- | ---------------------------- |
+| `users` | `Array`            | —       | Array of user objects        |
+| `size`  | `string`           | —       | Avatar size (passed through) |
+| `max`   | `number \| string` | —       | Maximum visible avatars      |
 
 The popover contains a scrollable list of `UserItem` components.
 
@@ -363,10 +367,10 @@ Combines a `UserAvatar` with the user's name and email text. Used inside popover
 
 **Props:**
 
-| Prop | Type | Default | Description |
-|------|------|---------|-------------|
-| `user` | `object \| null \| undefined` | — | User object |
-| `size` | `string` | `'md'` | Avatar size |
+| Prop   | Type                          | Default | Description |
+| ------ | ----------------------------- | ------- | ----------- |
+| `user` | `object \| null \| undefined` | —       | User object |
+| `size` | `string`                      | `'md'`  | Avatar size |
 
 ```vue
 <UserItem :user="user" size="sm" />
@@ -380,8 +384,8 @@ Hover-triggered popover that lazy-loads full user data on first hover. Shows the
 
 **Props:**
 
-| Prop | Type | Description |
-|------|------|-------------|
+| Prop   | Type                | Description                              |
+| ------ | ------------------- | ---------------------------------------- |
 | `user` | `number \| APIUser` | User ID (lazy fetch) or full user object |
 
 **Lazy loading:** If `user` is a number, fetches `/api/users/{id}` on first hover. Shows skeleton placeholders during loading. Caches the result after first fetch.
@@ -402,10 +406,10 @@ Full-width countdown timer with days, hours, minutes, and seconds.
 
 **Props:**
 
-| Prop | Type | Description |
-|------|------|-------------|
-| `date` | `Date` | Target date to count down to |
-| `label` | `string` | Label text above the timer |
+| Prop    | Type     | Description                  |
+| ------- | -------- | ---------------------------- |
+| `date`  | `Date`   | Target date to count down to |
+| `label` | `string` | Label text above the timer   |
 
 Updates every second via `setInterval`. Displays a formatted `DateTime` below the countdown. Styled with a dashed primary-colored border.
 
@@ -421,8 +425,8 @@ Full-screen overlay loader with an animated infinity SVG symbol and "Just a mome
 
 **Props:**
 
-| Prop | Type | Description |
-|------|------|-------------|
+| Prop   | Type      | Description                   |
+| ------ | --------- | ----------------------------- |
 | `show` | `boolean` | Whether to display the loader |
 
 The SVG animation features a looping stroke-dash animation on an infinity path, with shadow effects and a slow rotation.
@@ -451,13 +455,14 @@ Reusable confirmation modal wrapping `UModal`.
 
 **Props:**
 
-| Prop | Type | Default | Description |
-|------|------|---------|-------------|
-| `color` | `string` | `'primary'` | Color of the confirm button |
-| `click` | `Function` | `() => {}` | Callback on confirm |
-| `colorSecond` | `string` | `'neutral'` | Color of the cancel button |
+| Prop          | Type       | Default     | Description                 |
+| ------------- | ---------- | ----------- | --------------------------- |
+| `color`       | `string`   | `'primary'` | Color of the confirm button |
+| `click`       | `Function` | `() => {}`  | Callback on confirm         |
+| `colorSecond` | `string`   | `'neutral'` | Color of the cancel button  |
 
 **Slots:**
+
 - Default — trigger element (e.g., a button)
 - `content` — modal body content
 
@@ -478,15 +483,16 @@ Modal-based media preview browser wrapping `UModal`.
 
 **Props:**
 
-| Prop | Type | Default | Description |
-|------|------|---------|-------------|
-| `title` | `string` | `'Media preview'` | Modal title |
-| `buttonLabel` | `string` | `'Open media'` | Default trigger button text |
-| `buttonIcon` | `string` | `'i-material-symbols-open-in-new'` | Trigger button icon |
-| `buttonVariant` | `string` | `'ghost'` | Trigger button variant |
-| `disabled` | `boolean` | `false` | Disables the trigger |
+| Prop            | Type      | Default                            | Description                 |
+| --------------- | --------- | ---------------------------------- | --------------------------- |
+| `title`         | `string`  | `'Media preview'`                  | Modal title                 |
+| `buttonLabel`   | `string`  | `'Open media'`                     | Default trigger button text |
+| `buttonIcon`    | `string`  | `'i-material-symbols-open-in-new'` | Trigger button icon         |
+| `buttonVariant` | `string`  | `'ghost'`                          | Trigger button variant      |
+| `disabled`      | `boolean` | `false`                            | Disables the trigger        |
 
 **Slots:**
+
 - `trigger` — custom trigger element
 - `buttonLabel` — custom button label
 - Default (scoped) — receives `close` function for modal content
@@ -508,8 +514,8 @@ Formats a `Date` object as a localized string in the `Asia/Shanghai` timezone.
 
 **Props:**
 
-| Prop | Type | Description |
-|------|------|-------------|
+| Prop   | Type   | Description        |
+| ------ | ------ | ------------------ |
 | `date` | `Date` | The date to format |
 
 Uses `date.toLocaleString('en-CA', { dateStyle: 'medium', timeStyle: 'short', timeZone: 'Asia/Shanghai' })`. Wrapped in `<ClientOnly>` to avoid hydration mismatches. Renders a `<time>` element with an ISO `datetime` attribute.

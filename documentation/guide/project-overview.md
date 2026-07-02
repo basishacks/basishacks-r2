@@ -12,7 +12,7 @@ description: High-level overview of the basishacks hackathon platform — what i
 The platform manages the entire hackathon lifecycle:
 
 | Feature | Description |
-|---------|-------------|
+| --- | --- |
 | **Hackathon Management & Scheduling** | Control event state (`not_started`, `in_progress`, `voting`, `finished`, `paused`), schedule start/end times, and manage the event timeline |
 | **Team Creation & Management** | Participants create teams, invite members via `@basischina.com` email, and manage team membership |
 | **Project Submission** | Teams submit projects with name, description, demo URL, repo URL, and sourcing info. Submissions are only accepted during `not_started` or `in_progress` states |
@@ -27,7 +27,7 @@ The platform manages the entire hackathon lifecycle:
 ## Technology Stack
 
 | Layer | Technology | Notes |
-|-------|------------|-------|
+| --- | --- | --- |
 | **Framework** | Nuxt 3 (latest) | Full-stack Vue framework with SSR, file-based routing |
 | **UI** | `@nuxt/ui` ^4.7.1 | Tailwind CSS v4 based component library |
 | **Language** | TypeScript 5.6+ | Strict typing throughout |
@@ -57,6 +57,7 @@ Delegates authentication to Microsoft Entra ID (tenant configured via the `MICRO
 A custom OAuth2 integration with **PKCE (Proof Key for Code Exchange)** support. External applications redirect users to `/api/oauth2/authorize` with standard OAuth2 parameters (`client_id`, `scope`, `redirect_uri`, `state`, `code_challenge`, `code_challenge_method`). After the user authenticates and consents, the application receives an authorization code that can be exchanged for a JWT access token at `/api/oauth2/token`.
 
 The OAuth2 flow supports:
+
 - Authorization Code Grant with PKCE (protocol 2.1)
 - Legacy Authorization Code Grant without PKCE (protocol 2.0)
 - JWT access tokens (HS256, 1-hour expiry) signed with `NUXT_OAUTH2_JWT_SECRET`
@@ -69,33 +70,33 @@ The OAuth2 flow supports:
 
 Users are assigned one of three core roles in the database:
 
-| Role | Description |
-|------|-------------|
-| `participant` | Default role. Can join teams, submit projects, and vote. |
-| `judge` | Can score projects using the rubric system. Access to the judging interface. |
-| `admin` | Full access to all features including the developer portal. |
+| Role          | Description                                                                  |
+| ------------- | ---------------------------------------------------------------------------- |
+| `participant` | Default role. Can join teams, submit projects, and vote.                     |
+| `judge`       | Can score projects using the rubric system. Access to the judging interface. |
+| `admin`       | Full access to all features including the developer portal.                  |
 
 ### Fine-Grained Developer Permissions
 
 Beyond the three core roles, the platform supports fine-grained permissions stored as space-separated strings in the `role` column. These are managed through the `DevPermissions` constants in `shared/permissions.ts`:
 
-| Permission | Description |
-|------------|-------------|
-| `dev_users` | Access to user management utilities |
-| `dev_teams` | Access to team management utilities |
-| `dev_debug` | Access to debug endpoints |
-| `dev_deepseek` | Access to DeepSeek AI features |
-| `portal.users.view` | View users in the developer portal |
-| `portal.debug.view` | View debug tools in the developer portal |
-| `portal.teams.view` | View teams in the developer portal |
-| `portal.deepseek.view` | View DeepSeek tools in the developer portal |
-| `portal.applications.view` | View OAuth2 applications |
-| `portal.applications.create` | Create OAuth2 applications |
-| `portal.applications.create.firstparty` | Create first-party OAuth2 applications |
-| `portal.applications.delete` | Delete OAuth2 applications |
-| `portal.applications.view.all` | View all OAuth2 applications (including others') |
-| `portal.seasons.view` | View season management |
-| `portal.seasons.edit` | Edit seasons |
+| Permission                              | Description                                      |
+| --------------------------------------- | ------------------------------------------------ |
+| `dev_users`                             | Access to user management utilities              |
+| `dev_teams`                             | Access to team management utilities              |
+| `dev_debug`                             | Access to debug endpoints                        |
+| `dev_deepseek`                          | Access to DeepSeek AI features                   |
+| `portal.users.view`                     | View users in the developer portal               |
+| `portal.debug.view`                     | View debug tools in the developer portal         |
+| `portal.teams.view`                     | View teams in the developer portal               |
+| `portal.deepseek.view`                  | View DeepSeek tools in the developer portal      |
+| `portal.applications.view`              | View OAuth2 applications                         |
+| `portal.applications.create`            | Create OAuth2 applications                       |
+| `portal.applications.create.firstparty` | Create first-party OAuth2 applications           |
+| `portal.applications.delete`            | Delete OAuth2 applications                       |
+| `portal.applications.view.all`          | View all OAuth2 applications (including others') |
+| `portal.seasons.view`                   | View season management                           |
+| `portal.seasons.edit`                   | Edit seasons                                     |
 
 The `hasPermission()` helper checks both the specific permission and the `admin` permission (admins implicitly have all permissions).
 
@@ -220,13 +221,13 @@ basishacks-r2/
 
 The `hackathon` table contains a single row (`id = 1`) that controls the global event state. The status field determines what actions are available:
 
-| Status | Description |
-|--------|-------------|
+| Status        | Description                                           |
+| ------------- | ----------------------------------------------------- |
 | `not_started` | Before the event — teams can form and submit projects |
-| `in_progress` | During the event — project submissions accepted |
-| `voting` | After the event — peer voting is open |
-| `finished` | Event completed — results published |
-| `paused` | Event paused for maintenance |
+| `in_progress` | During the event — project submissions accepted       |
+| `voting`      | After the event — peer voting is open                 |
+| `finished`    | Event completed — results published                   |
+| `paused`      | Event paused for maintenance                          |
 
 ### Pathways
 
@@ -239,13 +240,13 @@ Teams are categorized into two pathways with different judging rubrics:
 
 Each pathway has five criteria scored 0–5 by judges:
 
-| Criterion | Junior Weight | Senior Weight |
-|-----------|:------------:|:------------:|
-| Innovation & Originality | 30% | 10% |
-| Presentation & Design | 25% | 25% |
-| Technical Complexity | 20% | 20% |
-| Theme Alignment | 15% | 15% |
-| Impact & Usefulness | 10% | 30% |
+| Criterion                | Junior Weight | Senior Weight |
+| ------------------------ | :-----------: | :-----------: |
+| Innovation & Originality |      30%      |      10%      |
+| Presentation & Design    |      25%      |      25%      |
+| Technical Complexity     |      20%      |      20%      |
+| Theme Alignment          |      15%      |      15%      |
+| Impact & Usefulness      |      10%      |      30%      |
 
 ### Peer Voting
 

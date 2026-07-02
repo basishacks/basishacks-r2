@@ -16,9 +16,7 @@ All API endpoints are protected by an in-memory rate limiter:
 - **Response:** 429 status with `Retry-After` header
 - **Cleanup:** 1% probabilistic cleanup of entries older than 1 hour
 
-::: warning
-Rate limiting is in-memory and per-process. Under high concurrency or with multiple server instances, a determined attacker could potentially bypass per-IP limits by distributing requests across many IPs.
-:::
+::: warning Rate limiting is in-memory and per-process. Under high concurrency or with multiple server instances, a determined attacker could potentially bypass per-IP limits by distributing requests across many IPs. :::
 
 See [Rate Limiting](./rate-limiting.md) for full details.
 
@@ -45,15 +43,13 @@ See [Rate Limiting](./rate-limiting.md) for full details.
 
 - RBAC is enforced **server-side** — the frontend never performs permission checks for authorization
 - Three helper functions enforce access:
-  - `requireUser(event)` — returns the full DB user row or 401
-  - `requireJudge(event)` — 403 if not judge/admin
-  - `requireAdmin(event)` — 403 if not admin
+    - `requireUser(event)` — returns the full DB user row or 401
+    - `requireJudge(event)` — 403 if not judge/admin
+    - `requireAdmin(event)` — 403 if not admin
 - Fine-grained permissions are checked using `hasPermission(user.role, DevPermissions.XXX)`
 - The `role` column stores space-separated URI-encoded permission strings
 
-::: danger
-Never trust the frontend for permission checks. Always validate on the server.
-:::
+::: danger Never trust the frontend for permission checks. Always validate on the server. :::
 
 ## Microsoft Graph API
 
@@ -73,12 +69,12 @@ Client secrets are **never stored in plaintext**. Instead:
 
 ```ts
 // Secret creation
-const plainSecret = randomBytes(32).toString('hex')
-const secretHash = createHash('sha256').update(plainSecret).digest('hex')
+const plainSecret = randomBytes(32).toString("hex");
+const secretHash = createHash("sha256").update(plainSecret).digest("hex");
 
 // Secret validation
-const hash = createHash('sha256').update(plainSecret).digest('hex')
-if (part === hash) return true
+const hash = createHash("sha256").update(plainSecret).digest("hex");
+if (part === hash) return true;
 ```
 
 ## JWT Tokens
@@ -97,18 +93,18 @@ At startup, the server validates `NUXT_OAUTH2_JWT_SECRET` in `server/plugins/val
 
 ```ts
 const jwt = await new SignJWT({
-  sub: String(session.user.id),
-  user_id: session.user.id,
-  client_id: session.application.client_id,
-  redirect_uri: session.redirect_uri,
-  scope: session.scopes,
+    sub: String(session.user.id),
+    user_id: session.user.id,
+    client_id: session.application.client_id,
+    redirect_uri: session.redirect_uri,
+    scope: session.scopes,
 })
-  .setProtectedHeader({ alg: 'HS256' })
-  .setIssuer('basishacks')
-  .setAudience(session.application.client_id)
-  .setIssuedAt(Date.now())
-  .setExpirationTime('1h')
-  .sign(key)
+    .setProtectedHeader({ alg: "HS256" })
+    .setIssuer("basishacks")
+    .setAudience(session.application.client_id)
+    .setIssuedAt(Date.now())
+    .setExpirationTime("1h")
+    .sign(key);
 ```
 
 Token verification uses `jose.jwtVerify()` with the same secret.
@@ -122,9 +118,9 @@ The OAuth2 authorization flow supports **Proof Key for Code Exchange (PKCE)**:
 - During token exchange, the `code_verifier` is verified against the stored challenge:
 
 ```ts
-if (session.bh_verifier_challenge_method === 'S256') {
-  const hash = createHash('sha256').update(codeVerifier).digest('base64url')
-  verified = hash === session.bh_verifier_challenge
+if (session.bh_verifier_challenge_method === "S256") {
+    const hash = createHash("sha256").update(codeVerifier).digest("base64url");
+    verified = hash === session.bh_verifier_challenge;
 }
 ```
 
@@ -140,3 +136,9 @@ When an application requests a scope marked as `sensitive: true` in `shared/oaut
 3. Only after consent is the authorization code issued
 
 This prevents applications from silently accessing sensitive user data such as chat messages or all meetings.
+
+---
+
+<QuoteCycler />
+
+::: info **Operator note:** The docs respond to a few classic combos. Try the Konami code, or press `Ctrl+Shift+H` for a retro mainframe moment. `Ctrl+Shift+M` drops you into the stream. :::

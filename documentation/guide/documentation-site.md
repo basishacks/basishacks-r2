@@ -15,12 +15,12 @@ Components are registered globally, so any markdown page can use them.
 
 Show a colored status pill:
 
-````md
+```md
 <StatusBadge status="online" text="System Online" />
 <StatusBadge status="warn" text="Deprecated" />
 <StatusBadge status="error" text="Offline" />
 <StatusBadge status="info" text="Beta" />
-````
+```
 
 ### TerminalWindow
 
@@ -40,52 +40,50 @@ curl -s https://localhost:24598/api/health
 
 Add a copy-to-clipboard button next to a command:
 
-````md
+```md
 <CopyButton content="bun i" label="copy install command" />
-````
+```
 
 ### CollapsibleDetails
 
 Hide extra detail behind an animated disclosure:
 
-````md
+```md
 <CollapsibleDetails summary="Expand: advanced options">
 
 Hidden content goes here.
 
 </CollapsibleDetails>
-````
+```
 
 ### AnimatedCounter
 
 Animate a number on page load:
 
-````md
+```md
 <AnimatedCounter :target="54" suffix="endpoints" />
-````
+```
 
 ### QuoteCycler
 
 Click to cycle through programming and hackathon quotes:
 
-````md
+```md
 <QuoteCycler />
-````
+```
 
 ## Easter Eggs
 
 A few lightweight surprises are wired into the site. They are client-side only and never interrupt normal reading.
 
-| Trigger | What happens |
-|---------|--------------|
-| Konami code (`↑ ↑ ↓ ↓ ← → ← → B A`) | A hidden ASCII message appears |
-| `Ctrl+Shift+H` | A retro "Hack the Planet" terminal overlay |
-| `Ctrl+Shift+M` | A scrolling matrix-style character stream |
-| Click the quote cycler | Cycles to the next quote |
+| Trigger                             | What happens                               |
+| ----------------------------------- | ------------------------------------------ |
+| Konami code (`↑ ↑ ↓ ↓ ← → ← → B A`) | A hidden ASCII message appears             |
+| `Ctrl+Shift+H`                      | A retro "Hack the Planet" terminal overlay |
+| `Ctrl+Shift+M`                      | A scrolling matrix-style character stream  |
+| Click the quote cycler              | Cycles to the next quote                   |
 
-::: tip
-Try them on any page. Close an overlay by clicking outside it or pressing the close button.
-:::
+::: tip Try them on any page. Close an overlay by clicking outside it or pressing the close button. :::
 
 ## Customizing the Theme
 

@@ -13,11 +13,11 @@ This guide walks you through setting up the **basishacks** development environme
 
 Before you begin, ensure you have the following installed:
 
-| Requirement | Minimum Version | Notes |
-|-------------|----------------|-------|
-| **Node.js** | >= v24 | Required by the runtime and tooling |
-| **Bun** | Latest | Preferred package manager; `npm` also works |
-| **Git** | Any recent | For cloning the repository |
+| Requirement | Minimum Version | Notes                                       |
+| ----------- | --------------- | ------------------------------------------- |
+| **Node.js** | >= v24          | Required by the runtime and tooling         |
+| **Bun**     | Latest          | Preferred package manager; `npm` also works |
+| **Git**     | Any recent      | For cloning the repository                  |
 
 ### Installing Bun
 
@@ -150,9 +150,7 @@ The server starts on **port 24598** with HTTPS. Open your browser to:
 https://localhost:24598
 ```
 
-:::: warning
-The `--https` flag is required because Microsoft OAuth2 and session cookies require a secure context. You may see a self-signed certificate warning in your browser — accept it to proceed.
-::::
+:::: warning The `--https` flag is required because Microsoft OAuth2 and session cookies require a secure context. You may see a self-signed certificate warning in your browser — accept it to proceed. ::::
 
 ## Production Build
 
@@ -172,9 +170,7 @@ The preview server runs on port 24598.
 
 ## Running Tests
 
-The project uses [Vitest](https://vitest.dev) as its test framework. The suite
-contains 600+ tests covering the API, server utilities, database helpers,
-shared schemas, and frontend components.
+The project uses [Vitest](https://vitest.dev) as its test framework. The suite contains 600+ tests covering the API, server utilities, database helpers, shared schemas, and frontend components.
 
 ```bash
 # Run the full test suite (canonical command)
@@ -187,27 +183,17 @@ bun run test:watch
 bun run test:coverage
 ```
 
-These invoke `vitest run --pool=forks`, which resolves Nuxt's `~~/` and `~/`
-path aliases via `vitest.config.ts` and runs `tests/setup.ts` as a setup file
-to populate in-memory SQLite databases and Microsoft OAuth2 env vars.
+These invoke `vitest run --pool=forks`, which resolves Nuxt's `~~/` and `~/` path aliases via `vitest.config.ts` and runs `tests/setup.ts` as a setup file to populate in-memory SQLite databases and Microsoft OAuth2 env vars.
 
 ### About `bun test`
 
-Bun's native test runner (`bun test`) cannot resolve Nuxt's `~~/` and `~/`
-path aliases, and the test files import their assertions from `vitest` rather
-than `bun:test`. Running `bun test` would therefore produce dozens of
-"Cannot find module '~~/...'" errors.
+Bun's native test runner (`bun test`) cannot resolve Nuxt's `~~/` and `~/` path aliases, and the test files import their assertions from `vitest` rather than `bun:test`. Running `bun test` would therefore produce dozens of "Cannot find module '~~/...'" errors.
 
-To avoid confusion, `bunfig.toml` scopes `bun test` to a single shim
-(`bun-shim/shim.test.ts`) that prints guidance directing you to run
-`bun run test` instead. The shim exits successfully so `bun test` never
-appears to fail.
+To avoid confusion, `bunfig.toml` scopes `bun test` to a single shim (`bun-shim/shim.test.ts`) that prints guidance directing you to run `bun run test` instead. The shim exits successfully so `bun test` never appears to fail.
 
 ### Legacy test script
 
-`tests/index.js` is a legacy manual test runner invoked via
-`node --env-file=.env tests/index.js`. It is not part of the Vitest suite and
-is rarely used.
+`tests/index.js` is a legacy manual test runner invoked via `node --env-file=.env tests/index.js`. It is not part of the Vitest suite and is rarely used.
 
 ## First Login Flow
 
@@ -226,13 +212,13 @@ Once the server is running, follow these steps to log in for the first time:
 New users are assigned the `participant` role by default. To elevate your permissions for development:
 
 1. Open the SQLite database directly:
-   ```bash
-   sqlite3 database/basishacks.sqlite
-   ```
+    ```bash
+    sqlite3 database/basishacks.sqlite
+    ```
 2. Update your user's role:
-   ```sql
-   UPDATE users SET role = 'admin' WHERE email = 'your@basischina.com';
-   ```
+    ```sql
+    UPDATE users SET role = 'admin' WHERE email = 'your@basischina.com';
+    ```
 3. Refresh the browser — you should now have access to admin features and the developer portal.
 
 ## Verify Everything Works

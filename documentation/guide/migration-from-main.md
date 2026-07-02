@@ -39,20 +39,21 @@ node .output/server/index.mjs   # Node.js runtime (uses better-sqlite3)
 If you have an existing database from the `main` branch:
 
 1. **Back up the database** (recommended):
-   ```bash
-   cp database/basishacks.sqlite database/basishacks.sqlite.bak
-   ```
+
+    ```bash
+    cp database/basishacks.sqlite database/basishacks.sqlite.bak
+    ```
 
 2. **Switch to the new branch and start the server** — the `init-database.ts` plugin automatically:
-   - Applies pending Drizzle migrations
-   - Runs `migrateLegacySchema()` to add any missing tables (`seasons`, `team_awards`, `peer_voting_scores`, `user_past_teams`) and columns
-   - Preserves all existing data
+    - Applies pending Drizzle migrations
+    - Runs `migrateLegacySchema()` to add any missing tables (`seasons`, `team_awards`, `peer_voting_scores`, `user_past_teams`) and columns
+    - Preserves all existing data
 
 3. **Verify startup** — check the server logs for:
-   ```
-   [Nitro] Database plugin loaded with N tables
-   Listening on http://[::]:3000
-   ```
+    ```
+    [Nitro] Database plugin loaded with N tables
+    Listening on http://[::]:3000
+    ```
 
 No manual SQL intervention is required.
 
@@ -61,7 +62,7 @@ No manual SQL intervention is required.
 The following credentials were previously hardcoded and are now read from environment variables. Add them to your `.env`:
 
 | Variable | Purpose | Previously hardcoded as |
-|----------|---------|------------------------|
+| --- | --- | --- |
 | `MICROSOFT_TENANT_ID` | Microsoft Entra ID tenant ID | `cbc6e1e2-a6bb-4002-bbdc-6da892a051a7` |
 | `MICROSOFT_CLIENT_ID` | Microsoft Entra ID application (client) ID | `868b989e-6574-4795-bcfb-8db37bee1c37` |
 | `ONSITE_LOGIN_CLIENT_ID` | OAuth2 client_id used for the onsite login flow | `97e435f4-17e8-42ef-9b12-9684fd656de9` |

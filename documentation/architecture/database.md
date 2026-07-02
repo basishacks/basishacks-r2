@@ -14,7 +14,7 @@ basishacks uses SQLite (`better-sqlite3` with WAL mode) for both local developme
 The hackathon table always has exactly one row (`id = 1`) that controls the global event state.
 
 | Column | Type | Description |
-|--------|------|-------------|
+| --- | --- | --- |
 | `id` | `INTEGER PRIMARY KEY CHECK (id = 1)` | Always 1 |
 | `status` | `TEXT` | One of: `not_started`, `in_progress`, `voting`, `finished`, `paused` |
 | `voting_enabled` | `INTEGER` | Whether peer voting is enabled |
@@ -34,27 +34,27 @@ The hackathon table always has exactly one row (`id = 1`) that controls the glob
 
 ### `teams`
 
-| Column | Type | Description |
-|--------|------|-------------|
-| `id` | `INTEGER PRIMARY KEY AUTOINCREMENT` | Team ID |
-| `name` | `TEXT NOT NULL` | Team name |
-| `pathway` | `TEXT` | `junior`, `senior`, or `NULL` |
-| `score` | `INTEGER` | Final score (out of 100) |
-| `rank` | `INTEGER` | 1-based ranking |
-| `project_name` | `TEXT NOT NULL DEFAULT ''` | Submitted project name |
-| `project_description` | `TEXT NOT NULL DEFAULT ''` | Project description |
-| `project_demo_url` | `TEXT` | Demo URL |
-| `project_repo_url` | `TEXT` | Repository URL |
-| `project_submitted` | `INTEGER NOT NULL DEFAULT 0` | Whether project is submitted |
-| `sourcing` | `TEXT NOT NULL DEFAULT ''` | Sourcing information |
-| `season_id` | `INTEGER NOT NULL` | FK to `seasons.id` |
+| Column                | Type                                | Description                   |
+| --------------------- | ----------------------------------- | ----------------------------- |
+| `id`                  | `INTEGER PRIMARY KEY AUTOINCREMENT` | Team ID                       |
+| `name`                | `TEXT NOT NULL`                     | Team name                     |
+| `pathway`             | `TEXT`                              | `junior`, `senior`, or `NULL` |
+| `score`               | `INTEGER`                           | Final score (out of 100)      |
+| `rank`                | `INTEGER`                           | 1-based ranking               |
+| `project_name`        | `TEXT NOT NULL DEFAULT ''`          | Submitted project name        |
+| `project_description` | `TEXT NOT NULL DEFAULT ''`          | Project description           |
+| `project_demo_url`    | `TEXT`                              | Demo URL                      |
+| `project_repo_url`    | `TEXT`                              | Repository URL                |
+| `project_submitted`   | `INTEGER NOT NULL DEFAULT 0`        | Whether project is submitted  |
+| `sourcing`            | `TEXT NOT NULL DEFAULT ''`          | Sourcing information          |
+| `season_id`           | `INTEGER NOT NULL`                  | FK to `seasons.id`            |
 
 ### `team_scores`
 
 Stores judge scores for each team. Each judge can score a team exactly once.
 
 | Column | Type | Description |
-|--------|------|-------------|
+| --- | --- | --- |
 | `id` | `INTEGER PRIMARY KEY AUTOINCREMENT` | Score ID |
 | `team_id` | `INTEGER NOT NULL` | FK to `teams.id` |
 | `judge_user_id` | `INTEGER NOT NULL` | FK to `users.id` |
@@ -66,7 +66,7 @@ Stores judge scores for each team. Each judge can score a team exactly once.
 ### `users`
 
 | Column | Type | Description |
-|--------|------|-------------|
+| --- | --- | --- |
 | `id` | `INTEGER PRIMARY KEY AUTOINCREMENT` | User ID |
 | `email` | `TEXT NOT NULL UNIQUE` | User email |
 | `role` | `TEXT NOT NULL DEFAULT 'participant'` | Space-separated permission string |
@@ -77,56 +77,54 @@ Stores judge scores for each team. Each judge can score a team exactly once.
 | `profile_theme` | `TEXT` | Profile theme as `"mode\|value"` |
 | `profile_picture` | `TEXT` | Profile picture URL or identifier |
 
-::: warning
-The `role` column originally had a `CHECK` constraint limiting it to `participant`, `judge`, or `admin`. This was removed via `migration-permissions.sql` to support space-separated permission strings such as `"participant portal.users.view portal.teams.view"`.
-:::
+::: warning The `role` column originally had a `CHECK` constraint limiting it to `participant`, `judge`, or `admin`. This was removed via `migration-permissions.sql` to support space-separated permission strings such as `"participant portal.users.view portal.teams.view"`. :::
 
 ### `ballots`
 
 Each user has exactly one ballot for peer voting.
 
-| Column | Type | Description |
-|--------|------|-------------|
-| `id` | `INTEGER PRIMARY KEY AUTOINCREMENT` | Ballot ID |
-| `user_id` | `INTEGER NOT NULL` | FK to `users.id` (unique) |
-| `reasoning` | `TEXT` | Voter's reasoning |
-| `submitted` | `INTEGER NOT NULL DEFAULT 0` | Whether ballot is submitted |
+| Column      | Type                                | Description                 |
+| ----------- | ----------------------------------- | --------------------------- |
+| `id`        | `INTEGER PRIMARY KEY AUTOINCREMENT` | Ballot ID                   |
+| `user_id`   | `INTEGER NOT NULL`                  | FK to `users.id` (unique)   |
+| `reasoning` | `TEXT`                              | Voter's reasoning           |
+| `submitted` | `INTEGER NOT NULL DEFAULT 0`        | Whether ballot is submitted |
 
 ### `ballot_scores`
 
 Individual project scores within a ballot. Scores must be 1–5 or null.
 
-| Column | Type | Description |
-|--------|------|-------------|
-| `id` | `INTEGER PRIMARY KEY AUTOINCREMENT` | Score ID |
-| `ballot_id` | `INTEGER NOT NULL` | FK to `ballots.id` (ON DELETE CASCADE) |
-| `project_id` | `INTEGER NOT NULL` | FK to `teams.id` |
-| `score` | `INTEGER` | 1, 2, 3, 4, 5, or NULL |
+| Column       | Type                                | Description                            |
+| ------------ | ----------------------------------- | -------------------------------------- |
+| `id`         | `INTEGER PRIMARY KEY AUTOINCREMENT` | Score ID                               |
+| `ballot_id`  | `INTEGER NOT NULL`                  | FK to `ballots.id` (ON DELETE CASCADE) |
+| `project_id` | `INTEGER NOT NULL`                  | FK to `teams.id`                       |
+| `score`      | `INTEGER`                           | 1, 2, 3, 4, 5, or NULL                 |
 
 **Unique constraint**: `(ballot_id, project_id)`
 
 ### `oauth2_applications`
 
-| Column | Type | Description |
-|--------|------|-------------|
-| `client_id` | `TEXT PRIMARY KEY` | UUID-based application ID |
-| `client_secret` | `TEXT NOT NULL` | Space-separated SHA-256 hashes |
-| `permissions` | `TEXT` | Space-separated allowed scopes |
-| `redirect_uris` | `TEXT` | Space-separated redirect URIs |
-| `name` | `TEXT NOT NULL` | Application display name |
-| `description` | `TEXT` | Application description |
-| `proxy_microsoft` | `INTEGER NOT NULL DEFAULT 0` | Whether app proxies MS Graph |
-| `type` | `TEXT` | `first` or `third` |
-| `profile_picture` | `TEXT` | Application icon |
-| `owner_id` | `INTEGER` | FK to `users.id` |
+| Column            | Type                         | Description                    |
+| ----------------- | ---------------------------- | ------------------------------ |
+| `client_id`       | `TEXT PRIMARY KEY`           | UUID-based application ID      |
+| `client_secret`   | `TEXT NOT NULL`              | Space-separated SHA-256 hashes |
+| `permissions`     | `TEXT`                       | Space-separated allowed scopes |
+| `redirect_uris`   | `TEXT`                       | Space-separated redirect URIs  |
+| `name`            | `TEXT NOT NULL`              | Application display name       |
+| `description`     | `TEXT`                       | Application description        |
+| `proxy_microsoft` | `INTEGER NOT NULL DEFAULT 0` | Whether app proxies MS Graph   |
+| `type`            | `TEXT`                       | `first` or `third`             |
+| `profile_picture` | `TEXT`                       | Application icon               |
+| `owner_id`        | `INTEGER`                    | FK to `users.id`               |
 
 ### `seasons`
 
-| Column | Type | Description |
-|--------|------|-------------|
-| `id` | `INTEGER PRIMARY KEY AUTOINCREMENT` | Season ID |
-| `name` | `TEXT NOT NULL UNIQUE` | Season name |
-| `is_active` | `INTEGER NOT NULL DEFAULT 0` | Only one season can be active (CHECK 0 or 1) |
+| Column      | Type                                | Description                                  |
+| ----------- | ----------------------------------- | -------------------------------------------- |
+| `id`        | `INTEGER PRIMARY KEY AUTOINCREMENT` | Season ID                                    |
+| `name`      | `TEXT NOT NULL UNIQUE`              | Season name                                  |
+| `is_active` | `INTEGER NOT NULL DEFAULT 0`        | Only one season can be active (CHECK 0 or 1) |
 
 A partial unique index ensures at most one active season:
 
@@ -138,8 +136,8 @@ CREATE UNIQUE INDEX idx_seasons_active ON seasons(is_active) WHERE is_active = 1
 
 Junction table tracking which teams a user has belonged to historically.
 
-| Column | Type | Description |
-|--------|------|-------------|
+| Column    | Type               | Description                          |
+| --------- | ------------------ | ------------------------------------ |
 | `user_id` | `INTEGER NOT NULL` | FK to `users.id` (ON DELETE CASCADE) |
 | `team_id` | `INTEGER NOT NULL` | FK to `teams.id` (ON DELETE CASCADE) |
 
@@ -151,37 +149,35 @@ All database access goes through `event.context.drizzle` (a Drizzle ORM instance
 
 ```ts
 // Read a single row via the users helper
-import { getUser } from '~~/server/utils/database/users'
-const user = await getUser(event, userId)
+import { getUser } from "~~/server/utils/database/users";
+const user = await getUser(event, userId);
 
 // Read multiple rows via the teams helper
-import { getTeamsBySeason } from '~~/server/utils/database/teams'
-const teams = await getTeamsBySeason(event, seasonId)
+import { getTeamsBySeason } from "~~/server/utils/database/teams";
+const teams = await getTeamsBySeason(event, seasonId);
 
 // Write via the users helper
-import { updateUserName } from '~~/server/utils/database/users'
-await updateUserName(event, userId, name)
+import { updateUserName } from "~~/server/utils/database/users";
+await updateUserName(event, userId, name);
 ```
 
 For queries not covered by a helper, use the Drizzle instance directly:
 
 ```ts
-import { users } from '~~/server/database/schema'
+import { users } from "~~/server/database/schema";
 
-const drizzle = event.context.drizzle
-const user = await drizzle.select().from(users).where(eq(users.id, userId)).get()
+const drizzle = event.context.drizzle;
+const user = await drizzle.select().from(users).where(eq(users.id, userId)).get();
 ```
 
-::: tip
-Always use Drizzle's parameterized query builders. Never interpolate user input directly into SQL strings.
-:::
+::: tip Always use Drizzle's parameterized query builders. Never interpolate user input directly into SQL strings. :::
 
 ## Per-table Helpers
 
 Each table has a dedicated helper module in `server/utils/database/`:
 
 | File | Key Functions |
-|------|--------------|
+| --- | --- |
 | `users.ts` | `getUser`, `getUserByEmail`, `addCodeToUser` (legacy), `updateUserName`, `updateUserProfileTheme` |
 | `teams.ts` | Team CRUD, project submission |
 | `members.ts` | Team member management |
@@ -197,15 +193,15 @@ TypeScript types in `shared/database.d.ts` must stay in sync with the SQL schema
 
 ```ts
 interface User {
-  id: number
-  email: string
-  role: string
-  name: string | null
-  team_id: number | null
-  login_code: string | null
-  login_expiry: number | null
-  profile_theme: string | null
-  profile_picture: string | null
+    id: number;
+    email: string;
+    role: string;
+    name: string | null;
+    team_id: number | null;
+    login_code: string | null;
+    login_expiry: number | null;
+    profile_theme: string | null;
+    profile_picture: string | null;
 }
 ```
 
@@ -213,13 +209,13 @@ API response types in `shared/responses.d.ts` represent the public-facing shape 
 
 ```ts
 interface APIUser {
-  id: number
-  email: string
-  role: string
-  name: string | null
-  team_id: number | null
-  profile_theme: ProfileTheme | null  // parsed from "mode|value"
-  profile_picture: string | null
+    id: number;
+    email: string;
+    role: string;
+    name: string | null;
+    team_id: number | null;
+    profile_theme: ProfileTheme | null; // parsed from "mode|value"
+    profile_picture: string | null;
 }
 ```
 
@@ -244,9 +240,9 @@ This custom runner is used because `drizzle-kit migrate` does not work with `bun
 
 ```ts
 // server/database/index.ts
-import { createAndMigrateDatabase } from './migrate'
+import { createAndMigrateDatabase } from "./migrate";
 // ...
-createAndMigrateDatabase(sqlite)
+createAndMigrateDatabase(sqlite);
 ```
 
 ### Migration file format
@@ -281,17 +277,17 @@ In practice, the dev/prod server applies migrations automatically when `createDr
 
 `migrateLegacySchema()` in `server/database/migrate.ts` brings databases created from older `sql/archive/init.sql` schemas up to date without dropping data. It adds missing tables and columns:
 
-| Missing Table / Column | Action |
-|------------------------|--------|
-| `seasons` table | Creates table + unique name index |
-| `team_awards` table | Creates table |
-| `peer_voting_scores` table | Creates table |
-| `user_past_teams` table | Creates table with composite PK |
-| `hackathon.*` timestamp/status columns | `ALTER TABLE ... ADD COLUMN INTEGER DEFAULT 0/NULL` |
-| `teams.season_id` | `ALTER TABLE ... ADD COLUMN INTEGER DEFAULT 1 NOT NULL` |
-| `teams.sourcing` | `ALTER TABLE ... ADD COLUMN TEXT DEFAULT '' NOT NULL` |
-| `team_scores.season_id` | `ALTER TABLE ... ADD COLUMN INTEGER` |
-| `oauth2_applications.owner_id` | `ALTER TABLE ... ADD COLUMN INTEGER` |
+| Missing Table / Column                 | Action                                                  |
+| -------------------------------------- | ------------------------------------------------------- |
+| `seasons` table                        | Creates table + unique name index                       |
+| `team_awards` table                    | Creates table                                           |
+| `peer_voting_scores` table             | Creates table                                           |
+| `user_past_teams` table                | Creates table with composite PK                         |
+| `hackathon.*` timestamp/status columns | `ALTER TABLE ... ADD COLUMN INTEGER DEFAULT 0/NULL`     |
+| `teams.season_id`                      | `ALTER TABLE ... ADD COLUMN INTEGER DEFAULT 1 NOT NULL` |
+| `teams.sourcing`                       | `ALTER TABLE ... ADD COLUMN TEXT DEFAULT '' NOT NULL`   |
+| `team_scores.season_id`                | `ALTER TABLE ... ADD COLUMN INTEGER`                    |
+| `oauth2_applications.owner_id`         | `ALTER TABLE ... ADD COLUMN INTEGER`                    |
 
 ### Seeding
 
@@ -300,7 +296,7 @@ After migrations, `seedHackathon()` ensures the `hackathon` singleton row exists
 ### Notable migrations
 
 | Migration | Description |
-|-----------|-------------|
+| --- | --- |
 | `migration-permissions.sql` | Drops the `CHECK` constraint on `users.role` to allow space-separated permission strings |
 | `migration-2026-05-20-owner-id.sql` | Adds `owner_id` column to `oauth2_applications` |
 | `migration-2026-06-02-18-13Z.sql` | Adds `sourcing` column to `teams` |
