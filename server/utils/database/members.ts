@@ -1,109 +1,93 @@
-import type { H3Event } from 'h3'
-import { eq, and, or, asc, isNull } from 'drizzle-orm'
-import { users, teams, userPastTeams } from '~~/server/database/schema'
+import type { H3Event } from "h3";
+import { eq, and, or, asc, isNull } from "drizzle-orm";
+import { users, teams, userPastTeams } from "~~/server/database/schema";
 
 export async function getTeamMembers(event: H3Event, teamID: number): Promise<User[]> {
-  return event.context.drizzle
-    .select()
-    .from(users)
-    .where(eq(users.team_id, teamID))
-    .all()
+    return event.context.drizzle.select().from(users).where(eq(users.team_id, teamID)).all();
 }
 
 export async function getAllTeamMembers(event: H3Event, teamID: number): Promise<User[]> {
-  const current = await event.context.drizzle
-    .select()
-    .from(users)
-    .where(eq(users.team_id, teamID))
-    .orderBy(asc(users.id))
-    .all()
+    const current = await event.context.drizzle
+        .select()
+        .from(users)
+        .where(eq(users.team_id, teamID))
+        .orderBy(asc(users.id))
+        .all();
 
-  const pastRows = await event.context.drizzle
-    .select()
-    .from(users)
-    .innerJoin(userPastTeams, eq(users.id, userPastTeams.user_id))
-    .where(eq(userPastTeams.team_id, teamID))
-    .orderBy(asc(users.id))
-    .all()
-  const past = pastRows.map((r: { users: User }) => ({ ...r.users }))
+    const pastRows = await event.context.drizzle
+        .select()
+        .from(users)
+        .innerJoin(userPastTeams, eq(users.id, userPastTeams.user_id))
+        .where(eq(userPastTeams.team_id, teamID))
+        .orderBy(asc(users.id))
+        .all();
+    const past = pastRows.map((r: { users: User }) => ({ ...r.users }));
 
-  const seen = new Map<number, User>()
-  for (const user of current) {
-    seen.set(user.id, user)
-  }
-  for (const user of past) {
-    if (!seen.has(user.id)) {
-      seen.set(user.id, user)
+    const seen = new Map<number, User>();
+    for (const user of current) {
+        seen.set(user.id, user);
     }
-  }
+    for (const user of past) {
+        if (!seen.has(user.id)) {
+            seen.set(user.id, user);
+        }
+    }
 
-  return Array.from(seen.values()).sort((a, b) => a.id - b.id)
+    return Array.from(seen.values()).sort((a, b) => a.id - b.id);
 }
 
 export async function getUserPastTeams(event: H3Event, userID: number): Promise<Team[]> {
-  const rows = event.context.drizzle
-    .select()
-    .from(teams)
-    .innerJoin(userPastTeams, eq(teams.id, userPastTeams.team_id))
-    .where(eq(userPastTeams.user_id, userID))
-    .orderBy(asc(teams.id))
-    .all()
-  return rows.map((r: { teams: Team }) => ({ ...r.teams }))
+    const rows = event.context.drizzle
+        .select()
+        .from(teams)
+        .innerJoin(userPastTeams, eq(teams.id, userPastTeams.team_id))
+        .where(eq(userPastTeams.user_id, userID))
+        .orderBy(asc(teams.id))
+        .all();
+    return rows.map((r: { teams: Team }) => ({ ...r.teams }));
 }
 
-export async function addUserPastTeam(
-  event: H3Event,
-  userID: number,
-  teamID: number
-) {
-  event.context.drizzle
-    .insert(userPastTeams)
-    .values({ user_id: userID, team_id: teamID })
-    .onConflictDoNothing()
-    .run()
+export async function addUserPastTeam(event: H3Event, userID: number, teamID: number) {
+    event.context.drizzle
+        .insert(userPastTeams)
+        .values({ user_id: userID, team_id: teamID })
+        .onConflictDoNothing()
+        .run();
 }
 
-export async function removeTeamMember(
-  event: H3Event,
-  teamID: number,
-  userID: number
-) {
-  event.context.drizzle.transaction((tx) => {
-    const result = tx
-      .update(users)
-      .set({ team_id: null })
-      .where(and(eq(users.id, userID), eq(users.team_id, teamID)))
-      .run()
+export async function removeTeamMember(event: H3Event, teamID: number, userID: number) {
+    event.context.drizzle.transaction((tx) => {
+        const result = tx
+            .update(users)
+            .set({ team_id: null })
+            .where(and(eq(users.id, userID), eq(users.team_id, teamID)))
+            .run();
+
+        if (result.changes === 0) {
+            throw createError({
+                status: 404,
+                message: "User not found or not in team",
+            });
+        }
+
+        tx.insert(userPastTeams)
+            .values({ user_id: userID, team_id: teamID })
+            .onConflictDoNothing()
+            .run();
+    });
+}
+
+export async function addTeamMember(event: H3Event, teamID: number, userID: number) {
+    const result = event.context.drizzle
+        .update(users)
+        .set({ team_id: teamID })
+        .where(and(eq(users.id, userID), isNull(users.team_id)))
+        .run();
 
     if (result.changes === 0) {
-      throw createError({
-        status: 404,
-        message: 'User not found or not in team',
-      })
+        throw createError({
+            status: 404,
+            message: "User not found or already in a team",
+        });
     }
-
-    tx.insert(userPastTeams)
-      .values({ user_id: userID, team_id: teamID })
-      .onConflictDoNothing()
-      .run()
-  })
-}
-
-export async function addTeamMember(
-  event: H3Event,
-  teamID: number,
-  userID: number
-) {
-  const result = event.context.drizzle
-    .update(users)
-    .set({ team_id: teamID })
-    .where(and(eq(users.id, userID), isNull(users.team_id)))
-    .run()
-
-  if (result.changes === 0) {
-    throw createError({
-      status: 404,
-      message: 'User not found or already in a team',
-    })
-  }
 }

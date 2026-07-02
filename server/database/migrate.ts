@@ -146,30 +146,32 @@ export function seedHackathon(sqlite: PortableSqlite) {
  * @param sqlite - SQLite database instance (bun:sqlite or better-sqlite3)
  */
 export function seedOAuth2ApplicationRedirectUri(sqlite: PortableSqlite) {
-    const clientId = process.env.ONSITE_LOGIN_CLIENT_ID
-    if (!clientId) return
+    const clientId = process.env.ONSITE_LOGIN_CLIENT_ID;
+    if (!clientId) return;
 
-    const origin = process.env.CURRENT_URL_ORIGIN || 'http://localhost:3000'
-    const redirectPath = process.env.REDIRECT_URI || 'api/oauth2/dccallback'
-    const redirectUri = `${origin}/${redirectPath}`
+    const origin = process.env.CURRENT_URL_ORIGIN || "http://localhost:3000";
+    const redirectPath = process.env.REDIRECT_URI || "api/oauth2/dccallback";
+    const redirectUri = `${origin}/${redirectPath}`;
 
     const app = sqlite
-        .prepare('SELECT redirect_uris FROM oauth2_applications WHERE client_id = ?')
-        .get<{ redirect_uris: string | null }>(clientId)
+        .prepare("SELECT redirect_uris FROM oauth2_applications WHERE client_id = ?")
+        .get<{ redirect_uris: string | null }>(clientId);
 
     if (!app) {
-        console.log(`[Nitro] Onsite login application ${clientId} not found; skipping redirect URI seed`)
-        return
+        console.log(
+            `[Nitro] Onsite login application ${clientId} not found; skipping redirect URI seed`,
+        );
+        return;
     }
 
-    const existing = app.redirect_uris ? app.redirect_uris.split(' ').filter((u) => u) : []
-    if (existing.includes(redirectUri)) return
+    const existing = app.redirect_uris ? app.redirect_uris.split(" ").filter((u) => u) : [];
+    if (existing.includes(redirectUri)) return;
 
-    const updated = [...existing, redirectUri].join(' ')
+    const updated = [...existing, redirectUri].join(" ");
     sqlite
-        .prepare('UPDATE oauth2_applications SET redirect_uris = ? WHERE client_id = ?')
-        .run(updated, clientId)
-    console.log(`[Nitro] Added redirect URI to onsite login application: ${redirectUri}`)
+        .prepare("UPDATE oauth2_applications SET redirect_uris = ? WHERE client_id = ?")
+        .run(updated, clientId);
+    console.log(`[Nitro] Added redirect URI to onsite login application: ${redirectUri}`);
 }
 
 function tableExists(sqlite: PortableSqlite, table: string): boolean {

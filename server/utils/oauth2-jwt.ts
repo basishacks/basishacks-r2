@@ -1,20 +1,20 @@
-import type { H3Event, EventHandler } from 'h3'
-import { jwtVerify } from 'jose'
-import { getUser } from './database/users'
+import type { H3Event, EventHandler } from "h3";
+import { jwtVerify } from "jose";
+import { getUser } from "./database/users";
 
 // ------------------------------------------------------------------
 // Config
 // ------------------------------------------------------------------
 
 function getJWTSecret(): Uint8Array {
-  const secret = process.env.NUXT_OAUTH2_JWT_SECRET
-  if (!secret) {
-    throw createError({
-      statusCode: 500,
-      message: 'NUXT_OAUTH2_JWT_SECRET is not set',
-    })
-  }
-  return new TextEncoder().encode(secret)
+    const secret = process.env.NUXT_OAUTH2_JWT_SECRET;
+    if (!secret) {
+        throw createError({
+            statusCode: 500,
+            message: "NUXT_OAUTH2_JWT_SECRET is not set",
+        });
+    }
+    return new TextEncoder().encode(secret);
 }
 
 // ------------------------------------------------------------------
@@ -22,12 +22,12 @@ function getJWTSecret(): Uint8Array {
 // ------------------------------------------------------------------
 
 export interface OAuth2JWTPayload {
-  sub?: string
-  user_id?: number
-  client_id?: string
-  redirect_uri?: string
-  scope?: string
-  [key: string]: any
+    sub?: string;
+    user_id?: number;
+    client_id?: string;
+    redirect_uri?: string;
+    scope?: string;
+    [key: string]: any;
 }
 
 /**
@@ -35,26 +35,26 @@ export interface OAuth2JWTPayload {
  * Throws 401 errors for invalid or expired tokens.
  */
 export async function verifyAccessToken(token: string): Promise<OAuth2JWTPayload> {
-  if (!token) {
-    throw createError({
-      statusCode: 401,
-      statusMessage: 'invalid_token',
-      message: 'Empty access token',
-    })
-  }
+    if (!token) {
+        throw createError({
+            statusCode: 401,
+            statusMessage: "invalid_token",
+            message: "Empty access token",
+        });
+    }
 
-  try {
-    const { payload } = await jwtVerify(token, getJWTSecret(), {
-      issuer: 'basishacks',
-    })
-    return payload as OAuth2JWTPayload
-  } catch {
-    throw createError({
-      statusCode: 401,
-      statusMessage: 'invalid_token',
-      message: 'Invalid or expired access token',
-    })
-  }
+    try {
+        const { payload } = await jwtVerify(token, getJWTSecret(), {
+            issuer: "basishacks",
+        });
+        return payload as OAuth2JWTPayload;
+    } catch {
+        throw createError({
+            statusCode: 401,
+            statusMessage: "invalid_token",
+            message: "Invalid or expired access token",
+        });
+    }
 }
 
 // ------------------------------------------------------------------
@@ -66,25 +66,25 @@ export async function verifyAccessToken(token: string): Promise<OAuth2JWTPayload
  * Throws 401 if the header is missing or malformed.
  */
 export function extractBearerToken(event: H3Event): string {
-  const authHeader = getHeader(event, 'authorization')
-  if (!authHeader || !authHeader.toLowerCase().startsWith('bearer ')) {
-    throw createError({
-      statusCode: 401,
-      statusMessage: 'invalid_token',
-      message: 'Missing or invalid Authorization header',
-    })
-  }
+    const authHeader = getHeader(event, "authorization");
+    if (!authHeader || !authHeader.toLowerCase().startsWith("bearer ")) {
+        throw createError({
+            statusCode: 401,
+            statusMessage: "invalid_token",
+            message: "Missing or invalid Authorization header",
+        });
+    }
 
-  const token = authHeader.slice(7).trim()
-  if (!token) {
-    throw createError({
-      statusCode: 401,
-      statusMessage: 'invalid_token',
-      message: 'Empty access token',
-    })
-  }
+    const token = authHeader.slice(7).trim();
+    if (!token) {
+        throw createError({
+            statusCode: 401,
+            statusMessage: "invalid_token",
+            message: "Empty access token",
+        });
+    }
 
-  return token
+    return token;
 }
 
 // ------------------------------------------------------------------
@@ -96,8 +96,8 @@ export function extractBearerToken(event: H3Event): string {
  * Returns the decoded JWT payload.
  */
 export async function verifyOAuth2JWT(event: H3Event): Promise<OAuth2JWTPayload> {
-  const token = extractBearerToken(event)
-  return await verifyAccessToken(token)
+    const token = extractBearerToken(event);
+    return await verifyAccessToken(token);
 }
 
 // ------------------------------------------------------------------
@@ -108,25 +108,22 @@ export async function verifyOAuth2JWT(event: H3Event): Promise<OAuth2JWTPayload>
  * Parse a space-separated scope string into an array.
  */
 export function parseJWScopes(scope: unknown): string[] {
-  if (typeof scope !== 'string') return []
-  return scope.split(' ').filter(Boolean)
+    if (typeof scope !== "string") return [];
+    return scope.split(" ").filter(Boolean);
 }
 
 /**
  * Check if the given scopes include every required scope.
  */
-export function requireScopes(
-  grantedScopes: string[],
-  requiredScopes: string[]
-): void {
-  const missing = requiredScopes.filter((s) => !grantedScopes.includes(s))
-  if (missing.length > 0) {
-    throw createError({
-      statusCode: 403,
-      statusMessage: 'insufficient_scope',
-      message: `Missing required scope(s): ${missing.join(', ')}`,
-    })
-  }
+export function requireScopes(grantedScopes: string[], requiredScopes: string[]): void {
+    const missing = requiredScopes.filter((s) => !grantedScopes.includes(s));
+    if (missing.length > 0) {
+        throw createError({
+            statusCode: 403,
+            statusMessage: "insufficient_scope",
+            message: `Missing required scope(s): ${missing.join(", ")}`,
+        });
+    }
 }
 
 // ------------------------------------------------------------------
@@ -138,24 +135,24 @@ export function requireScopes(
  * Throws 401 if the payload has no valid user id, 404 if user not found.
  */
 export async function resolveOAuth2User(event: H3Event, payload: OAuth2JWTPayload) {
-  const userId = Number(payload.user_id ?? payload.sub)
-  if (!userId || Number.isNaN(userId)) {
-    throw createError({
-      statusCode: 401,
-      statusMessage: 'invalid_token',
-      message: 'Token missing user identification',
-    })
-  }
+    const userId = Number(payload.user_id ?? payload.sub);
+    if (!userId || Number.isNaN(userId)) {
+        throw createError({
+            statusCode: 401,
+            statusMessage: "invalid_token",
+            message: "Token missing user identification",
+        });
+    }
 
-  const user = await getUser(event, userId)
-  if (!user) {
-    throw createError({
-      statusCode: 404,
-      message: 'User not found',
-    })
-  }
+    const user = await getUser(event, userId);
+    if (!user) {
+        throw createError({
+            statusCode: 404,
+            message: "User not found",
+        });
+    }
 
-  return user
+    return user;
 }
 
 // ------------------------------------------------------------------
@@ -163,23 +160,23 @@ export async function resolveOAuth2User(event: H3Event, payload: OAuth2JWTPayloa
 // ------------------------------------------------------------------
 
 export interface OAuth2JWTWrapperOptions {
-  /**
-   * List of scopes that the token must have.
-   * If empty, no scope check is performed.
-   */
-  requiredScopes?: string[]
+    /**
+     * List of scopes that the token must have.
+     * If empty, no scope check is performed.
+     */
+    requiredScopes?: string[];
 
-  /**
-   * Whether to load the user from the database and attach it to event.context.
-   * Default: false
-   */
-  loadUser?: boolean
+    /**
+     * Whether to load the user from the database and attach it to event.context.
+     * Default: false
+     */
+    loadUser?: boolean;
 }
 
 export interface OAuth2JWTContext {
-  payload: OAuth2JWTPayload
-  scopes: string[]
-  user?: User
+    payload: OAuth2JWTPayload;
+    scopes: string[];
+    user?: User;
 }
 
 // ------------------------------------------------------------------
@@ -203,26 +200,26 @@ export interface OAuth2JWTContext {
  *   }, { requiredScopes: ['profile'], loadUser: true })
  */
 export function withOAuth2JWT(
-  handler: (event: H3Event) => any,
-  options: OAuth2JWTWrapperOptions = {}
+    handler: (event: H3Event) => any,
+    options: OAuth2JWTWrapperOptions = {},
 ): EventHandler {
-  return async (event) => {
-    const payload = await verifyOAuth2JWT(event)
-    const scopes = parseJWScopes(payload.scope)
+    return async (event) => {
+        const payload = await verifyOAuth2JWT(event);
+        const scopes = parseJWScopes(payload.scope);
 
-    if (options.requiredScopes && options.requiredScopes.length > 0) {
-      requireScopes(scopes, options.requiredScopes)
-    }
+        if (options.requiredScopes && options.requiredScopes.length > 0) {
+            requireScopes(scopes, options.requiredScopes);
+        }
 
-    const ctx: OAuth2JWTContext = { payload, scopes }
+        const ctx: OAuth2JWTContext = { payload, scopes };
 
-    if (options.loadUser) {
-      ctx.user = await resolveOAuth2User(event, payload)
-    }
+        if (options.loadUser) {
+            ctx.user = await resolveOAuth2User(event, payload);
+        }
 
-    // @ts-ignore extend context dynamically
-    event.context.oauth2 = ctx
+        // @ts-ignore extend context dynamically
+        event.context.oauth2 = ctx;
 
-    return await handler(event)
-  }
+        return await handler(event);
+    };
 }
