@@ -238,17 +238,64 @@ Allowed modes: `url`, `emoji`, `gradient`. If the mode is unrecognized, it defau
 
 ## Migrations
 
-Migrations are managed via Drizzle Kit. The schema is defined in `server/database/schema.ts`, and migrations are generated with:
+Migrations are stored as SQL files in the `drizzle/` directory. On server startup, `server/database/migrate.ts` reads these files in lexicographic order and applies any that have not yet been recorded in the `_drizzle_migrations` tracking table.
+
+This custom runner is used because `drizzle-kit migrate` does not work with `bun:sqlite`. The runner is runtime-agnostic and works with both `bun:sqlite` and `better-sqlite3`.
+
+```ts
+// server/database/index.ts
+import { createAndMigrateDatabase } from './migrate'
+// ...
+createAndMigrateDatabase(sqlite)
+```
+
+### Migration file format
+
+Files must end in `.sql` and may contain multiple statements separated by:
+
+```sql
+--> statement-breakpoint
+```
+
+`CREATE TABLE`, `CREATE INDEX`, and `CREATE UNIQUE INDEX` statements are automatically made idempotent (`IF NOT EXISTS`) so they can safely re-run against databases created before migration tracking existed.
+
+### Generating migrations
+
+The `db:generate` script still uses Drizzle Kit to produce migration SQL from `server/database/schema.ts`:
 
 ```bash
 # Generate a migration after schema changes
 bun run db:generate
+```
 
-# Apply migrations
+### Applying migrations
+
+```bash
+# Apply pending migrations manually (uses Drizzle Kit; Bun users may prefer startup auto-migration)
 bun run db:migrate
 ```
 
-Legacy SQL migrations are archived in `sql/archive/`.
+In practice, the dev/prod server applies migrations automatically when `createDrizzleDatabase()` runs during `init-database.ts` plugin initialization.
+
+### Legacy schema repair
+
+`migrateLegacySchema()` in `server/database/migrate.ts` brings databases created from older `sql/archive/init.sql` schemas up to date without dropping data. It adds missing tables and columns:
+
+| Missing Table / Column | Action |
+|------------------------|--------|
+| `seasons` table | Creates table + unique name index |
+| `team_awards` table | Creates table |
+| `peer_voting_scores` table | Creates table |
+| `user_past_teams` table | Creates table with composite PK |
+| `hackathon.*` timestamp/status columns | `ALTER TABLE ... ADD COLUMN INTEGER DEFAULT 0/NULL` |
+| `teams.season_id` | `ALTER TABLE ... ADD COLUMN INTEGER DEFAULT 1 NOT NULL` |
+| `teams.sourcing` | `ALTER TABLE ... ADD COLUMN TEXT DEFAULT '' NOT NULL` |
+| `team_scores.season_id` | `ALTER TABLE ... ADD COLUMN INTEGER` |
+| `oauth2_applications.owner_id` | `ALTER TABLE ... ADD COLUMN INTEGER` |
+
+### Seeding
+
+After migrations, `seedHackathon()` ensures the `hackathon` singleton row exists, and `seedOAuth2ApplicationRedirectUri()` auto-registers the onsite-login redirect URI for `ONSITE_LOGIN_CLIENT_ID`.
 
 ### Notable migrations
 
