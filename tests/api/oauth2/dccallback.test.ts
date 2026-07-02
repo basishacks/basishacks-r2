@@ -134,6 +134,19 @@ describe('GET /api/oauth2/dccallback - PKCE verifier handling', () => {
     expect(deleteCookieSpy).toHaveBeenCalledWith(expect.anything(), 'pkce_verifier')
   })
 
+  it('clears the bridge_id session cookie after a successful exchange', async () => {
+    getAuthorizeSession.mockReturnValue(createMockSession())
+    mockCookies.values['bridge_id'] = 'test-bridge-id'
+    mockCookies.values['pkce_verifier'] = VERIFIER
+    mockQueryState.value = { code: 'test-code', state: 'test-state' }
+
+    exchangeAuthorizationCode.mockResolvedValue('fake-jwt-token')
+
+    await handler(createEvent())
+
+    expect(deleteCookieSpy).toHaveBeenCalledWith(expect.anything(), 'bridge_id')
+  })
+
   it('does not clear the pkce_verifier cookie when the exchange fails', async () => {
     getAuthorizeSession.mockReturnValue(createMockSession())
     mockCookies.values['bridge_id'] = 'test-bridge-id'

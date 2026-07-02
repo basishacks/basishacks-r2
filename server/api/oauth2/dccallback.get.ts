@@ -99,7 +99,8 @@ export default defineEventHandler(async (event) => {
         },
     })
 
-
+    // Authorization is complete; clear the session binding cookie
+    deleteCookie(event, 'bridge_id')
 
     const redirect = getQuery(event).redirect as string | undefined
     await sendRedirect(event, redirect || '/dashboard', 302)

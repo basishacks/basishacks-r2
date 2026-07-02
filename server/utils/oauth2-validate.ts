@@ -193,7 +193,6 @@ export function determinePostMicrosoft(event: any, session: AuthorizeSession): s
 export function completeConsentFlow(event: any, session: AuthorizeSession): string {
   generateExchangeCode(session)
   session.login_state = 'completed'
-  deleteCookie(event, 'bridge_id') // only delete after sucessful
   const separator = session.redirect_uri.includes('?') ? '&' : '?'
   const redirectParam = session.post_login_redirect
     ? `&redirect=${encodeURIComponent(session.post_login_redirect)}`
