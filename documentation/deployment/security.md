@@ -58,8 +58,8 @@ Never trust the frontend for permission checks. Always validate on the server.
 ## Microsoft Graph API
 
 - All Microsoft Graph API calls are centralized in `server/plugins/microsoft.ts` for auditability
-- The Microsoft OAuth2 configuration uses a specific Entra ID tenant (`cbc6e1e2-a6bb-4002-bbdc-6da892a051a7`)
-- Client ID and tenant are defined in `server/utils/oauth2.ts`
+- The Microsoft OAuth2 configuration reads the Entra ID tenant and client ID from the `MICROSOFT_TENANT_ID` and `MICROSOFT_CLIENT_ID` environment variables
+- Client ID and tenant are defined in `server/utils/oauth2.ts`; if either env var is missing, Microsoft Graph features are disabled gracefully
 
 ## OAuth2 Client Secret Storage
 

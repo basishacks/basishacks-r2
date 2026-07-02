@@ -34,6 +34,7 @@ export default defineConfig({
             { text: 'Getting Started', link: '/guide/getting-started' },
             { text: 'Project Overview', link: '/guide/project-overview' },
             { text: 'Environment Setup', link: '/guide/environment-setup' },
+            { text: 'Migration from main', link: '/guide/migration-from-main' },
           ],
         },
       ],

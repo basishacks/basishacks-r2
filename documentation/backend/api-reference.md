@@ -115,13 +115,19 @@ Microsoft OAuth2 callback. Exchanges the authorization code for a Microsoft toke
 
 ### GET `/api/oauth2/dccallback`
 
-basishacks connect OAuth2 callback (for the built-in first-party app).
+basishacks connect OAuth2 callback (for the built-in first-party app). Exchanges the authorization code for a JWT and establishes the user session.
 
 | Field | Details |
 |-------|---------|
 | **Auth** | None |
 | **Query** | `code`, `state` |
-| **Response** | 302 redirect to `/` with session established |
+| **Cookies** | `bridge_id` (required, binds to authorize session), `pkce_verifier` (required, PKCE code verifier set by `/api/login`) |
+| **Response** | 302 redirect to `redirect` query value or `/dashboard` with session established |
+| **Errors** | `400` if `bridge_id` cookie missing, authorize session not found, `state` mismatch, `pkce_verifier` cookie missing, or code exchange fails |
+
+::: tip PKCE verifier
+The `pkce_verifier` cookie is set by `constructOnSiteLoginURL` in `server/api/login.get.ts` and contains the `code_verifier` for the basishacks OAuth2 flow (client → basishacks). It is distinct from `session.ms_verifier`, which is the verifier for the Microsoft proxy flow (basishacks → Microsoft). The cookie is cleared immediately after the code exchange.
+:::
 
 ### GET `/api/oauth2/userinfo`
 

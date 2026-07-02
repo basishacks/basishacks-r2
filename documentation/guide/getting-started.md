@@ -67,7 +67,7 @@ npm install
 
 ## Initialize the Database
 
-The local development environment uses SQLite via `better-sqlite3` with Drizzle ORM. The database is initialized automatically by the `init-database.ts` Nitro plugin when the dev server starts.
+The local development environment uses SQLite with Drizzle ORM. The driver is selected automatically based on your runtime: `bun:sqlite` under Bun, or `better-sqlite3` under Node.js. The database is initialized automatically by the `init-database.ts` Nitro plugin when the dev server starts.
 
 To manually initialize the database:
 
@@ -161,19 +161,42 @@ The preview server runs on port 24598.
 
 ## Running Tests
 
-The project uses a simple test runner without a framework such as Vitest or Jest:
+The project uses [Vitest](https://vitest.dev) as its test framework. The suite
+contains 600+ tests covering the API, server utilities, database helpers,
+shared schemas, and frontend components.
 
 ```bash
-bun test
+# Run the full test suite (canonical command)
+bun run test
+
+# Run tests in watch mode
+bun run test:watch
+
+# Run tests with coverage
+bun run test:coverage
 ```
 
-This internally runs `node --env-file=.env tests/index.js`, which imports and executes:
+These invoke `vitest run --pool=forks`, which resolves Nuxt's `~~/` and `~/`
+path aliases via `vitest.config.ts` and runs `tests/setup.ts` as a setup file
+to populate in-memory SQLite databases and Microsoft OAuth2 env vars.
 
-- `test.oauth2.js` — OAuth2 flow tests
-- `test.microsoft.ts` — Microsoft Graph API tests (mostly commented out; requires admin-approved permissions)
-- `test.deepseek.ts` — DeepSeek API tests
+### About `bun test`
 
-Tests are simple async functions that return `true`/`false`.
+Bun's native test runner (`bun test`) cannot resolve Nuxt's `~~/` and `~/`
+path aliases, and the test files import their assertions from `vitest` rather
+than `bun:test`. Running `bun test` would therefore produce dozens of
+"Cannot find module '~~/...'" errors.
+
+To avoid confusion, `bunfig.toml` scopes `bun test` to a single shim
+(`bun-shim/shim.test.ts`) that prints guidance directing you to run
+`bun run test` instead. The shim exits successfully so `bun test` never
+appears to fail.
+
+### Legacy test script
+
+`tests/index.js` is a legacy manual test runner invoked via
+`node --env-file=.env tests/index.js`. It is not part of the Vitest suite and
+is rarely used.
 
 ## First Login Flow
 
@@ -187,7 +210,7 @@ Once the server is running, follow these steps to log in for the first time:
 
 ### Alternative Login Methods
 
-- **Microsoft OAuth2** — Click the Microsoft login button. This redirects to Microsoft Entra ID (tenant `cbc6e1e2-a6bb-4002-bbdc-6da892a051a7`) for authentication.
+- **Microsoft OAuth2** — Click the Microsoft login button. This redirects to Microsoft Entra ID (the tenant configured via `MICROSOFT_TENANT_ID`) for authentication.
 - **basishacks connect** — A custom OAuth2 integration with PKCE support for connected applications.
 
 ### Gaining Admin Access

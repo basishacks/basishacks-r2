@@ -36,8 +36,8 @@ Admins can request codes more frequently (bypassing the 1-minute cooldown) for t
 
 Delegates authentication to Microsoft Entra ID (Azure AD):
 
-- **Tenant**: `cbc6e1e2-a6bb-4002-bbdc-6da892a051a7`
-- **Client ID**: `868b989e-6574-4795-bcfb-8db37bee1c37`
+- **Tenant**: read from the `MICROSOFT_TENANT_ID` environment variable
+- **Client ID**: read from the `MICROSOFT_CLIENT_ID` environment variable
 - **Scopes**: `openid profile email`
 - **Redirect URI**: `/api/oauth2/mscallback`
 - **PKCE**: Supported with `S256` code challenge method

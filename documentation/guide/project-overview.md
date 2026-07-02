@@ -53,7 +53,7 @@ Users enter their `@basischina.com` email, receive a 6-digit verification code (
 
 ### 2. Microsoft OAuth2
 
-Delegates authentication to Microsoft Entra ID (tenant `cbc6e1e2-a6bb-4002-bbdc-6da892a051a7`). Users click the Microsoft login button and are redirected to Microsoft's consent screen. On success, they are redirected back with an authorization code that is exchanged for a basishacks session.
+Delegates authentication to Microsoft Entra ID (tenant configured via the `MICROSOFT_TENANT_ID` environment variable). Users click the Microsoft login button and are redirected to Microsoft's consent screen. On success, they are redirected back with an authorization code that is exchanged for a basishacks session.
 
 ### 3. basishacks connect
 
@@ -265,7 +265,7 @@ bun run build
 bun run preview
 
 # Run tests
-bun test
+bun run test
 
 # Format code
 bun run format
