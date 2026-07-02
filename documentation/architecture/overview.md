@@ -7,6 +7,8 @@ description: High-level overview of the basishacks full-stack architecture, dire
 
 basishacks is a **full-stack Nuxt 3 application** that combines a Vue 3 frontend with a Nitro backend in a single deployable unit. It manages hackathon registration, team creation, project submission, peer voting, and judge scoring for the BIBS-C Network Hackathon (season 2, 2025–26).
 
+<StatusBadge status="info" text="Stack: Nuxt 3 + SQLite" />
+
 ## Technology Stack
 
 | Layer | Technology |
@@ -141,6 +143,16 @@ The `users.role` column stores space-separated permission strings (e.g., `"parti
 ::: tip
 See [Authentication & Authorization](./auth) for full details on the auth flow and permission system.
 :::
+
+<CollapsibleDetails summary="Expand: request lifecycle in plain English">
+
+1. The browser asks for a page or API resource.
+2. Nuxt checks whether the route needs authentication.
+3. Nitro applies server middleware (OAuth2 bridge, rate limiting).
+4. The API handler validates input with Zod, checks permissions, and talks to SQLite.
+5. The response is stripped of internal fields and returned as JSON.
+
+</CollapsibleDetails>
 
 ### Shared code boundary
 
