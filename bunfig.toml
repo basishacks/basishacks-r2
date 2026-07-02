@@ -1,0 +1,12 @@
+# bunfig.toml
+#
+# Bun's native test runner (`bun test`) does not understand Nuxt's `~~/` and
+# `~/` path aliases, which are resolved by Vitest via vitest.config.ts. Running
+# `bun test` against the real suite produces dozens of "Cannot find module
+# '~~/...'" errors because the test files also import from `vitest` (not
+# `bun:test`) and rely on `tests/setup.ts` being executed as a Vitest setupFile.
+#
+# This config scopes `bun test` to a single shim that prints guidance. The real
+# test suite is run with:  bun run test
+[test]
+root = "./bun-shim"
