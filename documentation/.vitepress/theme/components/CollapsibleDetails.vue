@@ -1,16 +1,16 @@
 <script setup lang="ts">
 interface Props {
-  summary: string
+    summary: string;
 }
 
-defineProps<Props>()
+defineProps<Props>();
 </script>
 
 <template>
-  <details class="vp-collapsible">
-    <summary>{{ summary }}</summary>
-    <div class="vp-collapsible-content">
-      <slot />
-    </div>
-  </details>
+    <details class="vp-collapsible">
+        <summary>{{ summary }}</summary>
+        <div class="vp-collapsible-content">
+            <slot />
+        </div>
+    </details>
 </template>
