@@ -87,10 +87,13 @@ OAuth2 access tokens are signed JWTs with the following properties:
 
 - **Algorithm:** HS256 (HMAC with SHA-256)
 - **Signing key:** `NUXT_OAUTH2_JWT_SECRET` environment variable
+- **Key length:** Must be at least 32 bytes
 - **Expiration:** 1 hour (`setExpirationTime('1h')`)
 - **Issuer:** `basishacks`
 - **Audience:** The application's `client_id`
 - **Payload claims:** `sub`, `user_id`, `client_id`, `redirect_uri`, `scope`
+
+At startup, the server validates `NUXT_OAUTH2_JWT_SECRET` in `server/plugins/validate-oauth2-jwt-secret.ts`. In production, a missing or too-short secret causes a fatal error and immediate shutdown. In development and test environments, a dev-only fallback is applied with a prominent warning so local work can continue, but this fallback must never be used in production.
 
 ```ts
 const jwt = await new SignJWT({
