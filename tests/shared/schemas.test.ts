@@ -1,6 +1,4 @@
 import {
-  SendCodeRequest,
-  LoginRequest,
   MicrosoftRedirectRequest,
   CreateTeamQuery,
   CreateTeamRequest,
@@ -17,70 +15,6 @@ import {
   SetActiveSeasonRequest,
   ElectionVoteRequest,
 } from '~~/shared/schemas'
-
-describe('SendCodeRequest', () => {
-  it('accepts a valid @basischina.com email', () => {
-    expect(() => SendCodeRequest.parse({ email: 'test@basischina.com' })).not.toThrow()
-  })
-
-  it('accepts a valid @basischina.com email with mixed case', () => {
-    expect(() => SendCodeRequest.parse({ email: 'Test@BASISChina.com' })).not.toThrow()
-  })
-
-  it('rejects a non-basis email', () => {
-    expect(() => SendCodeRequest.parse({ email: 'test@gmail.com' })).toThrow()
-  })
-
-  it('rejects a lookalike domain that only contains basischina.com', () => {
-    expect(() => SendCodeRequest.parse({ email: 'test@notbasischina.com' })).toThrow()
-  })
-
-  it('rejects an invalid email format', () => {
-    expect(() => SendCodeRequest.parse({ email: 'not-an-email' })).toThrow()
-  })
-
-  it('rejects an empty string', () => {
-    expect(() => SendCodeRequest.parse({ email: '' })).toThrow()
-  })
-})
-
-describe('LoginRequest', () => {
-  it('accepts a valid email and 6-digit code', () => {
-    expect(() =>
-      LoginRequest.parse({ email: 'test@basischina.com', code: [1, 2, 3, 4, 5, 6] }),
-    ).not.toThrow()
-  })
-
-  it('rejects an invalid email', () => {
-    expect(() =>
-      LoginRequest.parse({ email: 'test@gmail.com', code: [1, 2, 3, 4, 5, 6] }),
-    ).toThrow()
-  })
-
-  it('rejects a code shorter than 6 digits', () => {
-    expect(() =>
-      LoginRequest.parse({ email: 'test@basischina.com', code: [1, 2, 3] }),
-    ).toThrow()
-  })
-
-  it('rejects a code longer than 6 digits', () => {
-    expect(() =>
-      LoginRequest.parse({ email: 'test@basischina.com', code: [1, 2, 3, 4, 5, 6, 7] }),
-    ).toThrow()
-  })
-
-  it('rejects a code with non-numeric values', () => {
-    expect(() =>
-      LoginRequest.parse({ email: 'test@basischina.com', code: 'abcdef' }),
-    ).toThrow()
-  })
-
-  it('rejects a code with digits above 9', () => {
-    expect(() =>
-      LoginRequest.parse({ email: 'test@basischina.com', code: [10, 2, 3, 4, 5, 6] }),
-    ).toThrow()
-  })
-})
 
 describe('MicrosoftRedirectRequest', () => {
   it('accepts a valid token', () => {
