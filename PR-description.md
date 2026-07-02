@@ -14,6 +14,12 @@ This branch modernizes the basishacks platform for the 2025–26 season. It hard
 
 ## What changed (high level)
 
+### Microsoft-only login
+
+- Removed magic-code login from both the backend and the UI. Users can no longer request a 6-digit email code; the `/api/auth/code` and `/api/auth/login` endpoints and the email-code UI have been deleted.
+- Microsoft OAuth2 is now the only login method for the hackathon registry. The `/login` page redirects users to Microsoft Entra ID, and the `/api/auth` handler remains as an alias for the Microsoft OAuth2 callback.
+- The `NUXT_OAUTH2_JWT_SECRET` startup guard (`server/plugins/validate-oauth2-jwt-secret.ts`) now validates the secret at server startup: fatal error in production if missing or shorter than 32 bytes, and a loud dev-only fallback in development/test.
+
 ### 1. Microsoft OAuth2 now uses PKCE and environment variables
 
 - Implemented PKCE (`code_verifier` + S256 `code_challenge`) for the Microsoft login flow in `/api/login` and `/api/oauth2/mscallback`.
@@ -56,7 +62,7 @@ This branch modernizes the basishacks platform for the 2025–26 season. It hard
 
 ### 6. Testing infrastructure
 
-- Expanded the suite to **667 passing tests**.
+- Expanded the suite to **647 passing tests**.
 - Added `bun-shim/` and `bunfig.toml` so `bun test` points users to the Vitest suite instead of failing on Nuxt path aliases.
 - Added tests for OAuth2 redirect URIs, PKCE validation, session creation, DB-to-public conversion, and more.
 
@@ -78,7 +84,7 @@ This branch modernizes the basishacks platform for the 2025–26 season. It hard
 
 - `bun install` — passes
 - `bun run build` — passes
-- `bun run test` — **668/668 tests pass**
+- `bun run test` — **647/647 tests pass**
 - `cd documentation && npm run build` — passes
 - Clean merge with latest `main` (129c1ca at time of verification)
 
@@ -88,12 +94,11 @@ This branch modernizes the basishacks platform for the 2025–26 season. It hard
 
 1. Copy `.env.example` to `.env` and fill in at least:
    - `NUXT_SESSION_PASSWORD`
-   - `NUXT_SEND_CODE_URL`
+   - `NUXT_OAUTH2_JWT_SECRET`
    - `ONSITE_LOGIN_CLIENT_ID`
    - `MICROSOFT_TENANT_ID`
    - `MICROSOFT_CLIENT_ID`
    - `MICROSOFT_CLIENT_SECRET`
-   - `NUXT_OAUTH2_JWT_SECRET`
 2. Ensure the Azure App Registration redirect URI matches `MICROSOFT_REDIRECT_URI` (default `/api/oauth2/mscallback`).
 3. The server will automatically register `${CURRENT_URL_ORIGIN}/${REDIRECT_URI}` for `ONSITE_LOGIN_CLIENT_ID`, so no manual SQL update is needed for the onsite login flow.
 4. Start with `bun run start` (or `node .output/server/index.mjs` after `bun run build`).
