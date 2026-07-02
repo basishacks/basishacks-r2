@@ -70,18 +70,14 @@ export default defineNitroPlugin(async (nitroApp) => {
 })
 ```
 
-### `seed-hackathon.ts`
+### `validate-oauth2-jwt-secret.ts`
 
-**Purpose**: Seeds the hackathon singleton row and performs auto-migrations for new columns.
+**File:** `server/plugins/validate-oauth2-jwt-secret.ts`
 
-1. Checks for missing columns in the `users` and `hackathon` tables via `PRAGMA table_info`
-2. Adds any missing columns with `ALTER TABLE ... ADD COLUMN`
-3. Upserts the hackathon row with schedule timestamps
-4. Inserts the default `basishacks connect` OAuth2 application if it does not exist
+**Purpose**: Ensures `NUXT_OAUTH2_JWT_SECRET` is configured and at least 32 bytes long.
 
-::: tip
-This plugin acts as a lightweight auto-migration system. It adds new columns that were introduced in migrations without requiring manual SQL execution in local development.
-:::
+- In production (`NODE_ENV=production`): logs a fatal error and exits immediately if the secret is missing or too short.
+- In development/test: logs a prominent warning and applies a documented dev-only fallback.
 
 ### `microsoft.ts`
 
@@ -100,12 +96,15 @@ All Microsoft Graph API calls **must** be made through functions exported from t
 
 The H3 event context is extended via TypeScript declarations in `server/types/`:
 
-### `h3.d.ts`
+### `cloudflare.d.ts`
+
+**File:** `server/types/cloudflare.d.ts`
 
 ```ts
 declare module 'h3' {
   interface H3EventContext {
-    drizzle: BaseSQLiteDatabase<typeof schema>
+    /** Drizzle ORM instance (driver-agnostic; backed by bun:sqlite or better-sqlite3) */
+    drizzle: BaseSQLiteDatabase<'sync', any, typeof schema>
   }
 }
 ```
@@ -141,7 +140,7 @@ declare module 'h3' {
 4. API route handler
      │  ├── readValidatedBody() / getValidatedQuery() with Zod
      │  ├── requireUser() / requireAdmin() / requirePermission()
-     │  └── event.context.db.prepare(sql).bind(...).first()/all()/run()
+     │  └── event.context.drizzle.select()/insert()/update()/delete()
      │
 5. Response
      └── convertUserToPublic() / convertTeamToPublic() to strip internal fields
