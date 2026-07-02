@@ -147,32 +147,33 @@ Junction table tracking which teams a user has belonged to historically.
 
 ## Access Patterns
 
-All database access follows a consistent pattern through `event.context.db`:
+All database access goes through `event.context.drizzle` (a Drizzle ORM instance). Per-table helpers in `server/utils/database/*.ts` wrap common queries:
 
 ```ts
-// Read a single row
-const user = event.context.db
-  .prepare('SELECT * FROM users WHERE id = ?')
-  .bind(userId)
-  .first() as User | null
+// Read a single row via the users helper
+import { getUser } from '~~/server/utils/database/users'
+const user = await getUser(event, userId)
 
-// Read multiple rows
-const { results } = event.context.db
-  .prepare('SELECT * FROM teams WHERE season_id = ?')
-  .bind(seasonId)
-  .all() as { results: Team[] }
+// Read multiple rows via the teams helper
+import { getTeamsBySeason } from '~~/server/utils/database/teams'
+const teams = await getTeamsBySeason(event, seasonId)
 
-// Write (INSERT, UPDATE, DELETE)
-const result = event.context.db
-  .prepare('UPDATE users SET name = ? WHERE id = ?')
-  .bind(name, userId)
-  .run()
+// Write via the users helper
+import { updateUserName } from '~~/server/utils/database/users'
+await updateUserName(event, userId, name)
+```
 
-const changes = result.meta.changed_db // number of affected rows
+For queries not covered by a helper, use the Drizzle instance directly:
+
+```ts
+import { users } from '~~/server/database/schema'
+
+const drizzle = event.context.drizzle
+const user = await drizzle.select().from(users).where(eq(users.id, userId)).get()
 ```
 
 ::: tip
-Always use parameterized queries (`.bind()`) to prevent SQL injection. Never interpolate user input directly into SQL strings.
+Always use Drizzle's parameterized query builders. Never interpolate user input directly into SQL strings.
 :::
 
 ## Per-table Helpers
