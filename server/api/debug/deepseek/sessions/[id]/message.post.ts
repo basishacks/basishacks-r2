@@ -6,12 +6,25 @@ import OpenAI from 'openai'
 
 import { NodeHtmlMarkdown } from "node-html-markdown"
 
-const openai = new OpenAI({
-  baseURL: 'https://api.deepseek.com',
-  apiKey: process.env.DEEPSEEK_API_KEY,
-})
+let openai: OpenAI | null = null
 
-console.log("[DeepSeek] DeepSeek Chat context initialized " + openai.baseURL)
+function getOpenAIClient(): OpenAI {
+  if (!openai) {
+    const apiKey = process.env.DEEPSEEK_API_KEY
+    if (!apiKey) {
+      throw createError({
+        statusCode: 503,
+        statusMessage: 'DEEPSEEK_API_KEY is not configured'
+      })
+    }
+    openai = new OpenAI({
+      baseURL: 'https://api.deepseek.com',
+      apiKey,
+    })
+    console.log("[DeepSeek] DeepSeek Chat context initialized " + openai.baseURL)
+  }
+  return openai
+}
 
 const SYSTEM_PROMPT = `
 ## Character Prompt: Barron Wang
@@ -317,7 +330,7 @@ async function processToolCalls(
   messages: any[],
   user: User
 ): Promise<{ hasToolCalls: boolean; toolCalls?: any; response?: any }> {
-  const completion = await openai.chat.completions.create({
+  const completion = await getOpenAIClient().chat.completions.create({
     messages: [
       {
         role: 'system',
