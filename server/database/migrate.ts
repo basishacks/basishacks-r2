@@ -138,6 +138,40 @@ export function seedHackathon(sqlite: PortableSqlite) {
     }
 }
 
+/**
+ * Ensures the onsite-login OAuth2 application allows the redirect URI used by
+ * /api/login. This prevents "Application does not allow redirect_uri" errors
+ * after fresh checkouts or when the configured origin changes.
+ *
+ * @param sqlite - SQLite database instance (bun:sqlite or better-sqlite3)
+ */
+export function seedOAuth2ApplicationRedirectUri(sqlite: PortableSqlite) {
+    const clientId = process.env.ONSITE_LOGIN_CLIENT_ID
+    if (!clientId) return
+
+    const origin = process.env.CURRENT_URL_ORIGIN || 'http://localhost:3000'
+    const redirectPath = process.env.REDIRECT_URI || 'api/oauth2/dccallback'
+    const redirectUri = `${origin}/${redirectPath}`
+
+    const app = sqlite
+        .prepare('SELECT redirect_uris FROM oauth2_applications WHERE client_id = ?')
+        .get<{ redirect_uris: string | null }>(clientId)
+
+    if (!app) {
+        console.log(`[Nitro] Onsite login application ${clientId} not found; skipping redirect URI seed`)
+        return
+    }
+
+    const existing = app.redirect_uris ? app.redirect_uris.split(' ').filter((u) => u) : []
+    if (existing.includes(redirectUri)) return
+
+    const updated = [...existing, redirectUri].join(' ')
+    sqlite
+        .prepare('UPDATE oauth2_applications SET redirect_uris = ? WHERE client_id = ?')
+        .run(updated, clientId)
+    console.log(`[Nitro] Added redirect URI to onsite login application: ${redirectUri}`)
+}
+
 function tableExists(sqlite: PortableSqlite, table: string): boolean {
     const row = sqlite
         .prepare("SELECT COUNT(*) AS count FROM sqlite_master WHERE type = 'table' AND name = ?")
@@ -263,6 +297,7 @@ export function createAndMigrateDatabase(sqlite: PortableSqlite) {
     migrateLegacySchema(sqlite);
     migrateDatabase(sqlite);
     seedHackathon(sqlite);
+    seedOAuth2ApplicationRedirectUri(sqlite);
 
     return sqlite;
 }
