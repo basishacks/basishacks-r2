@@ -29,9 +29,7 @@ export function parsePermissions(role: string | null | undefined): string[] {
         // URIError on malformed sequences (e.g. trailing %); fall back to raw
         decoded = role;
     }
-    return decoded
-        .split(" ")
-        .filter(Boolean);
+    return decoded.split(" ").filter(Boolean);
 }
 
 export function hasPermission(role: string | null | undefined, permission: string): boolean {

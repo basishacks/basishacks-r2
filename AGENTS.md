@@ -20,21 +20,21 @@ The stack is Vue 3 (frontend) + Nitro (backend) + SQLite (better-sqlite3).
 
 ## Technology Stack
 
-| Layer | Technology |
-|-------|------------|
-| Framework | Nuxt 3 (latest) |
-| UI | `@nuxt/ui` ^4.6.1 (Tailwind CSS v4 based) |
-| Language | TypeScript 5.6+ |
-| Runtime | Node.js >= v24 |
-| Package Manager | Bun (preferred); npm works |
-| Database (local) | `better-sqlite3` with WAL mode |
-| Database (prod) | SQLite (better-sqlite3) |
-| Auth | `nuxt-auth-utils` (session-based) |
-| Validation | Zod 4.x |
-| Fonts | `@nuxt/fonts` (local provider) |
-| Icons | `@iconify-json/lucide`, `@iconify-json/material-symbols` |
-| Linting | `@nuxt/eslint` + Prettier |
-| Deployment | Node.js server (VPS) |
+| Layer            | Technology                                               |
+| ---------------- | -------------------------------------------------------- |
+| Framework        | Nuxt 3 (latest)                                          |
+| UI               | `@nuxt/ui` ^4.6.1 (Tailwind CSS v4 based)                |
+| Language         | TypeScript 5.6+                                          |
+| Runtime          | Node.js >= v24                                           |
+| Package Manager  | Bun (preferred); npm works                               |
+| Database (local) | `better-sqlite3` with WAL mode                           |
+| Database (prod)  | SQLite (better-sqlite3)                                  |
+| Auth             | `nuxt-auth-utils` (session-based)                        |
+| Validation       | Zod 4.x                                                  |
+| Fonts            | `@nuxt/fonts` (local provider)                           |
+| Icons            | `@iconify-json/lucide`, `@iconify-json/material-symbols` |
+| Linting          | `@nuxt/eslint` + Prettier                                |
+| Deployment       | Node.js server (VPS)                                     |
 
 ---
 
@@ -117,11 +117,13 @@ bun test
 ## Runtime Architecture
 
 ### Local Development
+
 - Nitro preset: `node-server`
 - Uses `better-sqlite3` directly against `./database/basishacks.sqlite`
 - `server/plugins/init-database.ts` initializes the DB on startup via Drizzle ORM and attaches it to `event.context.drizzle`
 
 ### Production (VPS)
+
 - Nitro preset: `node-server`
 - Uses `better-sqlite3` directly against `./database/basishacks.sqlite`
 - The same `event.context.drizzle` is used as in local development
@@ -138,11 +140,13 @@ Two auth methods are supported:
 Session storage is handled by `nuxt-auth-utils`. The session cookie stores only `{ user: { id: number } }`.
 
 Roles:
+
 - `participant`
 - `judge`
 - `admin`
 
 Use the helpers in `server/utils/auth.ts` to enforce roles:
+
 - `requireUser(event)` — returns the full DB user row or 401
 - `requireJudge(event)` — 403 if not judge/admin
 - `requireAdmin(event)` — 403 if not admin
@@ -193,6 +197,7 @@ Use the helpers in `server/utils/auth.ts` to enforce roles:
 ## Testing
 
 Tests are run with `node --env-file=.env tests/index.js`. The runner imports and executes:
+
 - `test.oauth2.js`
 - `test.microsoft.ts` (mostly commented out; requires admin-approved MS Graph permissions)
 - `test.deepseek.ts`
@@ -231,7 +236,7 @@ node .output/server/index.mjs
 Copy `.env.example` to `.env` and fill in:
 
 | Variable | Purpose |
-|----------|---------|
+| --- | --- |
 | `NUXT_SESSION_PASSWORD` | Session encryption key (>= 32 bytes) |
 | `NUXT_OAUTH2_JWT_SECRET` | JWT signing secret for OAuth2 token exchange (>= 32 bytes). Validated at startup. |
 | `MICROSOFT_CLIENT_SECRET` | MS Entra app secret for Graph API |
@@ -259,14 +264,14 @@ In production, these are configured in the server environment.
 1. **Update `README.md`** — If your changes affect any feature, configuration, command, or behavior described in the README, update the relevant sections to reflect the current state of the project.
 
 2. **Update VitePress documentation** — If your changes affect any area documented in the `documentation/` directory, update the corresponding pages:
-   - `documentation/guide/` — Getting started, project overview, environment setup
-   - `documentation/architecture/` — Overview, runtime, database, auth, OAuth2
-   - `documentation/frontend/` — Components, pages, layouts, composables
-   - `documentation/backend/` — API reference, server utilities, plugins & middleware
-   - `documentation/shared/` — Schemas, types, rubric, permissions, OAuth2 scopes
-   - `documentation/deployment/` — Deployment, security, rate limiting
+    - `documentation/guide/` — Getting started, project overview, environment setup
+    - `documentation/architecture/` — Overview, runtime, database, auth, OAuth2
+    - `documentation/frontend/` — Components, pages, layouts, composables
+    - `documentation/backend/` — API reference, server utilities, plugins & middleware
+    - `documentation/shared/` — Schemas, types, rubric, permissions, OAuth2 scopes
+    - `documentation/deployment/` — Deployment, security, rate limiting
 
-   If no existing page covers the changed area, add a new page and register it in `documentation/.vitepress/config.ts` sidebar.
+    If no existing page covers the changed area, add a new page and register it in `documentation/.vitepress/config.ts` sidebar.
 
 3. **Verify the documentation builds** — Run `cd documentation && npm run build` to confirm no broken links or build errors.
 

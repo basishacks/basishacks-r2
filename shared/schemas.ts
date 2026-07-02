@@ -29,7 +29,7 @@ const ScoreValues = z.object(
 );
 
 export const MicrosoftRedirectRequest = z.object({
-    token: z.string().min(1, 'Token must not be empty'),
+    token: z.string().min(1, "Token must not be empty"),
 });
 export type MicrosoftRedirectRequest = z.infer<typeof MicrosoftRedirectRequest>;
 
@@ -170,10 +170,10 @@ export const ManageRedirectUriRequest = z.object({
         .url("Invalid URL format")
         .refine(
             (u) => {
-                if (u.startsWith('https://')) return true
-                return /^http:\/\/localhost(\/|:|$)/.test(u)
+                if (u.startsWith("https://")) return true;
+                return /^http:\/\/localhost(\/|:|$)/.test(u);
             },
-            { message: 'Redirect URI must use https:// or http://localhost' },
+            { message: "Redirect URI must use https:// or http://localhost" },
         ),
 });
 export type ManageRedirectUriRequest = z.infer<typeof ManageRedirectUriRequest>;

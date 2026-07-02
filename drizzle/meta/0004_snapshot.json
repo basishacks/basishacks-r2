@@ -1,845 +1,808 @@
 {
-  "version": "6",
-  "dialect": "sqlite",
-  "id": "bc8b23b3-5e41-4525-baa2-47e8fe816a0b",
-  "prevId": "c0e57f2d-3bb6-44c9-83c3-95c61b68eb72",
-  "tables": {
-    "ballot_scores": {
-      "name": "ballot_scores",
-      "columns": {
-        "id": {
-          "name": "id",
-          "type": "integer",
-          "primaryKey": true,
-          "notNull": true,
-          "autoincrement": true
+    "version": "6",
+    "dialect": "sqlite",
+    "id": "bc8b23b3-5e41-4525-baa2-47e8fe816a0b",
+    "prevId": "c0e57f2d-3bb6-44c9-83c3-95c61b68eb72",
+    "tables": {
+        "ballot_scores": {
+            "name": "ballot_scores",
+            "columns": {
+                "id": {
+                    "name": "id",
+                    "type": "integer",
+                    "primaryKey": true,
+                    "notNull": true,
+                    "autoincrement": true
+                },
+                "ballot_id": {
+                    "name": "ballot_id",
+                    "type": "integer",
+                    "primaryKey": false,
+                    "notNull": true,
+                    "autoincrement": false
+                },
+                "project_id": {
+                    "name": "project_id",
+                    "type": "integer",
+                    "primaryKey": false,
+                    "notNull": true,
+                    "autoincrement": false
+                },
+                "score": {
+                    "name": "score",
+                    "type": "integer",
+                    "primaryKey": false,
+                    "notNull": false,
+                    "autoincrement": false
+                }
+            },
+            "indexes": {
+                "idx_ballot_scores_project_id": {
+                    "name": "idx_ballot_scores_project_id",
+                    "columns": ["project_id"],
+                    "isUnique": false
+                },
+                "idx_ballot_scores_ballot_id": {
+                    "name": "idx_ballot_scores_ballot_id",
+                    "columns": ["ballot_id"],
+                    "isUnique": false
+                },
+                "idx_unique_ballot_project": {
+                    "name": "idx_unique_ballot_project",
+                    "columns": ["ballot_id", "project_id"],
+                    "isUnique": true
+                }
+            },
+            "foreignKeys": {},
+            "compositePrimaryKeys": {},
+            "uniqueConstraints": {},
+            "checkConstraints": {
+                "ballot_scores_score_check": {
+                    "name": "ballot_scores_score_check",
+                    "value": "\"ballot_scores\".\"score\" IN (NULL, 1, 2, 3, 4, 5)"
+                }
+            }
         },
-        "ballot_id": {
-          "name": "ballot_id",
-          "type": "integer",
-          "primaryKey": false,
-          "notNull": true,
-          "autoincrement": false
+        "ballots": {
+            "name": "ballots",
+            "columns": {
+                "id": {
+                    "name": "id",
+                    "type": "integer",
+                    "primaryKey": true,
+                    "notNull": true,
+                    "autoincrement": true
+                },
+                "user_id": {
+                    "name": "user_id",
+                    "type": "integer",
+                    "primaryKey": false,
+                    "notNull": true,
+                    "autoincrement": false
+                },
+                "reasoning": {
+                    "name": "reasoning",
+                    "type": "text",
+                    "primaryKey": false,
+                    "notNull": false,
+                    "autoincrement": false
+                },
+                "submitted": {
+                    "name": "submitted",
+                    "type": "integer",
+                    "primaryKey": false,
+                    "notNull": true,
+                    "autoincrement": false,
+                    "default": 0
+                }
+            },
+            "indexes": {
+                "idx_ballots_user_id": {
+                    "name": "idx_ballots_user_id",
+                    "columns": ["user_id"],
+                    "isUnique": true
+                }
+            },
+            "foreignKeys": {},
+            "compositePrimaryKeys": {},
+            "uniqueConstraints": {},
+            "checkConstraints": {}
         },
-        "project_id": {
-          "name": "project_id",
-          "type": "integer",
-          "primaryKey": false,
-          "notNull": true,
-          "autoincrement": false
+        "hackathon": {
+            "name": "hackathon",
+            "columns": {
+                "id": {
+                    "name": "id",
+                    "type": "integer",
+                    "primaryKey": true,
+                    "notNull": true,
+                    "autoincrement": false
+                },
+                "status": {
+                    "name": "status",
+                    "type": "text",
+                    "primaryKey": false,
+                    "notNull": true,
+                    "autoincrement": false
+                },
+                "voting_enabled": {
+                    "name": "voting_enabled",
+                    "type": "integer",
+                    "primaryKey": false,
+                    "notNull": true,
+                    "autoincrement": false,
+                    "default": 0
+                },
+                "results_published": {
+                    "name": "results_published",
+                    "type": "integer",
+                    "primaryKey": false,
+                    "notNull": true,
+                    "autoincrement": false,
+                    "default": 0
+                },
+                "submitted_count": {
+                    "name": "submitted_count",
+                    "type": "integer",
+                    "primaryKey": false,
+                    "notNull": true,
+                    "autoincrement": false,
+                    "default": 0
+                },
+                "max_votes_per_user": {
+                    "name": "max_votes_per_user",
+                    "type": "integer",
+                    "primaryKey": false,
+                    "notNull": true,
+                    "autoincrement": false,
+                    "default": 0
+                },
+                "judging_open": {
+                    "name": "judging_open",
+                    "type": "integer",
+                    "primaryKey": false,
+                    "notNull": true,
+                    "autoincrement": false,
+                    "default": 0
+                },
+                "schedule_start": {
+                    "name": "schedule_start",
+                    "type": "text",
+                    "primaryKey": false,
+                    "notNull": false,
+                    "autoincrement": false
+                },
+                "schedule_end": {
+                    "name": "schedule_end",
+                    "type": "text",
+                    "primaryKey": false,
+                    "notNull": false,
+                    "autoincrement": false
+                },
+                "start_timestamp": {
+                    "name": "start_timestamp",
+                    "type": "integer",
+                    "primaryKey": false,
+                    "notNull": true,
+                    "autoincrement": false
+                },
+                "end_timestamp": {
+                    "name": "end_timestamp",
+                    "type": "integer",
+                    "primaryKey": false,
+                    "notNull": true,
+                    "autoincrement": false
+                },
+                "voting_start_timestamp": {
+                    "name": "voting_start_timestamp",
+                    "type": "integer",
+                    "primaryKey": false,
+                    "notNull": true,
+                    "autoincrement": false
+                },
+                "voting_end_timestamp": {
+                    "name": "voting_end_timestamp",
+                    "type": "integer",
+                    "primaryKey": false,
+                    "notNull": true,
+                    "autoincrement": false
+                },
+                "results_open_timestamp": {
+                    "name": "results_open_timestamp",
+                    "type": "integer",
+                    "primaryKey": false,
+                    "notNull": true,
+                    "autoincrement": false
+                },
+                "theme_name": {
+                    "name": "theme_name",
+                    "type": "text",
+                    "primaryKey": false,
+                    "notNull": false,
+                    "autoincrement": false
+                },
+                "theme_description": {
+                    "name": "theme_description",
+                    "type": "text",
+                    "primaryKey": false,
+                    "notNull": false,
+                    "autoincrement": false
+                }
+            },
+            "indexes": {},
+            "foreignKeys": {},
+            "compositePrimaryKeys": {},
+            "uniqueConstraints": {},
+            "checkConstraints": {
+                "hackathon_id_check": {
+                    "name": "hackathon_id_check",
+                    "value": "\"hackathon\".\"id\" = 1"
+                },
+                "hackathon_status_check": {
+                    "name": "hackathon_status_check",
+                    "value": "\"hackathon\".\"status\" IN ('not_started', 'in_progress', 'voting', 'finished', 'paused')"
+                }
+            }
         },
-        "score": {
-          "name": "score",
-          "type": "integer",
-          "primaryKey": false,
-          "notNull": false,
-          "autoincrement": false
+        "oauth2_applications": {
+            "name": "oauth2_applications",
+            "columns": {
+                "client_id": {
+                    "name": "client_id",
+                    "type": "text",
+                    "primaryKey": true,
+                    "notNull": true,
+                    "autoincrement": false
+                },
+                "client_secret": {
+                    "name": "client_secret",
+                    "type": "text",
+                    "primaryKey": false,
+                    "notNull": true,
+                    "autoincrement": false
+                },
+                "permissions": {
+                    "name": "permissions",
+                    "type": "text",
+                    "primaryKey": false,
+                    "notNull": false,
+                    "autoincrement": false
+                },
+                "redirect_uris": {
+                    "name": "redirect_uris",
+                    "type": "text",
+                    "primaryKey": false,
+                    "notNull": false,
+                    "autoincrement": false
+                },
+                "name": {
+                    "name": "name",
+                    "type": "text",
+                    "primaryKey": false,
+                    "notNull": true,
+                    "autoincrement": false
+                },
+                "description": {
+                    "name": "description",
+                    "type": "text",
+                    "primaryKey": false,
+                    "notNull": false,
+                    "autoincrement": false
+                },
+                "proxy_microsoft": {
+                    "name": "proxy_microsoft",
+                    "type": "integer",
+                    "primaryKey": false,
+                    "notNull": true,
+                    "autoincrement": false,
+                    "default": 0
+                },
+                "type": {
+                    "name": "type",
+                    "type": "text",
+                    "primaryKey": false,
+                    "notNull": false,
+                    "autoincrement": false
+                },
+                "profile_picture": {
+                    "name": "profile_picture",
+                    "type": "text",
+                    "primaryKey": false,
+                    "notNull": false,
+                    "autoincrement": false
+                },
+                "owner_id": {
+                    "name": "owner_id",
+                    "type": "integer",
+                    "primaryKey": false,
+                    "notNull": false,
+                    "autoincrement": false
+                }
+            },
+            "indexes": {
+                "oauth2_applications_client_id_unique": {
+                    "name": "oauth2_applications_client_id_unique",
+                    "columns": ["client_id"],
+                    "isUnique": true
+                }
+            },
+            "foreignKeys": {},
+            "compositePrimaryKeys": {},
+            "uniqueConstraints": {},
+            "checkConstraints": {}
+        },
+        "peer_voting_scores": {
+            "name": "peer_voting_scores",
+            "columns": {
+                "user_id": {
+                    "name": "user_id",
+                    "type": "integer",
+                    "primaryKey": false,
+                    "notNull": true,
+                    "autoincrement": false
+                },
+                "score": {
+                    "name": "score",
+                    "type": "text",
+                    "primaryKey": false,
+                    "notNull": true,
+                    "autoincrement": false
+                },
+                "reasoning": {
+                    "name": "reasoning",
+                    "type": "text",
+                    "primaryKey": false,
+                    "notNull": false,
+                    "autoincrement": false
+                }
+            },
+            "indexes": {
+                "peer_voting_scores_user_id_unique": {
+                    "name": "peer_voting_scores_user_id_unique",
+                    "columns": ["user_id"],
+                    "isUnique": true
+                }
+            },
+            "foreignKeys": {},
+            "compositePrimaryKeys": {},
+            "uniqueConstraints": {},
+            "checkConstraints": {}
+        },
+        "sc_votes": {
+            "name": "sc_votes",
+            "columns": {
+                "id": {
+                    "name": "id",
+                    "type": "integer",
+                    "primaryKey": true,
+                    "notNull": true,
+                    "autoincrement": true
+                },
+                "user_id": {
+                    "name": "user_id",
+                    "type": "integer",
+                    "primaryKey": false,
+                    "notNull": false,
+                    "autoincrement": false
+                },
+                "vote": {
+                    "name": "vote",
+                    "type": "text",
+                    "primaryKey": false,
+                    "notNull": false,
+                    "autoincrement": false
+                },
+                "submitted_at": {
+                    "name": "submitted_at",
+                    "type": "integer",
+                    "primaryKey": false,
+                    "notNull": false,
+                    "autoincrement": false
+                }
+            },
+            "indexes": {
+                "sc_votes_user_id_unique": {
+                    "name": "sc_votes_user_id_unique",
+                    "columns": ["user_id"],
+                    "isUnique": true
+                }
+            },
+            "foreignKeys": {},
+            "compositePrimaryKeys": {},
+            "uniqueConstraints": {},
+            "checkConstraints": {}
+        },
+        "seasons": {
+            "name": "seasons",
+            "columns": {
+                "id": {
+                    "name": "id",
+                    "type": "integer",
+                    "primaryKey": true,
+                    "notNull": true,
+                    "autoincrement": true
+                },
+                "name": {
+                    "name": "name",
+                    "type": "text",
+                    "primaryKey": false,
+                    "notNull": true,
+                    "autoincrement": false
+                },
+                "is_active": {
+                    "name": "is_active",
+                    "type": "integer",
+                    "primaryKey": false,
+                    "notNull": true,
+                    "autoincrement": false,
+                    "default": 0
+                }
+            },
+            "indexes": {
+                "seasons_name_unique": {
+                    "name": "seasons_name_unique",
+                    "columns": ["name"],
+                    "isUnique": true
+                }
+            },
+            "foreignKeys": {},
+            "compositePrimaryKeys": {},
+            "uniqueConstraints": {},
+            "checkConstraints": {
+                "seasons_is_active_check": {
+                    "name": "seasons_is_active_check",
+                    "value": "\"seasons\".\"is_active\" IN (0, 1)"
+                }
+            }
+        },
+        "team_awards": {
+            "name": "team_awards",
+            "columns": {
+                "team_id": {
+                    "name": "team_id",
+                    "type": "integer",
+                    "primaryKey": false,
+                    "notNull": true,
+                    "autoincrement": false
+                },
+                "award": {
+                    "name": "award",
+                    "type": "text",
+                    "primaryKey": false,
+                    "notNull": true,
+                    "autoincrement": false
+                },
+                "meta": {
+                    "name": "meta",
+                    "type": "text",
+                    "primaryKey": false,
+                    "notNull": true,
+                    "autoincrement": false
+                }
+            },
+            "indexes": {},
+            "foreignKeys": {},
+            "compositePrimaryKeys": {},
+            "uniqueConstraints": {},
+            "checkConstraints": {}
+        },
+        "team_scores": {
+            "name": "team_scores",
+            "columns": {
+                "team_id": {
+                    "name": "team_id",
+                    "type": "integer",
+                    "primaryKey": false,
+                    "notNull": true,
+                    "autoincrement": false
+                },
+                "judge_user_id": {
+                    "name": "judge_user_id",
+                    "type": "integer",
+                    "primaryKey": false,
+                    "notNull": true,
+                    "autoincrement": false
+                },
+                "scores": {
+                    "name": "scores",
+                    "type": "text",
+                    "primaryKey": false,
+                    "notNull": true,
+                    "autoincrement": false
+                },
+                "reasoning": {
+                    "name": "reasoning",
+                    "type": "text",
+                    "primaryKey": false,
+                    "notNull": true,
+                    "autoincrement": false,
+                    "default": "'<no reasoning provided>'"
+                },
+                "season_id": {
+                    "name": "season_id",
+                    "type": "integer",
+                    "primaryKey": false,
+                    "notNull": false,
+                    "autoincrement": false
+                }
+            },
+            "indexes": {},
+            "foreignKeys": {},
+            "compositePrimaryKeys": {
+                "team_scores_team_id_judge_user_id_pk": {
+                    "columns": ["team_id", "judge_user_id"],
+                    "name": "team_scores_team_id_judge_user_id_pk"
+                }
+            },
+            "uniqueConstraints": {},
+            "checkConstraints": {}
+        },
+        "teams": {
+            "name": "teams",
+            "columns": {
+                "id": {
+                    "name": "id",
+                    "type": "integer",
+                    "primaryKey": true,
+                    "notNull": true,
+                    "autoincrement": true
+                },
+                "name": {
+                    "name": "name",
+                    "type": "text",
+                    "primaryKey": false,
+                    "notNull": true,
+                    "autoincrement": false
+                },
+                "pathway": {
+                    "name": "pathway",
+                    "type": "text",
+                    "primaryKey": false,
+                    "notNull": false,
+                    "autoincrement": false
+                },
+                "score": {
+                    "name": "score",
+                    "type": "integer",
+                    "primaryKey": false,
+                    "notNull": false,
+                    "autoincrement": false
+                },
+                "rank": {
+                    "name": "rank",
+                    "type": "integer",
+                    "primaryKey": false,
+                    "notNull": false,
+                    "autoincrement": false
+                },
+                "project_name": {
+                    "name": "project_name",
+                    "type": "text",
+                    "primaryKey": false,
+                    "notNull": true,
+                    "autoincrement": false,
+                    "default": "''"
+                },
+                "project_description": {
+                    "name": "project_description",
+                    "type": "text",
+                    "primaryKey": false,
+                    "notNull": true,
+                    "autoincrement": false,
+                    "default": "''"
+                },
+                "project_demo_url": {
+                    "name": "project_demo_url",
+                    "type": "text",
+                    "primaryKey": false,
+                    "notNull": false,
+                    "autoincrement": false
+                },
+                "project_repo_url": {
+                    "name": "project_repo_url",
+                    "type": "text",
+                    "primaryKey": false,
+                    "notNull": false,
+                    "autoincrement": false
+                },
+                "project_submitted": {
+                    "name": "project_submitted",
+                    "type": "integer",
+                    "primaryKey": false,
+                    "notNull": true,
+                    "autoincrement": false,
+                    "default": 0
+                },
+                "sourcing": {
+                    "name": "sourcing",
+                    "type": "text",
+                    "primaryKey": false,
+                    "notNull": true,
+                    "autoincrement": false,
+                    "default": "''"
+                },
+                "season_id": {
+                    "name": "season_id",
+                    "type": "integer",
+                    "primaryKey": false,
+                    "notNull": true,
+                    "autoincrement": false,
+                    "default": 1
+                }
+            },
+            "indexes": {
+                "teams_score": {
+                    "name": "teams_score",
+                    "columns": ["score"],
+                    "isUnique": false
+                },
+                "teams_rank": {
+                    "name": "teams_rank",
+                    "columns": ["rank"],
+                    "isUnique": false
+                },
+                "teams_season": {
+                    "name": "teams_season",
+                    "columns": ["season_id"],
+                    "isUnique": false
+                }
+            },
+            "foreignKeys": {},
+            "compositePrimaryKeys": {},
+            "uniqueConstraints": {},
+            "checkConstraints": {
+                "teams_pathway_check": {
+                    "name": "teams_pathway_check",
+                    "value": "\"teams\".\"pathway\" IN (NULL, 'junior', 'senior')"
+                }
+            }
+        },
+        "user_past_teams": {
+            "name": "user_past_teams",
+            "columns": {
+                "user_id": {
+                    "name": "user_id",
+                    "type": "integer",
+                    "primaryKey": false,
+                    "notNull": true,
+                    "autoincrement": false
+                },
+                "team_id": {
+                    "name": "team_id",
+                    "type": "integer",
+                    "primaryKey": false,
+                    "notNull": true,
+                    "autoincrement": false
+                }
+            },
+            "indexes": {},
+            "foreignKeys": {},
+            "compositePrimaryKeys": {
+                "user_past_teams_user_id_team_id_pk": {
+                    "columns": ["user_id", "team_id"],
+                    "name": "user_past_teams_user_id_team_id_pk"
+                }
+            },
+            "uniqueConstraints": {},
+            "checkConstraints": {}
+        },
+        "users": {
+            "name": "users",
+            "columns": {
+                "id": {
+                    "name": "id",
+                    "type": "integer",
+                    "primaryKey": true,
+                    "notNull": true,
+                    "autoincrement": true
+                },
+                "email": {
+                    "name": "email",
+                    "type": "text",
+                    "primaryKey": false,
+                    "notNull": true,
+                    "autoincrement": false
+                },
+                "role": {
+                    "name": "role",
+                    "type": "text",
+                    "primaryKey": false,
+                    "notNull": true,
+                    "autoincrement": false,
+                    "default": "'participant'"
+                },
+                "name": {
+                    "name": "name",
+                    "type": "text",
+                    "primaryKey": false,
+                    "notNull": false,
+                    "autoincrement": false
+                },
+                "team_id": {
+                    "name": "team_id",
+                    "type": "integer",
+                    "primaryKey": false,
+                    "notNull": false,
+                    "autoincrement": false
+                },
+                "login_code": {
+                    "name": "login_code",
+                    "type": "text",
+                    "primaryKey": false,
+                    "notNull": false,
+                    "autoincrement": false
+                },
+                "login_expiry": {
+                    "name": "login_expiry",
+                    "type": "integer",
+                    "primaryKey": false,
+                    "notNull": false,
+                    "autoincrement": false
+                },
+                "profile_theme": {
+                    "name": "profile_theme",
+                    "type": "text",
+                    "primaryKey": false,
+                    "notNull": false,
+                    "autoincrement": false
+                },
+                "profile_picture": {
+                    "name": "profile_picture",
+                    "type": "text",
+                    "primaryKey": false,
+                    "notNull": false,
+                    "autoincrement": false
+                }
+            },
+            "indexes": {
+                "users_email_unique": {
+                    "name": "users_email_unique",
+                    "columns": ["email"],
+                    "isUnique": true
+                },
+                "idx_users_email": {
+                    "name": "idx_users_email",
+                    "columns": ["email"],
+                    "isUnique": false
+                },
+                "idx_users_lower_email": {
+                    "name": "idx_users_lower_email",
+                    "columns": ["lower(\"email\")"],
+                    "isUnique": true
+                },
+                "idx_users_team_id": {
+                    "name": "idx_users_team_id",
+                    "columns": ["team_id"],
+                    "isUnique": false
+                }
+            },
+            "foreignKeys": {},
+            "compositePrimaryKeys": {},
+            "uniqueConstraints": {},
+            "checkConstraints": {
+                "users_role_check": {
+                    "name": "users_role_check",
+                    "value": "\"users\".\"role\" IN ('participant', 'judge', 'admin')"
+                }
+            }
         }
-      },
-      "indexes": {
-        "idx_ballot_scores_project_id": {
-          "name": "idx_ballot_scores_project_id",
-          "columns": [
-            "project_id"
-          ],
-          "isUnique": false
-        },
-        "idx_ballot_scores_ballot_id": {
-          "name": "idx_ballot_scores_ballot_id",
-          "columns": [
-            "ballot_id"
-          ],
-          "isUnique": false
-        },
-        "idx_unique_ballot_project": {
-          "name": "idx_unique_ballot_project",
-          "columns": [
-            "ballot_id",
-            "project_id"
-          ],
-          "isUnique": true
-        }
-      },
-      "foreignKeys": {},
-      "compositePrimaryKeys": {},
-      "uniqueConstraints": {},
-      "checkConstraints": {
-        "ballot_scores_score_check": {
-          "name": "ballot_scores_score_check",
-          "value": "\"ballot_scores\".\"score\" IN (NULL, 1, 2, 3, 4, 5)"
-        }
-      }
     },
-    "ballots": {
-      "name": "ballots",
-      "columns": {
-        "id": {
-          "name": "id",
-          "type": "integer",
-          "primaryKey": true,
-          "notNull": true,
-          "autoincrement": true
-        },
-        "user_id": {
-          "name": "user_id",
-          "type": "integer",
-          "primaryKey": false,
-          "notNull": true,
-          "autoincrement": false
-        },
-        "reasoning": {
-          "name": "reasoning",
-          "type": "text",
-          "primaryKey": false,
-          "notNull": false,
-          "autoincrement": false
-        },
-        "submitted": {
-          "name": "submitted",
-          "type": "integer",
-          "primaryKey": false,
-          "notNull": true,
-          "autoincrement": false,
-          "default": 0
-        }
-      },
-      "indexes": {
-        "idx_ballots_user_id": {
-          "name": "idx_ballots_user_id",
-          "columns": [
-            "user_id"
-          ],
-          "isUnique": true
-        }
-      },
-      "foreignKeys": {},
-      "compositePrimaryKeys": {},
-      "uniqueConstraints": {},
-      "checkConstraints": {}
+    "views": {},
+    "enums": {},
+    "_meta": {
+        "schemas": {},
+        "tables": {},
+        "columns": {}
     },
-    "hackathon": {
-      "name": "hackathon",
-      "columns": {
-        "id": {
-          "name": "id",
-          "type": "integer",
-          "primaryKey": true,
-          "notNull": true,
-          "autoincrement": false
-        },
-        "status": {
-          "name": "status",
-          "type": "text",
-          "primaryKey": false,
-          "notNull": true,
-          "autoincrement": false
-        },
-        "voting_enabled": {
-          "name": "voting_enabled",
-          "type": "integer",
-          "primaryKey": false,
-          "notNull": true,
-          "autoincrement": false,
-          "default": 0
-        },
-        "results_published": {
-          "name": "results_published",
-          "type": "integer",
-          "primaryKey": false,
-          "notNull": true,
-          "autoincrement": false,
-          "default": 0
-        },
-        "submitted_count": {
-          "name": "submitted_count",
-          "type": "integer",
-          "primaryKey": false,
-          "notNull": true,
-          "autoincrement": false,
-          "default": 0
-        },
-        "max_votes_per_user": {
-          "name": "max_votes_per_user",
-          "type": "integer",
-          "primaryKey": false,
-          "notNull": true,
-          "autoincrement": false,
-          "default": 0
-        },
-        "judging_open": {
-          "name": "judging_open",
-          "type": "integer",
-          "primaryKey": false,
-          "notNull": true,
-          "autoincrement": false,
-          "default": 0
-        },
-        "schedule_start": {
-          "name": "schedule_start",
-          "type": "text",
-          "primaryKey": false,
-          "notNull": false,
-          "autoincrement": false
-        },
-        "schedule_end": {
-          "name": "schedule_end",
-          "type": "text",
-          "primaryKey": false,
-          "notNull": false,
-          "autoincrement": false
-        },
-        "start_timestamp": {
-          "name": "start_timestamp",
-          "type": "integer",
-          "primaryKey": false,
-          "notNull": true,
-          "autoincrement": false
-        },
-        "end_timestamp": {
-          "name": "end_timestamp",
-          "type": "integer",
-          "primaryKey": false,
-          "notNull": true,
-          "autoincrement": false
-        },
-        "voting_start_timestamp": {
-          "name": "voting_start_timestamp",
-          "type": "integer",
-          "primaryKey": false,
-          "notNull": true,
-          "autoincrement": false
-        },
-        "voting_end_timestamp": {
-          "name": "voting_end_timestamp",
-          "type": "integer",
-          "primaryKey": false,
-          "notNull": true,
-          "autoincrement": false
-        },
-        "results_open_timestamp": {
-          "name": "results_open_timestamp",
-          "type": "integer",
-          "primaryKey": false,
-          "notNull": true,
-          "autoincrement": false
-        },
-        "theme_name": {
-          "name": "theme_name",
-          "type": "text",
-          "primaryKey": false,
-          "notNull": false,
-          "autoincrement": false
-        },
-        "theme_description": {
-          "name": "theme_description",
-          "type": "text",
-          "primaryKey": false,
-          "notNull": false,
-          "autoincrement": false
+    "internal": {
+        "indexes": {
+            "idx_users_lower_email": {
+                "columns": {
+                    "lower(\"email\")": {
+                        "isExpression": true
+                    }
+                }
+            }
         }
-      },
-      "indexes": {},
-      "foreignKeys": {},
-      "compositePrimaryKeys": {},
-      "uniqueConstraints": {},
-      "checkConstraints": {
-        "hackathon_id_check": {
-          "name": "hackathon_id_check",
-          "value": "\"hackathon\".\"id\" = 1"
-        },
-        "hackathon_status_check": {
-          "name": "hackathon_status_check",
-          "value": "\"hackathon\".\"status\" IN ('not_started', 'in_progress', 'voting', 'finished', 'paused')"
-        }
-      }
-    },
-    "oauth2_applications": {
-      "name": "oauth2_applications",
-      "columns": {
-        "client_id": {
-          "name": "client_id",
-          "type": "text",
-          "primaryKey": true,
-          "notNull": true,
-          "autoincrement": false
-        },
-        "client_secret": {
-          "name": "client_secret",
-          "type": "text",
-          "primaryKey": false,
-          "notNull": true,
-          "autoincrement": false
-        },
-        "permissions": {
-          "name": "permissions",
-          "type": "text",
-          "primaryKey": false,
-          "notNull": false,
-          "autoincrement": false
-        },
-        "redirect_uris": {
-          "name": "redirect_uris",
-          "type": "text",
-          "primaryKey": false,
-          "notNull": false,
-          "autoincrement": false
-        },
-        "name": {
-          "name": "name",
-          "type": "text",
-          "primaryKey": false,
-          "notNull": true,
-          "autoincrement": false
-        },
-        "description": {
-          "name": "description",
-          "type": "text",
-          "primaryKey": false,
-          "notNull": false,
-          "autoincrement": false
-        },
-        "proxy_microsoft": {
-          "name": "proxy_microsoft",
-          "type": "integer",
-          "primaryKey": false,
-          "notNull": true,
-          "autoincrement": false,
-          "default": 0
-        },
-        "type": {
-          "name": "type",
-          "type": "text",
-          "primaryKey": false,
-          "notNull": false,
-          "autoincrement": false
-        },
-        "profile_picture": {
-          "name": "profile_picture",
-          "type": "text",
-          "primaryKey": false,
-          "notNull": false,
-          "autoincrement": false
-        },
-        "owner_id": {
-          "name": "owner_id",
-          "type": "integer",
-          "primaryKey": false,
-          "notNull": false,
-          "autoincrement": false
-        }
-      },
-      "indexes": {
-        "oauth2_applications_client_id_unique": {
-          "name": "oauth2_applications_client_id_unique",
-          "columns": [
-            "client_id"
-          ],
-          "isUnique": true
-        }
-      },
-      "foreignKeys": {},
-      "compositePrimaryKeys": {},
-      "uniqueConstraints": {},
-      "checkConstraints": {}
-    },
-    "peer_voting_scores": {
-      "name": "peer_voting_scores",
-      "columns": {
-        "user_id": {
-          "name": "user_id",
-          "type": "integer",
-          "primaryKey": false,
-          "notNull": true,
-          "autoincrement": false
-        },
-        "score": {
-          "name": "score",
-          "type": "text",
-          "primaryKey": false,
-          "notNull": true,
-          "autoincrement": false
-        },
-        "reasoning": {
-          "name": "reasoning",
-          "type": "text",
-          "primaryKey": false,
-          "notNull": false,
-          "autoincrement": false
-        }
-      },
-      "indexes": {
-        "peer_voting_scores_user_id_unique": {
-          "name": "peer_voting_scores_user_id_unique",
-          "columns": [
-            "user_id"
-          ],
-          "isUnique": true
-        }
-      },
-      "foreignKeys": {},
-      "compositePrimaryKeys": {},
-      "uniqueConstraints": {},
-      "checkConstraints": {}
-    },
-    "sc_votes": {
-      "name": "sc_votes",
-      "columns": {
-        "id": {
-          "name": "id",
-          "type": "integer",
-          "primaryKey": true,
-          "notNull": true,
-          "autoincrement": true
-        },
-        "user_id": {
-          "name": "user_id",
-          "type": "integer",
-          "primaryKey": false,
-          "notNull": false,
-          "autoincrement": false
-        },
-        "vote": {
-          "name": "vote",
-          "type": "text",
-          "primaryKey": false,
-          "notNull": false,
-          "autoincrement": false
-        },
-        "submitted_at": {
-          "name": "submitted_at",
-          "type": "integer",
-          "primaryKey": false,
-          "notNull": false,
-          "autoincrement": false
-        }
-      },
-      "indexes": {
-        "sc_votes_user_id_unique": {
-          "name": "sc_votes_user_id_unique",
-          "columns": [
-            "user_id"
-          ],
-          "isUnique": true
-        }
-      },
-      "foreignKeys": {},
-      "compositePrimaryKeys": {},
-      "uniqueConstraints": {},
-      "checkConstraints": {}
-    },
-    "seasons": {
-      "name": "seasons",
-      "columns": {
-        "id": {
-          "name": "id",
-          "type": "integer",
-          "primaryKey": true,
-          "notNull": true,
-          "autoincrement": true
-        },
-        "name": {
-          "name": "name",
-          "type": "text",
-          "primaryKey": false,
-          "notNull": true,
-          "autoincrement": false
-        },
-        "is_active": {
-          "name": "is_active",
-          "type": "integer",
-          "primaryKey": false,
-          "notNull": true,
-          "autoincrement": false,
-          "default": 0
-        }
-      },
-      "indexes": {
-        "seasons_name_unique": {
-          "name": "seasons_name_unique",
-          "columns": [
-            "name"
-          ],
-          "isUnique": true
-        }
-      },
-      "foreignKeys": {},
-      "compositePrimaryKeys": {},
-      "uniqueConstraints": {},
-      "checkConstraints": {
-        "seasons_is_active_check": {
-          "name": "seasons_is_active_check",
-          "value": "\"seasons\".\"is_active\" IN (0, 1)"
-        }
-      }
-    },
-    "team_awards": {
-      "name": "team_awards",
-      "columns": {
-        "team_id": {
-          "name": "team_id",
-          "type": "integer",
-          "primaryKey": false,
-          "notNull": true,
-          "autoincrement": false
-        },
-        "award": {
-          "name": "award",
-          "type": "text",
-          "primaryKey": false,
-          "notNull": true,
-          "autoincrement": false
-        },
-        "meta": {
-          "name": "meta",
-          "type": "text",
-          "primaryKey": false,
-          "notNull": true,
-          "autoincrement": false
-        }
-      },
-      "indexes": {},
-      "foreignKeys": {},
-      "compositePrimaryKeys": {},
-      "uniqueConstraints": {},
-      "checkConstraints": {}
-    },
-    "team_scores": {
-      "name": "team_scores",
-      "columns": {
-        "team_id": {
-          "name": "team_id",
-          "type": "integer",
-          "primaryKey": false,
-          "notNull": true,
-          "autoincrement": false
-        },
-        "judge_user_id": {
-          "name": "judge_user_id",
-          "type": "integer",
-          "primaryKey": false,
-          "notNull": true,
-          "autoincrement": false
-        },
-        "scores": {
-          "name": "scores",
-          "type": "text",
-          "primaryKey": false,
-          "notNull": true,
-          "autoincrement": false
-        },
-        "reasoning": {
-          "name": "reasoning",
-          "type": "text",
-          "primaryKey": false,
-          "notNull": true,
-          "autoincrement": false,
-          "default": "'<no reasoning provided>'"
-        },
-        "season_id": {
-          "name": "season_id",
-          "type": "integer",
-          "primaryKey": false,
-          "notNull": false,
-          "autoincrement": false
-        }
-      },
-      "indexes": {},
-      "foreignKeys": {},
-      "compositePrimaryKeys": {
-        "team_scores_team_id_judge_user_id_pk": {
-          "columns": [
-            "team_id",
-            "judge_user_id"
-          ],
-          "name": "team_scores_team_id_judge_user_id_pk"
-        }
-      },
-      "uniqueConstraints": {},
-      "checkConstraints": {}
-    },
-    "teams": {
-      "name": "teams",
-      "columns": {
-        "id": {
-          "name": "id",
-          "type": "integer",
-          "primaryKey": true,
-          "notNull": true,
-          "autoincrement": true
-        },
-        "name": {
-          "name": "name",
-          "type": "text",
-          "primaryKey": false,
-          "notNull": true,
-          "autoincrement": false
-        },
-        "pathway": {
-          "name": "pathway",
-          "type": "text",
-          "primaryKey": false,
-          "notNull": false,
-          "autoincrement": false
-        },
-        "score": {
-          "name": "score",
-          "type": "integer",
-          "primaryKey": false,
-          "notNull": false,
-          "autoincrement": false
-        },
-        "rank": {
-          "name": "rank",
-          "type": "integer",
-          "primaryKey": false,
-          "notNull": false,
-          "autoincrement": false
-        },
-        "project_name": {
-          "name": "project_name",
-          "type": "text",
-          "primaryKey": false,
-          "notNull": true,
-          "autoincrement": false,
-          "default": "''"
-        },
-        "project_description": {
-          "name": "project_description",
-          "type": "text",
-          "primaryKey": false,
-          "notNull": true,
-          "autoincrement": false,
-          "default": "''"
-        },
-        "project_demo_url": {
-          "name": "project_demo_url",
-          "type": "text",
-          "primaryKey": false,
-          "notNull": false,
-          "autoincrement": false
-        },
-        "project_repo_url": {
-          "name": "project_repo_url",
-          "type": "text",
-          "primaryKey": false,
-          "notNull": false,
-          "autoincrement": false
-        },
-        "project_submitted": {
-          "name": "project_submitted",
-          "type": "integer",
-          "primaryKey": false,
-          "notNull": true,
-          "autoincrement": false,
-          "default": 0
-        },
-        "sourcing": {
-          "name": "sourcing",
-          "type": "text",
-          "primaryKey": false,
-          "notNull": true,
-          "autoincrement": false,
-          "default": "''"
-        },
-        "season_id": {
-          "name": "season_id",
-          "type": "integer",
-          "primaryKey": false,
-          "notNull": true,
-          "autoincrement": false,
-          "default": 1
-        }
-      },
-      "indexes": {
-        "teams_score": {
-          "name": "teams_score",
-          "columns": [
-            "score"
-          ],
-          "isUnique": false
-        },
-        "teams_rank": {
-          "name": "teams_rank",
-          "columns": [
-            "rank"
-          ],
-          "isUnique": false
-        },
-        "teams_season": {
-          "name": "teams_season",
-          "columns": [
-            "season_id"
-          ],
-          "isUnique": false
-        }
-      },
-      "foreignKeys": {},
-      "compositePrimaryKeys": {},
-      "uniqueConstraints": {},
-      "checkConstraints": {
-        "teams_pathway_check": {
-          "name": "teams_pathway_check",
-          "value": "\"teams\".\"pathway\" IN (NULL, 'junior', 'senior')"
-        }
-      }
-    },
-    "user_past_teams": {
-      "name": "user_past_teams",
-      "columns": {
-        "user_id": {
-          "name": "user_id",
-          "type": "integer",
-          "primaryKey": false,
-          "notNull": true,
-          "autoincrement": false
-        },
-        "team_id": {
-          "name": "team_id",
-          "type": "integer",
-          "primaryKey": false,
-          "notNull": true,
-          "autoincrement": false
-        }
-      },
-      "indexes": {},
-      "foreignKeys": {},
-      "compositePrimaryKeys": {
-        "user_past_teams_user_id_team_id_pk": {
-          "columns": [
-            "user_id",
-            "team_id"
-          ],
-          "name": "user_past_teams_user_id_team_id_pk"
-        }
-      },
-      "uniqueConstraints": {},
-      "checkConstraints": {}
-    },
-    "users": {
-      "name": "users",
-      "columns": {
-        "id": {
-          "name": "id",
-          "type": "integer",
-          "primaryKey": true,
-          "notNull": true,
-          "autoincrement": true
-        },
-        "email": {
-          "name": "email",
-          "type": "text",
-          "primaryKey": false,
-          "notNull": true,
-          "autoincrement": false
-        },
-        "role": {
-          "name": "role",
-          "type": "text",
-          "primaryKey": false,
-          "notNull": true,
-          "autoincrement": false,
-          "default": "'participant'"
-        },
-        "name": {
-          "name": "name",
-          "type": "text",
-          "primaryKey": false,
-          "notNull": false,
-          "autoincrement": false
-        },
-        "team_id": {
-          "name": "team_id",
-          "type": "integer",
-          "primaryKey": false,
-          "notNull": false,
-          "autoincrement": false
-        },
-        "login_code": {
-          "name": "login_code",
-          "type": "text",
-          "primaryKey": false,
-          "notNull": false,
-          "autoincrement": false
-        },
-        "login_expiry": {
-          "name": "login_expiry",
-          "type": "integer",
-          "primaryKey": false,
-          "notNull": false,
-          "autoincrement": false
-        },
-        "profile_theme": {
-          "name": "profile_theme",
-          "type": "text",
-          "primaryKey": false,
-          "notNull": false,
-          "autoincrement": false
-        },
-        "profile_picture": {
-          "name": "profile_picture",
-          "type": "text",
-          "primaryKey": false,
-          "notNull": false,
-          "autoincrement": false
-        }
-      },
-      "indexes": {
-        "users_email_unique": {
-          "name": "users_email_unique",
-          "columns": [
-            "email"
-          ],
-          "isUnique": true
-        },
-        "idx_users_email": {
-          "name": "idx_users_email",
-          "columns": [
-            "email"
-          ],
-          "isUnique": false
-        },
-        "idx_users_lower_email": {
-          "name": "idx_users_lower_email",
-          "columns": [
-            "lower(\"email\")"
-          ],
-          "isUnique": true
-        },
-        "idx_users_team_id": {
-          "name": "idx_users_team_id",
-          "columns": [
-            "team_id"
-          ],
-          "isUnique": false
-        }
-      },
-      "foreignKeys": {},
-      "compositePrimaryKeys": {},
-      "uniqueConstraints": {},
-      "checkConstraints": {
-        "users_role_check": {
-          "name": "users_role_check",
-          "value": "\"users\".\"role\" IN ('participant', 'judge', 'admin')"
-        }
-      }
     }
-  },
-  "views": {},
-  "enums": {},
-  "_meta": {
-    "schemas": {},
-    "tables": {},
-    "columns": {}
-  },
-  "internal": {
-    "indexes": {
-      "idx_users_lower_email": {
-        "columns": {
-          "lower(\"email\")": {
-            "isExpression": true
-          }
-        }
-      }
-    }
-  }
 }
