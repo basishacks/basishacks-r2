@@ -11,11 +11,11 @@ This guide covers everything you need to configure before developing basishacks 
 
 Ensure the following are installed before proceeding:
 
-| Tool | Version | Install |
-|------|---------|---------|
-| **Node.js** | >= v24 | [nodejs.org](https://nodejs.org) or use a version manager |
-| **Bun** | Latest | [bun.sh](https://bun.sh) |
-| **Git** | Any recent | [git-scm.com](https://git-scm.com) |
+| Tool        | Version    | Install                                                   |
+| ----------- | ---------- | --------------------------------------------------------- |
+| **Node.js** | >= v24     | [nodejs.org](https://nodejs.org) or use a version manager |
+| **Bun**     | Latest     | [bun.sh](https://bun.sh)                                  |
+| **Git**     | Any recent | [git-scm.com](https://git-scm.com)                        |
 
 ### Node.js v24+ Installation
 
@@ -39,9 +39,7 @@ node --version
 # Should output v24.x.x or higher
 ```
 
-:::: warning
-Node.js v24 or higher is required. Older versions may cause runtime errors or missing APIs.
-::::
+:::: warning Node.js v24 or higher is required. Older versions may cause runtime errors or missing APIs. ::::
 
 ### Bun Installation
 
@@ -107,7 +105,7 @@ cp .env.example .env
 ### Required Variables
 
 | Variable | Description | Example |
-|----------|-------------|---------|
+| --- | --- | --- |
 | `NUXT_SESSION_PASSWORD` | Session encryption key. **Must be at least 32 bytes.** | Output of `openssl rand -base64 32` |
 | `NUXT_SEND_CODE_URL` | Webhook/service URL for sending login verification codes to `@basischina.com` emails | `https://your-service.com/send` |
 
@@ -122,12 +120,15 @@ Copy the output and paste it as the value for `NUXT_SESSION_PASSWORD`.
 ### Optional Variables
 
 | Variable | Description | Default |
-|----------|-------------|---------|
+| --- | --- | --- |
 | `MICROSOFT_CLIENT_SECRET` | Microsoft Entra ID client secret for Graph API integration. Enables MS OAuth2 login and MS Graph features (meeting scheduling, Teams chat). | — |
+| `MICROSOFT_TENANT_ID` | Microsoft Entra ID tenant (directory) ID. Required together with `MICROSOFT_CLIENT_ID` for MS OAuth2 login and MS Graph features. If unset, Microsoft features are disabled gracefully. | — |
+| `MICROSOFT_CLIENT_ID` | Microsoft Entra ID application (client) ID. Required together with `MICROSOFT_TENANT_ID` for MS OAuth2 login and MS Graph features. If unset, Microsoft features are disabled gracefully. | — |
 | `CURRENT_URL_ORIGIN` | Base origin URL for OAuth2 redirect callbacks (no trailing slash). Must match the redirect URI registered in Azure Portal. | `http://localhost:3000` |
+| `MICROSOFT_REDIRECT_URI` | Microsoft OAuth2 redirect URI path (must start with `/`). Must exactly match the redirect URI registered in Azure Portal. Defaults to `/api/oauth2/mscallback`; `/api/auth` is also supported as an alias handler. | `/api/oauth2/mscallback` |
 | `DEEPSEEK_API_KEY` | DeepSeek API key for AI chat features (debug routes only). Uses the OpenAI SDK under the hood. | — |
 | `NUXT_OAUTH2_JWT_SECRET` | JWT signing secret for OAuth2 token exchange. Used by `jose` to sign and verify access tokens (HS256). Generate with `openssl rand -base64 32`. | — |
-| `REDIRECT_URI` | Redirect URI specification for OAuth2 flows | — |
+| `REDIRECT_URI` | Onsite OAuth2 redirect URI path used by `/api/login`. Must be registered for the OAuth2 application specified by `ONSITE_LOGIN_CLIENT_ID`. Defaults to `api/oauth2/dccallback`; do not set to `/api/auth` (reserved for the MS callback alias). | `api/oauth2/dccallback` |
 | `MICROSOFT_DUMMY_USER_NAME` | ROPC test user email (rarely used, testing only) | — |
 | `MICROSOFT_DUMMY_USER_PASSWORD` | ROPC test user password (rarely used, testing only) | — |
 | `PORT` | Server port override | `3000` |
@@ -145,8 +146,19 @@ NUXT_SEND_CODE_URL=https://your-code-sending-service.com/send
 # OPTIONAL - Microsoft Entra ID client secret
 MICROSOFT_CLIENT_SECRET=your_microsoft_client_secret_here
 
+# OPTIONAL - Microsoft Entra ID tenant ID (directory ID)
+MICROSOFT_TENANT_ID=your_microsoft_tenant_id_here
+
+# OPTIONAL - Microsoft Entra ID application (client) ID
+MICROSOFT_CLIENT_ID=your_microsoft_client_id_here
+
 # OPTIONAL - Base origin URL for OAuth2 callbacks
 CURRENT_URL_ORIGIN=http://localhost:3000
+
+# OPTIONAL - Microsoft OAuth2 redirect URI path
+# Must match the redirect URI registered in Azure Portal
+# Defaults to /api/oauth2/mscallback; /api/auth is also supported as an alias
+MICROSOFT_REDIRECT_URI=/api/oauth2/mscallback
 
 # OPTIONAL - DeepSeek API key
 DEEPSEEK_API_KEY=your_deepseek_api_key_here
@@ -154,8 +166,9 @@ DEEPSEEK_API_KEY=your_deepseek_api_key_here
 # OPTIONAL - OAuth2 JWT signing secret
 NUXT_OAUTH2_JWT_SECRET=your_oauth2_jwt_secret_here
 
-# OPTIONAL - OAuth2 redirect URI
-REDIRECT_URI=your_uri_here
+# OPTIONAL - Onsite OAuth2 redirect URI path for /api/login
+# Defaults to api/oauth2/dccallback. Do not use /api/auth here.
+REDIRECT_URI=api/oauth2/dccallback
 
 # OPTIONAL - ROPC test credentials (testing only)
 # MICROSOFT_DUMMY_USER_NAME=test_user@example.com
@@ -180,9 +193,7 @@ The server starts on **port 24598** (configured in `nuxt.config.ts` → `devServ
 https://localhost:24598
 ```
 
-:::: warning
-The `--https` flag generates a self-signed certificate. Your browser will show a security warning — accept it to proceed. This is expected in local development.
-::::
+:::: warning The `--https` flag generates a self-signed certificate. Your browser will show a security warning — accept it to proceed. This is expected in local development. ::::
 
 ### Custom Port
 
@@ -213,7 +224,7 @@ The Drizzle ORM instance is attached to `event.context.drizzle` on every request
 Install the following extensions for the best development experience:
 
 | Extension | Purpose |
-|-----------|---------|
+| --- | --- |
 | [Vue - Official](https://marketplace.visualstudio.com/items?itemName=Vue.volar) | Vue 3 IntelliSense, type checking, and template support (formerly Volar) |
 | [ESLint](https://marketplace.visualstudio.com/items?itemName=dbaeumer.vscode-eslint) | Real-time linting |
 | [Prettier](https://marketplace.visualstudio.com/items?itemName=esbenp.prettier-vscode) | Code formatting |
@@ -225,10 +236,10 @@ Add to `.vscode/settings.json`:
 
 ```json
 {
-  "editor.formatOnSave": true,
-  "editor.defaultFormatter": "esbenp.prettier-vscode",
-  "typescript.tsdk": "node_modules/typescript/lib",
-  "vue.inlayHints.inlineHandlerLeading": true
+    "editor.formatOnSave": true,
+    "editor.defaultFormatter": "esbenp.prettier-vscode",
+    "typescript.tsdk": "node_modules/typescript/lib",
+    "vue.inlayHints.inlineHandlerLeading": true
 }
 ```
 
@@ -254,7 +265,7 @@ Example:
 
 ```ts
 // Correct (project style)
-const name = 'basishacks'
+const name = "basishacks";
 
 // Wrong
 const name = "basishacks";
@@ -271,9 +282,7 @@ NUXT_SESSION_PASSWORD=<your-secret> bun run start
 
 Or configure them in the server's environment file (e.g., `/etc/environment`, systemd `EnvironmentFile`, or a `.env` file in the app directory).
 
-:::: warning
-Never commit `.env` files to version control. The `.gitignore` file excludes `.env` by default.
-::::
+:::: warning Never commit `.env` files to version control. The `.gitignore` file excludes `.env` by default. ::::
 
 ## Verifying Your Setup
 
@@ -317,13 +326,13 @@ kill -9 <PID>
 If you see database-related errors:
 
 1. Delete the existing database file:
-   ```bash
-   rm database/basishacks.sqlite
-   ```
+    ```bash
+    rm database/basishacks.sqlite
+    ```
 2. Re-initialize:
-   ```bash
-   bun run db:migrate
-   ```
+    ```bash
+    bun run db:migrate
+    ```
 
 ### HTTPS Certificate Warnings
 
@@ -347,7 +356,7 @@ And update `NUXT_SESSION_PASSWORD` in your `.env` file.
 
 ### Microsoft Graph API Unavailable
 
-If the server logs `[MS Graph] MS Token Endpoint returned 401` or similar, the `MICROSOFT_CLIENT_SECRET` is either missing or invalid. Microsoft OAuth2 login and Graph API features will be unavailable, but the rest of the application will work normally.
+If the server logs `[MS Graph] MS Token Endpoint returned 401` or similar, the `MICROSOFT_CLIENT_SECRET` is either missing or invalid. If the server logs `[MSGraph] MICROSOFT_TENANT_ID or MICROSOFT_CLIENT_ID not set - Microsoft Graph features will be unavailable`, set `MICROSOFT_TENANT_ID` and `MICROSOFT_CLIENT_ID` (the Azure app's tenant and client IDs). Microsoft OAuth2 login and Graph API features will be unavailable until these are configured, but the rest of the application will work normally.
 
 ### OAuth2 JWT Secret Missing
 
