@@ -7,6 +7,8 @@ description: Complete reference for all API endpoints in the basishacks backend
 
 All API routes live in `server/api/` and use Nitro's file-based routing. Input validation is performed with Zod schemas from `shared/schemas.ts`. Auth helpers from `server/utils/auth.ts` enforce role-based access.
 
+<AnimatedCounter :target="54" suffix="endpoints" />
+
 ---
 
 ## Auth
@@ -574,3 +576,18 @@ Microsoft Graph lifecycle notification endpoint (reauthorization, etc.).
 | **Auth** | Microsoft Graph |
 | **Body** | Lifecycle notification payload |
 | **Response** | 200 OK |
+
+---
+
+<TerminalWindow title="basishacks@api-test:~" prompt="$">
+
+```bash
+# Quick health check
+curl -s https://localhost:24598/api/health | jq .
+
+# List teams (authenticated)
+curl -s -H "Cookie: session=..." \
+  https://localhost:24598/api/teams
+```
+
+</TerminalWindow>
