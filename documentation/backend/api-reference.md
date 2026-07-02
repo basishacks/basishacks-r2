@@ -30,6 +30,15 @@ Redirects to the OAuth2 authorize page for basishacks connect (the built-in firs
 | **Auth** | None |
 | **Response** | 302 redirect to `/api/oauth2/authorize?client_id=...` |
 
+### GET `/api/auth`
+
+Alias for the Microsoft OAuth2 callback handler (`/api/oauth2/mscallback`). Registered to match Azure App Registration redirect URIs that point to `/api/auth`.
+
+| Field | Details |
+|-------|---------|
+| **Auth** | None |
+| **Response** | 302 redirect after Microsoft callback processing |
+
 ---
 
 ## OAuth2
@@ -280,15 +289,76 @@ Get the current user's ballot for peer voting.
 | **Auth** | Any authenticated user with a team |
 | **Response** | `GetBallotResponse` — `{ projects, scores, reasoning }` |
 
-### PATCH `/api/ballot`
+### POST `/api/ballot`
 
 Submit peer voting ballot.
 
 | Field | Details |
 |-------|---------|
-| **Auth** | Any authenticated user with a team |
-| **Validation** | `SubmitVoteRequest` — `{ scores: number[] (1-5 each, sum = 12), reasoning: string }` |
+| **Auth** | Any authenticated user with a team and a submitted project |
+| **Validation** | `SubmitVoteRequest` — `{ scores: number[] (0-5 each, sum = 10), reasoning: string }` |
 | **Response** | `{ message: string }` |
+| **Side effects** | Upserts a row in `peer_voting_scores` |
+
+### GET `/api/ballot/summary`
+
+Admin/developer endpoint returning per-season judging progress (submitted vs. scored project counts).
+
+| Field | Details |
+|-------|---------|
+| **Auth** | User with `PORTAL_DEBUG_VIEW` permission or admin |
+| **Response** | `BallotSummaryResponse` |
+
+---
+
+## Election
+
+### GET `/api/election/candidates`
+
+Returns the list of student-council election positions and candidates.
+
+| Field | Details |
+|-------|---------|
+| **Auth** | User with `VotePermissions.VOTE` or admin |
+| **Response** | `ElectionPosition[]` |
+
+### POST `/api/election/vote`
+
+Submit a ranked-choice election ballot.
+
+| Field | Details |
+|-------|---------|
+| **Auth** | User with `VotePermissions.VOTE` or admin |
+| **Validation** | `ElectionVoteRequest` — `{ positions: { title, candidates: { id, rank }[] }[] }` |
+| **Response** | `{ message: string }` |
+| **Rules** | Ranks within a position must be unique and contiguous starting at 1; `null` rank means abstain |
+
+### GET `/api/election/vote`
+
+Returns IRV tally results. Before `hackathon.results_open_timestamp`, only `totalBallots` is returned; full results are released after that timestamp.
+
+| Field | Details |
+|-------|---------|
+| **Auth** | User with `VotePermissions.VOTE` or admin |
+| **Response** | `ElectionResult` — `{ totalBallots, positions: { title, status, winner?, details? }[] }` |
+
+### GET `/api/election/vote/all`
+
+Admin-only: list all cast ballots with voter name/email and decoded votes.
+
+| Field | Details |
+|-------|---------|
+| **Auth** | Admin |
+| **Response** | `ElectionBallot[]` |
+
+### DELETE `/api/election/vote/:id`
+
+Admin-only: delete a ballot by ID.
+
+| Field | Details |
+|-------|---------|
+| **Auth** | Admin |
+| **Response** | `{ message: string, changes: number }` |
 
 ---
 
