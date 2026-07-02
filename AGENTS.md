@@ -14,27 +14,26 @@ This file contains project-specific context for AI coding agents. The reader is 
 - Peer voting and judge scoring
 - OAuth2 application integrations
 
-The stack is Vue 3 (frontend) + Nitro (backend) + SQLite (better-sqlite3).
+The stack is Vue 3 (frontend) + Nitro (backend) + SQLite via Drizzle ORM (`bun:sqlite` under Bun, `better-sqlite3` under Node.js).
 
 ---
 
 ## Technology Stack
 
-| Layer            | Technology                                               |
-| ---------------- | -------------------------------------------------------- |
-| Framework        | Nuxt 3 (latest)                                          |
-| UI               | `@nuxt/ui` ^4.6.1 (Tailwind CSS v4 based)                |
-| Language         | TypeScript 5.6+                                          |
-| Runtime          | Node.js >= v24                                           |
-| Package Manager  | Bun (preferred); npm works                               |
-| Database (local) | `better-sqlite3` with WAL mode                           |
-| Database (prod)  | SQLite (better-sqlite3)                                  |
-| Auth             | `nuxt-auth-utils` (session-based)                        |
-| Validation       | Zod 4.x                                                  |
-| Fonts            | `@nuxt/fonts` (local provider)                           |
-| Icons            | `@iconify-json/lucide`, `@iconify-json/material-symbols` |
-| Linting          | `@nuxt/eslint` + Prettier                                |
-| Deployment       | Node.js server (VPS)                                     |
+| Layer | Technology |
+| --- | --- |
+| Framework | Nuxt 3 (^4.4.8) |
+| UI | `@nuxt/ui` ^4.9.0 (Tailwind CSS v4 based) |
+| Language | TypeScript (^5.9.3) |
+| Runtime | Node.js >= v24 or Bun (dual-runtime support) |
+| Package Manager | Bun (preferred); npm works |
+| Database | SQLite via Drizzle ORM (`bun:sqlite` under Bun, `better-sqlite3` under Node.js) |
+| Auth | `nuxt-auth-utils` 0.5.25 (session-based) |
+| Validation | Zod 4.x (^4.4.3) |
+| Fonts | `@nuxt/fonts` ^0.14.0 (local provider) |
+| Icons | `@iconify-json/lucide`, `@iconify-json/material-symbols` |
+| Linting | `@nuxt/eslint` 1.10.0 + Prettier ^3.9.4 |
+| Deployment | Node.js server (VPS; Bun also supported) |
 
 ---
 
@@ -53,9 +52,13 @@ server/             # Nitro backend
   api/              # API route handlers (file-based)
   middleware/       # Server middleware (OAuth2 authorize)
   plugins/          # Nitro plugins (DB init, MS Graph token init)
+  database/         # Drizzle ORM schema, migrations, and runtime-agnostic init
+    schema.ts       # Canonical Drizzle schema
+    migrate.ts      # Custom migration runner + legacy schema repair
+    index.ts        # createDrizzleDatabase() selects bun:sqlite or better-sqlite3
   types/            # Type augmentations (H3EventContext)
   utils/            # Server utilities
-    database/       # Drizzle ORM schema and init
+    database/       # Per-table Drizzle helpers
     auth.ts         # requireUser / requireJudge / requireAdmin
     convert.ts      # DB row -> public API object transformers
     rateLimit.ts    # In-memory rate limiter
@@ -72,18 +75,23 @@ shared/             # Code shared between client and server
   oauth2.ts         # Microsoft OAuth2 static config
   rubric.ts         # Judging rubric definitions
 
-sql/                # Schema and migrations
-  init.sql          # Base schema (hackathon, teams, users, ballots, etc.)
-  migration-*.sql   # Dated migrations
-  patch-*.sql       # Feature patches
+sql/archive/        # Archived legacy SQL schema and migrations
+  init.sql          # Historical base schema
+  migration-*.sql   # Historical dated migrations
+  patch-*.sql       # Historical feature patches
 
-tests/              # Test suite
-  index.js          # Test runner entry
-  test.oauth2.js    # OAuth2 tests
-  test.microsoft.ts # MS Graph API tests (mostly commented out)
-  test.deepseek.ts  # DeepSeek API tests
+drizzle/            # Drizzle Kit generated migration files
+  *.sql             # Migration SQL
+  meta/             # Drizzle Kit metadata snapshots
 
-database/           # Local SQLite file (basishacks.sqlite)
+tests/              # Vitest test suite
+  **/*.test.ts      # API, server utility, shared, component, page, etc.
+  setup.ts          # Global test setup, in-memory DB, mocks
+
+bun-shim/           # Compatibility shim for `bun test`
+  shim.test.ts      # Prints guidance to use `bun run test`
+
+database/           # SQLite database file (basishacks.sqlite, WAL mode)
 ```
 
 ---
@@ -94,7 +102,7 @@ database/           # Local SQLite file (basishacks.sqlite)
 # Install dependencies
 bun i
 
-# Initialize local database (run once)
+# Database auto-migrates on server startup; manual Drizzle Kit command
 bun run db:migrate
 
 # Dev server (HTTPS, port 24598)
@@ -108,8 +116,8 @@ bun run build
 # Preview built app
 bun run preview   # port 24598
 
-# Run tests
-bun test
+# Run tests (Vitest; do NOT use `bun test`)
+bun run test
 ```
 
 ---
@@ -119,13 +127,15 @@ bun test
 ### Local Development
 
 - Nitro preset: `node-server`
-- Uses `better-sqlite3` directly against `./database/basishacks.sqlite`
+- SQLite driver is selected at runtime: `bun:sqlite` under Bun, `better-sqlite3` under Node.js
+- Database file: `./database/basishacks.sqlite` with WAL mode and foreign keys enabled
 - `server/plugins/init-database.ts` initializes the DB on startup via Drizzle ORM and attaches it to `event.context.drizzle`
 
 ### Production (VPS)
 
 - Nitro preset: `node-server`
-- Uses `better-sqlite3` directly against `./database/basishacks.sqlite`
+- Same runtime-agnostic SQLite driver selection as local development
+- Database file: `./database/basishacks.sqlite` with WAL mode and foreign keys enabled
 - The same `event.context.drizzle` is used as in local development
 
 ---
@@ -158,7 +168,7 @@ Use the helpers in `server/utils/auth.ts` to enforce roles:
 - All DB access goes through `event.context.drizzle` (Drizzle ORM).
 - Per-table helpers live in `server/utils/database/*.ts` (e.g., `users.ts`, `teams.ts`).
 - The canonical TypeScript types are in `shared/database.d.ts` (inferred from Drizzle schema).
-- Migrations are managed via Drizzle Kit (`drizzle/` directory).
+- Migration files are generated by Drizzle Kit and stored in `drizzle/`; they are applied automatically on server startup by the runtime-agnostic runner in `server/database/migrate.ts`.
 - Profile themes are stored as `"mode|value"` strings in the DB and parsed into `{ mode, value }` objects in the API layer (`server/utils/convert.ts`).
 
 ---
@@ -187,7 +197,7 @@ Use the helpers in `server/utils/auth.ts` to enforce roles:
 
 ## Code Style
 
-- Prettier config (`.prettierrc`): **no semicolons**, **single quotes**.
+- Prettier config (`.prettierrc`): **semicolons enabled**, **double quotes**, `tabWidth: 4`, `trailingComma: all`, `printWidth: 100`.
 - ESLint is configured via `@nuxt/eslint` (`eslint.config.mjs`).
 - Prefer `const` and arrow functions where appropriate.
 - Use `~~/` for imports from the project root (especially in server code).
@@ -196,13 +206,19 @@ Use the helpers in `server/utils/auth.ts` to enforce roles:
 
 ## Testing
 
-Tests are run with `node --env-file=.env tests/index.js`. The runner imports and executes:
+Tests are run with **Vitest**:
 
-- `test.oauth2.js`
-- `test.microsoft.ts` (mostly commented out; requires admin-approved MS Graph permissions)
-- `test.deepseek.ts`
+```bash
+bun run test            # one-shot run
+bun run test:watch      # watch mode
+bun run test:coverage   # with coverage
+```
 
-There is no framework like Vitest or Jest; tests are simple async functions that return `true`/`false`.
+The suite currently contains **647 passing tests** covering API endpoints, server utilities, database helpers, shared schemas, frontend components, pages, composables, and middleware.
+
+Do **not** use `bun test`. Bun's native test runner cannot resolve Nuxt's `~~/` and `~/` path aliases. `bunfig.toml` redirects `bun test` to `bun-shim/shim.test.ts`, which prints guidance pointing to `bun run test`.
+
+Legacy files such as `tests/index.js`, `tests/test.oauth2.js`, `tests/test.microsoft.ts`, and `tests/test.deepseek.ts` are kept for reference but are not part of the active Vitest suite.
 
 ---
 
@@ -233,13 +249,33 @@ node .output/server/index.mjs
 
 ## Environment Variables
 
-Copy `.env.example` to `.env` and fill in:
+Copy `.env.example` to `.env` and fill in at least the required values:
+
+### Required
 
 | Variable | Purpose |
 | --- | --- |
 | `NUXT_SESSION_PASSWORD` | Session encryption key (>= 32 bytes) |
 | `NUXT_OAUTH2_JWT_SECRET` | JWT signing secret for OAuth2 token exchange (>= 32 bytes). Validated at startup. |
-| `MICROSOFT_CLIENT_SECRET` | MS Entra app secret for Graph API |
+| `ONSITE_LOGIN_CLIENT_ID` | OAuth2 `client_id` of the basishacks app used for the onsite login flow |
+
+### Optional (for Microsoft features)
+
+| Variable | Purpose |
+| --- | --- |
+| `MICROSOFT_TENANT_ID` | Microsoft Entra ID tenant ID |
+| `MICROSOFT_CLIENT_ID` | Microsoft Entra ID application (client) ID |
+| `MICROSOFT_CLIENT_SECRET` | Microsoft Entra ID client secret for Graph API |
+| `MICROSOFT_REDIRECT_URI` | Microsoft OAuth2 redirect URI path (default `/api/oauth2/mscallback`) |
+
+### Optional (for development)
+
+| Variable | Purpose |
+| --- | --- |
+| `CURRENT_URL_ORIGIN` | Base origin for OAuth2 callbacks (default `http://localhost:3000`) |
+| `REDIRECT_URI` | Onsite OAuth2 redirect path (default `api/oauth2/dccallback`) |
+| `DEEPSEEK_API_KEY` | DeepSeek API key for AI chat features |
+| `PORT` / `HOST` | Server port/host override (defaults: `3000` / `0.0.0.0`) |
 | `MICROSOFT_DUMMY_USER_NAME` | ROPC test user (rarely used) |
 | `MICROSOFT_DUMMY_USER_PASSWORD` | ROPC test password (rarely used) |
 
