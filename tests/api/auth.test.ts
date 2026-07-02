@@ -1,96 +1,96 @@
 import {
-  createTestContext,
-  resetTestContext,
-  resetMockState,
-  setupNitroGlobals,
-  mockBody,
-  mockSession,
-  seedUser,
-  type TestContext,
-} from './helpers'
+    createTestContext,
+    resetTestContext,
+    resetMockState,
+    setupNitroGlobals,
+    mockBody,
+    mockSession,
+    seedUser,
+    type TestContext,
+} from "./helpers";
 
 // Mock the auth utility module
-vi.mock('~~/server/utils/auth', () => ({
-  requireUser: vi.fn(),
-  requireJudge: vi.fn(),
-  requireAdmin: vi.fn(),
-  requirePermission: vi.fn(),
-}))
+vi.mock("~~/server/utils/auth", () => ({
+    requireUser: vi.fn(),
+    requireJudge: vi.fn(),
+    requireAdmin: vi.fn(),
+    requirePermission: vi.fn(),
+}));
 
 // Mock the rate limit wrapper
-vi.mock('~~/server/utils/rateLimit', () => ({
-  applyRateLimit: (fn: any) => fn,
-}))
+vi.mock("~~/server/utils/rateLimit", () => ({
+    applyRateLimit: (fn: any) => fn,
+}));
 
-let ctx: TestContext
-let impersonateHandler: any
+let ctx: TestContext;
+let impersonateHandler: any;
 
 beforeAll(async () => {
-  setupNitroGlobals()
+    setupNitroGlobals();
 
-  // Stub auto-imported database functions using real implementations
-  const { getUser } = await import('~~/server/utils/database/users')
-  vi.stubGlobal('getUser', getUser)
+    // Stub auto-imported database functions using real implementations
+    const { getUser } = await import("~~/server/utils/database/users");
+    vi.stubGlobal("getUser", getUser);
 
-  // Import handler after globals are set up
-  impersonateHandler = (await import('~~/server/api/auth/impersonate.post')).default
-})
+    // Import handler after globals are set up
+    impersonateHandler = (await import("~~/server/api/auth/impersonate.post")).default;
+});
 
 beforeEach(async () => {
-  resetMockState()
-  ctx = await createTestContext()
-})
+    resetMockState();
+    ctx = await createTestContext();
+});
 
 afterEach(() => {
-  resetTestContext(ctx)
-})
+    resetTestContext(ctx);
+});
 
 function createEvent(overrides: Record<string, unknown> = {}) {
-  return {
-    context: { db: ctx.db, drizzle: ctx.drizzle },
-    ...overrides,
-  }
+    return {
+        context: { db: ctx.db, drizzle: ctx.drizzle },
+        ...overrides,
+    };
 }
 
-describe('POST /api/auth/impersonate', () => {
-  it('returns 403 when user is not admin', async () => {
-    const { requireAdmin } = await import('~~/server/utils/auth')
-    ;(requireAdmin as any).mockRejectedValue(
-      Object.assign(new Error('Insufficient permissions'), { statusCode: 403 }),
-    )
+describe("POST /api/auth/impersonate", () => {
+    it("returns 403 when user is not admin", async () => {
+        const { requireAdmin } = await import("~~/server/utils/auth");
+        (requireAdmin as any).mockRejectedValue(
+            Object.assign(new Error("Insufficient permissions"), { statusCode: 403 }),
+        );
 
-    mockBody.value = { userId: 1 }
+        mockBody.value = { userId: 1 };
 
-    await expect(impersonateHandler(createEvent())).rejects.toMatchObject({
-      statusCode: 403,
-    })
-  })
+        await expect(impersonateHandler(createEvent())).rejects.toMatchObject({
+            statusCode: 403,
+        });
+    });
 
-  it('returns 404 when target user does not exist', async () => {
-    const { requireAdmin } = await import('~~/server/utils/auth')
-    ;(requireAdmin as any).mockResolvedValue({ id: 1, role: 'admin' })
+    it("returns 404 when target user does not exist", async () => {
+        const { requireAdmin } = await import("~~/server/utils/auth");
+        (requireAdmin as any).mockResolvedValue({ id: 1, role: "admin" });
 
-    mockBody.value = { userId: 9999 }
+        mockBody.value = { userId: 9999 };
 
-    await expect(impersonateHandler(createEvent())).rejects.toMatchObject({
-      statusCode: 404,
-    })
-  })
+        await expect(impersonateHandler(createEvent())).rejects.toMatchObject({
+            statusCode: 404,
+        });
+    });
 
-  it('sets session to target user on successful impersonation', async () => {
-    const { requireAdmin } = await import('~~/server/utils/auth')
-    ;(requireAdmin as any).mockResolvedValue({ id: 1, role: 'admin' })
+    it("sets session to target user on successful impersonation", async () => {
+        const { requireAdmin } = await import("~~/server/utils/auth");
+        (requireAdmin as any).mockResolvedValue({ id: 1, role: "admin" });
 
-    const target = seedUser(ctx, {
-      email: 'target@basischina.com',
-      name: 'Target User',
-    })
+        const target = seedUser(ctx, {
+            email: "target@basischina.com",
+            name: "Target User",
+        });
 
-    mockBody.value = { userId: target.id }
+        mockBody.value = { userId: target.id };
 
-    const result = await impersonateHandler(createEvent())
+        const result = await impersonateHandler(createEvent());
 
-    expect(result).toEqual({ success: true })
-    expect(mockSession.value).toMatchObject({ user: { id: target.id } })
-  })
-})
+        expect(result).toEqual({ success: true });
+        expect(mockSession.value).toMatchObject({ user: { id: target.id } });
+    });
+});

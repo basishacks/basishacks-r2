@@ -1,126 +1,126 @@
-import { readFileSync } from 'node:fs'
-import { resolve } from 'node:path'
+import { readFileSync } from "node:fs";
+import { resolve } from "node:path";
 
 // Microsoft OAuth2 env vars used by server/utils/oauth2.ts and
 // server/plugins/microsoft.ts. These are read at module load time, so they
 // must be set before any test imports those modules. The values mirror the
 // previously hardcoded configuration so existing assertions still hold.
-process.env.MICROSOFT_TENANT_ID = 'cbc6e1e2-a6bb-4002-bbdc-6da892a051a7'
-process.env.MICROSOFT_CLIENT_ID = '868b989e-6574-4795-bcfb-8db37bee1c37'
+process.env.MICROSOFT_TENANT_ID = "cbc6e1e2-a6bb-4002-bbdc-6da892a051a7";
+process.env.MICROSOFT_CLIENT_ID = "868b989e-6574-4795-bcfb-8db37bee1c37";
 
 // Runtime-agnostic sqlite statement wrapper.
 // Under Bun we use bun:sqlite; under Node.js we use better-sqlite3.
 // Both expose a near-identical prepare().run/all/get API.
 class SQLiteStatement {
-  private statement: any
-  private bindings: unknown[] = []
+    private statement: any;
+    private bindings: unknown[] = [];
 
-  constructor(statement: any) {
-    this.statement = statement
-  }
+    constructor(statement: any) {
+        this.statement = statement;
+    }
 
-  bind(...params: unknown[]): this {
-    this.bindings = params
-    return this
-  }
+    bind(...params: unknown[]): this {
+        this.bindings = params;
+        return this;
+    }
 
-  first<T = unknown>(): T | undefined {
-    return this.statement.get(...this.bindings) as T | undefined
-  }
+    first<T = unknown>(): T | undefined {
+        return this.statement.get(...this.bindings) as T | undefined;
+    }
 
-  all<T = unknown>(): { results: T[] } {
-    return { results: this.statement.all(...this.bindings) as T[] }
-  }
+    all<T = unknown>(): { results: T[] } {
+        return { results: this.statement.all(...this.bindings) as T[] };
+    }
 
-  run(): { meta: { changed_db: number } } {
-    const result = this.statement.run(...this.bindings)
-    return { meta: { changed_db: result.changes ?? 0 } }
-  }
+    run(): { meta: { changed_db: number } } {
+        const result = this.statement.run(...this.bindings);
+        return { meta: { changed_db: result.changes ?? 0 } };
+    }
 }
 
 // Thin runtime abstraction for the test database wrapper.
 interface RawDatabase {
-  exec(sql: string): void
-  prepare(sql: string): any
-  close(): void
+    exec(sql: string): void;
+    prepare(sql: string): any;
+    close(): void;
 }
 
 /**
  * D1-compatible Database wrapper, mirroring the SQLiteDatabase class in server/utils/database.ts.
  */
 export class SQLiteDatabase {
-  private db: RawDatabase
+    private db: RawDatabase;
 
-  constructor(db: RawDatabase) {
-    this.db = db
-  }
-
-  prepare(sql: string): SQLiteStatement {
-    return new SQLiteStatement(this.db.prepare(sql))
-  }
-
-  batch<T = unknown>(statements: Array<{ sql: string; params: unknown[] }>): T[] {
-    const results: T[] = []
-    this.exec('BEGIN')
-    try {
-      for (const stmt of statements) {
-        const prepared = this.db.prepare(stmt.sql)
-        const result = prepared.all(...stmt.params)
-        if (Array.isArray(result)) {
-          results.push(...(result as T[]))
-        } else {
-          results.push(result as T)
-        }
-      }
-      this.exec('COMMIT')
-    } catch (e) {
-      this.exec('ROLLBACK')
-      throw e
+    constructor(db: RawDatabase) {
+        this.db = db;
     }
-    return results
-  }
 
-  exec(sql: string): void {
-    this.db.exec(sql)
-  }
+    prepare(sql: string): SQLiteStatement {
+        return new SQLiteStatement(this.db.prepare(sql));
+    }
 
-  /** Return the underlying raw sqlite instance (for Drizzle ORM) */
-  getRawDb(): RawDatabase {
-    return this.db
-  }
+    batch<T = unknown>(statements: Array<{ sql: string; params: unknown[] }>): T[] {
+        const results: T[] = [];
+        this.exec("BEGIN");
+        try {
+            for (const stmt of statements) {
+                const prepared = this.db.prepare(stmt.sql);
+                const result = prepared.all(...stmt.params);
+                if (Array.isArray(result)) {
+                    results.push(...(result as T[]));
+                } else {
+                    results.push(result as T);
+                }
+            }
+            this.exec("COMMIT");
+        } catch (e) {
+            this.exec("ROLLBACK");
+            throw e;
+        }
+        return results;
+    }
 
-  /** Close the database connection */
-  close(): void {
-    this.db.close()
-  }
+    exec(sql: string): void {
+        this.db.exec(sql);
+    }
+
+    /** Return the underlying raw sqlite instance (for Drizzle ORM) */
+    getRawDb(): RawDatabase {
+        return this.db;
+    }
+
+    /** Close the database connection */
+    close(): void {
+        this.db.close();
+    }
 }
 
 // Path to the schema file relative to the project root
-const schemaPath = resolve(import.meta.dirname, '..', 'sql', 'archive', 'init.sql')
-const schemaSQL = readFileSync(schemaPath, 'utf-8')
+const schemaPath = resolve(import.meta.dirname, "..", "sql", "archive", "init.sql");
+const schemaSQL = readFileSync(schemaPath, "utf-8");
 
 /**
  * Create a fresh in-memory SQLite database with the full schema applied.
  * Use this in tests to get a clean, isolated database instance.
  */
 export async function createTestDatabase(): Promise<SQLiteDatabase> {
-  let db: RawDatabase
+    let db: RawDatabase;
 
-  if (typeof Bun !== 'undefined') {
-    const { Database } = await import('bun:sqlite')
-    db = new Database(':memory:') as RawDatabase
-  } else {
-    const { default: Database } = await import('better-sqlite3')
-    db = new Database(':memory:') as RawDatabase
-  }
+    if (typeof Bun !== "undefined") {
+        const { Database } = await import("bun:sqlite");
+        db = new Database(":memory:") as RawDatabase;
+    } else {
+        const { default: Database } = await import("better-sqlite3");
+        db = new Database(":memory:") as RawDatabase;
+    }
 
-  // Enable foreign keys just like the real app does
-  db.exec('PRAGMA foreign_keys = ON')
-  // Run the schema to create all tables and indexes
-  db.exec(schemaSQL)
+    // Enable foreign keys just like the real app does
+    db.exec("PRAGMA foreign_keys = ON");
+    // Run the schema to create all tables and indexes
+    db.exec(schemaSQL);
 
-  // Apply migrations that add tables/columns not in init.sql
-  db.exec(`
+    // Apply migrations that add tables/columns not in init.sql
+    db.exec(`
     CREATE TABLE IF NOT EXISTS seasons (
       id INTEGER PRIMARY KEY AUTOINCREMENT,
       name TEXT NOT NULL UNIQUE,
@@ -167,9 +167,9 @@ export async function createTestDatabase(): Promise<SQLiteDatabase> {
     ALTER TABLE hackathon ADD COLUMN judging_open INTEGER NOT NULL DEFAULT 0;
     ALTER TABLE hackathon ADD COLUMN schedule_start TEXT;
     ALTER TABLE hackathon ADD COLUMN schedule_end TEXT;
-  `)
+  `);
 
-  return new SQLiteDatabase(db)
+    return new SQLiteDatabase(db);
 }
 
 /**
@@ -177,7 +177,7 @@ export async function createTestDatabase(): Promise<SQLiteDatabase> {
  * Faster than closing and re-opening for between-test resets.
  */
 export function resetTestDatabase(wrapper: SQLiteDatabase): void {
-  wrapper.exec(`
+    wrapper.exec(`
     DELETE FROM sc_votes;
     DELETE FROM ballot_scores;
     DELETE FROM ballots;
@@ -190,8 +190,8 @@ export function resetTestDatabase(wrapper: SQLiteDatabase): void {
     DELETE FROM teams;
     DELETE FROM seasons;
     DELETE FROM hackathon;
-  `)
+  `);
 }
 
 // Re-export a placeholder; tests that need the raw driver class should not rely on it.
-export const Database = null as any
+export const Database = null as any;

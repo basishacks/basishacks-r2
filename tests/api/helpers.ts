@@ -1,10 +1,10 @@
-import { readFileSync } from 'node:fs'
-import { resolve } from 'node:path'
-import type { BaseSQLiteDatabase } from 'drizzle-orm/sqlite-core'
-import * as schema from '~~/server/database/schema'
+import { readFileSync } from "node:fs";
+import { resolve } from "node:path";
+import type { BaseSQLiteDatabase } from "drizzle-orm/sqlite-core";
+import * as schema from "~~/server/database/schema";
 
-const schemaPath = resolve(import.meta.dirname, '..', '..', 'sql', 'archive', 'init.sql')
-const initSQL = readFileSync(schemaPath, 'utf-8')
+const schemaPath = resolve(import.meta.dirname, "..", "..", "sql", "archive", "init.sql");
+const initSQL = readFileSync(schemaPath, "utf-8");
 
 const migrationSQL = `
   CREATE TABLE IF NOT EXISTS seasons (
@@ -53,42 +53,42 @@ const migrationSQL = `
   ALTER TABLE hackathon ADD COLUMN judging_open INTEGER NOT NULL DEFAULT 0;
   ALTER TABLE hackathon ADD COLUMN schedule_start TEXT;
   ALTER TABLE hackathon ADD COLUMN schedule_end TEXT;
-`
+`;
 
 async function createRawDatabase(): Promise<any> {
-  if (typeof Bun !== 'undefined') {
-    const { Database } = await import('bun:sqlite')
-    return new Database(':memory:')
-  }
-  const { default: Database } = await import('better-sqlite3')
-  return new Database(':memory:')
+    if (typeof Bun !== "undefined") {
+        const { Database } = await import("bun:sqlite");
+        return new Database(":memory:");
+    }
+    const { default: Database } = await import("better-sqlite3");
+    return new Database(":memory:");
 }
 
-async function createDrizzle(sqlite: any): Promise<BaseSQLiteDatabase<'sync', any, typeof schema>> {
-  if (typeof Bun !== 'undefined') {
-    const { drizzle } = await import('drizzle-orm/bun-sqlite')
-    return drizzle(sqlite, { schema }) as any
-  }
-  const { drizzle } = await import('drizzle-orm/better-sqlite3')
-  return drizzle(sqlite, { schema }) as any
+async function createDrizzle(sqlite: any): Promise<BaseSQLiteDatabase<"sync", any, typeof schema>> {
+    if (typeof Bun !== "undefined") {
+        const { drizzle } = await import("drizzle-orm/bun-sqlite");
+        return drizzle(sqlite, { schema }) as any;
+    }
+    const { drizzle } = await import("drizzle-orm/better-sqlite3");
+    return drizzle(sqlite, { schema }) as any;
 }
 
 export interface TestContext {
-  drizzle: BaseSQLiteDatabase<'sync', any, typeof schema>
-  sqlite: any
+    drizzle: BaseSQLiteDatabase<"sync", any, typeof schema>;
+    sqlite: any;
 }
 
 export async function createTestContext(): Promise<TestContext> {
-  const sqlite = await createRawDatabase()
-  sqlite.exec('PRAGMA foreign_keys = ON')
-  sqlite.exec(initSQL)
-  sqlite.exec(migrationSQL)
-  const drizzleDb = await createDrizzle(sqlite)
-  return { drizzle: drizzleDb, sqlite }
+    const sqlite = await createRawDatabase();
+    sqlite.exec("PRAGMA foreign_keys = ON");
+    sqlite.exec(initSQL);
+    sqlite.exec(migrationSQL);
+    const drizzleDb = await createDrizzle(sqlite);
+    return { drizzle: drizzleDb, sqlite };
 }
 
 export function resetTestContext(ctx: TestContext): void {
-  ctx.sqlite.exec(`
+    ctx.sqlite.exec(`
     DELETE FROM sc_votes;
     DELETE FROM ballot_scores;
     DELETE FROM ballots;
@@ -101,203 +101,235 @@ export function resetTestContext(ctx: TestContext): void {
     DELETE FROM teams;
     DELETE FROM seasons;
     DELETE FROM hackathon;
-  `)
+  `);
 }
 
 export function seedHackathon(ctx: TestContext, overrides: Record<string, unknown> = {}) {
-  const now = Date.now()
-  ctx.drizzle
-    .insert(schema.hackathon)
-    .values({
-      id: 1,
-      status: 'in_progress',
-      voting_enabled: 0,
-      results_published: 0,
-      submitted_count: 0,
-      max_votes_per_user: 0,
-      judging_open: 0,
-      start_timestamp: now,
-      end_timestamp: now + 86400000,
-      voting_start_timestamp: now + 86400000,
-      voting_end_timestamp: now + 172800000,
-      results_open_timestamp: now + 259200000,
-      theme_name: 'Test Theme',
-      theme_description: 'A test theme',
-      ...overrides,
-    } as any)
-    .run()
+    const now = Date.now();
+    ctx.drizzle
+        .insert(schema.hackathon)
+        .values({
+            id: 1,
+            status: "in_progress",
+            voting_enabled: 0,
+            results_published: 0,
+            submitted_count: 0,
+            max_votes_per_user: 0,
+            judging_open: 0,
+            start_timestamp: now,
+            end_timestamp: now + 86400000,
+            voting_start_timestamp: now + 86400000,
+            voting_end_timestamp: now + 172800000,
+            results_open_timestamp: now + 259200000,
+            theme_name: "Test Theme",
+            theme_description: "A test theme",
+            ...overrides,
+        } as any)
+        .run();
 }
 
-export function seedSeason(ctx: TestContext, overrides: { name?: string; is_active?: number } = {}) {
-  return ctx.drizzle
-    .insert(schema.seasons)
-    .values({ name: overrides.name ?? 'Season 1', is_active: overrides.is_active ?? 1 })
-    .returning()
-    .get()
+export function seedSeason(
+    ctx: TestContext,
+    overrides: { name?: string; is_active?: number } = {},
+) {
+    return ctx.drizzle
+        .insert(schema.seasons)
+        .values({ name: overrides.name ?? "Season 1", is_active: overrides.is_active ?? 1 })
+        .returning()
+        .get();
 }
 
 export function seedUser(
-  ctx: TestContext,
-  overrides: { email?: string; role?: string; name?: string | null; team_id?: number | null; login_code?: string | null; login_expiry?: number | null } = {},
+    ctx: TestContext,
+    overrides: {
+        email?: string;
+        role?: string;
+        name?: string | null;
+        team_id?: number | null;
+        login_code?: string | null;
+        login_expiry?: number | null;
+    } = {},
 ) {
-  return ctx.drizzle
-    .insert(schema.users)
-    .values({
-      email: overrides.email ?? 'user@basischina.com',
-      role: overrides.role ?? 'participant',
-      name: overrides.name ?? 'Test User',
-      team_id: overrides.team_id ?? null,
-      login_code: overrides.login_code ?? null,
-      login_expiry: overrides.login_expiry ?? null,
-    } as any)
-    .returning()
-    .get()
+    return ctx.drizzle
+        .insert(schema.users)
+        .values({
+            email: overrides.email ?? "user@basischina.com",
+            role: overrides.role ?? "participant",
+            name: overrides.name ?? "Test User",
+            team_id: overrides.team_id ?? null,
+            login_code: overrides.login_code ?? null,
+            login_expiry: overrides.login_expiry ?? null,
+        } as any)
+        .returning()
+        .get();
 }
 
 export function seedTeam(
-  ctx: TestContext,
-  overrides: { name?: string; pathway?: string | null; season_id?: number; project_submitted?: number; project_name?: string; project_description?: string; project_demo_url?: string | null; project_repo_url?: string | null; sourcing?: string } = {},
+    ctx: TestContext,
+    overrides: {
+        name?: string;
+        pathway?: string | null;
+        season_id?: number;
+        project_submitted?: number;
+        project_name?: string;
+        project_description?: string;
+        project_demo_url?: string | null;
+        project_repo_url?: string | null;
+        sourcing?: string;
+    } = {},
 ) {
-  return ctx.drizzle
-    .insert(schema.teams)
-    .values({
-      name: overrides.name ?? 'Test Team',
-      pathway: overrides.pathway ?? null,
-      season_id: overrides.season_id ?? 1,
-      project_submitted: overrides.project_submitted ?? 0,
-      project_name: overrides.project_name ?? '',
-      project_description: overrides.project_description ?? '',
-      project_demo_url: overrides.project_demo_url ?? null,
-      project_repo_url: overrides.project_repo_url ?? null,
-      sourcing: overrides.sourcing ?? '',
-    } as any)
-    .returning()
-    .get()
+    return ctx.drizzle
+        .insert(schema.teams)
+        .values({
+            name: overrides.name ?? "Test Team",
+            pathway: overrides.pathway ?? null,
+            season_id: overrides.season_id ?? 1,
+            project_submitted: overrides.project_submitted ?? 0,
+            project_name: overrides.project_name ?? "",
+            project_description: overrides.project_description ?? "",
+            project_demo_url: overrides.project_demo_url ?? null,
+            project_repo_url: overrides.project_repo_url ?? null,
+            sourcing: overrides.sourcing ?? "",
+        } as any)
+        .returning()
+        .get();
 }
 
 // ---------------------------------------------------------------------------
 // Mock state
 // ---------------------------------------------------------------------------
 
-export const mockBody = { value: undefined as unknown }
-export const mockQueryState = { value: {} as Record<string, unknown> }
-export const mockCookies = { values: {} as Record<string, string | undefined> }
-export const mockParams = { values: {} as Record<string, string | undefined> }
-export const mockSession = { value: undefined as { user?: { id: number } } | undefined }
-export const mockConfig = { value: {} as Record<string, unknown> }
+export const mockBody = { value: undefined as unknown };
+export const mockQueryState = { value: {} as Record<string, unknown> };
+export const mockCookies = { values: {} as Record<string, string | undefined> };
+export const mockParams = { values: {} as Record<string, string | undefined> };
+export const mockSession = { value: undefined as { user?: { id: number } } | undefined };
+export const mockConfig = { value: {} as Record<string, unknown> };
 
 // ---------------------------------------------------------------------------
 // Nitro auto-import mocks
 // ---------------------------------------------------------------------------
 
 async function readBodyMock(_event: any, _schema: any) {
-  return mockBody.value
+    return mockBody.value;
 }
 
 function readRawBodyMock(_event: any) {
-  return Promise.resolve(mockBody.value)
+    return Promise.resolve(mockBody.value);
 }
 
 async function readQueryMock(_event: any, _schema: any) {
-  return mockQueryState.value
+    return mockQueryState.value;
 }
 
 function cookieMock(_event: any, name: string) {
-  return mockCookies.values[name]
+    return mockCookies.values[name];
 }
 
 function paramMock(_event: any, name: string) {
-  return mockParams.values[name]
+    return mockParams.values[name];
 }
 
 function queryMock(_event: any) {
-  return mockQueryState.value
+    return mockQueryState.value;
 }
 
 function headerMock(_event: any, _name: string) {
-  return undefined
+    return undefined;
 }
 
 function setHeaderMock(_event: any, _name: string, _value: string) {
-  return undefined
+    return undefined;
 }
 
-function createErrMock(err: { status?: number; statusCode?: number; message?: string; statusMessage?: string }) {
-  const statusCode = err.statusCode ?? err.status ?? 500
-  const message = err.statusMessage ?? err.message ?? 'Error'
-  const error = new Error(message) as any
-  error.statusCode = statusCode
-  error.statusMessage = message
-  throw error
+function createErrMock(err: {
+    status?: number;
+    statusCode?: number;
+    message?: string;
+    statusMessage?: string;
+}) {
+    const statusCode = err.statusCode ?? err.status ?? 500;
+    const message = err.statusMessage ?? err.message ?? "Error";
+    const error = new Error(message) as any;
+    error.statusCode = statusCode;
+    error.statusMessage = message;
+    throw error;
 }
 
 function configMock(_event?: any) {
-  return mockConfig.value
+    return mockConfig.value;
 }
 
 function getUserSessionMock(_event: any) {
-  return Promise.resolve(mockSession.value ?? {})
+    return Promise.resolve(mockSession.value ?? {});
 }
 
 function requireUserSessionMock(_event: any) {
-  const s = mockSession.value
-  if (!s?.user?.id) {
-    const error = new Error('Unauthorized') as any
-    error.statusCode = 401
-    throw error
-  }
-  return Promise.resolve(s)
+    const s = mockSession.value;
+    if (!s?.user?.id) {
+        const error = new Error("Unauthorized") as any;
+        error.statusCode = 401;
+        throw error;
+    }
+    return Promise.resolve(s);
 }
 
 function setUserSessionMock(_event: any, data: any) {
-  mockSession.value = { user: data.user }
-  return Promise.resolve()
+    mockSession.value = { user: data.user };
+    return Promise.resolve();
 }
 
 function clearUserSessionMock(_event: any) {
-  mockSession.value = undefined
-  return Promise.resolve()
+    mockSession.value = undefined;
+    return Promise.resolve();
 }
 
 export function setupNitroGlobals() {
-  vi.stubGlobal('defineEventHandler', (fn: any) => fn)
-  vi.stubGlobal('readValidatedBody', readBodyMock)
-  vi.stubGlobal('readBody', readRawBodyMock)
-  vi.stubGlobal('getValidatedQuery', readQueryMock)
-  vi.stubGlobal('getCookie', cookieMock)
-  vi.stubGlobal('getRouterParam', paramMock)
-  vi.stubGlobal('getQuery', queryMock)
-  vi.stubGlobal('getHeader', headerMock)
-  vi.stubGlobal('setHeader', setHeaderMock)
-  vi.stubGlobal('createError', createErrMock)
-  vi.stubGlobal('useRuntimeConfig', configMock)
-  vi.stubGlobal('getUserSession', getUserSessionMock)
-  vi.stubGlobal('requireUserSession', requireUserSessionMock)
-  vi.stubGlobal('setUserSession', setUserSessionMock)
-  vi.stubGlobal('clearUserSession', clearUserSessionMock)
-  vi.stubGlobal('requireUser', vi.fn().mockResolvedValue({ id: 1, team_id: null, role: 'participant' }))
-  vi.stubGlobal('requireJudge', vi.fn().mockResolvedValue({ id: 1, role: 'judge' }))
-  vi.stubGlobal('requireAdmin', vi.fn().mockResolvedValue({ id: 1, role: 'admin' }))
-  vi.stubGlobal('requirePermission', vi.fn().mockResolvedValue(undefined))
-  vi.stubGlobal('applyRateLimit', (fn: any) => fn)
+    vi.stubGlobal("defineEventHandler", (fn: any) => fn);
+    vi.stubGlobal("readValidatedBody", readBodyMock);
+    vi.stubGlobal("readBody", readRawBodyMock);
+    vi.stubGlobal("getValidatedQuery", readQueryMock);
+    vi.stubGlobal("getCookie", cookieMock);
+    vi.stubGlobal("getRouterParam", paramMock);
+    vi.stubGlobal("getQuery", queryMock);
+    vi.stubGlobal("getHeader", headerMock);
+    vi.stubGlobal("setHeader", setHeaderMock);
+    vi.stubGlobal("createError", createErrMock);
+    vi.stubGlobal("useRuntimeConfig", configMock);
+    vi.stubGlobal("getUserSession", getUserSessionMock);
+    vi.stubGlobal("requireUserSession", requireUserSessionMock);
+    vi.stubGlobal("setUserSession", setUserSessionMock);
+    vi.stubGlobal("clearUserSession", clearUserSessionMock);
+    vi.stubGlobal(
+        "requireUser",
+        vi.fn().mockResolvedValue({ id: 1, team_id: null, role: "participant" }),
+    );
+    vi.stubGlobal("requireJudge", vi.fn().mockResolvedValue({ id: 1, role: "judge" }));
+    vi.stubGlobal("requireAdmin", vi.fn().mockResolvedValue({ id: 1, role: "admin" }));
+    vi.stubGlobal("requirePermission", vi.fn().mockResolvedValue(undefined));
+    vi.stubGlobal("applyRateLimit", (fn: any) => fn);
 }
 
 export function resetMockState() {
-  mockBody.value = undefined
-  mockQueryState.value = {}
-  mockCookies.values = {}
-  mockParams.values = {}
-  mockSession.value = undefined
-  mockConfig.value = {}
+    mockBody.value = undefined;
+    mockQueryState.value = {};
+    mockCookies.values = {};
+    mockParams.values = {};
+    mockSession.value = undefined;
+    mockConfig.value = {};
 
-  // Reset auto-imported auth mocks to their default resolved values so a
-  // previous rejected-value test does not leak into the next one.
-  ;(globalThis as any).requireUser?.mockReset?.()
-  ;(globalThis as any).requireUser?.mockResolvedValue({ id: 1, team_id: null, role: 'participant' })
-  ;(globalThis as any).requireJudge?.mockReset?.()
-  ;(globalThis as any).requireJudge?.mockResolvedValue({ id: 1, role: 'judge' })
-  ;(globalThis as any).requireAdmin?.mockReset?.()
-  ;(globalThis as any).requireAdmin?.mockResolvedValue({ id: 1, role: 'admin' })
-  ;(globalThis as any).requirePermission?.mockReset?.()
-  ;(globalThis as any).requirePermission?.mockResolvedValue(undefined)
+    // Reset auto-imported auth mocks to their default resolved values so a
+    // previous rejected-value test does not leak into the next one.
+    (globalThis as any).requireUser?.mockReset?.();
+    (globalThis as any).requireUser?.mockResolvedValue({
+        id: 1,
+        team_id: null,
+        role: "participant",
+    });
+    (globalThis as any).requireJudge?.mockReset?.();
+    (globalThis as any).requireJudge?.mockResolvedValue({ id: 1, role: "judge" });
+    (globalThis as any).requireAdmin?.mockReset?.();
+    (globalThis as any).requireAdmin?.mockResolvedValue({ id: 1, role: "admin" });
+    (globalThis as any).requirePermission?.mockReset?.();
+    (globalThis as any).requirePermission?.mockResolvedValue(undefined);
 }

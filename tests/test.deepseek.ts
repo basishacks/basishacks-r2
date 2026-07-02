@@ -1,7 +1,7 @@
 import OpenAI from "openai";
 
 const openai = new OpenAI({
-    baseURL: 'https://api.deepseek.com',
+    baseURL: "https://api.deepseek.com",
     apiKey: process.env.DEEPSEEK_API_KEY,
 });
 
@@ -28,28 +28,26 @@ enviroment, words are often abbreviated and people often use slang, sometimes wi
 people talk in a chat environment and you will use slang and abbreviations when appropriate.
 
 However, your response should not lose accuracy as you are still an assistant. For questions that
-you are unsure, you will say "I am not sure about that, but I think..." and then give your best guess.`
+you are unsure, you will say "I am not sure about that, but I think..." and then give your best guess.`;
 
 export async function testDeepSeek() {
-
     console.log("Setting up DeepSeek test...");
-    
+
     const completion = await openai.chat.completions.create({
         messages: [
-            { 
-                role: "system", 
-                content: prompt
+            {
+                role: "system",
+                content: prompt,
             },
             {
                 role: "user",
-                content: "bro wtf why is ur club full????"
-            }
+                content: "bro wtf why is ur club full????",
+            },
         ],
         model: "deepseek-v4-flash",
     } as any);
 
     console.log(completion.choices[0].message.content);
 
-    return true
-
+    return true;
 }

@@ -8,16 +8,16 @@
 //
 // This file lives outside the `tests/` directory on purpose so that Vitest
 // (whose `include` is `tests/**/*.test.ts`) does not try to load it.
-import { test, expect } from 'bun:test'
+import { test, expect } from "bun:test";
 
-test('use bun run test', () => {
-  console.log('\n========================================')
-  console.log(' This project uses Vitest for testing.  ')
-  console.log(' Bun test cannot resolve Nuxt path       ')
-  console.log(' aliases (~~/ and ~/), and the test      ')
-  console.log(' files import from "vitest" directly.    ')
-  console.log('                                         ')
-  console.log(' Run the suite with:  bun run test       ')
-  console.log('========================================\n')
-  expect(true).toBe(true)
-})
+test("use bun run test", () => {
+    console.log("\n========================================");
+    console.log(" This project uses Vitest for testing.  ");
+    console.log(" Bun test cannot resolve Nuxt path       ");
+    console.log(" aliases (~~/ and ~/), and the test      ");
+    console.log(' files import from "vitest" directly.    ');
+    console.log("                                         ");
+    console.log(" Run the suite with:  bun run test       ");
+    console.log("========================================\n");
+    expect(true).toBe(true);
+});
