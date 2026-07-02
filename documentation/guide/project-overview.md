@@ -45,17 +45,13 @@ The platform manages the entire hackathon lifecycle:
 
 ## Authentication
 
-Three authentication methods are supported:
+Two authentication methods are supported:
 
-### 1. Magic Code
+### 1. Microsoft OAuth2
 
-Users enter their `@basischina.com` email, receive a 6-digit verification code (10-minute expiry) via a webhook service, and exchange it for a session. This is the primary login method for participants.
+Delegates authentication to Microsoft Entra ID (tenant configured via the `MICROSOFT_TENANT_ID` environment variable). Users click the Microsoft login button and are redirected to Microsoft's consent screen. On success, they are redirected back with an authorization code that is exchanged for a basishacks session. This is the only login method for the hackathon registry.
 
-### 2. Microsoft OAuth2
-
-Delegates authentication to Microsoft Entra ID (tenant configured via the `MICROSOFT_TENANT_ID` environment variable). Users click the Microsoft login button and are redirected to Microsoft's consent screen. On success, they are redirected back with an authorization code that is exchanged for a basishacks session.
-
-### 3. basishacks connect
+### 2. basishacks connect
 
 A custom OAuth2 integration with **PKCE (Proof Key for Code Exchange)** support. External applications redirect users to `/api/oauth2/authorize` with standard OAuth2 parameters (`client_id`, `scope`, `redirect_uri`, `state`, `code_challenge`, `code_challenge_method`). After the user authenticates and consents, the application receives an authorization code that can be exchanged for a JWT access token at `/api/oauth2/token`.
 
@@ -149,7 +145,7 @@ basishacks-r2/
 │   ├── api/                    # API route handlers (file-based)
 │   │   ├── admin/              # Admin endpoints (scores, teams)
 │   │   ├── applications/       # OAuth2 application CRUD + secrets, scopes, redirect URIs
-│   │   ├── auth/               # Authentication endpoints (login, code, impersonate)
+│   │   ├── auth/               # Authentication endpoints (impersonate; /api/auth alias for Microsoft OAuth2 callback)
 │   │   ├── ballot/             # Ballot/voting endpoints
 │   │   ├── chatbot/            # AI chatbot endpoints (Microsoft Teams integration)
 │   │   ├── debug/              # Debug endpoints (DeepSeek sessions, file upload)

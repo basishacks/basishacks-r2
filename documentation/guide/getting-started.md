@@ -113,8 +113,8 @@ At minimum, set the following:
 # REQUIRED - Must be at least 32 bytes
 NUXT_SESSION_PASSWORD=your_random_string_at_least_32_bytes_long
 
-# REQUIRED - Webhook URL for sending login codes
-NUXT_SEND_CODE_URL=https://your-code-sending-service.com/send
+# REQUIRED - Must be at least 32 bytes
+NUXT_OAUTH2_JWT_SECRET=your_oauth2_jwt_secret_here
 ```
 
 See [Environment Setup](/guide/environment-setup) for the full list of variables.
@@ -203,14 +203,11 @@ is rarely used.
 Once the server is running, follow these steps to log in for the first time:
 
 1. **Navigate to the login page** — Click the login button or go to `/login`.
-2. **Enter your email** — Use a `@basischina.com` email address. The magic code auth system only accepts emails from this domain.
-3. **Receive a verification code** — A 6-digit code is sent to your email (via the `NUXT_SEND_CODE_URL` webhook). In development, the code is also logged to the server console.
-4. **Enter the code** — Type the 6-digit code on the verification screen. The code expires after 10 minutes.
-5. **Access the dashboard** — After successful verification, you are redirected to the dashboard.
+2. **Sign in with Microsoft** — Click the Microsoft login button. This redirects to Microsoft Entra ID (the tenant configured via `MICROSOFT_TENANT_ID`) for authentication.
+3. **Access the dashboard** — After successful authentication, you are redirected to the dashboard.
 
 ### Alternative Login Methods
 
-- **Microsoft OAuth2** — Click the Microsoft login button. This redirects to Microsoft Entra ID (the tenant configured via `MICROSOFT_TENANT_ID`) for authentication.
 - **basishacks connect** — A custom OAuth2 integration with PKCE support for connected applications.
 
 ### Gaining Admin Access

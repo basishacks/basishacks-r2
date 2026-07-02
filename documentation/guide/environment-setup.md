@@ -107,7 +107,7 @@ cp .env.example .env
 | Variable | Description | Example |
 | --- | --- | --- |
 | `NUXT_SESSION_PASSWORD` | Session encryption key. **Must be at least 32 bytes.** | Output of `openssl rand -base64 32` |
-| `NUXT_SEND_CODE_URL` | Webhook/service URL for sending login verification codes to `@basischina.com` emails | `https://your-service.com/send` |
+| `NUXT_OAUTH2_JWT_SECRET` | JWT signing secret for OAuth2 token exchange. **Must be at least 32 bytes.** Used by `jose` to sign and verify access tokens (HS256). | Output of `openssl rand -base64 32` |
 | `ONSITE_LOGIN_CLIENT_ID` | OAuth2 `client_id` of the basishacks app used by the onsite login flow. The server auto-adds `${CURRENT_URL_ORIGIN}/${REDIRECT_URI}` to this app's allowed redirect URIs on startup. | `97e435f4-17e8-42ef-9b12-9684fd656de9` |
 
 #### Generating a Session Password
@@ -128,7 +128,6 @@ Copy the output and paste it as the value for `NUXT_SESSION_PASSWORD`.
 | `CURRENT_URL_ORIGIN` | Base origin URL for OAuth2 redirect callbacks (no trailing slash). Must match the redirect URI registered in Azure Portal. | `http://localhost:3000` |
 | `MICROSOFT_REDIRECT_URI` | Microsoft OAuth2 redirect URI path (must start with `/`). Must exactly match the redirect URI registered in Azure Portal. Defaults to `/api/oauth2/mscallback`. | `/api/oauth2/mscallback` |
 | `DEEPSEEK_API_KEY` | DeepSeek API key for AI chat features (debug routes only). Uses the OpenAI SDK under the hood. | — |
-| `NUXT_OAUTH2_JWT_SECRET` | JWT signing secret for OAuth2 token exchange. Used by `jose` to sign and verify access tokens (HS256). Generate with `openssl rand -base64 32`. | — |
 | `REDIRECT_URI` | Onsite OAuth2 redirect URI path used by `/api/login`. The server auto-registers `${CURRENT_URL_ORIGIN}/${REDIRECT_URI}` for `ONSITE_LOGIN_CLIENT_ID`. Defaults to `api/oauth2/dccallback`. | `api/oauth2/dccallback` |
 | `MICROSOFT_DUMMY_USER_NAME` | ROPC test user email (rarely used, testing only) | — |
 | `MICROSOFT_DUMMY_USER_PASSWORD` | ROPC test user password (rarely used, testing only) | — |
@@ -141,8 +140,8 @@ Copy the output and paste it as the value for `NUXT_SESSION_PASSWORD`.
 # REQUIRED - Session encryption key (>= 32 bytes)
 NUXT_SESSION_PASSWORD=your_random_string_at_least_32_bytes_long
 
-# REQUIRED - Webhook URL for sending login codes
-NUXT_SEND_CODE_URL=https://your-code-sending-service.com/send
+# REQUIRED - OAuth2 JWT signing secret (>= 32 bytes)
+NUXT_OAUTH2_JWT_SECRET=your_oauth2_jwt_secret_here
 
 # OPTIONAL - Microsoft Entra ID client secret
 MICROSOFT_CLIENT_SECRET=your_microsoft_client_secret_here
@@ -163,9 +162,6 @@ MICROSOFT_REDIRECT_URI=/api/oauth2/mscallback
 
 # OPTIONAL - DeepSeek API key
 DEEPSEEK_API_KEY=your_deepseek_api_key_here
-
-# OPTIONAL - OAuth2 JWT signing secret
-NUXT_OAUTH2_JWT_SECRET=your_oauth2_jwt_secret_here
 
 # OPTIONAL - Onsite OAuth2 redirect URI path for /api/login
 # Defaults to api/oauth2/dccallback.
@@ -366,7 +362,12 @@ If the server logs `[MS Graph] MS Token Endpoint returned 401` or similar, the `
 
 ### OAuth2 JWT Secret Missing
 
-If you see `NUXT_OAUTH2_JWT_SECRET is not set` when trying to use OAuth2 token exchange, generate and set the secret:
+The server validates `NUXT_OAUTH2_JWT_SECRET` at startup:
+
+- **Production (`NODE_ENV=production`):** if the secret is missing or shorter than 32 bytes, the server logs a fatal error and exits immediately so the application can never return `invalid_grant: NUXT_OAUTH2_JWT_SECRET is not set`.
+- **Development/test:** if the secret is missing or too short, a prominent warning is logged and a documented dev-only fallback is applied automatically. Do not rely on this fallback in production.
+
+Generate a proper secret with:
 
 ```bash
 openssl rand -base64 32
