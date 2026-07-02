@@ -14,6 +14,11 @@ let initPromise: Promise<string | null> | null = null
 
 export default async function initializeMSAccessToken() {
 
+    if (!process.env.MICROSOFT_TENANT_ID || !process.env.MICROSOFT_CLIENT_ID) {
+        console.warn("[MSGraph] MICROSOFT_TENANT_ID or MICROSOFT_CLIENT_ID not set - Microsoft Graph features will be unavailable")
+        return null
+    }
+
     console.log("[MSGraph] Initializing MS Access Token...")
 
     if (metadata.access_token) {
@@ -21,13 +26,13 @@ export default async function initializeMSAccessToken() {
         return metadata.access_token;
     }
 
-    const req = await fetch("https://login.microsoftonline.com/cbc6e1e2-a6bb-4002-bbdc-6da892a051a7/oauth2/v2.0/token",{
+    const req = await fetch(`https://login.microsoftonline.com/${process.env.MICROSOFT_TENANT_ID}/oauth2/v2.0/token`,{
         method: "POST",
         headers: {
             'Content-Type': 'application/x-www-form-urlencoded'
         },
         body: new URLSearchParams({
-            client_id: '868b989e-6574-4795-bcfb-8db37bee1c37',
+            client_id: process.env.MICROSOFT_CLIENT_ID || '',
             scope: 'https://graph.microsoft.com/.default',
             client_secret: env.MICROSOFT_CLIENT_SECRET ?? '',
             grant_type: 'client_credentials',
@@ -144,13 +149,18 @@ export async function createMicrosoftMeeting(target: string, subject: string, ht
 
 export async function initializeDummyUserAccessToken() {
 
-    const res = await fetch("https://login.microsoftonline.com/cbc6e1e2-a6bb-4002-bbdc-6da892a051a7/oauth2/v2.0/token", {
+    if (!process.env.MICROSOFT_TENANT_ID || !process.env.MICROSOFT_CLIENT_ID) {
+        console.warn("[MSGraph] MICROSOFT_TENANT_ID or MICROSOFT_CLIENT_ID not set - Microsoft Graph features will be unavailable")
+        return null
+    }
+
+    const res = await fetch(`https://login.microsoftonline.com/${process.env.MICROSOFT_TENANT_ID}/oauth2/v2.0/token`, {
         method: "POST",
         headers: {
             'Content-Type': 'application/x-www-form-urlencoded'
         },
         body: new URLSearchParams({
-            client_id: '868b989e-6574-4795-bcfb-8db37bee1c37',
+            client_id: process.env.MICROSOFT_CLIENT_ID || '',
             scope: 'https://graph.microsoft.com/Chat.ReadWrite openid profile offline_access',
             username: env.MICROSOFT_DUMMY_USER_NAME ?? '',
             password: env.MICROSOFT_DUMMY_USER_PASSWORD ?? '',
@@ -170,7 +180,7 @@ export async function initializeDummyUserAccessToken() {
         const state = randomBytes(77).toString("base64url")
         const code_verif = randomBytes(75).toString("base64url")
         const code_challenge = createHash("sha256").update(code_verif).digest("base64url")
-        const link = structureLink(state, code_challenge, encodeURI("Chat.Create Chat.ReadWrite Presence.ReadWrite"))
+        const link = structureLink(state, code_challenge, "Chat.Create Chat.ReadWrite Presence.ReadWrite")
 
         console.log("[MS Graph] Dummy user error: " + data.error_description)
         console.log("[MS Graph] Consent first with DevClub User: " + link)
