@@ -5,7 +5,7 @@ description: File-based routes in the basishacks frontend — home, dashboard, v
 
 # Pages
 
-The basishacks frontend contains **25 page files** in `app/pages/`, mapped to routes via Nuxt's file-based routing. All pages use `<script setup lang="ts">`.
+The basishacks frontend contains **27 page files** in `app/pages/`, mapped to routes via Nuxt's file-based routing. All pages use `<script setup lang="ts">`.
 
 ## Public Pages
 
@@ -106,13 +106,46 @@ Peer voting page. Protected by `auth` middleware. Only accessible during the `vo
 
 **Flow:**
 1. Fetches ballot data from `/api/ballot`
-2. Displays 4 `VotingProjectCard` components in a grid
-3. User distributes **10 stars** among eligible projects (0–5 per project)
+2. Displays eligible `VotingProjectCard` components in a grid
+3. User distributes **10 stars** among eligible projects in the same pathway (0–5 per project)
 4. Increment/decrement buttons with validation (total must equal 10)
 5. Reasoning textarea
 6. Submit with browser `confirm()` dialog
 
-**Validation:** Uses `SubmitVoteRequest` schema. Patches `/api/ballot`.
+**Validation:** Uses `SubmitVoteRequest` schema. Posts to `/api/ballot`.
+
+**Layout:** `default`
+
+## Election Pages
+
+### `/temp/vote`
+
+**File:** `app/pages/temp/vote/index.vue`
+
+Student-council election voting page. Protected by `auth` middleware. Requires `VotePermissions.VOTE` or `admin` permission.
+
+**Flow:**
+1. Fetches candidates from `/api/election/candidates`
+2. Fetches current IRV results from `/api/election/vote`
+3. User enters a rank (1 = first preference) for each candidate via `UPinInput`
+4. Empty inputs are treated as abstentions
+5. Press <UKbd>X</UKbd> to validate; press again to submit if there are no errors
+6. Results can be toggled on/off before full public release
+
+**Validation:** Client-side checks for duplicate ranks and skipped ranks; server validates with `ElectionVoteRequest`.
+
+**Keybinds:**
+- `X` — check / submit
+- `Tab` / `Shift+Tab` — navigate candidates
+- `ArrowDown` / `ArrowUp` — move between pin inputs
+
+**Layout:** `default`
+
+### `/temp/vote/all`
+
+**File:** `app/pages/temp/vote/all.vue`
+
+Admin-only ballot listing page for the election. Shows every cast ballot with voter name, email, submission time, decoded ranked choices, and a delete button.
 
 **Layout:** `default`
 
