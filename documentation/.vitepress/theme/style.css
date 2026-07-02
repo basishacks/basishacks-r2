@@ -4,7 +4,7 @@
    ═══════════════════════════════════════════════════════════════ */
 
 /* ── Font Imports ────────────────────────────────────────────── */
-@import url("https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:ital,wght@0,300;0,400;0,500;0,600;0,700;1,400&family=Space+Mono:ital,wght@0,400;0,700;1,400&display=swap");
+@import url("https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:ital,wght@0,300;0,400;0,500;0,600;0,700;1,400&family=Space+Mono:ital,wght@0,400;0,700;1,400&family=VT323&display=swap");
 
 /* ── CSS Custom Properties ──────────────────────────────────── */
 :root {
@@ -13,36 +13,36 @@
     --bh-brand-light: #00aa5e;
     --bh-brand-dark: #006638;
 
-    /* Light mode — WCAG AA compliant */
-    --bh-green: #00884a;
-    --bh-green-dim: #3a6e4f;
-    --bh-green-subtle: rgba(0, 136, 74, 0.08);
-    --bh-text: #1a3a1a;
-    --bh-text-muted: #3a5a3a;
-    --bh-bg: #ffffff;
-    --bh-bg-soft: #f6faf6;
-    --bh-bg-mute: #eef6ee;
-    --bh-border: #c8dcc8;
-    --bh-code-bg: #eef6ee;
-    --bh-selection-bg: rgba(0, 136, 74, 0.2);
-    --bh-selection-text: #1a3a1a;
-    --bh-shadow: rgba(0, 136, 74, 0.1);
-    --bh-scrollbar-thumb: #a0c8a0;
-    --bh-scrollbar-track: #eef6ee;
-    --bh-btn-bg: #00884a;
+    /* Light mode — light terminal emulator */
+    --bh-green: #006600;
+    --bh-green-dim: #3a5a3a;
+    --bh-green-subtle: rgba(0, 102, 0, 0.06);
+    --bh-text: #1a1a1a;
+    --bh-text-muted: #4a4a4a;
+    --bh-bg: #f5f5f5;
+    --bh-bg-soft: #eeeeee;
+    --bh-bg-mute: #e5e5e5;
+    --bh-border: #b8c4b8;
+    --bh-code-bg: #ffffff;
+    --bh-selection-bg: rgba(0, 102, 0, 0.18);
+    --bh-selection-text: #1a1a1a;
+    --bh-shadow: transparent;
+    --bh-scrollbar-thumb: #a0b0a0;
+    --bh-scrollbar-track: #e5e5e5;
+    --bh-btn-bg: #006600;
     --bh-btn-text: #ffffff;
-    --bh-btn-hover: #00aa5e;
-    --bh-table-stripe: #f6faf6;
+    --bh-btn-hover: #008800;
+    --bh-table-stripe: #eeeeee;
     --bh-crt-glow: none;
-    --bh-terminal-bg: #f4f9f4;
-    --bh-terminal-border: #c8dcc8;
-    --bh-terminal-header: #e8f2e8;
-    --bh-terminal-text: #1a3a1a;
+    --bh-terminal-bg: #ffffff;
+    --bh-terminal-border: #b8c4b8;
+    --bh-terminal-header: #e8e8e8;
+    --bh-terminal-text: #1a1a1a;
 
     /* Typography */
-    --bh-font-mono: "IBM Plex Mono", "Space Mono", "Fira Code", "Cascadia Code", monospace;
-    --bh-font-display: "Space Mono", "IBM Plex Mono", monospace;
-    --bh-transition-speed: 0.25s;
+    --bh-font-mono: "IBM Plex Mono", "Space Mono", "Courier New", Courier, monospace;
+    --bh-font-display: "VT323", "IBM Plex Mono", "Space Mono", monospace;
+    --bh-transition-speed: 0.15s;
 
     /* Legacy CRT aliases (used by home page components) */
     --crt-green: var(--bh-green);
@@ -88,31 +88,31 @@
 }
 
 .dark {
-    /* Dark mode — high contrast */
-    --bh-green: #33ff66;
-    --bh-green-dim: #66cc7a;
-    --bh-green-subtle: rgba(51, 255, 102, 0.1);
-    --bh-text: #d8ffd8;
-    --bh-text-muted: #88cc88;
-    --bh-bg: #080808;
-    --bh-bg-soft: #0a120a;
-    --bh-bg-mute: #101a10;
-    --bh-border: #1a3a1a;
-    --bh-code-bg: #0a120a;
-    --bh-selection-bg: rgba(51, 255, 102, 0.22);
-    --bh-selection-text: #d8ffd8;
-    --bh-shadow: rgba(51, 255, 102, 0.15);
-    --bh-scrollbar-thumb: #1a3a1a;
-    --bh-scrollbar-track: #080808;
-    --bh-btn-bg: #33ff66;
-    --bh-btn-text: #080808;
-    --bh-btn-hover: #66ff99;
-    --bh-table-stripe: #0a120a;
-    --bh-crt-glow: 0 0 10px rgba(51, 255, 102, 0.3), 0 0 40px rgba(51, 255, 102, 0.1);
-    --bh-terminal-bg: #080808;
-    --bh-terminal-border: #1a3a1a;
-    --bh-terminal-header: #101a10;
-    --bh-terminal-text: #d8ffd8;
+    /* Dark mode — classic UNIX terminal */
+    --bh-green: #33ff33;
+    --bh-green-dim: #22aa22;
+    --bh-green-subtle: rgba(51, 255, 51, 0.08);
+    --bh-text: #33ff33;
+    --bh-text-muted: #22aa22;
+    --bh-bg: #000000;
+    --bh-bg-soft: #0a0a0a;
+    --bh-bg-mute: #111111;
+    --bh-border: #1a331a;
+    --bh-code-bg: #000000;
+    --bh-selection-bg: rgba(51, 255, 51, 0.25);
+    --bh-selection-text: #000000;
+    --bh-shadow: transparent;
+    --bh-scrollbar-thumb: #1a331a;
+    --bh-scrollbar-track: #000000;
+    --bh-btn-bg: #33ff33;
+    --bh-btn-text: #000000;
+    --bh-btn-hover: #66ff66;
+    --bh-table-stripe: #0a0a0a;
+    --bh-crt-glow: none;
+    --bh-terminal-bg: #000000;
+    --bh-terminal-border: #1a331a;
+    --bh-terminal-header: #111111;
+    --bh-terminal-text: #33ff33;
 
     /* Legacy CRT aliases */
     --crt-green: var(--bh-green);
@@ -1609,6 +1609,66 @@ tr:hover td {
     .vp-terminal-window {
         font-size: 0.75em;
     }
+}
+
+/* ── Terminal Authenticity Overrides ──────────────────────────
+   Strip decorative rounding and glow so the docs feel like a real
+   UNIX terminal session rather than a styled marketing page. */
+
+/* Square corners on chrome and content surfaces */
+.VPNav,
+.VPSidebar,
+.VPFooter,
+.VPButton,
+.DocSearch-Button,
+pre,
+code,
+table,
+.custom-block,
+.vp-quote-cycler,
+.vp-terminal-window,
+.vp-easter-close,
+.bh-terminal,
+.network-node,
+.bh-actions .bh-btn,
+.vp-interactive-hero .hero-btn,
+.vp-interactive-hero .bh-terminal,
+.VPNavBarMenuLink,
+.VPSidebarItem.is-active .item {
+    border-radius: 0 !important;
+}
+
+/* No decorative shadows */
+pre,
+.VPButton,
+.vp-terminal-window,
+.bh-terminal,
+.network-node,
+.vp-quote-cycler,
+.vp-interactive-hero .hero-btn,
+.vp-interactive-hero .bh-terminal {
+    box-shadow: none !important;
+}
+
+/* Remove CRT scanlines and glow on the hero */
+.crt-scanlines::before,
+.crt-scanlines::after {
+    display: none !important;
+}
+
+/* Use classic terminal cursor */
+.term-cursor,
+.crt-cursor-inline {
+    background: var(--bh-green);
+    color: var(--bh-bg);
+    padding: 0 0.15em;
+    animation: cursor-blink 1s step-end infinite;
+}
+
+/* Make the hero ASCII banner feel like a login banner */
+.ascii-art {
+    text-shadow: none !important;
+    letter-spacing: 0;
 }
 
 /* Reduce motion for accessibility */

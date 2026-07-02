@@ -4,7 +4,7 @@ export default defineConfig({
     title: "basishacks",
     description: "Documentation for the BIBS-C Network Hackathon platform",
     lang: "en-US",
-    appearance: true,
+    appearance: "dark",
     cleanUrls: true,
     lastUpdated: true,
     head: [
