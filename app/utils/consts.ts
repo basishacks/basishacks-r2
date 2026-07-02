@@ -1,4 +1,2 @@
-
-
-export const WEBSITE_NAME = 'basishacks'
-export const THEME_NAME = 'nostalgia'
+export const WEBSITE_NAME = "basishacks";
+export const THEME_NAME = "nostalgia";
