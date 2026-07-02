@@ -170,7 +170,7 @@ The preview server runs on port 24598.
 
 ## Running Tests
 
-The project uses [Vitest](https://vitest.dev) as its test framework. The suite contains 600+ tests covering the API, server utilities, database helpers, shared schemas, and frontend components.
+The project uses [Vitest](https://vitest.dev) as its test framework. The suite contains **647 passing tests** covering the API, server utilities, database helpers, shared schemas, and frontend components.
 
 ```bash
 # Run the full test suite (canonical command)

@@ -5,7 +5,7 @@ description: Database schema, access patterns, per-table helpers, type conventio
 
 # Database
 
-basishacks uses SQLite (`better-sqlite3` with WAL mode) for both local development and production. All database access goes through Drizzle ORM, which provides type-safe queries.
+basishacks uses SQLite with a runtime-agnostic driver layer for both local development and production: `bun:sqlite` under Bun and `better-sqlite3` under Node.js. The database file uses WAL mode. All database access goes through Drizzle ORM, which provides type-safe queries.
 
 ## Tables
 
@@ -236,7 +236,7 @@ Allowed modes: `url`, `emoji`, `gradient`. If the mode is unrecognized, it defau
 
 Migrations are stored as SQL files in the `drizzle/` directory. On server startup, `server/database/migrate.ts` reads these files in lexicographic order and applies any that have not yet been recorded in the `_drizzle_migrations` tracking table.
 
-This custom runner is used because `drizzle-kit migrate` does not work with `bun:sqlite`. The runner is runtime-agnostic and works with both `bun:sqlite` and `better-sqlite3`.
+This runtime-agnostic custom runner works with both `bun:sqlite` and `better-sqlite3`, so the server can migrate the database regardless of which runtime is used. `bun run db:migrate` is also available as a Drizzle Kit command for manual migration management.
 
 ```ts
 // server/database/index.ts
@@ -313,7 +313,7 @@ Foreign keys are enforced at the SQLite level:
 PRAGMA foreign_keys = ON;
 ```
 
-This is set both in `initializeDatabase()` and in the `init-database.ts` plugin. Cascade deletes are configured on:
+This is set in `createDrizzleDatabase()` (via `server/database/index.ts`) and in the `init-database.ts` plugin. Cascade deletes are configured on:
 
 - `ballot_scores.ballot_id` → `ballots.id` (ON DELETE CASCADE)
 - `user_past_teams.user_id` → `users.id` (ON DELETE CASCADE)

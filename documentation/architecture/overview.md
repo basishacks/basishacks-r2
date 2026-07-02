@@ -11,21 +11,20 @@ basishacks is a **full-stack Nuxt 3 application** that combines a Vue 3 frontend
 
 ## Technology Stack
 
-| Layer            | Technology                                               |
-| ---------------- | -------------------------------------------------------- |
-| Framework        | Nuxt 3 (latest)                                          |
-| UI               | `@nuxt/ui` ^4.6.1 (Tailwind CSS v4 based)                |
-| Language         | TypeScript 5.6+                                          |
-| Runtime          | Node.js >= v24                                           |
-| Package Manager  | Bun (preferred); npm works                               |
-| Database (local) | `better-sqlite3` with WAL mode                           |
-| Database (prod)  | SQLite (better-sqlite3)                                  |
-| Auth             | `nuxt-auth-utils` (session-based)                        |
-| Validation       | Zod 4.x                                                  |
-| Fonts            | `@nuxt/fonts` (local provider)                           |
-| Icons            | `@iconify-json/lucide`, `@iconify-json/material-symbols` |
-| Linting          | `@nuxt/eslint` + Prettier                                |
-| Deployment       | Node.js server (VPS)                                     |
+| Layer | Technology |
+| --- | --- |
+| Framework | Nuxt 3 (^4.4.8) |
+| UI | `@nuxt/ui` ^4.9.0 (Tailwind CSS v4 based) |
+| Language | TypeScript (^5.9.3) |
+| Runtime | Node.js >= v24 or Bun (dual-runtime support) |
+| Package Manager | Bun (preferred); npm works |
+| Database | SQLite via Drizzle ORM (`bun:sqlite` under Bun, `better-sqlite3` under Node.js) |
+| Auth | `nuxt-auth-utils` 0.5.25 (session-based) |
+| Validation | Zod 4.x (^4.4.3) |
+| Fonts | `@nuxt/fonts` ^0.14.0 (local provider) |
+| Icons | `@iconify-json/lucide`, `@iconify-json/material-symbols` |
+| Linting | `@nuxt/eslint` 1.10.0 + Prettier ^3.9.4 |
+| Deployment | Node.js server (VPS; Bun also supported) |
 
 ## Directory Structure
 
@@ -62,11 +61,19 @@ basishacks-r2/
 │   ├── permissions.ts      # Fine-grained permission constants and helpers
 │   ├── oauth2-scopes.ts    # OAuth2 scope definitions
 │   └── rubric.ts           # Judging rubric definitions
-├── sql/                    # Schema and migrations
-│   ├── init.sql            # Base schema
-│   └── migration-*.sql     # Dated migrations
+├── sql/archive/            # Archived legacy SQL schema and migrations
+│   ├── init.sql            # Historical base schema
+│   └── migration-*.sql     # Historical dated migrations
+├── drizzle/                # Drizzle Kit generated migration files
+├── tests/                  # Vitest test suite
+│   ├── setup.ts            # Global test setup, in-memory DB, mocks
+│   └── **/*.test.ts        # API, server, shared, component, page tests
+├── bun-shim/               # Compatibility shim for `bun test`
+│   └── shim.test.ts        # Prints guidance to use `bun run test`
+├── bunfig.toml             # Redirects `bun test` to the guidance shim
+├── start-fix.mjs           # Bun production start entrypoint
 ├── documentation/          # VitePress documentation
-└── tests/                  # Test suite
+└── database/               # SQLite database file (basishacks.sqlite, WAL mode)
 ```
 
 ## Data Flow
@@ -101,7 +108,7 @@ Every incoming request has the following context attached by plugins and middlew
 
 | Context Key | Type | Set By | Purpose |
 | --- | --- | --- | --- |
-| `event.context.drizzle` | `BetterSQLite3Database` | `init-database.ts` plugin | Database access |
+| `event.context.drizzle` | `BaseSQLiteDatabase` | `init-database.ts` plugin | Database access |
 | `event.context.oauth2` | `OAuth2JWTContext` | `withOAuth2JWT()` wrapper | OAuth2 JWT payload, scopes, user |
 
 ## Key Architectural Decisions
@@ -130,7 +137,7 @@ const body = await readValidatedBody(event, CreateTeamRequest.parse);
 
 ### Drizzle ORM database layer
 
-The database layer uses Drizzle ORM with better-sqlite3. Schema definitions in `server/database/schema.ts` provide type-safe queries and automatic migrations via Drizzle Kit.
+The database layer uses Drizzle ORM with a runtime-agnostic SQLite driver (`bun:sqlite` under Bun, `better-sqlite3` under Node.js). Schema definitions in `server/database/schema.ts` provide type-safe queries. Migrations are applied automatically on startup by the custom runner in `server/database/migrate.ts`; Drizzle Kit is used to generate new migration files.
 
 ### Session-based auth
 

@@ -112,7 +112,7 @@ cp .env.example .env
 | --- | --- | --- |
 | `NUXT_SESSION_PASSWORD` | Session encryption key. **Must be at least 32 bytes.** | Output of `openssl rand -base64 32` |
 | `NUXT_OAUTH2_JWT_SECRET` | JWT signing secret for OAuth2 token exchange. **Must be at least 32 bytes.** Used by `jose` to sign and verify access tokens (HS256). | Output of `openssl rand -base64 32` |
-| `ONSITE_LOGIN_CLIENT_ID` | OAuth2 `client_id` of the basishacks app used by the onsite login flow. The server auto-adds `${CURRENT_URL_ORIGIN}/${REDIRECT_URI}` to this app's allowed redirect URIs on startup. | `97e435f4-17e8-42ef-9b12-9684fd656de9` |
+| `ONSITE_LOGIN_CLIENT_ID` | OAuth2 `client_id` of the basishacks app used by the onsite login flow. The server auto-adds `${CURRENT_URL_ORIGIN}/${REDIRECT_URI}` to this app's allowed redirect URIs on startup. | `your_onsite_login_client_id_here` |
 
 #### Generating a Session Password
 
@@ -264,8 +264,10 @@ The project includes an `.editorconfig` file that enforces consistent formatting
 
 The project uses Prettier with the following settings (defined in `.prettierrc`):
 
-- **No semicolons** — Semicolons are omitted
-- **Single quotes** — Strings use single quotes instead of double quotes
+- **Semicolons enabled** — Statements end with semicolons
+- **Double quotes** — Strings use double quotes instead of single quotes
+- **Tab width 4** — Indentation uses 4 spaces
+- **Trailing commas** — Trailing commas are added where valid
 
 Example:
 

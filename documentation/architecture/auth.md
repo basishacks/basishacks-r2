@@ -23,7 +23,7 @@ The flow redirects the user to Microsoft's login page, then back to the basishac
 
 ### 2. basishacks connect
 
-A custom OAuth2 integration that allows users to log in through the basishacks OAuth2 provider itself. This is the internal first-party application (`client_id: 97e435f4-17e8-42ef-9b12-9684fd656de9`) seeded during initialization.
+A custom OAuth2 integration that allows users to log in through the basishacks OAuth2 provider itself. The internal first-party application is identified by the `ONSITE_LOGIN_CLIENT_ID` environment variable and is registered during initialization.
 
 See [OAuth2 System](./oauth2) for full details on the authorization code flow.
 

@@ -242,15 +242,15 @@ This allows external applications to leverage basishacks as a proxy for Microsof
 
 ## basishacks connect
 
-`basishacks connect` is the internal first-party OAuth2 application, seeded during initialization:
+`basishacks connect` is the internal first-party OAuth2 application, seeded during initialization. Its `client_id` is read from the `ONSITE_LOGIN_CLIENT_ID` environment variable:
 
-| Property          | Value                                         |
-| ----------------- | --------------------------------------------- |
-| `client_id`       | `97e435f4-17e8-42ef-9b12-9684fd656de9`        |
-| `permissions`     | `openid profile email`                        |
-| `redirect_uri`    | `http://localhost:3000/api/oauth2/dccallback` |
-| `type`            | `first`                                       |
-| `proxy_microsoft` | `0`                                           |
+| Property | Value |
+| --- | --- |
+| `client_id` | Value of `ONSITE_LOGIN_CLIENT_ID` |
+| `permissions` | `openid profile email` |
+| `redirect_uri` | `${CURRENT_URL_ORIGIN}/${REDIRECT_URI}` (default `http://localhost:3000/api/oauth2/dccallback`) |
+| `type` | `first` |
+| `proxy_microsoft` | `0` |
 
 This application is used for site login via the custom OAuth2 flow.
 

@@ -28,21 +28,20 @@ The platform manages the entire hackathon lifecycle:
 
 | Layer | Technology | Notes |
 | --- | --- | --- |
-| **Framework** | Nuxt 3 (latest) | Full-stack Vue framework with SSR, file-based routing |
-| **UI** | `@nuxt/ui` ^4.7.1 | Tailwind CSS v4 based component library |
-| **Language** | TypeScript 5.6+ | Strict typing throughout |
-| **Runtime** | Node.js >= v24 | Required by tooling and runtime |
+| **Framework** | Nuxt 3 (^4.4.8) | Full-stack Vue framework with SSR, file-based routing |
+| **UI** | `@nuxt/ui` ^4.9.0 | Tailwind CSS v4 based component library |
+| **Language** | TypeScript (^5.9.3) | Strict typing throughout |
+| **Runtime** | Node.js >= v24 or Bun | Dual-runtime support; Bun is preferred |
 | **Package Manager** | Bun (preferred) | npm also works |
-| **Database (local)** | `better-sqlite3` with WAL mode | SQLite for local development |
-| **Database (prod)** | SQLite (bun:sqlite) via Drizzle ORM | Same stack as local development |
-| **Auth** | `nuxt-auth-utils` | Session-based authentication |
+| **Database** | SQLite via Drizzle ORM | `bun:sqlite` under Bun, `better-sqlite3` under Node.js |
+| **Auth** | `nuxt-auth-utils` 0.5.25 | Session-based authentication |
 | **JWT** | `jose` ^6.2.3 | JWT signing and verification for OAuth2 access tokens |
-| **AI** | `openai` ^6.37.0 | OpenAI SDK used for DeepSeek API integration |
-| **Validation** | Zod 4.x | Schema validation for all API inputs |
-| **Fonts** | `@nuxt/fonts` | Local font provider |
+| **AI** | `openai` ^6.45.0 | OpenAI SDK used for DeepSeek API integration |
+| **Validation** | Zod 4.x (^4.4.3) | Schema validation for all API inputs |
+| **Fonts** | `@nuxt/fonts` ^0.14.0 | Local font provider |
 | **Icons** | `@iconify-json/lucide`, `@iconify-json/material-symbols`, `@iconify-json/simple-icons` | Icon sets |
-| **Linting** | `@nuxt/eslint` + Prettier | No semicolons, single quotes |
-| **Deployment** | VPS (Bun) | Node.js server running Bun runtime |
+| **Linting** | `@nuxt/eslint` 1.10.0 + Prettier ^3.9.4 | Semicolons enabled, double quotes |
+| **Deployment** | Node.js server (VPS) | Bun also supported; Nitro `node-server` preset |
 
 ## Authentication
 
@@ -165,7 +164,7 @@ basishacks-r2/
 │   │   ├── init-database.ts    # Database initialization + attach Drizzle to event context
 │   │   ├── microsoft.ts        # MS Graph API token initialization + centralized API calls
 │   │   └── validate-oauth2-jwt-secret.ts # Startup guard for NUXT_OAUTH2_JWT_SECRET
-│   ├── types/                  # Type augmentations (H3EventContext, Cloudflare, OAuth2 JWT)
+│   ├── types/                  # Type augmentations (H3EventContext, OAuth2 JWT)
 │   └── utils/                  # Server utilities
 │       ├── database/           # Per-table DB helpers
 │       │   ├── awards.ts
@@ -198,18 +197,26 @@ basishacks-r2/
 │   ├── rubric.ts               # Judging rubric definitions (junior/senior criteria + weights)
 │   └── seasons.ts              # Season metadata (theme, date, docs links)
 │
-├── sql/                        # Schema and migrations
-│   ├── init.sql                # Base schema
-│   ├── migration-*.sql         # Dated migrations
-│   └── patch-*.sql             # Feature patches
+├── sql/archive/                # Archived legacy SQL schema and migrations
+│   ├── init.sql                # Historical base schema
+│   ├── migration-*.sql         # Historical dated migrations
+│   └── patch-*.sql             # Historical feature patches
 │
-├── tests/                      # Test suite
-│   ├── index.js                # Test runner entry
-│   ├── test.deepseek.ts        # DeepSeek API tests
-│   ├── test.microsoft.ts       # MS Graph API tests
-│   └── test.search.ts          # Search tests
+├── drizzle/                    # Drizzle Kit generated migration files
+│   ├── *.sql                   # Migration SQL
+│   └── meta/                   # Drizzle Kit metadata snapshots
 │
-├── database/                   # Local SQLite file (basishacks.sqlite)
+├── tests/                      # Vitest test suite
+│   ├── setup.ts                # Global test setup, in-memory DB, mocks
+│   ├── **/*.test.ts            # API, server, shared, component, page tests
+│   ├── index.js                # Legacy test runner (kept for reference)
+│   ├── test.deepseek.ts        # Legacy DeepSeek API tests (reference)
+│   └── test.microsoft.ts       # Legacy MS Graph API tests (reference)
+│
+├── bun-shim/                   # Compatibility shim for `bun test`
+│   └── shim.test.ts            # Prints guidance to use `bun run test`
+│
+├── database/                   # SQLite database file (basishacks.sqlite, WAL mode)
 ├── documentation/              # VitePress documentation site
 ├── public/                     # Static assets (fonts, images, uploads)
 └── scripts/                    # Build scripts
@@ -278,7 +285,7 @@ bun run format
 
 The project follows these conventions:
 
-- **Prettier** — No semicolons, single quotes
+- **Prettier** — Semicolons enabled, double quotes, `tabWidth: 4`, `trailingComma: all`, `printWidth: 100`
 - **ESLint** — Configured via `@nuxt/eslint`
 - **Imports** — Use `~~/` for project root imports in server code, `~/` for app imports
 - **Components** — Prefer `const` and arrow functions
