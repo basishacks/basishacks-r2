@@ -49,7 +49,7 @@ The canonical list of variables lives in `.env.example`. The table below summari
 | --- | --- | --- |
 | `NUXT_SESSION_PASSWORD` | Required | Session encryption key. Must be at least 32 bytes. Generate with `openssl rand -base64 32` |
 | `NUXT_SEND_CODE_URL` | Required | Webhook/service URL for sending magic-code login codes |
-| `ONSITE_LOGIN_CLIENT_ID` | Required for onsite login | OAuth2 `client_id` of the basishacks app used by the `/api/login` -> `/api/oauth2/authorize` onsite flow |
+| `ONSITE_LOGIN_CLIENT_ID` | Required for onsite login | OAuth2 `client_id` of the basishacks app used by the `/api/login` -> `/api/oauth2/authorize` onsite flow. The server auto-adds `${CURRENT_URL_ORIGIN}/${REDIRECT_URI}` to this app's allowed redirect URIs on startup |
 | `MICROSOFT_TENANT_ID` | Required for MS login | Microsoft Entra ID tenant (directory) ID. Must be paired with `MICROSOFT_CLIENT_ID` |
 | `MICROSOFT_CLIENT_ID` | Required for MS login | Microsoft Entra ID application (client) ID. Must be paired with `MICROSOFT_TENANT_ID` |
 | `MICROSOFT_CLIENT_SECRET` | Optional | Microsoft Entra ID app secret for MS Graph API integration |

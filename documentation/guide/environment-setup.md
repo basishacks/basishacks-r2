@@ -108,6 +108,7 @@ cp .env.example .env
 | --- | --- | --- |
 | `NUXT_SESSION_PASSWORD` | Session encryption key. **Must be at least 32 bytes.** | Output of `openssl rand -base64 32` |
 | `NUXT_SEND_CODE_URL` | Webhook/service URL for sending login verification codes to `@basischina.com` emails | `https://your-service.com/send` |
+| `ONSITE_LOGIN_CLIENT_ID` | OAuth2 `client_id` of the basishacks app used by the onsite login flow. The server auto-adds `${CURRENT_URL_ORIGIN}/${REDIRECT_URI}` to this app's allowed redirect URIs on startup. | `97e435f4-17e8-42ef-9b12-9684fd656de9` |
 
 #### Generating a Session Password
 
@@ -128,7 +129,7 @@ Copy the output and paste it as the value for `NUXT_SESSION_PASSWORD`.
 | `MICROSOFT_REDIRECT_URI` | Microsoft OAuth2 redirect URI path (must start with `/`). Must exactly match the redirect URI registered in Azure Portal. Defaults to `/api/oauth2/mscallback`; `/api/auth` is also supported as an alias handler. | `/api/oauth2/mscallback` |
 | `DEEPSEEK_API_KEY` | DeepSeek API key for AI chat features (debug routes only). Uses the OpenAI SDK under the hood. | — |
 | `NUXT_OAUTH2_JWT_SECRET` | JWT signing secret for OAuth2 token exchange. Used by `jose` to sign and verify access tokens (HS256). Generate with `openssl rand -base64 32`. | — |
-| `REDIRECT_URI` | Onsite OAuth2 redirect URI path used by `/api/login`. Must be registered for the OAuth2 application specified by `ONSITE_LOGIN_CLIENT_ID`. Defaults to `api/oauth2/dccallback`; do not set to `/api/auth` (reserved for the MS callback alias). | `api/oauth2/dccallback` |
+| `REDIRECT_URI` | Onsite OAuth2 redirect URI path used by `/api/login`. The server auto-registers `${CURRENT_URL_ORIGIN}/${REDIRECT_URI}` for `ONSITE_LOGIN_CLIENT_ID`. Defaults to `api/oauth2/dccallback`; do not set to `/api/auth` (reserved for the MS callback alias). | `api/oauth2/dccallback` |
 | `MICROSOFT_DUMMY_USER_NAME` | ROPC test user email (rarely used, testing only) | — |
 | `MICROSOFT_DUMMY_USER_PASSWORD` | ROPC test user password (rarely used, testing only) | — |
 | `PORT` | Server port override | `3000` |
@@ -169,6 +170,11 @@ NUXT_OAUTH2_JWT_SECRET=your_oauth2_jwt_secret_here
 # OPTIONAL - Onsite OAuth2 redirect URI path for /api/login
 # Defaults to api/oauth2/dccallback. Do not use /api/auth here.
 REDIRECT_URI=api/oauth2/dccallback
+
+# REQUIRED for onsite login - OAuth2 client_id of the basishacks app
+# The server auto-adds ${CURRENT_URL_ORIGIN}/${REDIRECT_URI} to its allowed
+# redirect URIs on startup if missing.
+ONSITE_LOGIN_CLIENT_ID=your_onsite_login_client_id_here
 
 # OPTIONAL - ROPC test credentials (testing only)
 # MICROSOFT_DUMMY_USER_NAME=test_user@example.com
