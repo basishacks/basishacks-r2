@@ -193,12 +193,12 @@ An object whose keys are the rubric criteria (`originality`, `presentation`, `te
 
 | Field | Type | Constraints |
 |-------|------|-------------|
-| `scores` | `number[]` | Array of integers, each 1–5 |
-| `reasoning` | `string` | 30–2000 characters |
+| `scores` | `number[]` | Array of integers, each 0–5 |
+| `reasoning` | `string` | Max 2000 characters |
 
-**Refinement:** `scores.reduce((a, b) => a + b, 0) === 12` — the scores **must sum to exactly 12**.
+**Refinement:** `scores.reduce((a, b) => a + b, 0) === 10` — the scores **must sum to exactly 10**.
 
-**API endpoint:** `PATCH /api/ballot`
+**API endpoint:** `POST /api/ballot`
 
 ---
 
@@ -247,6 +247,24 @@ An object whose keys are the rubric criteria (`originality`, `presentation`, `te
 | `action` | `'cancel' \| 'consent' \| 'assume_consent' \| 'deny'` | Required, must be one of the four actions |
 
 **API endpoint:** `DELETE /api/oauth2/session`
+
+---
+
+## Election Schema
+
+### `ElectionVoteRequest`
+
+| Field | Type | Constraints |
+|-------|------|-------------|
+| `positions` | `array` | One entry per election position |
+| `positions[].title` | `string` | Position title (must match a known position) |
+| `positions[].candidates` | `array` | Candidates for this position |
+| `positions[].candidates[].id` | `string` | Candidate ID |
+| `positions[].candidates[].rank` | `number \| null` | Rank (1 = first preference); `null` means abstain |
+
+**Refinement:** Ranks within a position must be unique and contiguous starting at 1 (e.g., 1, 2, 3 with no gaps or duplicates). Abstained candidates are ignored.
+
+**API endpoint:** `POST /api/election/vote`
 
 ---
 
