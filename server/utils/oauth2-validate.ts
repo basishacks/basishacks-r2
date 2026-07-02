@@ -130,7 +130,7 @@ export async function validateOAuth2AuthorizationRequest(
       if (!allowedRedirectUris.includes(redirectUri)) {
         throw createError({
           statusCode: 403,
-          message: `Application '${app.name}' does not allow redirect_uri '${redirectUri}'`
+          message: `Application '${app.name}' does not allow redirect_uri '${redirectUri}'. Add it to the application's registered redirect URIs (space-separated in the oauth2_applications.redirect_uris column or via the admin API).`
         })
       }
     } else {
