@@ -180,3 +180,4 @@ vite.config.ts.timestamp-*
 docs
 .trae
 .agents
+basishacks.sqlite
