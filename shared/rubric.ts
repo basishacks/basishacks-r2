@@ -5,7 +5,14 @@ export interface RubricData {
     weight: number;
 }
 
-<<<<<<< HEAD
+export interface RubricBallot {
+    originality: RubricData,
+    presentation: RubricData
+    technicality: RubricData
+    theme: RubricData
+    impact: RubricData
+}
+
 const rubrics = {
     junior: {
         originality: {
@@ -38,23 +45,6 @@ const rubrics = {
             description: "Potential to solve real problems or benefit users.",
             weight: 10,
         },
-=======
-export interface RubricBallot {
-  originality: RubricData,
-  presentation: RubricData,
-  technicality: RubricData,
-  theme: RubricData
-  impact: RubricData
-}
-
-const rubrics : Record<string, RubricBallot> = {
-  junior: {
-    originality: {
-      abbr: 'ORG',
-      name: 'Innovation & Originality',
-      description: 'Novelty of idea and approach.',
-      weight: 30,
->>>>>>> score-release-patch
     },
     senior: {
         impact: {
@@ -89,8 +79,8 @@ const rubrics : Record<string, RubricBallot> = {
         },
     },
 } satisfies {
-    junior: Record<string, RubricData>;
-    senior: Record<string, RubricData>;
+    junior: RubricBallot;
+    senior: RubricBallot;
 };
 
 export default rubrics;

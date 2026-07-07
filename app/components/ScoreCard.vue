@@ -55,22 +55,14 @@
                     <div class="w-1/2 blur-md select-none">
                         <span class="uppercase text-sm text-muted">score</span>
                         <div class="w-1/2 flex items-baseline-last gap-1">
-<<<<<<< HEAD
-                            <span class="text-5xl font-bold">SOO</span>
-=======
                             <span class="text-5xl font-bold">---</span>
->>>>>>> score-release-patch
                             <span class="text-muted">/800</span>
                         </div>
                     </div>
                     <div class="w-1/2 blur-md select-none">
                         <span class="uppercase text-sm text-muted">ranking</span>
                         <div class="flex items-baseline-last gap-1">
-<<<<<<< HEAD
-                            <span class="text-5xl font-bold">#SAD</span>
-=======
                             <span class="text-5xl font-bold">#--</span>
->>>>>>> score-release-patch
                         </div>
                     </div>
                 </div>
@@ -88,14 +80,11 @@
                     />
                     <p v-else class="text-muted text-sm">(No members...? For some reason)</p>
                 </div>
-<<<<<<< HEAD
-=======
                 <div class="flex flex-row gap-2">
                   <div v-for="award in team.awards">
                       <AwardButton :award="award" size="md"></AwardButton>
                   </div>
                 </div>
->>>>>>> score-release-patch
             </div>
         </template>
         <template #footer>

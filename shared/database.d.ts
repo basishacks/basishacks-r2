@@ -42,13 +42,12 @@ export type Season = SeasonBase;
 
 export type { HackathonStatus, TeamPathway };
 
-<<<<<<< HEAD
 // Ambient declarations for backward compatibility — existing code uses
 // these types without explicit imports (they were previously declared
 // as global interfaces in this file).
 declare global {
     type Hackathon = Omit<HackathonBase, "status"> & { status: HackathonStatus };
-    type Team = Omit<TeamBase, "pathway"> & { pathway: TeamPathway | null };
+    type Team = Omit<TeamBase, "pathway"> & { pathway: TeamPathway };
     type TeamScores = TeamScoresBase;
     type User = UserBase;
     type Ballot = BallotBase;
@@ -60,70 +59,4 @@ declare global {
     type Season = SeasonBase;
     type HackathonStatus = "not_started" | "in_progress" | "voting" | "finished" | "paused";
     type TeamPathway = "junior" | "senior";
-=======
-interface User {
-    id: number;
-    email: string;
-    role: string;
-    name: string | null;
-    team_id: number | null;
-    login_code: string | null;
-    login_expiry: number | null;
-    profile_theme: string | null;
-    profile_picture: string | null;
-}
-
-interface Ballot {
-    id: number;
-    user_id: number;
-    reasoning: string | null;
-    submitted: number;
-}
-
-interface BallotScore {
-    id: number;
-    ballot_id: number;
-    project_id: number;
-    score: 1 | 2 | 3 | 4 | 5 | null;
-}
-
-interface OAuth2Application {
-    client_id: string;
-    client_secret: string;
-    redirect_uris: string | null;
-    permissions: string | null;
-    name: string;
-    description: string | null;
-    proxy_microsoft: number;
-    type: "first" | "third";
-    profile_picture: string | null;
-    owner_id: number | null;
-}
-
-interface Award {
-    id: number;
-    name: string;
-    description: string;
-    icon: string;
-    color: string;
-}
-
-interface TeamAward {
-    team_id: number;
-    award_id: number;
-    meta: string | null;
-}
-
-interface PeerVotingScore {
-    user_id: number;
-    score: string;
-    reasoning: string | null;
-}
-
-interface SCVote {
-    id: number;
-    user_id: number;
-    vote: string;
-    submitted_at: number | null;
->>>>>>> score-release-patch
 }

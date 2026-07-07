@@ -13,47 +13,6 @@ const { data: members } = await useFetch<GetTeamMembersResponse>(
 </script>
 
 <template>
-<<<<<<< HEAD
-    <div
-        class="w-96 mx-4 p-6 rounded-2xl border border-muted hover:border-primary hover:bg-muted transition-colors cursor-pointer flex-shrink-0 select-none"
-        @click="emit('click')"
-    >
-        <div class="flex items-center justify-between mb-3">
-            <span
-                v-if="team.rank"
-                class="text-3xl font-bold"
-                :class="{
-                    'metallic-gold': team.rank === 1,
-                    'metallic-silver': team.rank === 2,
-                    'metallic-bronze': team.rank === 3,
-                    'text-neutral-500': team.rank > 3,
-                }"
-            >
-                #{{ team.rank }}
-            </span>
-            <span v-else class="text-lg">Unranked</span>
-            <UBadge
-                v-if="team.pathway"
-                variant="outline"
-                size="sm"
-                :color="team.pathway === 'junior' ? 'primary' : 'warning'"
-            >
-                {{ team.pathway === "junior" ? "Junior" : "Senior" }}
-            </UBadge>
-        </div>
-        <h4 class="text-xl font-bold truncate">{{ team.project?.name || "(No Project Name)" }}</h4>
-        <p class="text-sm truncate mt-1">
-            {{ team.project?.description || "(No Project Description)" }}
-        </p>
-        <UserAvatarGroup
-            v-if="members && members.length > 0"
-            :users="members"
-            :max="5"
-            size="sm"
-            class="mt-3"
-        />
-        <p v-else class="text-muted text-sm mt-3">(No members)</p>
-=======
   <div
     class="w-96 mx-4 p-6 rounded-2xl border border-muted hover:border-primary hover:bg-muted transition-colors cursor-pointer flex-shrink-0 select-none"
     @click="emit('click')"
@@ -89,8 +48,8 @@ const { data: members } = await useFetch<GetTeamMembersResponse>(
       >
         {{ team.pathway === 'junior' ? 'Junior' : 'Senior' }}
       </UBadge>
->>>>>>> score-release-patch
     </div>
+  </div>
 </template>
 
 <style scoped>

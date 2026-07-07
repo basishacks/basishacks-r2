@@ -20,7 +20,7 @@ export async function computeScores(event: H3Event, seasonID: number) {
         console.error("[Score] Failed score compute: Team " + score.team_id + " does not exist")
         return;
        };
-
+       
        const rubric : RubricBallot | undefined = rubrics[team.pathway!];
        if (!rubric) return;
 

@@ -10,28 +10,6 @@ import {
 } from "~~/server/database/schema";
 
 // --- Active season filtered (default behavior) ---
-<<<<<<< HEAD
-
-export async function getTeam(
-    event: H3Event,
-    teamID: number,
-    allSeason?: boolean,
-): Promise<Team | null> {
-    if (allSeason) {
-        const row = event.context.drizzle.select().from(teams).where(eq(teams.id, teamID)).get();
-
-        return row ?? null;
-    }
-    const activeSeason = await getActiveSeason(event);
-    const seasonId = activeSeason?.id ?? -1;
-    const row = event.context.drizzle
-        .select()
-        .from(teams)
-        .where(and(eq(teams.id, teamID), eq(teams.season_id, seasonId)))
-        .get();
-
-    return row ?? null;
-=======
 /**
    * Gets the team by ID only in the active season.
    * For wildcard searches use getTeamById, or set
@@ -52,13 +30,12 @@ export async function getTeam(event: H3Event, teamID: number, allSeason?: boolea
   )
     .bind(teamID, seasonId)
     .first() as Team | null
->>>>>>> score-release-patch
 }
 
 export async function getAllTeams(event: H3Event): Promise<Team[]> {
     const activeSeason = await getActiveSeason(event);
     const seasonId = activeSeason?.id ?? -1;
-    return event.context.drizzle.select().from(teams).where(eq(teams.season_id, seasonId)).all();
+    return event.context.drizzle.select().from(teams).where(eq(teams.season_id, seasonId)).all() as Team[];
 }
 
 export async function getSubmittedUnjudgedTeams(
@@ -79,7 +56,7 @@ export async function getSubmittedUnjudgedTeams(
         .where(
             and(eq(teams.season_id, seasonId), eq(teams.project_submitted, 1), notExists(subquery)),
         )
-        .all();
+        .all() as Team[];
 }
 
 export async function getSubmittedTeams(event: H3Event): Promise<Team[]> {
@@ -89,7 +66,7 @@ export async function getSubmittedTeams(event: H3Event): Promise<Team[]> {
         .select()
         .from(teams)
         .where(and(eq(teams.season_id, seasonId), eq(teams.project_submitted, 1)))
-        .all();
+        .all() as Team[];
 }
 
 // --- Unrestricted / by season ---
@@ -98,18 +75,12 @@ export async function getSubmittedTeams(event: H3Event): Promise<Team[]> {
    * Essentially the same as `getTeam(event, teamID, true)`
    */
 export async function getTeamById(event: H3Event, teamID: number): Promise<Team | null> {
-<<<<<<< HEAD
-    const row = event.context.drizzle.select().from(teams).where(eq(teams.id, teamID)).get();
-
-    return row ?? null;
-=======
   
   return event.context.db.prepare(
     'SELECT * FROM teams WHERE id = ?',
   )
     .bind(teamID)
     .first() as Team | null
->>>>>>> score-release-patch
 }
 
 export async function getTeamBySeason(
@@ -121,17 +92,17 @@ export async function getTeamBySeason(
         .select()
         .from(teams)
         .where(and(eq(teams.id, teamID), eq(teams.season_id, seasonId)))
-        .get();
+        .get() as Team | undefined;
 
     return row ?? null;
 }
 
 export async function getAllTeamsAllSeasons(event: H3Event): Promise<Team[]> {
-    return event.context.drizzle.select().from(teams).all();
+    return event.context.drizzle.select().from(teams).all() as Team[];
 }
 
 export async function getTeamsBySeason(event: H3Event, seasonId: number): Promise<Team[]> {
-    return event.context.drizzle.select().from(teams).where(eq(teams.season_id, seasonId)).all();
+    return event.context.drizzle.select().from(teams).where(eq(teams.season_id, seasonId)).all() as Team[];
 }
 
 // --- Mutations ---
@@ -150,7 +121,7 @@ export async function createTeam(event: H3Event, teamName: string): Promise<Team
         .insert(teams)
         .values({ name: teamName, season_id: seasonId })
         .returning()
-        .get()!;
+        .get()! as Team;
 
     return team;
 }

@@ -1,14 +1,10 @@
 import type { ResolvedAward } from "./database/awards";
 
 function parseProfileTheme(input?: string): ProfileTheme {
-<<<<<<< HEAD
     const str = input ?? "";
     const sepIndex = str.indexOf("|");
     const rawMode = sepIndex === -1 ? str : str.slice(0, sepIndex);
     const rawValue = sepIndex === -1 ? "" : str.slice(sepIndex + 1);
-=======
-    const [rawMode, rawValue] = (input ?? "").split("|");
->>>>>>> score-release-patch
 
     const allowedModes: ProfileTheme["mode"][] = ["url", "emoji", "gradient"];
 
@@ -16,13 +12,7 @@ function parseProfileTheme(input?: string): ProfileTheme {
         ? (rawMode as ProfileTheme["mode"])
         : "emoji"; // default fallback
 
-<<<<<<< HEAD
     return { mode, value: rawValue };
-=======
-    const value: string = rawValue ?? "";
-
-    return { mode, value };
->>>>>>> score-release-patch
 }
 
 export function convertUserToPublic(user: User): APIUser {
@@ -57,13 +47,6 @@ export function convertTeamToPublic(
             submitted: team.project_submitted ? true : false,
             sourcing: team.sourcing,
         },
-<<<<<<< HEAD
-        awards: awards.map(({ team_id, text, ...award }) => ({
-            ...award,
-            text: Array.isArray(text) ? text.join(", ") : (text ?? ""),
-        })),
-=======
         awards: awards.map(({ team_id, ...award }) => award),
->>>>>>> score-release-patch
     };
 }

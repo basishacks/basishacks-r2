@@ -68,7 +68,7 @@ const items = ref<NavigationMenuItem[][]>([
             <UCard>
                 <template #header>
                     <span
-                        v-if="hackathon?.status === 'ongoing'"
+                        v-if="hackathon?.status == 'in_progress'"
                         class="uppercase text-sm font-bold text-muted"
                     >
                         ongoing

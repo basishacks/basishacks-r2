@@ -50,7 +50,7 @@ export const teams = sqliteTable(
     {
         id: integer("id").primaryKey({ autoIncrement: true }),
         name: text("name").notNull(),
-        pathway: text("pathway"),
+        pathway: text("pathway").notNull(),     
         score: integer("score"),
         rank: integer("rank"),
         project_name: text("project_name").notNull().default(""),
@@ -65,7 +65,7 @@ export const teams = sqliteTable(
         index("teams_score").on(table.score),
         index("teams_rank").on(table.rank),
         index("teams_season").on(table.season_id),
-        check("teams_pathway_check", sql`${table.pathway} IN (NULL, 'junior', 'senior')`),
+        check("teams_pathway_check", sql`${table.pathway} IN ('junior', 'senior')`),
     ],
 );
 
