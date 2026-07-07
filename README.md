@@ -95,6 +95,13 @@ npm run dev
 
 The dev server defaults to HTTP. For HTTPS (required by some OAuth2 flows during local development), use `bun dev --https` or `npm run dev -- --https`.
 
+> **Dependency pins in `package.json`:**
+>
+> - `vite` is pinned to `8.0.16`. Vite `8.1.x` combined with Nuxt `4.4.8` creates two HMR WebSocket listeners on the same HTTP server, crashing the dev server with `server.handleUpgrade() was called more than once with the same socket` ([nuxt/nuxt#35450](https://github.com/nuxt/nuxt/issues/35450)).
+> - `entities` is pinned to `7.0.1`. `entities@8` changes the `entities/decode` export and breaks `@vue/compiler-core`'s entity decoder, causing errors such as `decode.fromCodePoint is not a function` when Vue parses SFC templates (e.g. `rules.vue`).
+>
+> Keep both overrides in place until the affected packages release compatible versions.
+
 ## Building
 
 Build the production bundle (Nitro `node-server` preset):
