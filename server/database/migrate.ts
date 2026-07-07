@@ -1,5 +1,6 @@
 import { readFileSync, readdirSync } from "node:fs";
 import { resolve } from "node:path";
+import { buildOnsiteRedirectUri } from "~~/server/utils/oauth2";
 
 const MIGRATIONS_DIR = resolve(process.cwd(), "drizzle");
 
@@ -149,9 +150,7 @@ export function seedOAuth2ApplicationRedirectUri(sqlite: PortableSqlite) {
     const clientId = process.env.ONSITE_LOGIN_CLIENT_ID;
     if (!clientId) return;
 
-    const origin = process.env.CURRENT_URL_ORIGIN || "http://localhost:3000";
-    const redirectPath = process.env.REDIRECT_URI || "api/oauth2/dccallback";
-    const redirectUri = `${origin}/${redirectPath}`;
+    const redirectUri = buildOnsiteRedirectUri();
 
     const app = sqlite
         .prepare("SELECT redirect_uris FROM oauth2_applications WHERE client_id = ?")

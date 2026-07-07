@@ -1,4 +1,4 @@
-import oAuth2Config, { structureLink } from "~~/server/utils/oauth2";
+import oAuth2Config, { structureLink, buildOnsiteRedirectUri } from "~~/server/utils/oauth2";
 import { generateExchangeCode, getAuthorizeSession } from "./session.post";
 import { createHash } from "crypto";
 import { determinePostMicrosoft } from "~~/server/utils/oauth2-validate";
@@ -20,11 +20,7 @@ function decodeJWT(token: string) {
 }
 
 function getFallbackRedirectUri(): string {
-    return (
-        (process.env.CURRENT_URL_ORIGIN || "http://localhost:3000") +
-        "/" +
-        (process.env.REDIRECT_URI || "api/oauth2/dccallback")
-    );
+    return buildOnsiteRedirectUri();
 }
 
 function redirectWithOAuth2Error(

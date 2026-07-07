@@ -1,4 +1,5 @@
 import { createHash, randomBytes } from "crypto";
+import { buildOnsiteRedirectUri } from "~~/server/utils/oauth2";
 import { AuthorizeSession } from "./oauth2/session.post";
 
 export function constructOnSiteLoginURL(event: any, postLoginRedirect?: string) {
@@ -21,11 +22,10 @@ export function constructOnSiteLoginURL(event: any, postLoginRedirect?: string) 
     });
 
     const origin = process.env.CURRENT_URL_ORIGIN || "http://localhost:3000";
-    const redirectPath = process.env.REDIRECT_URI || "api/oauth2/dccallback";
     const url = new URL("/api/oauth2/authorize", origin);
     url.searchParams.set("client_id", clientId);
     url.searchParams.set("response_type", "code");
-    url.searchParams.set("redirect_uri", `${origin}/${redirectPath}`);
+    url.searchParams.set("redirect_uri", buildOnsiteRedirectUri(origin));
     url.searchParams.set("scope", "openid profile email");
     url.searchParams.set("state", state);
     url.searchParams.set("code_challenge", code_challenge);

@@ -2,6 +2,16 @@ export function getMicrosoftRedirectUri(): string {
     return process.env.MICROSOFT_REDIRECT_URI || "/api/oauth2/mscallback";
 }
 
+export function getOnsiteRedirectPath(): string {
+    return process.env.REDIRECT_URI || "/api/oauth2/dccallback";
+}
+
+export function buildOnsiteRedirectUri(origin?: string): string {
+    const base = origin || process.env.CURRENT_URL_ORIGIN || "http://localhost:3000";
+    const path = getOnsiteRedirectPath();
+    return new URL(path, base).href;
+}
+
 const oAuth2Config = {
     base: "https://login.microsoftonline.com/",
     tenant: process.env.MICROSOFT_TENANT_ID || "",

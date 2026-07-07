@@ -69,7 +69,7 @@ The following credentials were previously hardcoded and are now read from enviro
 
 Find these values in the [Azure Portal](https://portal.azure.com) under **App Registrations** → your basishacks app → **Overview**.
 
-The server automatically adds `${CURRENT_URL_ORIGIN}/${REDIRECT_URI}` (default `http://localhost:3000/api/oauth2/dccallback`) to the `ONSITE_LOGIN_CLIENT_ID` application's allowed redirect URIs on startup, so no manual SQL update is needed for local development.
+The server automatically adds `${CURRENT_URL_ORIGIN}${REDIRECT_URI}` (default `http://localhost:3000/api/oauth2/dccallback`) to the `ONSITE_LOGIN_CLIENT_ID` application's allowed redirect URIs on startup, so no manual SQL update is needed for local development.
 
 See [Environment Setup](/guide/environment-setup) for the complete list.
 

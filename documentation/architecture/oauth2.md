@@ -248,7 +248,7 @@ This allows external applications to leverage basishacks as a proxy for Microsof
 | --- | --- |
 | `client_id` | Value of `ONSITE_LOGIN_CLIENT_ID` |
 | `permissions` | `openid profile email` |
-| `redirect_uri` | `${CURRENT_URL_ORIGIN}/${REDIRECT_URI}` (default `http://localhost:3000/api/oauth2/dccallback`) |
+| `redirect_uri` | `${CURRENT_URL_ORIGIN}${REDIRECT_URI}` (default `http://localhost:3000/api/oauth2/dccallback`) |
 | `type` | `first` |
 | `proxy_microsoft` | `0` |
 
