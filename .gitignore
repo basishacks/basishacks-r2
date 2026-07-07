@@ -179,7 +179,7 @@ vite.config.ts.timestamp-*
 docs
 .trae
 .agents
-
+basishacks.sqlite
 # Agent/skill working artifacts
 skills-*.json
 test-agent-file.txt
