@@ -3,7 +3,7 @@
 
     <UFooter>
         <template #left>
-            <div class="w-full">
+            <div class="w-full flex flex-col gap-2">
                 <p class="text-muted text-xs inline-flex items-baseline gap-1">
                     <UIcon name="i-lucide-copyright"></UIcon>
                     {{ new Date().getFullYear() }} BISZ Developers' Club, BINJ Hack Club
@@ -11,7 +11,6 @@
                 <ULink class="text-xs" to="/contributing" target="_blank">
                     Contribute to basishacks
                 </ULink>
-                <br />
                 <ULink class="text-xs" to="/developers">Developer Portal</ULink>
             </div>
         </template>
