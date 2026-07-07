@@ -8,7 +8,11 @@ export default defineEventHandler(async (event) => {
     const team = await getTeam(event, id, true);
 
     if (!team) {
+<<<<<<< HEAD
         throw createError({
+=======
+        return createError({
+>>>>>>> score-release-patch
             status: 404,
             message: "Team '" + id + "' does not exist",
         });

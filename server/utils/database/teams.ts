@@ -10,6 +10,7 @@ import {
 } from "~~/server/database/schema";
 
 // --- Active season filtered (default behavior) ---
+<<<<<<< HEAD
 
 export async function getTeam(
     event: H3Event,
@@ -30,6 +31,28 @@ export async function getTeam(
         .get();
 
     return row ?? null;
+=======
+/**
+   * Gets the team by ID only in the active season.
+   * For wildcard searches use getTeamById, or set
+   * allSeason to true
+   * 
+   */
+export async function getTeam(event: H3Event, teamID: number, allSeason?: boolean): Promise<Team | null> {
+  
+  if (allSeason) {
+    return event.context.db.prepare('SELECT * FROM teams WHERE id = ?')
+      .bind(teamID)
+      .first() as Team | null
+  }
+  const activeSeason = await getActiveSeason(event)
+  const seasonId = activeSeason?.id ?? -1
+  return event.context.db.prepare(
+    'SELECT * FROM teams WHERE id = ? AND season_id = ?',
+  )
+    .bind(teamID, seasonId)
+    .first() as Team | null
+>>>>>>> score-release-patch
 }
 
 export async function getAllTeams(event: H3Event): Promise<Team[]> {
@@ -70,11 +93,23 @@ export async function getSubmittedTeams(event: H3Event): Promise<Team[]> {
 }
 
 // --- Unrestricted / by season ---
-
+/**
+   * Get a team by its ID. Not limited to the active season.
+   * Essentially the same as `getTeam(event, teamID, true)`
+   */
 export async function getTeamById(event: H3Event, teamID: number): Promise<Team | null> {
+<<<<<<< HEAD
     const row = event.context.drizzle.select().from(teams).where(eq(teams.id, teamID)).get();
 
     return row ?? null;
+=======
+  
+  return event.context.db.prepare(
+    'SELECT * FROM teams WHERE id = ?',
+  )
+    .bind(teamID)
+    .first() as Team | null
+>>>>>>> score-release-patch
 }
 
 export async function getTeamBySeason(

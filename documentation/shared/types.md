@@ -92,6 +92,7 @@ These interfaces match the SQL schema exactly. They include all columns, includi
 
 ### `User`
 
+<<<<<<< HEAD
 | Field | Type | Description |
 | --- | --- | --- |
 | `id` | `number` | Primary key |
@@ -103,6 +104,19 @@ These interfaces match the SQL schema exactly. They include all columns, includi
 | `login_expiry` | `number \| null` | Legacy login code expiry timestamp (unused by current authentication) |
 | `profile_theme` | `string \| null` | Profile theme as `"mode\|value"` string |
 | `profile_picture` | `string \| null` | Profile picture path |
+=======
+| Field             | Type             | Description                                    |
+| ----------------- | ---------------- | ---------------------------------------------- |
+| `id`              | `number`         | Primary key                                    |
+| `email`           | `string`         | User email (`@basischina.com`)                 |
+| `role`            | `string`         | Space-separated URI-encoded permission strings |
+| `name`            | `string \| null` | Display name                                   |
+| `team_id`         | `number \| null` | Foreign key to team                            |
+| `login_code`      | `string \| null` | Current magic login code                       |
+| `login_expiry`    | `number \| null` | Login code expiry timestamp                    |
+| `profile_theme`   | `string \| null` | Profile theme as `"mode\|value"` string        |
+| `profile_picture` | `string \| null` | Profile picture path                           |
+>>>>>>> score-release-patch
 
 ### `Ballot`
 
@@ -136,6 +150,26 @@ These interfaces match the SQL schema exactly. They include all columns, includi
 | `type`            | `'first' \| 'third'` | First-party or third-party application       |
 | `profile_picture` | `string \| null`     | Application icon path                        |
 | `owner_id`        | `number \| null`     | Foreign key to owning user                   |
+<<<<<<< HEAD
+=======
+
+### `Award`
+
+| Field         | Type     | Description       |
+| ------------- | -------- | ----------------- |
+| `id`          | `number` | Primary key       |
+| `name`        | `string` | Award name        |
+| `description` | `string` | Award description |
+| `icon`        | `string` | Icon class        |
+
+### `TeamAward`
+
+| Field      | Type             | Description            |
+| ---------- | ---------------- | ---------------------- |
+| `team_id`  | `number`         | Foreign key to team    |
+| `award_id` | `number`         | Foreign key to award   |
+| `meta`     | `string \| null` | Optional JSON metadata |
+>>>>>>> score-release-patch
 
 ---
 
@@ -182,7 +216,23 @@ Parsed from the database `"mode|value"` string format.
 | `project.repo_url`    | `string \| null`      | Repository URL                 |
 | `project.submitted`   | `boolean`             | Whether project is submitted   |
 | `project.sourcing`    | `string`              | AI/tooling sourcing disclosure |
+<<<<<<< HEAD
 | `awards`              | `APIAward[]`          | Resolved team awards           |
+=======
+| `awards`              | `APIAward[]`          | Awards assigned to the team    |
+
+### `APIAward`
+
+| Field         | Type                      | Description                             |
+| ------------- | ------------------------- | --------------------------------------- |
+| `award_id`    | `number`                  | Award ID from the `awards` table        |
+| `name`        | `string`                  | Award display name                      |
+| `description` | `string`                  | Award description                       |
+| `icon`        | `string`                  | Icon class                              |
+| `meta`        | `Record<string, unknown>` | Parsed JSON metadata from `team_awards` |
+
+Awards are resolved from the `team_awards` table joined with `awards` and attached to `APITeam` by `convertTeamToPublic`.
+>>>>>>> score-release-patch
 
 ### `GetUserResponse`
 
@@ -225,6 +275,7 @@ An array of lightweight member objects.
 
 ### `GetBallotResponse`
 
+<<<<<<< HEAD
 | Field       | Type             | Description                                        |
 | ----------- | ---------------- | -------------------------------------------------- |
 | `submitted` | `boolean`        | Whether the user has already submitted a peer vote |
@@ -291,6 +342,14 @@ An array of lightweight member objects.
 | `email`        | `string \| null`                 | Voter email          |
 | `submitted_at` | `number \| null`                 | Submission timestamp |
 | `vote`         | `Record<string, number \| null>` | Candidate ID → rank  |
+=======
+| Field       | Type                                      | Description                            |
+| ----------- | ----------------------------------------- | -------------------------------------- |
+| `id`        | `number`                                  | Ballot ID                              |
+| `projects`  | `(APITeam['project'] & { id: number })[]` | Projects to vote on, each with an `id` |
+| `scores`    | `(1 \| 2 \| 3 \| 4 \| 5)[] \| null`       | Star ratings, or null if not yet voted |
+| `reasoning` | `string \| null`                          | Voter's reasoning                      |
+>>>>>>> score-release-patch
 
 ---
 
