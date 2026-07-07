@@ -1,7 +1,10 @@
 <script lang="ts" setup>
-const { user: userRef, clear } = useUserSession()
-const userID = computed(() => userRef.value?.id ?? 0)
+const { user: userRef } = useUserSession();
+const userID = computed(() => userRef.value?.id);
 
-navigateTo("/user/" + userID.value)
+if (!userID.value) {
+    throw await navigateTo("/login");
+}
 
+throw await navigateTo("/user/" + userID.value);
 </script>

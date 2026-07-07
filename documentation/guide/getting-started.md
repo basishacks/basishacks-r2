@@ -7,15 +7,17 @@ description: Get the basishacks hackathon platform running on your local machine
 
 This guide walks you through setting up the **basishacks** development environment from scratch. By the end, you will have the app running locally with HTTPS on port 24598.
 
+<StatusBadge status="online" text="Docs build status: passing" />
+
 ## Prerequisites
 
 Before you begin, ensure you have the following installed:
 
-| Requirement | Minimum Version | Notes |
-|-------------|----------------|-------|
-| **Node.js** | >= v24 | Required by the runtime and tooling |
-| **Bun** | Latest | Preferred package manager; `npm` also works |
-| **Git** | Any recent | For cloning the repository |
+| Requirement | Minimum Version | Notes                                       |
+| ----------- | --------------- | ------------------------------------------- |
+| **Node.js** | >= v24          | Required by the runtime and tooling         |
+| **Bun**     | Latest          | Preferred package manager; `npm` also works |
+| **Git**     | Any recent      | For cloning the repository                  |
 
 ### Installing Bun
 
@@ -46,10 +48,14 @@ If you need to manage multiple Node.js versions, consider using [fnm](https://gi
 
 ## Clone the Repository
 
+<TerminalWindow title="basishacks@setup:~" prompt="$">
+
 ```bash
 git clone <repository-url> basishacks-r2
 cd basishacks-r2
 ```
+
+</TerminalWindow>
 
 ## Install Dependencies
 
@@ -65,43 +71,44 @@ If you prefer npm:
 npm install
 ```
 
+<CopyButton content="bun i" label="copy bun install" />
+
 ## Initialize the Database
 
-The local development environment uses SQLite via `better-sqlite3`. You need to create the schema and seed the initial hackathon row.
+The local development environment uses SQLite with Drizzle ORM. The driver is selected automatically based on your runtime: `bun:sqlite` under Bun, or `better-sqlite3` under Node.js.
 
-### Create the Schema
+Migrations and seeding run **automatically** when the Nitro dev server starts via the `init-database.ts` plugin, which calls `createDrizzleDatabase()` and `createAndMigrateDatabase()` from `server/database/migrate.ts`.
+
+To manually initialize the database:
 
 ```bash
-bunx wrangler d1 execute DB --file sql/init.sql
+bun run db:migrate
 ```
 
-This runs the base schema from `sql/init.sql`, which creates all required tables (`hackathon`, `teams`, `team_scores`, `users`, `ballots`, `ballot_scores`, `oauth2_applications`).
+This runs Drizzle Kit migrations, which create all required tables (`hackathon`, `teams`, `team_scores`, `users`, `ballots`, `ballot_scores`, `oauth2_applications`, `seasons`, `user_past_teams`).
 
 ### Seed the Hackathon Row
 
-The `hackathon` table requires a single row with `id = 1` that controls the global event state:
+The `hackathon` table requires a single row with `id = 1` that controls the global event state. `seedHackathon()` in `server/database/migrate.ts` automatically inserts this row when the dev server starts. If you need to manually seed it, connect to the SQLite database directly:
 
 ```bash
-bunx wrangler d1 execute DB --command 'INSERT INTO hackathon VALUES(1, "not_started", 0, 0, 0, 0, 0, NULL, NULL) ON CONFLICT DO NOTHING'
+sqlite3 database/basishacks.sqlite "INSERT INTO hackathon VALUES(1, 'not_started', 0, 0, 0, 0, 0, NULL, NULL, 0, 0, 0, 0, 0, NULL, NULL) ON CONFLICT DO NOTHING"
 ```
-
-:::: tip
-When the Nitro dev server starts, the `seed-hackathon` plugin automatically seeds timestamps and the default `basishacks connect` OAuth2 application. You only need to run the seed command above if you're initializing the database outside the dev server.
-::::
 
 ### Apply Migrations
 
-If there are additional migration files in `sql/`, apply them in order:
+Migrations are generated with Drizzle Kit:
 
 ```bash
-bunx wrangler d1 execute DB --file sql/migration-2026-01-12-07-23Z.sql
-bunx wrangler d1 execute DB --file sql/migration-2026-01-12-10-43Z.sql
-# ... apply remaining migrations in chronological order
+# Generate a migration after schema changes
+bun run db:generate
 ```
 
-:::: tip
-There is no automated migration runner. Migrations must be applied manually in order. Check the `sql/` directory for all migration and patch files.
-::::
+The `db:migrate` script applies pending migrations via Drizzle Kit. In practice, the server also applies migrations automatically on startup, so manual runs are usually unnecessary:
+
+```bash
+bun run db:migrate
+```
 
 ## Configure Environment Variables
 
@@ -117,8 +124,8 @@ At minimum, set the following:
 # REQUIRED - Must be at least 32 bytes
 NUXT_SESSION_PASSWORD=your_random_string_at_least_32_bytes_long
 
-# REQUIRED - Webhook URL for sending login codes
-NUXT_SEND_CODE_URL=https://your-code-sending-service.com/send
+# REQUIRED - Must be at least 32 bytes
+NUXT_OAUTH2_JWT_SECRET=your_oauth2_jwt_secret_here
 ```
 
 See [Environment Setup](/guide/environment-setup) for the full list of variables.
@@ -143,20 +150,14 @@ The server starts on **port 24598** with HTTPS. Open your browser to:
 https://localhost:24598
 ```
 
-:::: warning
-The `--https` flag is required because Microsoft OAuth2 and session cookies require a secure context. You may see a self-signed certificate warning in your browser — accept it to proceed.
-::::
+:::: warning The `--https` flag is required because Microsoft OAuth2 and session cookies require a secure context. You may see a self-signed certificate warning in your browser — accept it to proceed. ::::
 
 ## Production Build
 
 Build the application for production:
 
 ```bash
-# Local Node.js server preset
 bun run build
-
-# Cloudflare Pages preset (for deployment)
-bun run build --preset cloudflare-pages
 ```
 
 Preview the production build:
@@ -169,33 +170,41 @@ The preview server runs on port 24598.
 
 ## Running Tests
 
-The project uses a simple test runner without a framework such as Vitest or Jest:
+The project uses [Vitest](https://vitest.dev) as its test framework. The suite contains **647 passing tests** covering the API, server utilities, database helpers, shared schemas, and frontend components.
 
 ```bash
-bun test
+# Run the full test suite (canonical command)
+bun run test
+
+# Run tests in watch mode
+bun run test:watch
+
+# Run tests with coverage
+bun run test:coverage
 ```
 
-This internally runs `node --env-file=.env tests/index.js`, which imports and executes:
+These invoke `vitest run --pool=forks`, which resolves Nuxt's `~~/` and `~/` path aliases via `vitest.config.ts` and runs `tests/setup.ts` as a setup file to populate in-memory SQLite databases and Microsoft OAuth2 env vars.
 
-- `test.oauth2.js` — OAuth2 flow tests
-- `test.microsoft.ts` — Microsoft Graph API tests (mostly commented out; requires admin-approved permissions)
-- `test.deepseek.ts` — DeepSeek API tests
+### About `bun test`
 
-Tests are simple async functions that return `true`/`false`.
+Bun's native test runner (`bun test`) cannot resolve Nuxt's `~~/` and `~/` path aliases, and the test files import their assertions from `vitest` rather than `bun:test`. Running `bun test` would therefore produce dozens of "Cannot find module '~~/...'" errors.
+
+To avoid confusion, `bunfig.toml` scopes `bun test` to a single shim (`bun-shim/shim.test.ts`) that prints guidance directing you to run `bun run test` instead. The shim exits successfully so `bun test` never appears to fail.
+
+### Legacy test script
+
+`tests/index.js` is a legacy manual test runner invoked via `node --env-file=.env tests/index.js`. It is not part of the Vitest suite and is rarely used.
 
 ## First Login Flow
 
 Once the server is running, follow these steps to log in for the first time:
 
 1. **Navigate to the login page** — Click the login button or go to `/login`.
-2. **Enter your email** — Use a `@basischina.com` email address. The magic code auth system only accepts emails from this domain.
-3. **Receive a verification code** — A 6-digit code is sent to your email (via the `NUXT_SEND_CODE_URL` webhook). In development, the code is also logged to the server console.
-4. **Enter the code** — Type the 6-digit code on the verification screen. The code expires after 10 minutes.
-5. **Access the dashboard** — After successful verification, you are redirected to the dashboard.
+2. **Sign in with Microsoft** — Click the Microsoft login button. This redirects to Microsoft Entra ID (the tenant configured via `MICROSOFT_TENANT_ID`) for authentication.
+3. **Access the dashboard** — After successful authentication, you are redirected to the dashboard.
 
 ### Alternative Login Methods
 
-- **Microsoft OAuth2** — Click the Microsoft login button. This redirects to Microsoft Entra ID (tenant `cbc6e1e2-a6bb-4002-bbdc-6da892a051a7`) for authentication.
 - **basishacks connect** — A custom OAuth2 integration with PKCE support for connected applications.
 
 ### Gaining Admin Access
@@ -203,13 +212,13 @@ Once the server is running, follow these steps to log in for the first time:
 New users are assigned the `participant` role by default. To elevate your permissions for development:
 
 1. Open the SQLite database directly:
-   ```bash
-   sqlite3 database/basishacks.sqlite
-   ```
+    ```bash
+    sqlite3 database/basishacks.sqlite
+    ```
 2. Update your user's role:
-   ```sql
-   UPDATE users SET role = 'admin' WHERE email = 'your@basischina.com';
-   ```
+    ```sql
+    UPDATE users SET role = 'admin' WHERE email = 'your@basischina.com';
+    ```
 3. Refresh the browser — you should now have access to admin features and the developer portal.
 
 ## Verify Everything Works

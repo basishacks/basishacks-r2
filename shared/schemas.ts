@@ -28,19 +28,8 @@ const ScoreValues = z.object(
     ),
 );
 
-export const SendCodeRequest = z.object({
-    email: BasisEmail,
-});
-export type SendCodeRequest = z.infer<typeof SendCodeRequest>;
-
-export const LoginRequest = z.object({
-    email: BasisEmail,
-    code: z.array(z.number().max(9).min(0)).length(6, "Code must be 6 digits"),
-});
-export type LoginRequest = z.infer<typeof LoginRequest>;
-
 export const MicrosoftRedirectRequest = z.object({
-    token: z.string(),
+    token: z.string().min(1, "Token must not be empty"),
 });
 export type MicrosoftRedirectRequest = z.infer<typeof MicrosoftRedirectRequest>;
 
@@ -169,14 +158,22 @@ export const CreateApplicationRequest = z.object({
 });
 export type CreateApplicationRequest = z.infer<typeof CreateApplicationRequest>;
 
+export const DeleteApplicationsRequest = z.object({
+    ids: z.array(z.string().min(1)).max(100, "Cannot delete more than 100 applications at once"),
+});
+export type DeleteApplicationsRequest = z.infer<typeof DeleteApplicationsRequest>;
+
 export const ManageRedirectUriRequest = z.object({
     uri: z
         .string()
         .min(1, "Redirect URI is required")
         .url("Invalid URL format")
         .refine(
-            (val) => val.startsWith("https://") || val.startsWith("http://localhost"),
-            "Redirect URIs must start with http://localhost or https://",
+            (u) => {
+                if (u.startsWith("https://")) return true;
+                return /^http:\/\/localhost(\/|:|$)/.test(u);
+            },
+            { message: "Redirect URI must use https:// or http://localhost" },
         ),
 });
 export type ManageRedirectUriRequest = z.infer<typeof ManageRedirectUriRequest>;

@@ -1,15 +1,22 @@
-import { DevPermissions } from '~~/shared/permissions'
+import { DevPermissions } from "~~/shared/permissions";
+import { users } from "~~/server/database/schema";
 
 export default defineEventHandler(async (event) => {
-  await requirePermission(event, DevPermissions.PORTAL_USERS_VIEW)
+    await requirePermission(event, DevPermissions.PORTAL_USERS_VIEW);
 
-  const results = await event.context.db.prepare(
-    `SELECT u.*, GROUP_CONCAT(upt.team_id) as past_team_ids
-     FROM users u
-     LEFT JOIN user_past_teams upt ON u.id = upt.user_id
-     GROUP BY u.id
-     ORDER BY u.id ASC`
-  ).all() as { results: (User & { past_team_ids: string | null })[] }
+    const results = event.context.drizzle
+        .select({
+            id: users.id,
+            email: users.email,
+            role: users.role,
+            name: users.name,
+            team_id: users.team_id,
+            profile_theme: users.profile_theme,
+            profile_picture: users.profile_picture,
+        })
+        .from(users)
+        .orderBy(users.id)
+        .all();
 
-  return results.results
-})
+    return results.map((user) => convertUserToPublic(user as User)) satisfies APIUser[];
+});

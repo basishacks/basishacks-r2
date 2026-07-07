@@ -5,61 +5,58 @@ description: High-level overview of the basishacks hackathon platform — what i
 
 # Project Overview
 
-**basishacks** is the official website for the **BIBS-C Network Hackathon** (season 2, 2025–26). It is a full-stack Nuxt 3 application that serves as the central platform for organizing and running the hackathon event.
+**basishacks** is the official website for the **BIBS-C Network Hackathon** (season 2, 2025–26). It is a full-stack Nuxt 4 application that serves as the central platform for organizing and running the hackathon event.
 
 ## What basishacks Does
 
 The platform manages the entire hackathon lifecycle:
 
 | Feature | Description |
-|---------|-------------|
+| --- | --- |
 | **Hackathon Management & Scheduling** | Control event state (`not_started`, `in_progress`, `voting`, `finished`, `paused`), schedule start/end times, and manage the event timeline |
 | **Team Creation & Management** | Participants create teams, invite members via `@basischina.com` email, and manage team membership |
 | **Project Submission** | Teams submit projects with name, description, demo URL, repo URL, and sourcing info. Submissions are only accepted during `not_started` or `in_progress` states |
-| **Peer Voting** | Participants vote on projects by distributing stars (scores must sum to exactly 12). Voting occurs during the `voting` state |
+| **Peer Voting** | Participants vote on projects by distributing 10 stars across eligible projects (scores must sum to exactly 10). Voting occurs during the `voting` state |
 | **Judge Scoring** | Judges score projects using a weighted rubric system with criteria scored 0–5 per criterion. Separate rubrics for junior and senior pathways |
 | **OAuth2 Application Integrations** | Full OAuth2 2.0/2.1 authorization server with PKCE support, allowing third-party and first-party applications to integrate with the platform |
 | **Developer Portal** | Admin dashboard for managing OAuth2 applications, users, teams, seasons, and debug tools |
 | **Microsoft Graph API** | Integration with Microsoft Entra ID for OAuth2 login, meeting scheduling, and Teams chat via the Graph API |
+| **Election Voting** | Student-council election interface with ranked-choice ballots and instant-runoff voting (IRV) tally |
 | **DeepSeek AI Chatbot** | In-memory chat session store powered by the OpenAI SDK for DeepSeek AI interactions (debug routes) |
 
 ## Technology Stack
 
 | Layer | Technology | Notes |
-|-------|------------|-------|
-| **Framework** | Nuxt 3 (latest) | Full-stack Vue framework with SSR, file-based routing |
-| **UI** | `@nuxt/ui` ^4.7.1 | Tailwind CSS v4 based component library |
-| **Language** | TypeScript 5.6+ | Strict typing throughout |
-| **Runtime** | Node.js >= v24 | Required by tooling and runtime |
+| --- | --- | --- |
+| **Framework** | Nuxt 4 (^4.4.8) | Full-stack Vue framework with SSR, file-based routing |
+| **UI** | `@nuxt/ui` ^4.9.0 | Tailwind CSS v4 based component library |
+| **Language** | TypeScript (^5.9.3) | Strict typing throughout |
+| **Runtime** | Node.js >= v24 or Bun | Dual-runtime support; Bun is preferred |
 | **Package Manager** | Bun (preferred) | npm also works |
-| **Database (local)** | `better-sqlite3` with WAL mode | SQLite for local development |
-| **Database (prod)** | Cloudflare D1 | Serverless SQL database |
-| **Auth** | `nuxt-auth-utils` | Session-based authentication |
+| **Database** | SQLite via Drizzle ORM | `bun:sqlite` under Bun, `better-sqlite3` under Node.js |
+| **Auth** | `nuxt-auth-utils` 0.5.25 | Session-based authentication |
 | **JWT** | `jose` ^6.2.3 | JWT signing and verification for OAuth2 access tokens |
-| **AI** | `openai` ^6.37.0 | OpenAI SDK used for DeepSeek API integration |
-| **Validation** | Zod 4.x | Schema validation for all API inputs |
-| **Fonts** | `@nuxt/fonts` | Local font provider |
+| **AI** | `openai` ^6.45.0 | OpenAI SDK used for DeepSeek API integration |
+| **Validation** | Zod 4.x (^4.4.3) | Schema validation for all API inputs |
+| **Fonts** | `@nuxt/fonts` ^0.14.0 | Local font provider |
 | **Icons** | `@iconify-json/lucide`, `@iconify-json/material-symbols`, `@iconify-json/simple-icons` | Icon sets |
-| **Linting** | `@nuxt/eslint` + Prettier | No semicolons, single quotes |
-| **Deployment** | Cloudflare Pages | Via GitHub Actions CI/CD |
+| **Linting** | `@nuxt/eslint` 1.10.0 + Prettier ^3.9.4 | Semicolons enabled, double quotes |
+| **Deployment** | Node.js server (VPS) | Bun also supported; Nitro `node-server` preset |
 
 ## Authentication
 
-Three authentication methods are supported:
+Two authentication methods are supported:
 
-### 1. Magic Code
+### 1. Microsoft OAuth2
 
-Users enter their `@basischina.com` email, receive a 6-digit verification code (10-minute expiry) via a webhook service, and exchange it for a session. This is the primary login method for participants.
+Delegates authentication to Microsoft Entra ID (tenant configured via the `MICROSOFT_TENANT_ID` environment variable). Users click the Microsoft login button and are redirected to Microsoft's consent screen. On success, they are redirected back with an authorization code that is exchanged for a basishacks session. This is the only login method for the hackathon registry.
 
-### 2. Microsoft OAuth2
-
-Delegates authentication to Microsoft Entra ID (tenant `cbc6e1e2-a6bb-4002-bbdc-6da892a051a7`). Users click the Microsoft login button and are redirected to Microsoft's consent screen. On success, they are redirected back with an authorization code that is exchanged for a basishacks session.
-
-### 3. basishacks connect
+### 2. basishacks connect
 
 A custom OAuth2 integration with **PKCE (Proof Key for Code Exchange)** support. External applications redirect users to `/api/oauth2/authorize` with standard OAuth2 parameters (`client_id`, `scope`, `redirect_uri`, `state`, `code_challenge`, `code_challenge_method`). After the user authenticates and consents, the application receives an authorization code that can be exchanged for a JWT access token at `/api/oauth2/token`.
 
 The OAuth2 flow supports:
+
 - Authorization Code Grant with PKCE (protocol 2.1)
 - Legacy Authorization Code Grant without PKCE (protocol 2.0)
 - JWT access tokens (HS256, 1-hour expiry) signed with `NUXT_OAUTH2_JWT_SECRET`
@@ -72,33 +69,33 @@ The OAuth2 flow supports:
 
 Users are assigned one of three core roles in the database:
 
-| Role | Description |
-|------|-------------|
-| `participant` | Default role. Can join teams, submit projects, and vote. |
-| `judge` | Can score projects using the rubric system. Access to the judging interface. |
-| `admin` | Full access to all features including the developer portal. |
+| Role          | Description                                                                  |
+| ------------- | ---------------------------------------------------------------------------- |
+| `participant` | Default role. Can join teams, submit projects, and vote.                     |
+| `judge`       | Can score projects using the rubric system. Access to the judging interface. |
+| `admin`       | Full access to all features including the developer portal.                  |
 
 ### Fine-Grained Developer Permissions
 
 Beyond the three core roles, the platform supports fine-grained permissions stored as space-separated strings in the `role` column. These are managed through the `DevPermissions` constants in `shared/permissions.ts`:
 
-| Permission | Description |
-|------------|-------------|
-| `dev_users` | Access to user management utilities |
-| `dev_teams` | Access to team management utilities |
-| `dev_debug` | Access to debug endpoints |
-| `dev_deepseek` | Access to DeepSeek AI features |
-| `portal.users.view` | View users in the developer portal |
-| `portal.debug.view` | View debug tools in the developer portal |
-| `portal.teams.view` | View teams in the developer portal |
-| `portal.deepseek.view` | View DeepSeek tools in the developer portal |
-| `portal.applications.view` | View OAuth2 applications |
-| `portal.applications.create` | Create OAuth2 applications |
-| `portal.applications.create.firstparty` | Create first-party OAuth2 applications |
-| `portal.applications.delete` | Delete OAuth2 applications |
-| `portal.applications.view.all` | View all OAuth2 applications (including others') |
-| `portal.seasons.view` | View season management |
-| `portal.seasons.edit` | Edit seasons |
+| Permission                              | Description                                      |
+| --------------------------------------- | ------------------------------------------------ |
+| `dev_users`                             | Access to user management utilities              |
+| `dev_teams`                             | Access to team management utilities              |
+| `dev_debug`                             | Access to debug endpoints                        |
+| `dev_deepseek`                          | Access to DeepSeek AI features                   |
+| `portal.users.view`                     | View users in the developer portal               |
+| `portal.debug.view`                     | View debug tools in the developer portal         |
+| `portal.teams.view`                     | View teams in the developer portal               |
+| `portal.deepseek.view`                  | View DeepSeek tools in the developer portal      |
+| `portal.applications.view`              | View OAuth2 applications                         |
+| `portal.applications.create`            | Create OAuth2 applications                       |
+| `portal.applications.create.firstparty` | Create first-party OAuth2 applications           |
+| `portal.applications.delete`            | Delete OAuth2 applications                       |
+| `portal.applications.view.all`          | View all OAuth2 applications (including others') |
+| `portal.seasons.view`                   | View season management                           |
+| `portal.seasons.edit`                   | Edit seasons                                     |
 
 The `hasPermission()` helper checks both the specific permission and the `admin` permission (admins implicitly have all permissions).
 
@@ -149,7 +146,7 @@ basishacks-r2/
 │   ├── api/                    # API route handlers (file-based)
 │   │   ├── admin/              # Admin endpoints (scores, teams)
 │   │   ├── applications/       # OAuth2 application CRUD + secrets, scopes, redirect URIs
-│   │   ├── auth/               # Authentication endpoints (login, code, impersonate)
+│   │   ├── auth/               # Authentication endpoints (impersonate; /api/auth alias for Microsoft OAuth2 callback)
 │   │   ├── ballot/             # Ballot/voting endpoints
 │   │   ├── chatbot/            # AI chatbot endpoints (Microsoft Teams integration)
 │   │   ├── debug/              # Debug endpoints (DeepSeek sessions, file upload)
@@ -159,18 +156,23 @@ basishacks-r2/
 │   │   ├── users/              # User CRUD + profile pictures
 │   │   └── _webhooks/          # Lifecycle and update webhooks
 │   ├── middleware/             # Server middleware (OAuth2 authorize validation)
+│   ├── database/               # Drizzle ORM schema, migration runner, and DB wrapper
+│   │   ├── schema.ts           # Drizzle table definitions
+│   │   ├── migrate.ts          # Custom migration runner + legacy schema repair + seeding
+│   │   └── index.ts            # Runtime-agnostic SQLite driver selection
 │   ├── plugins/                # Nitro plugins
-│   │   ├── init-database.ts    # Database schema initialization + wrapper attachment
+│   │   ├── init-database.ts    # Database initialization + attach Drizzle to event context
 │   │   ├── microsoft.ts        # MS Graph API token initialization + centralized API calls
-│   │   └── seed-hackathon.ts   # Seed hackathon timestamps + default OAuth2 app
-│   ├── types/                  # Type augmentations (H3EventContext, Cloudflare, OAuth2 JWT)
+│   │   └── validate-oauth2-jwt-secret.ts # Startup guard for NUXT_OAUTH2_JWT_SECRET
+│   ├── types/                  # Type augmentations (H3EventContext, OAuth2 JWT)
 │   └── utils/                  # Server utilities
-│       ├── database.ts         # SQLite wrapper mimicking D1 interface
 │       ├── database/           # Per-table DB helpers
+│       │   ├── awards.ts
 │       │   ├── ballots.ts
 │       │   ├── hackathon.ts
 │       │   ├── members.ts
 │       │   ├── oauth2_applications.ts
+│       │   ├── peer-voting.ts
 │       │   ├── scores.ts
 │       │   ├── seasons.ts
 │       │   ├── teams.ts
@@ -195,18 +197,26 @@ basishacks-r2/
 │   ├── rubric.ts               # Judging rubric definitions (junior/senior criteria + weights)
 │   └── seasons.ts              # Season metadata (theme, date, docs links)
 │
-├── sql/                        # Schema and migrations
-│   ├── init.sql                # Base schema
-│   ├── migration-*.sql         # Dated migrations
-│   └── patch-*.sql             # Feature patches
+├── sql/archive/                # Archived legacy SQL schema and migrations
+│   ├── init.sql                # Historical base schema
+│   ├── migration-*.sql         # Historical dated migrations
+│   └── patch-*.sql             # Historical feature patches
 │
-├── tests/                      # Test suite
-│   ├── index.js                # Test runner entry
-│   ├── test.deepseek.ts        # DeepSeek API tests
-│   ├── test.microsoft.ts       # MS Graph API tests
-│   └── test.search.ts          # Search tests
+├── drizzle/                    # Drizzle Kit generated migration files
+│   ├── *.sql                   # Migration SQL
+│   └── meta/                   # Drizzle Kit metadata snapshots
 │
-├── database/                   # Local SQLite file (basishacks.sqlite)
+├── tests/                      # Vitest test suite
+│   ├── setup.ts                # Global test setup, in-memory DB, mocks
+│   ├── **/*.test.ts            # API, server, shared, component, page tests
+│   ├── index.js                # Legacy test runner (kept for reference)
+│   ├── test.deepseek.ts        # Legacy DeepSeek API tests (reference)
+│   └── test.microsoft.ts       # Legacy MS Graph API tests (reference)
+│
+├── bun-shim/                   # Compatibility shim for `bun test`
+│   └── shim.test.ts            # Prints guidance to use `bun run test`
+│
+├── database/                   # SQLite database file (basishacks.sqlite, WAL mode)
 ├── documentation/              # VitePress documentation site
 ├── public/                     # Static assets (fonts, images, uploads)
 └── scripts/                    # Build scripts
@@ -218,13 +228,13 @@ basishacks-r2/
 
 The `hackathon` table contains a single row (`id = 1`) that controls the global event state. The status field determines what actions are available:
 
-| Status | Description |
-|--------|-------------|
+| Status        | Description                                           |
+| ------------- | ----------------------------------------------------- |
 | `not_started` | Before the event — teams can form and submit projects |
-| `in_progress` | During the event — project submissions accepted |
-| `voting` | After the event — peer voting is open |
-| `finished` | Event completed — results published |
-| `paused` | Event paused for maintenance |
+| `in_progress` | During the event — project submissions accepted       |
+| `voting`      | After the event — peer voting is open                 |
+| `finished`    | Event completed — results published                   |
+| `paused`      | Event paused for maintenance                          |
 
 ### Pathways
 
@@ -237,17 +247,17 @@ Teams are categorized into two pathways with different judging rubrics:
 
 Each pathway has five criteria scored 0–5 by judges:
 
-| Criterion | Junior Weight | Senior Weight |
-|-----------|:------------:|:------------:|
-| Innovation & Originality | 30% | 10% |
-| Presentation & Design | 25% | 25% |
-| Technical Complexity | 20% | 20% |
-| Theme Alignment | 15% | 15% |
-| Impact & Usefulness | 10% | 30% |
+| Criterion                | Junior Weight | Senior Weight |
+| ------------------------ | :-----------: | :-----------: |
+| Innovation & Originality |      30%      |      10%      |
+| Presentation & Design    |      25%      |      25%      |
+| Technical Complexity     |      20%      |      20%      |
+| Theme Alignment          |      15%      |      15%      |
+| Impact & Usefulness      |      10%      |      30%      |
 
 ### Peer Voting
 
-During the voting phase, participants distribute stars across projects. The total stars assigned must sum to exactly 12, enforced by the `SubmitVoteRequest` Zod schema.
+During the voting phase, participants distribute 10 stars across eligible projects in the same pathway. The total stars assigned must sum to exactly 10, enforced by the `SubmitVoteRequest` Zod schema.
 
 ## Build & Development Commands
 
@@ -258,20 +268,14 @@ bun i
 # Dev server (HTTPS, port 24598)
 bun dev --https
 
-# Production build (local preset)
+# Production build
 bun run build
-
-# Production build (Cloudflare Pages preset)
-bun run build --preset cloudflare-pages
 
 # Preview built app
 bun run preview
 
 # Run tests
-bun test
-
-# Update Cloudflare types
-bun run cf-types
+bun run test
 
 # Format code
 bun run format
@@ -281,7 +285,7 @@ bun run format
 
 The project follows these conventions:
 
-- **Prettier** — No semicolons, single quotes
+- **Prettier** — Semicolons enabled, double quotes, `tabWidth: 4`, `trailingComma: all`, `printWidth: 100`
 - **ESLint** — Configured via `@nuxt/eslint`
 - **Imports** — Use `~~/` for project root imports in server code, `~/` for app imports
 - **Components** — Prefer `const` and arrow functions

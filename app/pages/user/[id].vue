@@ -1,37 +1,31 @@
 <script setup lang="ts">
+const backgroundRef = ref(null);
 
-const backgroundRef = ref(null)
+setPageLayout("fullwidth");
 
-setPageLayout("fullwidth")
-
-const route = useRoute()
+const route = useRoute();
 const userID = route.params.id as string;
 
-const { data, error, refresh } = await useFetch<APIUser>(
-  () => `/api/users/${userID}`
-)
+const { data, error, refresh } = await useFetch<APIUser>(() => `/api/users/${userID}`);
 if (error.value) {
-  throw createError(
-    {
-      status: 404,
-      statusText: "User not found"
-    }
-  )
+    throw createError({
+        status: 404,
+        statusText: "User not found",
+    });
 }
 
-const user = computed(() => data.value as APIUser)
+const user = computed(() => data.value as APIUser);
 
 onMounted(() => {
-  const e: any = backgroundRef.value;
-  if (e && user.value?.profile_theme?.value) {
-    e.style = `background-image: url(/userast/${user.value.profile_theme.value})`;
-  }
-})
-
+    const e: any = backgroundRef.value;
+    if (e && user.value?.profile_theme?.value) {
+        e.style = `background-image: url(/userast/${user.value.profile_theme.value})`;
+    }
+});
 </script>
 
 <template>
-  <div ref="backgroundRef" class="bg-center bg-cover">
-    <UContainer class="h-[calc(100vh-var(--ui-header-height))] bg-default pt-4"/>
-  </div>
+    <div ref="backgroundRef" class="bg-center bg-cover">
+        <div class="h-[calc(100vh-var(--ui-header-height))] bg-default pt-4 px-4 sm:px-6 lg:px-8" />
+    </div>
 </template>

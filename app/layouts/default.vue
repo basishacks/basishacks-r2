@@ -1,19 +1,13 @@
-
-
 <template>
+    <div>
+        <RoleHeader />
 
-  
+        <UMain>
+            <div class="px-4 sm:px-6 lg:px-8">
+                <slot />
+            </div>
+        </UMain>
 
-  <div>
-    
-    <RoleHeader/>
-
-    <UMain>
-      <UContainer>
-        <slot />
-      </UContainer>
-    </UMain>
-
-    <Footer/>
-  </div>
+        <Footer />
+    </div>
 </template>

@@ -27,18 +27,18 @@ const intent = ref<"save" | "submit">("save");
 const showConfirmModal = ref(false);
 let pendingSubmitEvent: FormSubmitEvent<UpdateTeamRequest | SubmitTeamRequest> | null = null;
 
-const autosaveStatus = ref('');
+const autosaveStatus = ref("");
 
 async function triggerAutosave() {
     if (!formRef.value?.dirty || !defaultTeam) {
         // autosaveStatus.value = 'Synced with origin';
-        return
-    };
+        return;
+    }
 
-    autosaveStatus.value = 'Auto-saving...';
+    autosaveStatus.value = "Auto-saving...";
     try {
         await $fetch(`/api/teams/${defaultTeam.id}`, {
-            method: 'PATCH',
+            method: "PATCH",
             body: {
                 name: state.name,
                 pathway: state.pathway,
@@ -52,21 +52,21 @@ async function triggerAutosave() {
         });
         autosaveStatus.value = `Auto-saved at ${new Date().toLocaleTimeString()}`;
     } catch (e) {
-        autosaveStatus.value = 'Auto-save failed';
+        autosaveStatus.value = "Auto-save failed";
     }
 }
 
-let autosaveInterval: ReturnType<typeof setInterval> | null = null
+let autosaveInterval: ReturnType<typeof setInterval> | null = null;
 
 onMounted(() => {
-    autosaveInterval = setInterval(triggerAutosave, 10000)
-})
+    autosaveInterval = setInterval(triggerAutosave, 10000);
+});
 
 onUnmounted(() => {
     if (autosaveInterval) {
-        clearInterval(autosaveInterval)
+        clearInterval(autosaveInterval);
     }
-})
+});
 
 const state = reactive({
     name: "",
@@ -167,7 +167,7 @@ async function confirmSubmit() {
         :state="state"
         :schema="intent === 'save' ? UpdateTeamRequest : SubmitTeamRequest"
         :disabled="disabled"
-        class="max-w-[600px] space-y-4 mb-4"
+        class="w-full space-y-4 mb-4"
         @submit="onSubmit"
     >
         <UFormField name="project.name" label="Project name" help="Make it sound even cooler!">

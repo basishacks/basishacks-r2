@@ -7,9 +7,7 @@ description: Scope definitions and management for the basishacks connect OAuth2 
 
 The basishacks connect OAuth2 integration defines a set of scopes that third-party and first-party applications can request. Scopes control what user data and Microsoft Graph resources an application can access.
 
-::: info Source
-`shared/oauth2-scopes.ts`
-:::
+::: info Source `shared/oauth2-scopes.ts` :::
 
 ## OAuth2ScopeMeta Interface
 
@@ -17,17 +15,17 @@ Each scope is described by the `OAuth2ScopeMeta` interface:
 
 ```ts
 export interface OAuth2ScopeMeta {
-  description: string   // Human-readable description shown in consent UI
-  adminOnly: boolean    // Whether only admins can assign this scope to an app
-  sensitive: boolean    // Whether this scope triggers the consent page
-  tooltip?: string      // Optional tooltip for the scope picker UI
+    description: string; // Human-readable description shown in consent UI
+    adminOnly: boolean; // Whether only admins can assign this scope to an app
+    sensitive: boolean; // Whether this scope triggers the consent page
+    tooltip?: string; // Optional tooltip for the scope picker UI
 }
 ```
 
 ## Defined Scopes
 
 | Scope | Description | Admin Only | Sensitive | Tooltip |
-|-------|-------------|:----------:|:---------:|---------|
+| --- | --- | :-: | :-: | --- |
 | `openid` | Access basic OpenID Connect identity information | No | No | — |
 | `profile` | Access user profile information (name, picture, etc.) | No | No | — |
 | `email` | Access user's email address | No | No | — |
@@ -52,10 +50,10 @@ The module also exports convenience constants:
 
 ```ts
 // Map of scope name → description string
-export const OAuth2ScopeDescriptions: Record<string, string>
+export const OAuth2ScopeDescriptions: Record<string, string>;
 
 // Array of all scope name strings
-export const OAuth2ScopesList: string[]
+export const OAuth2ScopesList: string[];
 ```
 
 These are used in validation, API responses, and the UI scope picker modal.
@@ -65,7 +63,7 @@ These are used in validation, API responses, and the UI scope picker modal.
 ### `isAdminScope(scope)`
 
 ```ts
-function isAdminScope(scope: string): boolean
+function isAdminScope(scope: string): boolean;
 ```
 
 Returns `true` if the scope has `adminOnly: true` in its metadata. Returns `false` for unknown scopes.
@@ -73,15 +71,15 @@ Returns `true` if the scope has `adminOnly: true` in its metadata. Returns `fals
 **Example:**
 
 ```ts
-isAdminScope('meetings.read.all')   // → true
-isAdminScope('openid')              // → false
-isAdminScope('nonexistent')         // → false
+isAdminScope("meetings.read.all"); // → true
+isAdminScope("openid"); // → false
+isAdminScope("nonexistent"); // → false
 ```
 
 ### `parseScopes(scopes)`
 
 ```ts
-function parseScopes(scopes: string | null | undefined): string[]
+function parseScopes(scopes: string | null | undefined): string[];
 ```
 
 Parses a space-separated scope string into an array. Returns an empty array for nullish input.
@@ -89,17 +87,17 @@ Parses a space-separated scope string into an array. Returns an empty array for 
 **Example:**
 
 ```ts
-parseScopes('openid profile email')
+parseScopes("openid profile email");
 // → ['openid', 'profile', 'email']
 
-parseScopes(null)
+parseScopes(null);
 // → []
 ```
 
 ### `hasScope(scopes, scope)`
 
 ```ts
-function hasScope(scopes: string | null | undefined, scope: string): boolean
+function hasScope(scopes: string | null | undefined, scope: string): boolean;
 ```
 
 Checks whether the given scope string includes the specified scope.
@@ -107,14 +105,14 @@ Checks whether the given scope string includes the specified scope.
 **Example:**
 
 ```ts
-hasScope('openid profile', 'profile')   // → true
-hasScope('openid', 'email')             // → false
+hasScope("openid profile", "profile"); // → true
+hasScope("openid", "email"); // → false
 ```
 
 ### `addScopes(scopes, toAdd)`
 
 ```ts
-function addScopes(scopes: string | null | undefined, toAdd: string[]): string
+function addScopes(scopes: string | null | undefined, toAdd: string[]): string;
 ```
 
 Adds scopes to the existing scope string, avoiding duplicates. Returns a space-separated string.
@@ -122,17 +120,17 @@ Adds scopes to the existing scope string, avoiding duplicates. Returns a space-s
 **Example:**
 
 ```ts
-addScopes('openid', ['profile', 'email'])
+addScopes("openid", ["profile", "email"]);
 // → 'openid profile email'
 
-addScopes('openid profile', ['profile'])
+addScopes("openid profile", ["profile"]);
 // → 'openid profile' (no duplicate)
 ```
 
 ### `removeScope(scopes, toRemove)`
 
 ```ts
-function removeScope(scopes: string | null | undefined, toRemove: string): string
+function removeScope(scopes: string | null | undefined, toRemove: string): string;
 ```
 
 Removes a single scope from the scope string. Returns a space-separated string.
@@ -140,7 +138,7 @@ Removes a single scope from the scope string. Returns a space-separated string.
 **Example:**
 
 ```ts
-removeScope('openid profile email', 'profile')
+removeScope("openid profile email", "profile");
 // → 'openid email'
 ```
 
@@ -166,16 +164,17 @@ To add a new scope, simply add an entry to the `OAuth2Scopes` object in `shared/
 
 ```ts
 export const OAuth2Scopes: Record<string, OAuth2ScopeMeta> = {
-  // ... existing scopes
-  'new.scope': {
-    description: 'Description of the new scope',
-    adminOnly: false,
-    sensitive: false,
-  },
-}
+    // ... existing scopes
+    "new.scope": {
+        description: "Description of the new scope",
+        adminOnly: false,
+        sensitive: false,
+    },
+};
 ```
 
 The new scope automatically propagates to:
+
 - Validation logic (via `OAuth2ScopesList`)
 - API responses (via `OAuth2ScopeDescriptions`)
 - The UI scope picker modal

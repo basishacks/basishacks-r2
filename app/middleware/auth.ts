@@ -1,8 +1,10 @@
-export default defineNuxtRouteMiddleware(() => {
-  const { loggedIn } = useUserSession()
+export default defineNuxtRouteMiddleware((to) => {
+    const { loggedIn } = useUserSession();
 
-  if (!loggedIn.value) {
-    // Force redirect
-    return navigateTo('/api/login', {external: true})
-  }
-})
+    if (!loggedIn.value) {
+        // Preserve the requested URL so login can redirect back after authentication
+        return navigateTo(`/api/login?redirect=${encodeURIComponent(to.fullPath)}`, {
+            external: true,
+        });
+    }
+});

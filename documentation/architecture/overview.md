@@ -5,25 +5,26 @@ description: High-level overview of the basishacks full-stack architecture, dire
 
 # Architecture Overview
 
-basishacks is a **full-stack Nuxt 3 application** that combines a Vue 3 frontend with a Nitro backend in a single deployable unit. It manages hackathon registration, team creation, project submission, peer voting, and judge scoring for the BIBS-C Network Hackathon (season 2, 2025–26).
+basishacks is a **full-stack Nuxt 4 application** that combines a Vue 3 frontend with a Nitro backend in a single deployable unit. It manages hackathon registration, team creation, project submission, peer voting, and judge scoring for the BIBS-C Network Hackathon (season 2, 2025–26).
+
+<StatusBadge status="info" text="Stack: Nuxt 4 + SQLite" />
 
 ## Technology Stack
 
 | Layer | Technology |
-|-------|-----------|
-| Framework | Nuxt 3 (latest) |
-| UI | `@nuxt/ui` ^4.6.1 (Tailwind CSS v4 based) |
-| Language | TypeScript 5.6+ |
-| Runtime | Node.js >= v24 |
+| --- | --- |
+| Framework | Nuxt 4 (^4.4.8) |
+| UI | `@nuxt/ui` ^4.9.0 (Tailwind CSS v4 based) |
+| Language | TypeScript (^5.9.3) |
+| Runtime | Node.js >= v24 or Bun (dual-runtime support) |
 | Package Manager | Bun (preferred); npm works |
-| Database (local) | `better-sqlite3` with WAL mode |
-| Database (prod) | Cloudflare D1 (binding name `DB`) |
-| Auth | `nuxt-auth-utils` (session-based) |
-| Validation | Zod 4.x |
-| Fonts | `@nuxt/fonts` (local provider) |
+| Database | SQLite via Drizzle ORM (`bun:sqlite` under Bun, `better-sqlite3` under Node.js) |
+| Auth | `nuxt-auth-utils` 0.5.25 (session-based) |
+| Validation | Zod 4.x (^4.4.3) |
+| Fonts | `@nuxt/fonts` ^0.14.0 (local provider) |
 | Icons | `@iconify-json/lucide`, `@iconify-json/material-symbols` |
-| Linting | `@nuxt/eslint` + Prettier |
-| Deployment | Cloudflare Pages via GitHub Actions |
+| Linting | `@nuxt/eslint` 1.10.0 + Prettier ^3.9.4 |
+| Deployment | Node.js server (VPS; Bun also supported) |
 
 ## Directory Structure
 
@@ -39,18 +40,19 @@ basishacks-r2/
 ├── server/                 # Nitro backend
 │   ├── api/                # API route handlers (file-based)
 │   ├── middleware/          # Server middleware (OAuth2 authorize)
-│   ├── plugins/            # Nitro plugins (DB init, MS Graph token)
-│   ├── types/              # Type augmentations (H3EventContext, Cloudflare)
+│   ├── plugins/            # Nitro plugins (DB init, MS Graph token, JWT secret guard)
+│   ├── types/              # Type augmentations (H3EventContext)
 │   └── utils/              # Server utilities
-│       ├── database.ts     # SQLite wrapper mimicking D1 interface
 │       ├── database/       # Per-table DB helpers (users, teams, scores, etc.)
-│       ├── auth.ts         # requireUser / requireJudge / requireAdmin
+│       ├── auth.ts         # requireUser / requireJudge / requireAdmin / requirePermission
 │       ├── convert.ts      # DB row -> public API object transformers
 │       ├── rateLimit.ts    # In-memory rate limiter
 │       ├── oauth2.ts       # Microsoft OAuth2 config
 │       ├── oauth2-validate.ts  # OAuth2 authorization request validation
 │       ├── oauth2-jwt.ts   # JWT verification and withOAuth2JWT() wrapper
-│       └── profile.ts      # Profile picture helpers
+│       ├── profile.ts      # Profile picture helpers
+│       ├── assets.ts       # Static and user asset helpers
+│       └── deepseek-store.ts   # DeepSeek AI chat session store
 ├── shared/                 # Code shared between client and server
 │   ├── schemas.ts          # Zod schemas for API input validation
 │   ├── database.d.ts       # TypeScript types matching DB schema exactly
@@ -59,11 +61,19 @@ basishacks-r2/
 │   ├── permissions.ts      # Fine-grained permission constants and helpers
 │   ├── oauth2-scopes.ts    # OAuth2 scope definitions
 │   └── rubric.ts           # Judging rubric definitions
-├── sql/                    # Schema and migrations
-│   ├── init.sql            # Base schema
-│   └── migration-*.sql     # Dated migrations
+├── sql/archive/            # Archived legacy SQL schema and migrations
+│   ├── init.sql            # Historical base schema
+│   └── migration-*.sql     # Historical dated migrations
+├── drizzle/                # Drizzle Kit generated migration files
+├── tests/                  # Vitest test suite
+│   ├── setup.ts            # Global test setup, in-memory DB, mocks
+│   └── **/*.test.ts        # API, server, shared, component, page tests
+├── bun-shim/               # Compatibility shim for `bun test`
+│   └── shim.test.ts        # Prints guidance to use `bun run test`
+├── bunfig.toml             # Redirects `bun test` to the guidance shim
+├── start-fix.mjs           # Bun production start entrypoint
 ├── documentation/          # VitePress documentation
-└── tests/                  # Test suite
+└── database/               # SQLite database file (basishacks.sqlite, WAL mode)
 ```
 
 ## Data Flow
@@ -83,10 +93,10 @@ Nitro Server Middleware (OAuth2 authorize, rate limiting)
 Nitro API Handler (server/api/**/*.ts)
   │  ├── Input validation via Zod schemas
   │  ├── Role/permission checks via requireUser/requireAdmin/etc.
-  │  └── Database access via event.context.db
+  │  └── Database access via event.context.drizzle
   │
   ▼
-SQLite (local) / Cloudflare D1 (production)
+SQLite (bun:sqlite under Bun / better-sqlite3 under Node.js)
   │
   ▼
 Response (JSON, converted via convertUserToPublic/convertTeamToPublic)
@@ -97,9 +107,8 @@ Response (JSON, converted via convertUserToPublic/convertTeamToPublic)
 Every incoming request has the following context attached by plugins and middleware:
 
 | Context Key | Type | Set By | Purpose |
-|-------------|------|--------|---------|
-| `event.context.db` | `SQLiteDatabase` | `init-database.ts` plugin | Database access |
-| `event.context.cf` | `CfProperties` | Cloudflare runtime | Cloudflare-specific properties |
+| --- | --- | --- | --- |
+| `event.context.drizzle` | `BaseSQLiteDatabase` | `init-database.ts` plugin | Database access |
 | `event.context.oauth2` | `OAuth2JWTContext` | `withOAuth2JWT()` wrapper | OAuth2 JWT payload, scopes, user |
 
 ## Key Architectural Decisions
@@ -118,23 +127,17 @@ Every API endpoint validates its input using shared Zod schemas from `shared/sch
 ```ts
 // shared/schemas.ts
 export const CreateTeamRequest = z.object({
-  name: z.string().min(1).max(50),
-  pathway: z.enum(['junior', 'senior']).optional(),
-})
+    name: z.string().min(1).max(50),
+    pathway: z.enum(["junior", "senior"]).optional(),
+});
 
 // server/api/teams/index.post.ts
-const body = await readValidatedBody(event, CreateTeamRequest.parse)
+const body = await readValidatedBody(event, CreateTeamRequest.parse);
 ```
 
-### D1-compatible SQLite wrapper
+### Drizzle ORM database layer
 
-The `SQLiteDatabase` class in `server/utils/database.ts` wraps `better-sqlite3` to mimic the Cloudflare D1 interface. This means the same database code works identically in local development and production:
-
-- `prepare(sql).bind(...).first()` — return first row
-- `prepare(sql).bind(...).all()` — return `{ results: T[] }`
-- `prepare(sql).bind(...).run()` — return `{ meta: { changed_db: number } }`
-- `batch(statements)` — execute in a transaction
-- `exec(sql)` — raw SQL execution
+The database layer uses Drizzle ORM with a runtime-agnostic SQLite driver (`bun:sqlite` under Bun, `better-sqlite3` under Node.js). Schema definitions in `server/database/schema.ts` provide type-safe queries. Migrations are applied automatically on startup by the custom runner in `server/database/migrate.ts`; Drizzle Kit is used to generate new migration files.
 
 ### Session-based auth
 
@@ -144,9 +147,17 @@ Authentication uses `nuxt-auth-utils` with session cookies. The session stores o
 
 The `users.role` column stores space-separated permission strings (e.g., `"participant portal.users.view portal.teams.view"`). The `admin` permission always passes all checks. Permission helpers in `shared/permissions.ts` provide `hasPermission()`, `addPermission()`, and `removePermission()` utilities.
 
-::: tip
-See [Authentication & Authorization](./auth) for full details on the auth flow and permission system.
-:::
+::: tip See [Authentication & Authorization](./auth) for full details on the auth flow and permission system. :::
+
+<CollapsibleDetails summary="Expand: request lifecycle in plain English">
+
+1. The browser asks for a page or API resource.
+2. Nuxt checks whether the route needs authentication.
+3. Nitro applies server middleware (OAuth2 bridge, rate limiting).
+4. The API handler validates input with Zod, checks permissions, and talks to SQLite.
+5. The response is stripped of internal fields and returned as JSON.
+
+</CollapsibleDetails>
 
 ### Shared code boundary
 

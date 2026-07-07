@@ -16,12 +16,13 @@ Authentication and authorization helpers for enforcing role-based access control
 ### `requireUser`
 
 ```ts
-export async function requireUser(event: H3Event): Promise<User>
+export async function requireUser(event: H3Event): Promise<User>;
 ```
 
 Ensures the request is from an authenticated user. Returns the full DB user row or throws 401.
 
 **Flow:**
+
 1. Calls `requireUserSession(event)` from `nuxt-auth-utils` to get the session user ID
 2. Fetches the user from the database via `getUser(event, userID)`
 3. Throws 401 if the user is not found in the database
@@ -29,7 +30,7 @@ Ensures the request is from an authenticated user. Returns the full DB user row 
 ### `requireJudge`
 
 ```ts
-export async function requireJudge(event: H3Event): Promise<User>
+export async function requireJudge(event: H3Event): Promise<User>;
 ```
 
 Ensures the user has judge or admin role. Throws 403 if insufficient permissions.
@@ -37,7 +38,7 @@ Ensures the user has judge or admin role. Throws 403 if insufficient permissions
 ### `requireAdmin`
 
 ```ts
-export async function requireAdmin(event: H3Event): Promise<User>
+export async function requireAdmin(event: H3Event): Promise<User>;
 ```
 
 Ensures the user has admin role. Throws 403 if insufficient permissions.
@@ -45,7 +46,7 @@ Ensures the user has admin role. Throws 403 if insufficient permissions.
 ### `requirePermission`
 
 ```ts
-export async function requirePermission(event: H3Event, permission: string): Promise<User>
+export async function requirePermission(event: H3Event, permission: string): Promise<User>;
 ```
 
 Ensures the user has a specific permission (or admin role). Uses `hasPermission` from `shared/permissions`.
@@ -56,15 +57,24 @@ Ensures the user has a specific permission (or admin role). Uses `hasPermission`
 
 ## database.ts
 
-SQLite wrapper that mimics Cloudflare D1's interface for local development.
+The database layer uses Drizzle ORM. See `server/database/` for schema definitions and initialization.
 
-### `initializeDatabase`
+The Drizzle ORM instance is attached to `event.context.drizzle` on every request via the `init-database` Nitro plugin. All database operations go through the Drizzle query builder.
+
+### Creating the Database Wrapper
 
 ```ts
-export function initializeDatabase(): any
+<<<<<<< HEAD
+export function createDatabaseWrapper(): DrizzleDatabase;
+```
+
+Creates a new Drizzle database wrapper instance. Called per-request in the `init-database` plugin.
+=======
+export function initializeDatabase(): any;
 ```
 
 Initializes the `better-sqlite3` database connection (singleton). Configures:
+
 - WAL journal mode for concurrent read performance
 - Foreign key enforcement (`PRAGMA foreign_keys = ON`)
 - Database path: `./database/basishacks.sqlite`
@@ -72,7 +82,7 @@ Initializes the `better-sqlite3` database connection (singleton). Configures:
 ### `getDatabase`
 
 ```ts
-export function getDatabase(): any
+export function getDatabase(): any;
 ```
 
 Returns the existing database instance or initializes a new one.
@@ -81,30 +91,31 @@ Returns the existing database instance or initializes a new one.
 
 Wraps `better-sqlite3` to match the D1 `D1Database` interface:
 
-| Method | Description |
-|--------|-------------|
-| `prepare(sql)` | Returns an `SQLiteStatement` wrapper |
+| Method              | Description                                   |
+| ------------------- | --------------------------------------------- |
+| `prepare(sql)`      | Returns an `SQLiteStatement` wrapper          |
 | `batch(statements)` | Executes multiple statements in a transaction |
-| `exec(sql)` | Executes raw SQL (for schema initialization) |
+| `exec(sql)`         | Executes raw SQL (for schema initialization)  |
 
 ### `SQLiteStatement` class
 
 Wraps a prepared statement to match D1's `D1PreparedStatement` interface:
 
-| Method | D1 Equivalent | Description |
-|--------|--------------|-------------|
-| `bind(...params)` | `bind()` | Binds parameters to the statement |
-| `first<T>()` | `first()` | Returns the first row or `undefined` |
-| `all<T>()` | `all()` | Returns `{ results: T[] }` |
-| `run()` | `run()` | Returns `{ meta: { changed_db: number } }` |
+| Method            | D1 Equivalent | Description                                |
+| ----------------- | ------------- | ------------------------------------------ |
+| `bind(...params)` | `bind()`      | Binds parameters to the statement          |
+| `first<T>()`      | `first()`     | Returns the first row or `undefined`       |
+| `all<T>()`        | `all()`       | Returns `{ results: T[] }`                 |
+| `run()`           | `run()`       | Returns `{ meta: { changed_db: number } }` |
 
 ### `createDatabaseWrapper`
 
 ```ts
-export function createDatabaseWrapper(): SQLiteDatabase
+export function createDatabaseWrapper(): SQLiteDatabase;
 ```
 
 Creates a new `SQLiteDatabase` wrapper instance. Called per-request in the `init-database` plugin.
+>>>>>>> score-release-patch
 
 ---
 
@@ -115,7 +126,7 @@ Transforms internal database rows into public API response objects.
 ### `parseProfileTheme`
 
 ```ts
-function parseProfileTheme(input?: string): ProfileTheme
+function parseProfileTheme(input?: string): ProfileTheme;
 ```
 
 Parses a `"mode|value"` string from the database into a `{ mode, value }` object.
@@ -126,38 +137,50 @@ Parses a `"mode|value"` string from the database into a `{ mode, value }` object
 ### `convertUserToPublic`
 
 ```ts
-export function convertUserToPublic(user: User): APIUser
+export function convertUserToPublic(user: User): APIUser;
 ```
 
 Strips internal fields from a `User` row and returns a public `APIUser`:
 
-| Output Field | Source |
-|-------------|--------|
-| `id` | `user.id` |
-| `email` | `user.email` |
-| `role` | `user.role` |
-| `name` | `user.name` |
-| `team_id` | `user.team_id` |
-| `profile_theme` | Parsed from `user.profile_theme` |
-| `profile_picture` | `user.profile_picture` |
+| Output Field      | Source                           |
+| ----------------- | -------------------------------- |
+| `id`              | `user.id`                        |
+| `email`           | `user.email`                     |
+| `role`            | `user.role`                      |
+| `name`            | `user.name`                      |
+| `team_id`         | `user.team_id`                   |
+| `profile_theme`   | Parsed from `user.profile_theme` |
+| `profile_picture` | `user.profile_picture`           |
 
 ### `convertTeamToPublic`
 
 ```ts
-export function convertTeamToPublic(team: Team, withScore?: boolean): APITeam
+<<<<<<< HEAD
+export function convertTeamToPublic(team: Team, withScore?: boolean): APITeam;
+=======
+export function convertTeamToPublic(
+    team: Team,
+    withScore?: boolean,
+    awards?: ResolvedAward[],
+): APITeam;
+>>>>>>> score-release-patch
 ```
 
-Converts a `Team` row to a public `APITeam`. The `withScore` parameter controls whether the score is included (default: `false`).
+Converts a `Team` row to a public `APITeam`. The `withScore` parameter controls whether the score is included (default: `false`). Pass resolved awards to include them in the `awards` array.
 
-| Output Field | Source |
-|-------------|--------|
-| `id` | `team.id` |
-| `name` | `team.name` |
-| `pathway` | `team.pathway` |
-| `rank` | `team.rank` |
-| `score` | `team.score` (only if `withScore`) or `null` |
-| `season_id` | `team.season_id` |
-| `project` | Nested object from `project_name`, `project_description`, etc. |
+| Output Field | Source                                                         |
+| ------------ | -------------------------------------------------------------- |
+| `id`         | `team.id`                                                      |
+| `name`       | `team.name`                                                    |
+| `pathway`    | `team.pathway`                                                 |
+| `rank`       | `team.rank`                                                    |
+| `score`      | `team.score` (only if `withScore`) or `null`                   |
+| `season_id`  | `team.season_id`                                               |
+| `project`    | Nested object from `project_name`, `project_description`, etc. |
+<<<<<<< HEAD
+=======
+| `awards`     | Resolved awards with `team_id` stripped                        |
+>>>>>>> score-release-patch
 
 ---
 
@@ -169,33 +192,35 @@ In-memory rate limiting middleware.
 
 ```ts
 interface RateLimitConfig {
-  maxRequests: number  // Default: 60
-  windowMs: number     // Default: 60000 (1 minute)
+    maxRequests: number; // Default: 60
+    windowMs: number; // Default: 60000 (1 minute)
 }
 ```
 
 ### `getClientIdentifier`
 
 ```ts
-export async function getClientIdentifier(event: H3Event): Promise<string>
+export async function getClientIdentifier(event: H3Event): Promise<string>;
 ```
 
 Returns a unique identifier for the client:
+
 1. If authenticated: `user:{id}`
-2. Otherwise: `ip:{x-forwarded-for | cf-connecting-ip | x-real-ip | 'unknown'}`
+2. Otherwise: `ip:{x-forwarded-for | x-real-ip | 'unknown'}`
 
 ### `applyRateLimit`
 
 ```ts
 export function applyRateLimit(
-  handler: (event: H3Event) => Promise<any>,
-  config?: Partial<RateLimitConfig>
-): (event: H3Event) => Promise<any>
+    handler: (event: H3Event) => Promise<any>,
+    config?: Partial<RateLimitConfig>,
+): (event: H3Event) => Promise<any>;
 ```
 
 Wraps an API handler with rate limiting. Returns 429 with `Retry-After` header when exceeded.
 
 **Features:**
+
 - Per-identifier request tracking with sliding window
 - Automatic cleanup of old entries (1% probability per request)
 - Returns `Retry-After` header and reset time in error response
@@ -210,24 +235,33 @@ Microsoft OAuth2 configuration and URL construction.
 
 ```ts
 const oAuth2Config = {
-  base: 'https://login.microsoftonline.com/',
-  tenant: 'cbc6e1e2-a6bb-4002-bbdc-6da892a051a7',
-  clientId: '868b989e-6574-4795-bcfb-8db37bee1c37',
-  responseType: 'code',
-  redirectUri: '/api/oauth2/mscallback',
-  scope: 'openid profile email',
-}
+    base: "https://login.microsoftonline.com/",
+<<<<<<< HEAD
+    tenant: process.env.MICROSOFT_TENANT_ID || "",
+    clientId: process.env.MICROSOFT_CLIENT_ID || "",
+    responseType: "code",
+    redirectUri: process.env.MICROSOFT_REDIRECT_URI || "/api/oauth2/mscallback",
+=======
+    tenant: "cbc6e1e2-a6bb-4002-bbdc-6da892a051a7",
+    clientId: "868b989e-6574-4795-bcfb-8db37bee1c37",
+    responseType: "code",
+    redirectUri: "/api/oauth2/mscallback",
+>>>>>>> score-release-patch
+    scope: "openid profile email",
+};
 ```
+
+The `tenant`, `clientId`, and `redirectUri` are read from `MICROSOFT_TENANT_ID`, `MICROSOFT_CLIENT_ID`, and `MICROSOFT_REDIRECT_URI`. If the tenant or client ID is unset, Microsoft OAuth2 / Graph features are disabled gracefully. The redirect URI defaults to `/api/oauth2/mscallback`; an alias handler is also exposed at `/api/auth` for convenience.
 
 ### `structureLink`
 
 ```ts
 export function structureLink(
-  state: string,
-  code_challenge: string,
-  scope?: string,
-  redirect_uri?: string
-): string
+    state: string,
+    code_challenge: string,
+    scope?: string,
+    redirect_uri?: string,
+): string;
 ```
 
 Constructs a Microsoft OAuth2 authorization URL with PKCE parameters.
@@ -242,8 +276,15 @@ OAuth2 authorization request validation logic.
 
 ```ts
 export async function validateOAuth2AuthorizationRequest(
-  event, clientId, scope, redirectUri, state, responseType, codeChallenge, codeChallengeType
-): Promise<ValidatedRequest>
+    event,
+    clientId,
+    scope,
+    redirectUri,
+    state,
+    responseType,
+    codeChallenge,
+    codeChallengeType,
+): Promise<ValidatedRequest>;
 ```
 
 Validates all parameters of an OAuth2 authorization request:
@@ -258,7 +299,7 @@ Validates all parameters of an OAuth2 authorization request:
 ### `usedSensitiveScopes`
 
 ```ts
-export function usedSensitiveScopes(session: AuthorizeSession): boolean
+export function usedSensitiveScopes(session: AuthorizeSession): boolean;
 ```
 
 Returns `true` if any requested scope is marked as sensitive in `OAuth2Scopes`.
@@ -266,17 +307,18 @@ Returns `true` if any requested scope is marked as sensitive in `OAuth2Scopes`.
 ### `determinePostMicrosoft`
 
 ```ts
-export function determinePostMicrosoft(event, session: AuthorizeSession): string
+export function determinePostMicrosoft(event, session: AuthorizeSession): string;
 ```
 
 Determines the redirect URL after successful Microsoft login:
+
 - If sensitive scopes are requested → redirect to consent page
 - Otherwise → complete the flow immediately
 
 ### `completeConsentFlow`
 
 ```ts
-export function completeConsentFlow(event, session: AuthorizeSession): string
+export function completeConsentFlow(event, session: AuthorizeSession): string;
 ```
 
 Generates an exchange code, marks the session as completed, deletes the `bridge_id` cookie, and returns the redirect URI with `code` and `state` parameters.
@@ -290,7 +332,7 @@ JWT verification and OAuth2 Bearer token handling using the `jose` library.
 ### `verifyAccessToken`
 
 ```ts
-export async function verifyAccessToken(token: string): Promise<OAuth2JWTPayload>
+export async function verifyAccessToken(token: string): Promise<OAuth2JWTPayload>;
 ```
 
 Verifies a JWT access token against `NUXT_OAUTH2_JWT_SECRET`. Throws 401 for invalid or expired tokens.
@@ -298,7 +340,7 @@ Verifies a JWT access token against `NUXT_OAUTH2_JWT_SECRET`. Throws 401 for inv
 ### `extractBearerToken`
 
 ```ts
-export function extractBearerToken(event: H3Event): string
+export function extractBearerToken(event: H3Event): string;
 ```
 
 Extracts the Bearer token from the `Authorization` header. Throws 401 if missing or malformed.
@@ -306,7 +348,7 @@ Extracts the Bearer token from the `Authorization` header. Throws 401 if missing
 ### `verifyOAuth2JWT`
 
 ```ts
-export async function verifyOAuth2JWT(event: H3Event): Promise<OAuth2JWTPayload>
+export async function verifyOAuth2JWT(event: H3Event): Promise<OAuth2JWTPayload>;
 ```
 
 Combines `extractBearerToken` and `verifyAccessToken` into a single call.
@@ -314,7 +356,7 @@ Combines `extractBearerToken` and `verifyAccessToken` into a single call.
 ### `parseJWScopes`
 
 ```ts
-export function parseJWScopes(scope: string | undefined): string[]
+export function parseJWScopes(scope: string | undefined): string[];
 ```
 
 Parses a space-separated scope string into an array.
@@ -322,7 +364,7 @@ Parses a space-separated scope string into an array.
 ### `requireScopes`
 
 ```ts
-export function requireScopes(grantedScopes: string[], requiredScopes: string[]): void
+export function requireScopes(grantedScopes: string[], requiredScopes: string[]): void;
 ```
 
 Throws 403 with `insufficient_scope` if any required scope is missing.
@@ -330,7 +372,7 @@ Throws 403 with `insufficient_scope` if any required scope is missing.
 ### `resolveOAuth2User`
 
 ```ts
-export async function resolveOAuth2User(event: H3Event, payload: OAuth2JWTPayload): Promise<User>
+export async function resolveOAuth2User(event: H3Event, payload: OAuth2JWTPayload): Promise<User>;
 ```
 
 Resolves a user from the JWT payload's `user_id` or `sub` field. Throws 401/404 if invalid.
@@ -339,9 +381,9 @@ Resolves a user from the JWT payload's `user_id` or `sub` field. Throws 401/404 
 
 ```ts
 export function withOAuth2JWT(
-  handler: (event: H3Event) => any,
-  options?: OAuth2JWTWrapperOptions
-): EventHandler
+    handler: (event: H3Event) => any,
+    options?: OAuth2JWTWrapperOptions,
+): EventHandler;
 ```
 
 High-level wrapper that handles the full OAuth2 JWT authentication flow:
@@ -349,17 +391,17 @@ High-level wrapper that handles the full OAuth2 JWT authentication flow:
 **Options:**
 
 | Option | Type | Default | Description |
-|--------|------|---------|-------------|
+| --- | --- | --- | --- |
 | `requiredScopes` | `string[]` | `[]` | Scopes the token must include |
 | `loadUser` | `boolean` | `false` | Fetch the DB user and attach to `event.context.oauth2.user` |
 
 **Context attached to `event.context.oauth2`:**
 
-| Field | Type | Description |
-|-------|------|-------------|
-| `payload` | `OAuth2JWTPayload` | Decoded JWT payload |
-| `scopes` | `string[]` | Parsed scopes from the token |
-| `user` | `User` | DB user row (only if `loadUser: true`) |
+| Field     | Type               | Description                            |
+| --------- | ------------------ | -------------------------------------- |
+| `payload` | `OAuth2JWTPayload` | Decoded JWT payload                    |
+| `scopes`  | `string[]`         | Parsed scopes from the token           |
+| `user`    | `User`             | DB user row (only if `loadUser: true`) |
 
 ---
 
@@ -370,7 +412,7 @@ Profile picture generation using jdenticon.
 ### `generateIdenticonPNG`
 
 ```ts
-export async function generateIdenticonPNG(name: string, size?: number): Promise<Buffer>
+export async function generateIdenticonPNG(name: string, size?: number): Promise<Buffer>;
 ```
 
 Generates a deterministic identicon PNG from a name string and saves it as a user asset.
@@ -386,15 +428,25 @@ File system helpers for managing static and user assets.
 
 ### Asset Functions
 
-| Function | Description |
-|----------|-------------|
-| `createAsset(name, data)` | Writes a Buffer to `public/assets/{name}` |
-| `createUserAsset(name, data)` | Writes a Buffer to `public/userast/{name}` |
-| `removeAsset(name)` | Deletes a file from `public/assets/` |
-| `removeUserAsset(name)` | Deletes a file from `public/userast/` |
-| `getUserAsset(name)` | Reads a file from `public/userast/` as a Buffer |
+<<<<<<< HEAD
+| Function                      | Description                                        |
+| ----------------------------- | -------------------------------------------------- |
+| `createAsset(name, data)`     | Writes a Buffer to `public/assets/{name}`          |
+| `createUserAsset(name, data)` | Writes a Buffer to `public/userassets/{name}`      |
+| `removeAsset(name)`           | Deletes a file from `public/assets/`               |
+| `removeUserAsset(name)`       | Deletes a file from `public/userassets/`           |
+| `getUserAsset(name)`          | Reads a file from `public/userassets/` as a Buffer |
+=======
+| Function                      | Description                                     |
+| ----------------------------- | ----------------------------------------------- |
+| `createAsset(name, data)`     | Writes a Buffer to `public/assets/{name}`       |
+| `createUserAsset(name, data)` | Writes a Buffer to `public/userast/{name}`      |
+| `removeAsset(name)`           | Deletes a file from `public/assets/`            |
+| `removeUserAsset(name)`       | Deletes a file from `public/userast/`           |
+| `getUserAsset(name)`          | Reads a file from `public/userast/` as a Buffer |
+>>>>>>> score-release-patch
 
-All functions create directories recursively if they do not exist. Remove functions silently catch errors (file may not exist).
+All functions validate the asset name to prevent path traversal, create parent directories recursively, and remove functions silently catch missing-file errors. Invalid names throw a 400 error.
 
 ---
 
@@ -406,25 +458,71 @@ In-memory store for DeepSeek AI chat sessions.
 
 ```ts
 interface ChatSession {
-  id: number
-  sessionName: string
-  createdAt: number
-  messages: ChatCompletionMessage[]
+    id: number;
+    sessionName: string;
+    createdAt: number;
+    messages: ChatCompletionMessage[];
 }
 ```
 
 ### Functions
 
-| Function | Description |
-|----------|-------------|
-| `createSession(sessionName)` | Creates a new session with auto-incrementing ID |
-| `getDeepSeekSession(sessionId)` | Returns a session by ID |
-| `getAllSessions()` | Returns all sessions |
-| `deleteSession(sessionId)` | Deletes a session |
-| `addMessage(sessionId, message)` | Appends a message to a session |
-| `getMessages(sessionId)` | Returns all messages for a session |
+| Function                         | Description                                     |
+| -------------------------------- | ----------------------------------------------- |
+| `createSession(sessionName)`     | Creates a new session with auto-incrementing ID |
+| `getDeepSeekSession(sessionId)`  | Returns a session by ID                         |
+| `getAllSessions()`               | Returns all sessions                            |
+| `deleteSession(sessionId)`       | Deletes a session                               |
+| `addMessage(sessionId, message)` | Appends a message to a session                  |
+| `getMessages(sessionId)`         | Returns all messages for a session              |
 
 **Note:** All data is in-memory and lost on server restart.
+
+---
+
+## url-validation.ts
+
+**File:** `server/utils/url-validation.ts`
+
+Centralized helpers for validating redirect URIs and other URLs used in OAuth2 flows.
+
+```ts
+export function isValidRedirectUri(uri: string): boolean;
+```
+
+Returns `true` if the URI is a valid HTTP/HTTPS URL.
+
+```ts
+export function isLocalhostRedirectUri(uri: string): boolean;
+```
+
+Returns `true` if the URI uses `http://localhost`.
+
+```ts
+export function assertValidRedirectUri(uri: string): void;
+```
+
+Throws a 400 error if the URI is not valid for application redirect URIs (must be `https://` or `http://localhost`).
+
+---
+
+## validate-oauth2-jwt-secret.ts
+
+**File:** `server/utils/validate-oauth2-jwt-secret.ts`
+
+Shared guard used by the `validate-oauth2-jwt-secret.ts` Nitro plugin and tests.
+
+```ts
+export const DEV_OAUTH2_JWT_SECRET_FALLBACK: string;
+```
+
+The documented dev-only fallback (exactly 32 bytes).
+
+```ts
+export function validateOAuth2JWTSecret(options?: ValidateOAuth2JWTSecretOptions): void;
+```
+
+Validates `NUXT_OAUTH2_JWT_SECRET` length and either exits (production) or applies the fallback (development/test).
 
 ---
 
@@ -434,8 +532,20 @@ Per-table database helper modules in `server/utils/database/`.
 
 ### users.ts
 
+<<<<<<< HEAD
+| Function                                | Description                                        |
+| --------------------------------------- | -------------------------------------------------- |
+| `getUser(event, userID)`                | Get user by ID                                     |
+| `getUserByEmail(event, email)`          | Get user by email (case-insensitive)               |
+| `addCodeToUser(event, email)`           | Create or update a user record for the given email |
+| `updateUserName(event, user)`           | Update user's name                                 |
+| `updateUserProfileTheme(event, user)`   | Update user's profile theme                        |
+| `updateUserProfilePicture(event, user)` | Update user's profile picture                      |
+| `updateUserRole(event, userID, role)`   | Update user's role                                 |
+| `deleteUsers(event, userIDs)`           | Delete users and their related records             |
+=======
 | Function | Description |
-|----------|-------------|
+| --- | --- |
 | `getUser(event, userID)` | Get user by ID |
 | `getUserByEmail(event, email)` | Get user by email (case-insensitive) |
 | `addCodeToUser(event, email)` | Generate and store a 6-digit login code (10-min expiry, 1-min cooldown) |
@@ -445,72 +555,110 @@ Per-table database helper modules in `server/utils/database/`.
 | `updateUserProfilePicture(event, user)` | Update user's profile picture |
 | `updateUserRole(event, userID, role)` | Update user's role |
 | `deleteUsers(event, userIDs)` | Delete users and their related records |
+>>>>>>> score-release-patch
 
 ### teams.ts
 
-| Function | Description |
-|----------|-------------|
-| `getTeam(event, teamID)` | Get team by ID (active season only) |
-| `getAllTeams(event)` | Get all teams for active season |
+| Function                                        | Description                                   |
+| ----------------------------------------------- | --------------------------------------------- |
+| `getTeam(event, teamID)`                        | Get team by ID (active season only)           |
+| `getAllTeams(event)`                            | Get all teams for active season               |
 | `getSubmittedUnjudgedTeams(event, judgeUserID)` | Get submitted teams not yet scored by a judge |
-| `getSubmittedTeams(event)` | Get all submitted teams for active season |
-| `getTeamById(event, teamID)` | Get team by ID (any season) |
-| `getTeamBySeason(event, teamID, seasonId)` | Get team by ID and season |
-| `getAllTeamsAllSeasons(event)` | Get all teams across all seasons |
-| `getTeamsBySeason(event, seasonId)` | Get teams by season ID |
-| `createTeam(event, teamName)` | Create a new team in the active season |
-| `updateTeam(event, team)` | Update all team fields |
-| `deleteTeams(event, teamIDs)` | Delete teams and related records |
+| `getSubmittedTeams(event)`                      | Get all submitted teams for active season     |
+| `getTeamById(event, teamID)`                    | Get team by ID (any season)                   |
+| `getTeamBySeason(event, teamID, seasonId)`      | Get team by ID and season                     |
+| `getAllTeamsAllSeasons(event)`                  | Get all teams across all seasons              |
+| `getTeamsBySeason(event, seasonId)`             | Get teams by season ID                        |
+| `createTeam(event, teamName)`                   | Create a new team in the active season        |
+| `updateTeam(event, team)`                       | Update all team fields                        |
+| `deleteTeams(event, teamIDs)`                   | Delete teams and related records              |
 
 ### scores.ts
 
-| Function | Description |
-|----------|-------------|
-| `createTeamScores(event, scores)` | Create a judge score record |
-| `getTeamScoresByTeamID(event, teamID)` | Get all scores for a team |
+| Function                               | Description                 |
+| -------------------------------------- | --------------------------- |
+| `createTeamScores(event, scores)`      | Create a judge score record |
+| `getTeamScoresByTeamID(event, teamID)` | Get all scores for a team   |
 
 ### members.ts
 
-| Function | Description |
-|----------|-------------|
-| `getTeamMembers(event, teamID)` | Get current team members |
-| `getAllTeamMembers(event, teamID)` | Get current and past team members |
-| `getUserPastTeams(event, userID)` | Get teams a user was previously in |
-| `addUserPastTeam(event, userID, teamID)` | Record a past team membership |
+| Function                                  | Description                               |
+| ----------------------------------------- | ----------------------------------------- |
+| `getTeamMembers(event, teamID)`           | Get current team members                  |
+| `getAllTeamMembers(event, teamID)`        | Get current and past team members         |
+| `getUserPastTeams(event, userID)`         | Get teams a user was previously in        |
+| `addUserPastTeam(event, userID, teamID)`  | Record a past team membership             |
 | `removeTeamMember(event, teamID, userID)` | Remove a member (records past team first) |
-| `addTeamMember(event, teamID, userID)` | Add a member to a team |
+| `addTeamMember(event, teamID, userID)`    | Add a member to a team                    |
 
 ### hackathon.ts
 
-| Function | Description |
-|----------|-------------|
+| Function              | Description                                     |
+| --------------------- | ----------------------------------------------- |
 | `getHackathon(event)` | Get the hackathon status row (single row, id=1) |
 
 ### ballots.ts
 
-| Function | Description |
-|----------|-------------|
-| `createBallot(event, userID)` | Create a ballot for a user |
-| `getBallotByUser(event, userID)` | Get a user's ballot |
-| `updateBallot(event, ballot)` | Update ballot reasoning/submitted status |
-| `createBallotScore(event, ballotID, projectID)` | Create a ballot score entry |
-| `getBallotScores(event, ballotID)` | Get all scores for a ballot |
-| `getBallotScoresByTeamID(event, teamID)` | Get all ballot scores for a team |
-| `updateBallotScore(event, score)` | Update a ballot score value |
+| Function                                        | Description                              |
+| ----------------------------------------------- | ---------------------------------------- |
+| `createBallot(event, userID)`                   | Create a ballot for a user               |
+| `getBallotByUser(event, userID)`                | Get a user's ballot                      |
+| `updateBallot(event, ballot)`                   | Update ballot reasoning/submitted status |
+| `createBallotScore(event, ballotID, projectID)` | Create a ballot score entry              |
+| `getBallotScores(event, ballotID)`              | Get all scores for a ballot              |
+| `getBallotScoresByTeamID(event, teamID)`        | Get all ballot scores for a team         |
+| `updateBallotScore(event, score)`               | Update a ballot score value              |
 
 ### seasons.ts
 
-| Function | Description |
-|----------|-------------|
-| `getSeasons(event)` | List all seasons ordered by ID |
-| `getSeasonById(event, seasonId)` | Get a season by ID |
-| `getActiveSeason(event)` | Get the currently active season |
+| Function                           | Description                                    |
+| ---------------------------------- | ---------------------------------------------- |
+| `getSeasons(event)`                | List all seasons ordered by ID                 |
+| `getSeasonById(event, seasonId)`   | Get a season by ID                             |
+| `getActiveSeason(event)`           | Get the currently active season                |
 | `setActiveSeason(event, seasonId)` | Set the active season (deactivates all others) |
+
+<<<<<<< HEAD
+### peer-voting.ts
+
+**File:** `server/utils/database/peer-voting.ts`
+
+| Function                           | Description                                               |
+| ---------------------------------- | --------------------------------------------------------- |
+| `getPeerVoteByUser(event, userID)` | Get a peer voting record by user ID                       |
+| `upsertPeerVote(event, vote)`      | Insert or update a peer vote (`peer_voting_scores` table) |
+
+### awards.ts
+
+**File:** `server/utils/database/awards.ts`
+
+| Function                                  | Description                            |
+| ----------------------------------------- | -------------------------------------- |
+| `getAwards(event, teamId)`                | Get resolved awards for a single team  |
+| `getAwardsForTeams(event, teamIds)`       | Get resolved awards for multiple teams |
+| `createAward(event, teamId, award, meta)` | Create a team award                    |
+| `deleteTeamAwards(event, teamId)`         | Delete all awards for a team           |
+| `deleteAward(event, teamId, award)`       | Delete a specific award for a team     |
+
+Award definitions live in `shared/awards.ts`.
+=======
+### awards.ts
+
+| Function                                     | Description                                |
+| -------------------------------------------- | ------------------------------------------ |
+| `getAwards(event, teamID)`                   | Get resolved awards for a single team      |
+| `getAwardsForTeams(event, teamIDs)`          | Batch fetch resolved awards for many teams |
+| `createAward(event, teamID, awardID, meta?)` | Assign an award to a team                  |
+| `deleteTeamAwards(event, teamID)`            | Remove all awards from a team              |
+| `deleteAward(event, teamID, awardID)`        | Remove a specific award from a team        |
+
+Award helpers resolve `team_awards` rows by joining the `awards` catalog so each result includes `award_id`, `name`, `description`, `icon`, and parsed `meta`. No runtime condition evaluation is performed.
+>>>>>>> score-release-patch
 
 ### oauth2_applications.ts
 
 | Function | Description |
-|----------|-------------|
+| --- | --- |
 | `getOAuth2ApplicationCountByOwner(event, ownerId)` | Count applications owned by a user |
 | `createOAuth2Application(event, ownerId, name, description, proxyMicrosoft, type)` | Create a new OAuth2 app |
 | `getOAuth2Application(event, clientID)` | Get an application by client ID |

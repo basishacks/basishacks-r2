@@ -1,0 +1,1 @@
+CREATE UNIQUE INDEX `idx_sc_votes_user_id` ON `sc_votes` (`user_id`);

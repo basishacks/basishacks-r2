@@ -29,7 +29,7 @@ The standard page layout used by most public pages.
 ```
 
 - `RoleHeader` — sticky navigation header with role-based menu items
-- `UContainer` — centered content wrapper with responsive max-width
+- Content wrapper — full-width padded container (the global `UContainer` max-width constraint was removed so the header, footer, and content span the viewport)
 - `Footer` — site-wide footer with links and copyright
 
 **Used by:** `/`, `/profile`, `/rules`, `/voting`, `/judging`
@@ -40,9 +40,7 @@ The standard page layout used by most public pages.
 
 Identical to `default` but with a **red background** (`bg-red-100`) on the `UMain` element. Used for debugging/visual testing.
 
-::: warning
-This layout is intended for development only and should not be used in production pages.
-:::
+::: warning This layout is intended for development only and should not be used in production pages. :::
 
 ## fullwidth
 
@@ -92,7 +90,7 @@ Same as `fullwidth` but with a **non-sticky** header (`class="relative"` on `Rol
 
 **File:** `app/layouts/dashboard.vue`
 
-Participant dashboard layout with a fixed left sidebar (visible on screens >= 1800px wide) and centered content area.
+Participant dashboard layout with a visible left sidebar containing the active phase card and vertical navigation, plus a full-width main content area.
 
 **Structure:**
 
@@ -100,8 +98,8 @@ Participant dashboard layout with a fixed left sidebar (visible on screens >= 18
 ┌──────────────────────────────────────────────────┐
 │ RoleHeader                                       │
 ├──────────┬───────────────────────────────────────┤
-│ Sidebar  │ UContainer                            │
-│ (fixed)  │   UBanner (small screens)             │
+│ Sidebar  │ Main content                          │
+│ (aside)  │   UBanner (small screens)             │
 │          │   <slot />                            │
 │          │                                       │
 ├──────────┴───────────────────────────────────────┤
@@ -110,18 +108,21 @@ Participant dashboard layout with a fixed left sidebar (visible on screens >= 18
 ```
 
 **Sidebar contents:**
-- Season info card — shows "ongoing" label, season date, theme name, and event details link
+
+- Phase info card — shows "ongoing"/"completed" label, season date, theme name, and event details link
 - Navigation menu with items:
-  - **Dashboard** (label)
-  - Overview → `/dashboard`
-  - Team → `/dashboard/teams`
-  - General → `/dashboard/general`
-  - Results → `/dashboard/results`
-  - Help → external Microsoft Teams Q&A channel
+    - **Dashboard** (label)
+    - Overview → `/dashboard`
+    - Team → `/dashboard/teams`
+    - General → `/dashboard/general`
+    - Results → `/dashboard/results`
+    - Help → external Microsoft Teams Q&A channel
 
 **Responsive behavior:**
-- On screens **< 1800px**, the sidebar is hidden via CSS (`translate-x-full`)
-- A `UBanner` notification appears on small screens, informing users they can hover/expand the dashboard tab in the header
+
+- On large screens, the sidebar is rendered as a fixed-width aside on the left and the main content fills the remaining width
+- On small screens, the sidebar stacks above the main content
+- A `UBanner` notification can appear on small screens with guidance about dashboard navigation
 
 **CSS:** Includes `metallic-gold`, `metallic-silver`, and `metallic-bronze` shimmer animations for season info display.
 
@@ -150,25 +151,25 @@ Developer portal layout using `UDashboardGroup` with a collapsible, resizable si
 
 **Sidebar sections:**
 
-| Section | Content |
-|---------|---------|
-| Header | "basishacks devs" link (collapses to "b" when sidebar is minimized) |
-| Search | Search button with ⌘K keyboard shortcut hint |
-| Navigation | Permission-gated menu items |
-| Footer | User avatar button linking to `/profile` |
+| Section    | Content                                                             |
+| ---------- | ------------------------------------------------------------------- |
+| Header     | "basishacks devs" link (collapses to "b" when sidebar is minimized) |
+| Search     | Search button with ⌘K keyboard shortcut hint                        |
+| Navigation | Permission-gated menu items                                         |
+| Footer     | User avatar button linking to `/profile`                            |
 
 **Navigation items with permission gates:**
 
-| Item | Route | Permission Required |
-|------|-------|-------------------|
-| Home | `/developers` | None |
-| Users | `/developers/users` | `PORTAL_USERS_VIEW` or admin |
-| Teams | `/developers/teams` | `PORTAL_TEAMS_VIEW` or admin |
-| Applications | `/developers/applications/` | `PORTAL_APPLICATIONS_VIEW` or admin |
+| Item         | Route                             | Permission Required                   |
+| ------------ | --------------------------------- | ------------------------------------- |
+| Home         | `/developers`                     | None                                  |
+| Users        | `/developers/users`               | `PORTAL_USERS_VIEW` or admin          |
+| Teams        | `/developers/teams`               | `PORTAL_TEAMS_VIEW` or admin          |
+| Applications | `/developers/applications/`       | `PORTAL_APPLICATIONS_VIEW` or admin   |
 | ↳ Create New | `/developers/applications/create` | `PORTAL_APPLICATIONS_CREATE` or admin |
-| DeepSeek | `/developers/deepseek` | `PORTAL_DEEPSEEK_VIEW` or admin |
-| Files | `/developers/debug` | `PORTAL_DEBUG_VIEW` or admin |
-| Seasons | `/developers/seasons` | `PORTAL_SEASONS_VIEW` or admin |
+| DeepSeek     | `/developers/deepseek`            | `PORTAL_DEEPSEEK_VIEW` or admin       |
+| Files        | `/developers/debug`               | `PORTAL_DEBUG_VIEW` or admin          |
+| Seasons      | `/developers/seasons`             | `PORTAL_SEASONS_VIEW` or admin        |
 
 Items are disabled (not hidden) when the user lacks the required permission. Permission checks use `hasPermission()` from `~~/shared/permissions` with `DevPermissions` constants.
 
@@ -177,10 +178,10 @@ Items are disabled (not hidden) when the user lacks the required permission. Per
 ## Layout Comparison
 
 | Layout | Header | Container | Footer | Sidebar | Sticky Header |
-|--------|--------|-----------|--------|---------|---------------|
+| --- | --- | --- | --- | --- | --- |
 | `default` | RoleHeader | UContainer | Footer | — | Yes |
 | `default-background` | RoleHeader | UContainer (red bg) | Footer | — | Yes |
 | `fullwidth` | RoleHeader | None | Footer | — | Yes |
 | `fullwidth-nostick` | RoleHeader | None | Footer | — | No |
-| `dashboard` | RoleHeader | UContainer | Footer | Fixed left | Yes |
+| `dashboard` | RoleHeader | UContainer | Footer | Visible left | Yes |
 | `developers-dashboard` | — | None | — | Collapsible | — |

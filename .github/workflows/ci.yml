@@ -1,0 +1,63 @@
+name: CI
+
+on:
+    push:
+        branches: [main, enhance-and-debloat]
+    pull_request:
+        branches: [main, enhance-and-debloat]
+
+concurrency:
+    group: ${{ github.workflow }}-${{ github.ref }}
+    cancel-in-progress: true
+
+jobs:
+    build-and-test:
+        name: Build, Test & Docs
+        runs-on: ubuntu-latest
+        timeout-minutes: 15
+
+        steps:
+            - name: Checkout
+              uses: actions/checkout@v4
+
+            - name: Setup Bun
+              uses: oven-sh/setup-bun@v2
+              with:
+                  bun-version: latest
+
+            - name: Cache Bun dependencies
+              uses: actions/cache@v4
+              with:
+                  path: |
+                      ~/.bun/install/cache
+                      node_modules
+                  key: ${{ runner.os }}-bun-${{ hashFiles('package.json', 'bun.lock') }}
+                  restore-keys: |
+                      ${{ runner.os }}-bun-
+
+            - name: Install dependencies
+              run: bun install --frozen-lockfile
+
+            - name: Run tests
+              run: bun run test
+
+            - name: Build Nuxt app
+              run: bun run build
+
+            - name: Cache docs dependencies
+              uses: actions/cache@v4
+              with:
+                  path: |
+                      ~/.bun/install/cache
+                      documentation/node_modules
+                  key: ${{ runner.os }}-docs-bun-${{ hashFiles('documentation/package.json', 'documentation/bun.lock') }}
+                  restore-keys: |
+                      ${{ runner.os }}-docs-bun-
+
+            - name: Install docs dependencies
+              working-directory: documentation
+              run: bun install --frozen-lockfile
+
+            - name: Build documentation
+              working-directory: documentation
+              run: bun run build

@@ -22,10 +22,14 @@ export const DevPermissions = {
 
 export function parsePermissions(role: string | null | undefined): string[] {
     if (!role) return [];
-    return role
-        .split(" ")
-        .map((p) => decodeURIComponent(p.trim()))
-        .filter(Boolean);
+    let decoded: string;
+    try {
+        decoded = decodeURIComponent(role);
+    } catch {
+        // URIError on malformed sequences (e.g. trailing %); fall back to raw
+        decoded = role;
+    }
+    return decoded.split(" ").filter(Boolean);
 }
 
 export function hasPermission(role: string | null | undefined, permission: string): boolean {

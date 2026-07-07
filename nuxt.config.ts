@@ -1,69 +1,71 @@
 // https://nuxt.com/docs/api/configuration/nuxt-config
 export default defineNuxtConfig({
-  compatibilityDate: '2025-07-15',
-  devtools: { enabled: false }, // keeps crasing
-  modules: ['@nuxt/eslint', '@nuxt/ui', 'nuxt-auth-utils', '@comark/nuxt'],
-  
-  css: ['~/assets/css/main.css'],
-  runtimeConfig: {
-    sendCodeURL: '',
-    session: {
-      password: '',
-      maxAge: 30 * 24 * 60 * 60,
+    compatibilityDate: "2025-07-15",
+    devtools: { enabled: false }, // keeps crasing
+    modules: ["@nuxt/eslint", "@nuxt/ui", "nuxt-auth-utils", "@comark/nuxt"],
+
+    css: ["~/assets/css/main.css"],
+    runtimeConfig: {
+        sendCodeURL: "",
+        session: {
+            password: "",
+            maxAge: 30 * 24 * 60 * 60,
+        },
     },
-  },
-  colorMode: {
-    preference: 'dark',
-  },
-  experimental: {
-    asyncContext: true,
-  },
-  devServer: {
-    port: 24598,
-  },
-  icon: {
-    customCollections: [],
-  },
-  fonts: {
-    provider: 'local',
-  },
-  vite: {
-    server: {
-      allowedHosts: true,
+    colorMode: {
+        preference: "dark",
     },
-    optimizeDeps: {
-      include: ['@comark/vue'],
+    experimental: {
+        asyncContext: true,
     },
-    build: {
-      target: 'es2020',
-      minify: 'esbuild',
-      sourcemap: false,
-      rollupOptions: {
-        onwarn(warning, warn) {
-          if (warning.message.includes('Sourcemap is likely to be incorrect')) return
-          if (warning.code === 'TOLERATED_TRANSFORM') return
-          if (warning.code === 'PLUGIN_TIMINGS') return
-          if (warning.code === 'CIRCULAR_DEPENDENCY') return
-          if (warning.message.includes('/* #__PURE__ */')) return
-          warn(warning)
-        }
-      }
-    }
-  },
-  nitro: {
-    preset: 'bun',
-    externals: {
-      // trace: true
-      trace: false
+    devServer: {
+        port: 24598,
     },
-    rollupConfig: {
-      onwarn(warning, warn) {
-        if (warning.code === 'UNRESOLVED_IMPORT') return
-        if (warning.code === 'CIRCULAR_DEPENDENCY') return
-        if (warning.code === 'PLUGIN_TIMINGS') return
-        if (warning.message.includes('/* #__PURE__ */')) return
-        warn(warning)
-      }
-    }
-  }
-})
+    icon: {
+        customCollections: [],
+    },
+    fonts: {
+        provider: "local",
+    },
+    vite: {
+        server: {
+            allowedHosts: true,
+        },
+        optimizeDeps: {
+            include: ["@comark/vue"],
+        },
+        build: {
+            target: "es2020",
+            minify: "esbuild",
+            sourcemap: false,
+            rollupOptions: {
+                onwarn(warning, warn) {
+                    if (warning.message.includes("Sourcemap is likely to be incorrect")) return;
+                    if (warning.code === "TOLERATED_TRANSFORM") return;
+                    if (warning.code === "PLUGIN_TIMINGS") return;
+                    if (warning.code === "CIRCULAR_DEPENDENCY") return;
+                    if (warning.message.includes("/* #__PURE__ */")) return;
+                    warn(warning);
+                },
+            },
+        },
+    },
+    nitro: {
+        // Bun dev uses the bun preset implicitly; production defaults to node-server
+        // so the same build runs under Node.js (better-sqlite3) or Bun (bun:sqlite).
+        preset: process.env.NITRO_PRESET ?? "node-server",
+        externals: {
+            // trace: true
+            trace: false,
+        },
+        rollupConfig: {
+            onwarn(warning, warn) {
+                if (warning.code === "UNRESOLVED_IMPORT") return;
+                if (warning.code === "CIRCULAR_DEPENDENCY") return;
+                if (warning.code === "PLUGIN_TIMINGS") return;
+                if (warning.message.includes("/* #__PURE__ */")) return;
+                warn(warning);
+            },
+        },
+    },
+});

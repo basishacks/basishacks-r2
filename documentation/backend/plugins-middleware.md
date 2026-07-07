@@ -21,92 +21,77 @@ Initializes the SQLite database schema and attaches the database wrapper to ever
 
 On first run (when no tables exist), creates the following tables:
 
-| Table | Description |
-|-------|-------------|
-| `hackathon` | Single-row table controlling global event state |
-| `teams` | Team records with project details, scores, and rankings |
-| `team_scores` | Judge scoring records (UNIQUE per team+judge) |
-| `users` | User accounts with email, role, team membership |
-| `ballots` | Peer voting ballots |
-| `ballot_scores` | Individual project scores within a ballot |
-| `oauth2_applications` | OAuth2 client application registrations |
+| Table                 | Description                                             |
+| --------------------- | ------------------------------------------------------- |
+| `hackathon`           | Single-row table controlling global event state         |
+| `teams`               | Team records with project details, scores, and rankings |
+| `team_scores`         | Judge scoring records (UNIQUE per team+judge)           |
+| `users`               | User accounts with email, role, team membership         |
+| `ballots`             | Peer voting ballots                                     |
+| `ballot_scores`       | Individual project scores within a ballot               |
+| `oauth2_applications` | OAuth2 client application registrations                 |
 
 #### Key Schema Details
 
 **hackathon table:**
+
 - Single row enforced via `CHECK (id = 1)`
 - Status enum: `not_started`, `in_progress`, `voting`, `finished`, `paused`
 - Timestamps for start, end, voting start/end, results open
 - Theme name and description
 
 **teams table:**
+
 - Pathway enum: `NULL`, `junior`, `senior`
 - Project fields: name, description, demo_url, repo_url, submitted flag, sourcing (AI statement)
 - Score and rank indexes
 
 **users table:**
+
 - Unique email with case-insensitive index
-- Login code with expiry for magic code auth
+- Legacy `login_code` / `login_expiry` columns (unused by current Microsoft-only authentication)
 - Profile theme and picture fields
 - Foreign key to teams
 
 **ballot_scores table:**
+
 - Score enum: 1–5 (or NULL)
 - UNIQUE constraint on (ballot_id, project_id)
 
 #### Request Hook
 
 ```ts
-nitroApp.hooks.hook('request', (event) => {
-  event.context.db = createDatabaseWrapper()
-})
+nitroApp.hooks.hook("request", (event) => {
+    event.context.drizzle = db;
+});
 ```
 
-Every incoming request receives a fresh `SQLiteDatabase` wrapper attached to `event.context.db`. This ensures each request uses the same D1-compatible interface.
+Every incoming request receives the same Drizzle ORM instance attached to `event.context.drizzle`. The instance is created once at server startup and shared across requests because SQLite handles concurrent readers safely and the migration/seeding work has already completed.
 
 ---
 
-### seed-hackathon.ts
+### validate-oauth2-jwt-secret.ts
 
-**File:** `server/plugins/seed-hackathon.ts`
+**File:** `server/plugins/validate-oauth2-jwt-secret.ts`
 
-Schema migration and seed data plugin. Runs after `init-database.ts`.
+Startup guard for `NUXT_OAUTH2_JWT_SECRET`. The secret is used by `jose` to sign and verify OAuth2 access tokens (HS256) and must be at least 32 bytes long.
 
-#### Schema Migrations
+#### Behavior
 
-Performs `ALTER TABLE` migrations by checking for missing columns:
+| Environment | Secret Missing/Too Short | Action |
+| --- | --- | --- |
+| `NODE_ENV=production` | Missing or `< 32 bytes` | Logs a fatal error and exits the process immediately |
+| Development / Test | Missing or `< 32 bytes` | Logs a prominent warning and applies a documented dev-only fallback so local work can continue |
 
-**Users table migrations:**
-- `profile_theme` (TEXT)
-- `profile_picture` (TEXT)
+::: warning The dev-only fallback (`"dev-only-placeholder-32-bytes!!"`) is **only** for local development and tests. Never use it in production. :::
 
-**Hackathon table migrations:**
-- `voting_enabled`, `results_published`, `submitted_count`, `max_votes_per_user`, `judging_open` (INTEGER)
-- `schedule_start`, `schedule_end` (TEXT)
-- `start_timestamp`, `end_timestamp`, `voting_start_timestamp`, `voting_end_timestamp`, `results_open_timestamp` (TEXT)
+#### Implementation
 
-#### Seed Data
-
-**Hackathon row:**
-- Upserts the hackathon row (id=1) with default timestamps
-- Uses `ON CONFLICT DO UPDATE` to always refresh schedule/timestamp data
-
-**Built-in OAuth2 application:**
-```sql
-INSERT OR IGNORE INTO oauth2_applications VALUES (
-  '97e435f4-17e8-42ef-9b12-9684fd656de9',  -- client_id
-  'local-dev-secret',                         -- client_secret
-  'openid profile email',                     -- permissions
-  'http://localhost:3000/api/auth',           -- redirect_uris
-  'basishacks connect',                       -- name
-  'BIBS-C Network internal OAuth2...',        -- description
-  0,                                          -- proxy_microsoft
-  'first',                                    -- type
-  NULL                                        -- profile_picture
-)
+```ts
+export function validateOAuth2JWTSecret(options?: ValidateOAuth2JWTSecretOptions): void;
 ```
 
-This is the first-party "basishacks connect" application used for the main site's login flow.
+The function reads `process.env.NUXT_OAUTH2_JWT_SECRET`, measures its UTF-8 length, and either exits (production) or writes the fallback back to the env object (development/test).
 
 ---
 
@@ -116,14 +101,12 @@ This is the first-party "basishacks connect" application used for the main site'
 
 Microsoft Graph API integration plugin. All Microsoft Graph API calls are centralized here for auditability.
 
-::: warning Security Policy
-All Microsoft Graph API calls MUST be made through the wrappers in this file. Never call the Graph API directly from other modules.
-:::
+::: warning Security Policy All Microsoft Graph API calls MUST be made through the wrappers in this file. Never call the Graph API directly from other modules. :::
 
 #### Token Management
 
 | Function | Description |
-|----------|-------------|
+| --- | --- |
 | `initializeMSAccessToken()` | Obtains an app-level access token via client credentials flow |
 | `getMSAccessToken()` | Returns the cached app-level token (lazy-initializes) |
 | `initializeDummyUserAccessToken()` | Obtains a user-level token via ROPC flow for chat operations |
@@ -137,13 +120,13 @@ All Microsoft Graph API calls MUST be made through the wrappers in this file. Ne
 
 ```ts
 export async function createMicrosoftMeeting(
-  target: string,
-  subject: string,
-  htmlDescription: string,
-  startTime: string,
-  endTime: string,
-  attendees: any[]
-): Promise<Response>
+    target: string,
+    subject: string,
+    htmlDescription: string,
+    startTime: string,
+    endTime: string,
+    attendees: any[],
+): Promise<Response>;
 ```
 
 Creates a Microsoft Teams calendar event on behalf of a target user. Appends an auto-generated disclaimer to the event description.
@@ -151,14 +134,14 @@ Creates a Microsoft Teams calendar event on behalf of a target user. Appends an 
 #### Chat Operations
 
 ```ts
-export async function createOrGetExistingDirectChat(targetId: string): Promise<{ id: string }>
+export async function createOrGetExistingDirectChat(targetId: string): Promise<{ id: string }>;
 ```
 
 Creates or retrieves a 1:1 chat between the dummy user and a target user. Results are cached in-memory (`directChatCache` map) to avoid repeated Graph API calls.
 
 ```ts
-export async function sendChatMessage(chatId: string, content: string): Promise<Response>
-export async function sendRichChatMessage(chatId: string, content: string): Promise<Response>
+export async function sendChatMessage(chatId: string, content: string): Promise<Response>;
+export async function sendRichChatMessage(chatId: string, content: string): Promise<Response>;
 ```
 
 Sends a plain text or HTML message to a Microsoft Teams chat.
@@ -166,10 +149,11 @@ Sends a plain text or HTML message to a Microsoft Teams chat.
 #### Webhook Management
 
 ```ts
-export async function initializeChatbotWebhook(): Promise<void>
+export async function initializeChatbotWebhook(): Promise<void>;
 ```
 
 Creates a Microsoft Graph subscription for chat message notifications:
+
 - **Change type:** `created, updated`
 - **Resource:** `/chats/getAllMessages`
 - **Notification URL:** `{CURRENT_URL_ORIGIN}/api/_webhooks/update`
@@ -178,14 +162,14 @@ Creates a Microsoft Graph subscription for chat message notifications:
 - **Client state:** Random 89-byte base64url string for validation
 
 ```ts
-export async function refreshChatbotWebhook(): Promise<void>
+export async function refreshChatbotWebhook(): Promise<void>;
 ```
 
 Extends the webhook subscription expiration by 1 day.
 
 ```ts
-export function getMicrosoftWebhookState(): string | null
-export function getChatbotWebhookId(): string | null
+export function getMicrosoftWebhookState(): string | null;
+export function getChatbotWebhookId(): string | null;
 ```
 
 Returns the current webhook state and subscription ID.
@@ -193,7 +177,7 @@ Returns the current webhook state and subscription ID.
 #### Polling
 
 ```ts
-export async function pollChatbotMessages(): Promise<void>
+export async function pollChatbotMessages(): Promise<void>;
 ```
 
 Manually polls chat messages via delta endpoint (fallback for webhook failures).
@@ -201,7 +185,7 @@ Manually polls chat messages via delta endpoint (fallback for webhook failures).
 #### Internal Request Helpers
 
 | Function | Description |
-|----------|-------------|
+| --- | --- |
 | `requestMicrosoft(endpoint, method, body)` | Makes an authenticated request using the app-level token |
 | `requestUserMicrosoft(endpoint, method, body)` | Makes an authenticated request using the user-level token (auto-refreshes on 401) |
 
@@ -219,8 +203,8 @@ Validates and manages OAuth2 authorization sessions for requests to `/api/oauth2
 
 1. **Route check** — Only processes URLs containing `/api/oauth2/authorize`
 2. **Existing session check** — Reads the `bridge_id` cookie:
-   - If a valid session exists with matching parameters (client_id, scope, redirect_uri, state), extends the session expiry and skips re-validation
-   - If the session has an invalid login state or mismatched parameters, completes the old session and starts fresh
+    - If a valid session exists with matching parameters (client_id, scope, redirect_uri, state), extends the session expiry and skips re-validation
+    - If the session has an invalid login state or mismatched parameters, completes the old session and starts fresh
 3. **New session validation** — Calls `validateOAuth2AuthorizationRequest` to verify all parameters
 4. **Session creation** — Constructs an `AuthorizeSession`, adds it to the session store, and attaches a `bridge_id` cookie
 5. **Microsoft proxy** — If the application has `proxy_microsoft` enabled, immediately redirects to Microsoft login (skips basishacks login page)
@@ -232,6 +216,7 @@ Instead of throwing HTTP errors, validation errors are encoded as base64url JSON
 #### Session Cookie
 
 The `bridge_id` cookie:
+
 - Contains the session identifier
 - Expires after 10 minutes
 - `Secure` and `SameSite=Lax` flags

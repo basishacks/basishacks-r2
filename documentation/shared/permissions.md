@@ -7,16 +7,14 @@ description: Fine-grained permission system replacing the old role CHECK constra
 
 The basishacks platform uses a fine-grained permission system stored in the `role` column of the `users` table. This replaced the old `CHECK` constraint approach, allowing for flexible role composition.
 
-::: info Source
-`shared/permissions.ts`
-:::
+::: info Source `shared/permissions.ts` :::
 
 ## DevPermissions Constants
 
 The `DevPermissions` object defines all recognized permission strings:
 
 | Constant | Permission String | Description |
-|----------|-------------------|-------------|
+| --- | --- | --- |
 | `USERS` | `dev_users` | Dev: manage users |
 | `TEAMS` | `dev_teams` | Dev: manage teams |
 | `DEBUG` | `dev_debug` | Dev: access debug routes |
@@ -50,6 +48,7 @@ portal.users.view portal.teams.view portal.debug.view
 ```
 
 This format was chosen because:
+
 - Permission strings contain dots (`.`) which are safe in URI encoding
 - Space separation allows simple `split(' ')` parsing
 - URI encoding prevents ambiguity with special characters
@@ -63,7 +62,7 @@ Previously, the `role` column used a SQL `CHECK` constraint limiting values to `
 ### `parsePermissions(role)`
 
 ```ts
-function parsePermissions(role: string | null | undefined): string[]
+function parsePermissions(role: string | null | undefined): string[];
 ```
 
 Parses the space-separated, URI-encoded `role` string into an array of decoded permission strings. Returns an empty array for nullish input.
@@ -71,17 +70,17 @@ Parses the space-separated, URI-encoded `role` string into an array of decoded p
 **Example:**
 
 ```ts
-parsePermissions('portal.users.view%20portal.teams.view')
+parsePermissions("portal.users.view%20portal.teams.view");
 // → ['portal.users.view', 'portal.teams.view']
 
-parsePermissions(null)
+parsePermissions(null);
 // → []
 ```
 
 ### `hasPermission(role, permission)`
 
 ```ts
-function hasPermission(role: string | null | undefined, permission: string): boolean
+function hasPermission(role: string | null | undefined, permission: string): boolean;
 ```
 
 Checks whether the given role string includes the specified permission.
@@ -89,17 +88,17 @@ Checks whether the given role string includes the specified permission.
 **Example:**
 
 ```ts
-hasPermission('portal.users.view%20portal.teams.view', 'portal.users.view')
+hasPermission("portal.users.view%20portal.teams.view", "portal.users.view");
 // → true
 
-hasPermission('portal.users.view', 'portal.debug.view')
+hasPermission("portal.users.view", "portal.debug.view");
 // → false
 ```
 
 ### `addPermission(role, permission)`
 
 ```ts
-function addPermission(role: string | null | undefined, permission: string): string
+function addPermission(role: string | null | undefined, permission: string): string;
 ```
 
 Adds a permission to the role string. If the permission already exists, returns the original string unchanged. Returns a URI-encoded, space-separated string suitable for storing back in the database.
@@ -107,17 +106,17 @@ Adds a permission to the role string. If the permission already exists, returns 
 **Example:**
 
 ```ts
-addPermission('portal.users.view', 'portal.teams.view')
+addPermission("portal.users.view", "portal.teams.view");
 // → 'portal.users.view%20portal.teams.view'
 
-addPermission('portal.users.view%20portal.teams.view', 'portal.users.view')
+addPermission("portal.users.view%20portal.teams.view", "portal.users.view");
 // → 'portal.users.view%20portal.teams.view' (no duplicate)
 ```
 
 ### `removePermission(role, permission)`
 
 ```ts
-function removePermission(role: string | null | undefined, permission: string): string
+function removePermission(role: string | null | undefined, permission: string): string;
 ```
 
 Removes a permission from the role string. Returns a URI-encoded, space-separated string.
@@ -125,14 +124,14 @@ Removes a permission from the role string. Returns a URI-encoded, space-separate
 **Example:**
 
 ```ts
-removePermission('portal.users.view%20portal.teams.view', 'portal.users.view')
+removePermission("portal.users.view%20portal.teams.view", "portal.users.view");
 // → 'portal.teams.view'
 ```
 
 ## Internal: `serializePermissions(perms)`
 
 ```ts
-function serializePermissions(perms: string[]): string
+function serializePermissions(perms: string[]): string;
 ```
 
 Private helper that maps each permission through `encodeURIComponent` and joins with spaces. Used by `addPermission` and `removePermission`.
@@ -142,12 +141,12 @@ Private helper that maps each permission through `encodeURIComponent` and joins 
 Permission checks are used throughout the server to control access:
 
 ```ts
-import { hasPermission, DevPermissions } from '~~/shared/permissions'
+import { hasPermission, DevPermissions } from "~~/shared/permissions";
 
-const user = await requireUser(event)
+const user = await requireUser(event);
 
 if (!hasPermission(user.role, DevPermissions.PORTAL_APPLICATIONS_VIEW_ALL)) {
-  throw createError({ status: 403, message: 'Insufficient permissions' })
+    throw createError({ status: 403, message: "Insufficient permissions" });
 }
 ```
 

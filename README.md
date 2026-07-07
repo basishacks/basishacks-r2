@@ -4,29 +4,162 @@ The official website for the BIBS-C Network Hackathon (season 2, 2025–26).
 
 ## Technology Stack
 
-| Layer | Technology |
-|-------|------------|
-| Framework | Nuxt 3 |
-| UI | @nuxt/ui ^4.6.1 (Tailwind CSS v4) |
-| Language | TypeScript 5.6+ |
-| Runtime | Node.js >= v24 |
-| Package Manager | Bun (preferred); npm works |
-| Database (local) | better-sqlite3 with WAL mode |
-| Database (prod) | Cloudflare D1 |
-| Auth | nuxt-auth-utils (session-based) |
-| Validation | Zod 4.x |
-| Fonts | @nuxt/fonts (local provider) |
-| Icons | @iconify-json/lucide, @iconify-json/material-symbols |
-| Linting | @nuxt/eslint + Prettier |
-| Deployment | Cloudflare Pages |
+| Layer           | Technology                                                                  |
+| --------------- | --------------------------------------------------------------------------- |
+| Framework       | Nuxt 4 (^4.4.8)                                                             |
+| UI              | @nuxt/ui ^4.9.0 (Tailwind CSS v4)                                           |
+| Language        | TypeScript ^5.9.3                                                           |
+| Runtime         | Node.js >= v24 or Bun (dual-runtime support)                                |
+| Package Manager | Bun (preferred); npm works                                                  |
+| Database        | SQLite via Drizzle ORM (bun:sqlite under Bun, better-sqlite3 under Node.js) |
+| Auth            | nuxt-auth-utils 0.5.25 (session-based)                                      |
+| Validation      | Zod 4.x (^4.4.3)                                                            |
+| Fonts           | @nuxt/fonts ^0.14.0 (local provider)                                        |
+| Icons           | @iconify-json/lucide, @iconify-json/material-symbols                        |
+| Linting         | @nuxt/eslint 1.10.0 + Prettier ^3.9.4                                       |
+| Deployment      | Node.js server (VPS)                                                        |
+
+## Prerequisites
+
+- **Node.js** >= v24, **or** **Bun** (any recent 1.x release)
+- Bun is the preferred runtime and package manager; npm works as a fallback
+- A SQLite-compatible filesystem (the local DB file lives at `./database/basishacks.sqlite`)
+
+## Installation
+
+```bash
+bun install
+# or
+npm install
+```
+
+The `postinstall` script (`nuxt prepare`) runs automatically and generates Nuxt's typed references.
+
+## Environment Setup
+
+Copy the example env file and fill in your credentials:
+
+```bash
+cp .env.example .env
+```
+
+The canonical list of variables lives in `.env.example`. The table below summarizes which are required and which are optional.
+
+| Variable | Required? | Purpose |
+| --- | --- | --- |
+| `NUXT_SESSION_PASSWORD` | Required | Session encryption key. Must be at least 32 bytes. Generate with `openssl rand -base64 32` |
+| `NUXT_OAUTH2_JWT_SECRET` | Required | JWT signing secret for OAuth2 token exchange. Must be at least 32 bytes. Generate with `openssl rand -base64 32` |
+| `ONSITE_LOGIN_CLIENT_ID` | Required for onsite login | OAuth2 `client_id` of the basishacks app used by the `/api/login` -> `/api/oauth2/authorize` onsite flow. The server auto-adds `${CURRENT_URL_ORIGIN}${REDIRECT_URI}` to this app's allowed redirect URIs on startup |
+| `MICROSOFT_TENANT_ID` | Required for MS login | Microsoft Entra ID tenant (directory) ID. Must be paired with `MICROSOFT_CLIENT_ID` |
+| `MICROSOFT_CLIENT_ID` | Required for MS login | Microsoft Entra ID application (client) ID. Must be paired with `MICROSOFT_TENANT_ID` |
+| `MICROSOFT_CLIENT_SECRET` | Optional | Microsoft Entra ID app secret for MS Graph API integration |
+| `CURRENT_URL_ORIGIN` | Optional | Base origin for OAuth2 redirect callbacks (no trailing slash). Defaults to `http://localhost:3000`; set to your real domain in production |
+| `MICROSOFT_REDIRECT_URI` | Optional | Microsoft OAuth2 redirect URI path (must start with `/`). Defaults to `/api/oauth2/mscallback` |
+| `REDIRECT_URI` | Optional | Onsite OAuth2 redirect URI path used by `/api/login`. Defaults to `/api/oauth2/dccallback`. The server auto-registers it for `ONSITE_LOGIN_CLIENT_ID` |
+| `DEEPSEEK_API_KEY` | Optional | DeepSeek API key for AI chat features (debug routes only) |
+| `PORT` / `HOST` | Optional | Server port/host override (defaults: `3000` / `0.0.0.0`) |
+
+> Note: `MICROSOFT_TENANT_ID`, `MICROSOFT_CLIENT_ID`, and `ONSITE_LOGIN_CLIENT_ID` were previously hardcoded in the `main` branch. They are now read from environment variables and must be set explicitly.
+
+## Database Setup
+
+The database auto-migrates on startup — no manual SQL is required. The init plugin `server/plugins/init-database.ts` calls `createDrizzleDatabase()` (in `server/database/index.ts`), which:
+
+1. Selects the runtime's native SQLite driver (`bun:sqlite` under Bun, `better-sqlite3` under Node.js) via dynamic import
+2. Applies `PRAGMA journal_mode = WAL` and `PRAGMA foreign_keys = ON`
+3. Runs `createAndMigrateDatabase()` from `server/database/migrate.ts` to bring the schema up to date
+
+For manual schema management (e.g., generating migration files after editing `server/database/schema.ts`), Drizzle Kit is available:
+
+```bash
+bun run db:migrate    # apply pending Drizzle Kit migrations
+bun run db:generate   # generate new migration from schema changes
+bun run db:studio     # open Drizzle Studio
+```
+
+### Legacy databases
+
+A database created on the `main` branch will be auto-repaired on first startup by `migrateLegacySchema()` in `server/database/migrate.ts`. No manual SQL needs to be run.
+
+The legacy SQL schema and migration files that used to live in `sql/` have been **archived** under `sql/archive/`. They are kept for historical reference only and are not applied at runtime.
+
+## Development
+
+Start the dev server (port **24598**, configured in `nuxt.config.ts`):
+
+```bash
+bun dev
+# or
+npm run dev
+```
+
+The dev server defaults to HTTP. For HTTPS (required by some OAuth2 flows during local development), use `bun dev --https` or `npm run dev -- --https`.
+
+> **Dependency pins in `package.json`:**
+>
+> - `vite` is pinned to `8.0.16`. Vite `8.1.x` combined with Nuxt `4.4.8` creates two HMR WebSocket listeners on the same HTTP server, crashing the dev server with `server.handleUpgrade() was called more than once with the same socket` ([nuxt/nuxt#35450](https://github.com/nuxt/nuxt/issues/35450)).
+> - `entities` is pinned to `7.0.1`. `entities@8` changes the `entities/decode` export and breaks `@vue/compiler-core`'s entity decoder, causing errors such as `decode.fromCodePoint is not a function` when Vue parses SFC templates (e.g. `rules.vue`).
+>
+> Keep both overrides in place until the affected packages release compatible versions.
+
+## Building
+
+Build the production bundle (Nitro `node-server` preset):
+
+```bash
+bun run build
+```
+
+The same `.output/` artifact runs under both Bun and Node.js — the SQLite driver is selected at runtime based on `typeof Bun`.
+
+## Testing
+
+Tests are run with **Vitest**:
+
+```bash
+bun run test            # one-shot run
+bun run test:watch      # watch mode
+bun run test:coverage   # with coverage
+```
+
+Do **not** use `bun test`. Bun's native test runner cannot resolve Nuxt's `~~/` and `~/` path aliases (which are configured in `vitest.config.ts`), and the test files import their assertions from `vitest` rather than `bun:test`. Running `bun test` is intentionally redirected by `bunfig.toml` to a shim (`bun-shim/shim.test.ts`) that prints guidance pointing you to `bun run test`.
+
+## Production
+
+Two production start options are supported.
+
+### Bun (preferred)
+
+```bash
+bun start
+```
+
+This runs `start-fix.mjs`, which sets `globalThis._importMeta_` so the Nitro server's `import.meta.url` resolves correctly under Bun, then boots `.output/server/index.mjs`. **`start-fix.mjs` must be kept** — it is the Bun production entrypoint.
+
+### Node.js
+
+```bash
+node .output/server/index.mjs
+```
+
+Set `NODE_ENV=production` and ensure all environment variables are present in the server environment before starting.
+
+## Deployment
+
+The application is deployed as a Node.js server on a VPS:
+
+1. Build the production bundle on the server (or locally and sync `.output/`): `bun run build`
+2. Ensure all required environment variables (see [Environment Setup](#environment-setup)) are set in the server environment
+3. Start the server with `bun start` (Bun) or `node .output/server/index.mjs` (Node.js)
+4. Put a reverse proxy (e.g., Nginx, Caddy) in front of the Node server for TLS termination and to forward traffic to the configured `PORT` (default `3000`)
+
+The SQLite database file lives at `./database/basishacks.sqlite` and uses WAL mode. Back up the `database/` directory (including `-wal` and `-shm` files) for point-in-time snapshots.
 
 ## Project Structure
 
-Follow this structure when adding / patching new information
-
 ```
 app/                    # Nuxt app (Vue frontend)
-  assets/css/           # Global styles
+  assets/css/           # Global styles (Tailwind + custom utilities)
   components/           # Vue components
   layouts/              # Nuxt layouts
   middleware/           # Route middleware
@@ -34,14 +167,15 @@ app/                    # Nuxt app (Vue frontend)
   utils/                # Frontend utilities
 
 server/                 # Nitro backend
-  api/                  # API route handlers
-  middleware/           # Server middleware
-  plugins/              # Nitro plugins (DB init, MS Graph)
-  utils/                # Server utilities
-    database.ts         # SQLite wrapper (D1-compatible)
-    database/*.ts       # Per-table DB helpers
-    auth.ts             # Role enforcement helpers
-    oauth2-validate.ts  # OAuth2 request validation
+  api/                  # API route handlers (file-based)
+  middleware/           # Server middleware (OAuth2 authorize)
+  plugins/              # Nitro plugins (DB init, MS Graph token init)
+  database/             # Drizzle ORM: schema, migrations, dual-runtime init
+    schema.ts           # Drizzle schema definition
+    migrate.ts          # createAndMigrateDatabase() + migrateLegacySchema()
+    index.ts            # createDrizzleDatabase() — selects bun:sqlite or better-sqlite3
+  utils/                # Server utilities (auth, convert, rateLimit, oauth2, etc.)
+  types/                # Type augmentations (H3EventContext)
 
 shared/                 # Code shared between client and server
   schemas.ts            # Zod validation schemas
@@ -49,10 +183,61 @@ shared/                 # Code shared between client and server
   permissions.ts        # DevPermissions + helpers
   oauth2-scopes.ts      # OAuth2 scope definitions
 
-sql/                    # Schema and migrations
-  init.sql              # Base schema
-  migration-*.sql       # Dated migrations
-  patch-*.sql           # Feature patches
+sql/archive/            # ARCHIVED legacy SQL schema and migrations (not active)
+  init.sql              # Historical base schema
+  migration-*.sql       # Historical dated migrations
+  patch-*.sql           # Historical feature patches
 
-database/               # Local SQLite file
+database/               # Local SQLite file (basishacks.sqlite, WAL mode)
+
+drizzle/                # Drizzle Kit generated migration files
+
+tests/                  # Vitest test suite (server, api, shared, frontend, etc.)
+  setup.ts              # Vitest setupFile
+
+documentation/          # VitePress documentation site
+  .vitepress/config.ts  # Sidebar / nav config
+
+start-fix.mjs           # Bun production start entrypoint (kept intentionally)
+bunfig.toml             # Redirects `bun test` to a guidance shim
+bun-shim/shim.test.ts   # Shim that prints "use bun run test" guidance
 ```
+
+## Migration from main
+
+The `enhance-and-debloat` branch merges cleanly with `origin/main` (only one new commit on main: `129c1ca Update .gitignore`). The steps below cover both fresh setups and upgrades from an existing `main` deployment.
+
+### Fresh clone
+
+```bash
+git checkout enhance-and-debloat
+bun install
+cp .env.example .env       # then edit .env and fill in credentials
+bun run build
+bun run test
+bun start                  # or: node .output/server/index.mjs
+```
+
+### Existing database (upgrade from main)
+
+No manual SQL is required. On first startup against an existing `main`-era database:
+
+1. `migrateLegacySchema()` in `server/database/migrate.ts` detects the legacy schema and applies the necessary repairs
+2. `createAndMigrateDatabase()` brings the schema up to date via Drizzle
+3. The server boots normally
+
+Back up the `database/` directory before the first boot as a precaution.
+
+### New required environment variables
+
+The following variables were hardcoded on `main` and **must now be set explicitly** in `.env` (or the server environment):
+
+- `MICROSOFT_TENANT_ID` — previously hardcoded Microsoft Entra tenant ID
+- `MICROSOFT_CLIENT_ID` — previously hardcoded Microsoft Entra client ID
+- `ONSITE_LOGIN_CLIENT_ID` — previously hardcoded OAuth2 client_id for the onsite login flow
+
+Without these, Microsoft OAuth2 login and the onsite login flow will not function.
+
+### Conflict-free merge
+
+Merging `origin/main` into `enhance-and-debloat` (or vice versa) produces no conflicts. The only incoming change from `main` is `.gitignore`, which applies cleanly.

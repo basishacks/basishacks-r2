@@ -8,10 +8,10 @@ description: Database row types and API response interfaces
 The shared type definitions ensure type safety across the frontend and backend. Database types mirror the SQL schema exactly, while API response types define the public contract.
 
 ::: info Source Files
+
 - `shared/database.d.ts` — Database row types
 - `shared/responses.d.ts` — API response interfaces
-- `shared/auth.d.ts` — Session type augmentation
-:::
+- `shared/auth.d.ts` — Session type augmentation :::
 
 ## Type Unions
 
@@ -19,11 +19,11 @@ The shared type definitions ensure type safety across the frontend and backend. 
 
 ```ts
 type HackathonStatus =
-  | 'not_started' // before the event
-  | 'in_progress' // during the event
-  | 'voting'      // after the event, peer voting
-  | 'finished'    // event completed
-  | 'paused'      // event paused for maintenance, etc.
+    | "not_started" // before the event
+    | "in_progress" // during the event
+    | "voting" // after the event, peer voting
+    | "finished" // event completed
+    | "paused"; // event paused for maintenance, etc.
 ```
 
 The `hackathon` table has a single row (`id = 1`) whose `status` column controls the global event state.
@@ -31,7 +31,7 @@ The `hackathon` table has a single row (`id = 1`) whose `status` column controls
 ### `TeamPathway`
 
 ```ts
-type TeamPathway = 'junior' | 'senior'
+type TeamPathway = "junior" | "senior";
 ```
 
 Teams are categorized into two pathways with different rubric weightings.
@@ -44,98 +44,132 @@ These interfaces match the SQL schema exactly. They include all columns, includi
 
 ### `Hackathon`
 
-| Field | Type | Description |
-|-------|------|-------------|
-| `id` | `1` | Literal `1` — single-row table |
-| `status` | `HackathonStatus` | Current event state |
-| `voting_enabled` | `number` | Whether peer voting is open (0 or 1) |
-| `results_published` | `number` | Whether results are published (0 or 1) |
-| `submitted_count` | `number` | Number of submitted projects |
-| `max_votes_per_user` | `number` | Maximum peer votes per user |
-| `judging_open` | `number` | Whether judge scoring is open (0 or 1) |
-| `schedule_start` | `string \| null` | Scheduled start time |
-| `schedule_end` | `string \| null` | Scheduled end time |
-| `start_timestamp` | `number` | Actual start timestamp |
-| `end_timestamp` | `number` | Actual end timestamp |
-| `voting_start_timestamp` | `number` | Voting period start |
-| `voting_end_timestamp` | `number` | Voting period end |
-| `results_open_timestamp` | `number` | Results visibility timestamp |
-| `theme_name` | `string \| null` | Hackathon theme name |
-| `theme_description` | `string \| null` | Hackathon theme description |
+| Field                    | Type              | Description                            |
+| ------------------------ | ----------------- | -------------------------------------- |
+| `id`                     | `1`               | Literal `1` — single-row table         |
+| `status`                 | `HackathonStatus` | Current event state                    |
+| `voting_enabled`         | `number`          | Whether peer voting is open (0 or 1)   |
+| `results_published`      | `number`          | Whether results are published (0 or 1) |
+| `submitted_count`        | `number`          | Number of submitted projects           |
+| `max_votes_per_user`     | `number`          | Maximum peer votes per user            |
+| `judging_open`           | `number`          | Whether judge scoring is open (0 or 1) |
+| `schedule_start`         | `string \| null`  | Scheduled start time                   |
+| `schedule_end`           | `string \| null`  | Scheduled end time                     |
+| `start_timestamp`        | `number`          | Actual start timestamp                 |
+| `end_timestamp`          | `number`          | Actual end timestamp                   |
+| `voting_start_timestamp` | `number`          | Voting period start                    |
+| `voting_end_timestamp`   | `number`          | Voting period end                      |
+| `results_open_timestamp` | `number`          | Results visibility timestamp           |
+| `theme_name`             | `string \| null`  | Hackathon theme name                   |
+| `theme_description`      | `string \| null`  | Hackathon theme description            |
 
 ### `Team`
 
-| Field | Type | Description |
-|-------|------|-------------|
-| `id` | `number` | Primary key |
-| `name` | `string` | Team name |
-| `pathway` | `TeamPathway \| null` | Junior or senior pathway |
-| `score` | `number \| null` | Final weighted score |
-| `rank` | `number \| null` | Final rank |
-| `project_name` | `string` | Project name |
-| `project_description` | `string` | Project description |
-| `project_demo_url` | `string \| null` | Demo URL |
-| `project_repo_url` | `string \| null` | Repository URL |
-| `project_submitted` | `number` | Whether project is submitted (0 or 1) |
-| `sourcing` | `string` | AI/tooling sourcing disclosure |
-| `season_id` | `number` | Foreign key to season |
+| Field                 | Type                  | Description                           |
+| --------------------- | --------------------- | ------------------------------------- |
+| `id`                  | `number`              | Primary key                           |
+| `name`                | `string`              | Team name                             |
+| `pathway`             | `TeamPathway \| null` | Junior or senior pathway              |
+| `score`               | `number \| null`      | Final weighted score                  |
+| `rank`                | `number \| null`      | Final rank                            |
+| `project_name`        | `string`              | Project name                          |
+| `project_description` | `string`              | Project description                   |
+| `project_demo_url`    | `string \| null`      | Demo URL                              |
+| `project_repo_url`    | `string \| null`      | Repository URL                        |
+| `project_submitted`   | `number`              | Whether project is submitted (0 or 1) |
+| `sourcing`            | `string`              | AI/tooling sourcing disclosure        |
+| `season_id`           | `number`              | Foreign key to season                 |
 
 ### `TeamScores`
 
-| Field | Type | Description |
-|-------|------|-------------|
-| `id` | `number` | Primary key |
-| `team_id` | `number` | Foreign key to team |
-| `judge_user_id` | `number` | Foreign key to judge user |
-| `scores` | `string` | JSON string of rubric scores |
-| `reasoning` | `string` | Judge's written reasoning |
+| Field           | Type     | Description                  |
+| --------------- | -------- | ---------------------------- |
+| `id`            | `number` | Primary key                  |
+| `team_id`       | `number` | Foreign key to team          |
+| `judge_user_id` | `number` | Foreign key to judge user    |
+| `scores`        | `string` | JSON string of rubric scores |
+| `reasoning`     | `string` | Judge's written reasoning    |
 
 ### `User`
 
+<<<<<<< HEAD
 | Field | Type | Description |
-|-------|------|-------------|
+| --- | --- | --- |
 | `id` | `number` | Primary key |
 | `email` | `string` | User email (`@basischina.com`) |
 | `role` | `string` | Space-separated URI-encoded permission strings |
 | `name` | `string \| null` | Display name |
 | `team_id` | `number \| null` | Foreign key to team |
-| `login_code` | `string \| null` | Current magic login code |
-| `login_expiry` | `number \| null` | Login code expiry timestamp |
+| `login_code` | `string \| null` | Legacy login code (unused by current authentication) |
+| `login_expiry` | `number \| null` | Legacy login code expiry timestamp (unused by current authentication) |
 | `profile_theme` | `string \| null` | Profile theme as `"mode\|value"` string |
 | `profile_picture` | `string \| null` | Profile picture path |
+=======
+| Field             | Type             | Description                                    |
+| ----------------- | ---------------- | ---------------------------------------------- |
+| `id`              | `number`         | Primary key                                    |
+| `email`           | `string`         | User email (`@basischina.com`)                 |
+| `role`            | `string`         | Space-separated URI-encoded permission strings |
+| `name`            | `string \| null` | Display name                                   |
+| `team_id`         | `number \| null` | Foreign key to team                            |
+| `login_code`      | `string \| null` | Current magic login code                       |
+| `login_expiry`    | `number \| null` | Login code expiry timestamp                    |
+| `profile_theme`   | `string \| null` | Profile theme as `"mode\|value"` string        |
+| `profile_picture` | `string \| null` | Profile picture path                           |
+>>>>>>> score-release-patch
 
 ### `Ballot`
 
-| Field | Type | Description |
-|-------|------|-------------|
-| `id` | `number` | Primary key |
-| `user_id` | `number` | Foreign key to user |
-| `reasoning` | `string \| null` | Voter's written reasoning |
-| `submitted` | `number` | Whether ballot is submitted (0 or 1) |
+| Field       | Type             | Description                          |
+| ----------- | ---------------- | ------------------------------------ |
+| `id`        | `number`         | Primary key                          |
+| `user_id`   | `number`         | Foreign key to user                  |
+| `reasoning` | `string \| null` | Voter's written reasoning            |
+| `submitted` | `number`         | Whether ballot is submitted (0 or 1) |
 
 ### `BallotScore`
 
-| Field | Type | Description |
-|-------|------|-------------|
-| `id` | `number` | Primary key |
-| `ballot_id` | `number` | Foreign key to ballot |
-| `project_id` | `number` | Foreign key to team (project) |
-| `score` | `1 \| 2 \| 3 \| 4 \| 5 \| null` | Star rating (1–5) or null |
+| Field        | Type                            | Description                   |
+| ------------ | ------------------------------- | ----------------------------- |
+| `id`         | `number`                        | Primary key                   |
+| `ballot_id`  | `number`                        | Foreign key to ballot         |
+| `project_id` | `number`                        | Foreign key to team (project) |
+| `score`      | `1 \| 2 \| 3 \| 4 \| 5 \| null` | Star rating (1–5) or null     |
 
 ### `OAuth2Application`
 
-| Field | Type | Description |
-|-------|------|-------------|
-| `client_id` | `string` | UUID client identifier |
-| `client_secret` | `string` | Space-separated SHA-256 hashes |
-| `redirect_uris` | `string \| null` | Space-separated allowed redirect URIs |
-| `permissions` | `string \| null` | Space-separated allowed OAuth2 scopes |
-| `name` | `string` | Application display name |
-| `description` | `string \| null` | Application description |
-| `proxy_microsoft` | `number` | Whether app proxies Microsoft OAuth (0 or 1) |
-| `type` | `'first' \| 'third'` | First-party or third-party application |
-| `profile_picture` | `string \| null` | Application icon path |
-| `owner_id` | `number \| null` | Foreign key to owning user |
+| Field             | Type                 | Description                                  |
+| ----------------- | -------------------- | -------------------------------------------- |
+| `client_id`       | `string`             | UUID client identifier                       |
+| `client_secret`   | `string`             | Space-separated SHA-256 hashes               |
+| `redirect_uris`   | `string \| null`     | Space-separated allowed redirect URIs        |
+| `permissions`     | `string \| null`     | Space-separated allowed OAuth2 scopes        |
+| `name`            | `string`             | Application display name                     |
+| `description`     | `string \| null`     | Application description                      |
+| `proxy_microsoft` | `number`             | Whether app proxies Microsoft OAuth (0 or 1) |
+| `type`            | `'first' \| 'third'` | First-party or third-party application       |
+| `profile_picture` | `string \| null`     | Application icon path                        |
+| `owner_id`        | `number \| null`     | Foreign key to owning user                   |
+<<<<<<< HEAD
+=======
+
+### `Award`
+
+| Field         | Type     | Description       |
+| ------------- | -------- | ----------------- |
+| `id`          | `number` | Primary key       |
+| `name`        | `string` | Award name        |
+| `description` | `string` | Award description |
+| `icon`        | `string` | Icon class        |
+
+### `TeamAward`
+
+| Field      | Type             | Description            |
+| ---------- | ---------------- | ---------------------- |
+| `team_id`  | `number`         | Foreign key to team    |
+| `award_id` | `number`         | Foreign key to award   |
+| `meta`     | `string \| null` | Optional JSON metadata |
+>>>>>>> score-release-patch
 
 ---
 
@@ -147,8 +181,8 @@ These types define the shape of data returned by API endpoints. Internal fields 
 
 ```ts
 interface ProfileTheme {
-  mode: 'url' | 'emoji' | 'gradient'
-  value: string
+    mode: "url" | "emoji" | "gradient";
+    value: string;
 }
 ```
 
@@ -156,42 +190,59 @@ Parsed from the database `"mode|value"` string format.
 
 ### `APIUser`
 
-| Field | Type | Description |
-|-------|------|-------------|
-| `id` | `number` | User ID |
-| `email` | `string` | Email address |
-| `role` | `string` | Permission string |
-| `name` | `string \| null` | Display name |
-| `team_id` | `number \| null` | Current team ID |
-| `profile_theme` | `ProfileTheme \| null` | Parsed profile theme |
-| `profile_picture` | `string \| null` | Profile picture path |
+| Field             | Type                   | Description          |
+| ----------------- | ---------------------- | -------------------- |
+| `id`              | `number`               | User ID              |
+| `email`           | `string`               | Email address        |
+| `role`            | `string`               | Permission string    |
+| `name`            | `string \| null`       | Display name         |
+| `team_id`         | `number \| null`       | Current team ID      |
+| `profile_theme`   | `ProfileTheme \| null` | Parsed profile theme |
+| `profile_picture` | `string \| null`       | Profile picture path |
 
 ### `APITeam`
 
-| Field | Type | Description |
-|-------|------|-------------|
-| `id` | `number` | Team ID |
-| `name` | `string` | Team name |
-| `pathway` | `TeamPathway \| null` | Junior or senior |
-| `rank` | `number \| null` | Final rank |
-| `score` | `number \| null` | Final weighted score |
-| `season_id` | `number` | Season ID |
-| `project.name` | `string` | Project name |
-| `project.description` | `string` | Project description |
-| `project.demo_url` | `string \| null` | Demo URL |
-| `project.repo_url` | `string \| null` | Repository URL |
-| `project.submitted` | `boolean` | Whether project is submitted |
-| `project.sourcing` | `string` | AI/tooling sourcing disclosure |
+| Field                 | Type                  | Description                    |
+| --------------------- | --------------------- | ------------------------------ |
+| `id`                  | `number`              | Team ID                        |
+| `name`                | `string`              | Team name                      |
+| `pathway`             | `TeamPathway \| null` | Junior or senior               |
+| `rank`                | `number \| null`      | Final rank                     |
+| `score`               | `number \| null`      | Final weighted score           |
+| `season_id`           | `number`              | Season ID                      |
+| `project.name`        | `string`              | Project name                   |
+| `project.description` | `string`              | Project description            |
+| `project.demo_url`    | `string \| null`      | Demo URL                       |
+| `project.repo_url`    | `string \| null`      | Repository URL                 |
+| `project.submitted`   | `boolean`             | Whether project is submitted   |
+| `project.sourcing`    | `string`              | AI/tooling sourcing disclosure |
+<<<<<<< HEAD
+| `awards`              | `APIAward[]`          | Resolved team awards           |
+=======
+| `awards`              | `APIAward[]`          | Awards assigned to the team    |
+
+### `APIAward`
+
+| Field         | Type                      | Description                             |
+| ------------- | ------------------------- | --------------------------------------- |
+| `award_id`    | `number`                  | Award ID from the `awards` table        |
+| `name`        | `string`                  | Award display name                      |
+| `description` | `string`                  | Award description                       |
+| `icon`        | `string`                  | Icon class                              |
+| `meta`        | `Record<string, unknown>` | Parsed JSON metadata from `team_awards` |
+
+Awards are resolved from the `team_awards` table joined with `awards` and attached to `APITeam` by `convertTeamToPublic`.
+>>>>>>> score-release-patch
 
 ### `GetUserResponse`
 
 Extends `APIUser` with team information:
 
-| Field | Type | Description |
-|-------|------|-------------|
-| *(all APIUser fields)* | | Inherited |
-| `team` | `APITeam \| null` | User's current team |
-| `past_teams` | `APITeam[]` | Teams from previous seasons |
+| Field                  | Type              | Description                 |
+| ---------------------- | ----------------- | --------------------------- |
+| _(all APIUser fields)_ |                   | Inherited                   |
+| `team`                 | `APITeam \| null` | User's current team         |
+| `past_teams`           | `APITeam[]`       | Teams from previous seasons |
 
 ### `GetTeamResponse`
 
@@ -200,36 +251,105 @@ Extends `APITeam` (no additional fields, but typed as a distinct interface for f
 ### `CreateTeamResponse`
 
 ```ts
-type CreateTeamResponse = APITeam
+type CreateTeamResponse = APITeam;
 ```
 
 ### `GetTeamMembersResponse`
 
 ```ts
 type GetTeamMembersResponse = {
-  id: number
-  email: string
-  name: string | null
-  team_id: number | null
-}[]
+    id: number;
+    email: string;
+    name: string | null;
+    team_id: number | null;
+}[];
 ```
 
 An array of lightweight member objects.
 
 ### `UpdateUserResponse`
 
-| Field | Type | Description |
-|-------|------|-------------|
+| Field     | Type     | Description     |
+| --------- | -------- | --------------- |
 | `message` | `string` | Success message |
 
 ### `GetBallotResponse`
 
-| Field | Type | Description |
-|-------|------|-------------|
-| `id` | `number` | Ballot ID |
-| `projects` | `(APITeam['project'] & { id: number })[]` | Projects to vote on, each with an `id` |
-| `scores` | `(1 \| 2 \| 3 \| 4 \| 5)[] \| null` | Star ratings, or null if not yet voted |
-| `reasoning` | `string \| null` | Voter's reasoning |
+<<<<<<< HEAD
+| Field       | Type             | Description                                        |
+| ----------- | ---------------- | -------------------------------------------------- |
+| `submitted` | `boolean`        | Whether the user has already submitted a peer vote |
+| `projects`  | `APITeam[]`      | Eligible projects to vote on                       |
+| `scores`    | `number[]`       | Star ratings parallel to `projects`                |
+| `reasoning` | `string \| null` | Voter's reasoning                                  |
+
+### `BallotSummaryItem`
+
+| Field             | Type     | Description                    |
+| ----------------- | -------- | ------------------------------ |
+| `season_id`       | `number` | Season ID                      |
+| `season_name`     | `string` | Season display name            |
+| `project_count`   | `number` | Total projects in the season   |
+| `submitted_count` | `number` | Submitted projects             |
+| `scored_count`    | `number` | Projects that have been judged |
+
+### `GetBallotSummaryResponse`
+
+| Field     | Type                        | Description                   |
+| --------- | --------------------------- | ----------------------------- |
+| `current` | `BallotSummaryItem \| null` | Summary for the active season |
+| `past`    | `BallotSummaryItem[]`       | Summaries for past seasons    |
+
+### `APIAward`
+
+| Field       | Type                      | Description           |
+| ----------- | ------------------------- | --------------------- |
+| `namespace` | `string`                  | Award identifier      |
+| `name`      | `string`                  | Display name          |
+| `meta`      | `Record<string, unknown>` | Stored metadata       |
+| `text`      | `string`                  | Resolved display text |
+
+### `ElectionCandidate`
+
+| Field       | Type     | Description         |
+| ----------- | -------- | ------------------- |
+| `id`        | `string` | Candidate ID        |
+| `shortName` | `string` | Ballot display name |
+| `fullName`  | `string` | Official full name  |
+| `email`     | `string` | School email        |
+
+### `ElectionPosition`
+
+| Field        | Type                  | Description                 |
+| ------------ | --------------------- | --------------------------- |
+| `title`      | `string`              | Position title              |
+| `candidates` | `ElectionCandidate[]` | Candidates for the position |
+
+### `ElectionResult`
+
+| Field          | Type                                     | Description             |
+| -------------- | ---------------------------------------- | ----------------------- |
+| `totalBallots` | `number`                                 | Number of cast ballots  |
+| `positions`    | `{ title, status, winner?, details? }[]` | Per-position IRV result |
+
+### `ElectionBallot`
+
+| Field          | Type                             | Description          |
+| -------------- | -------------------------------- | -------------------- |
+| `id`           | `number`                         | Ballot record ID     |
+| `user_id`      | `number`                         | Voter user ID        |
+| `name`         | `string \| null`                 | Voter name           |
+| `email`        | `string \| null`                 | Voter email          |
+| `submitted_at` | `number \| null`                 | Submission timestamp |
+| `vote`         | `Record<string, number \| null>` | Candidate ID → rank  |
+=======
+| Field       | Type                                      | Description                            |
+| ----------- | ----------------------------------------- | -------------------------------------- |
+| `id`        | `number`                                  | Ballot ID                              |
+| `projects`  | `(APITeam['project'] & { id: number })[]` | Projects to vote on, each with an `id` |
+| `scores`    | `(1 \| 2 \| 3 \| 4 \| 5)[] \| null`       | Star ratings, or null if not yet voted |
+| `reasoning` | `string \| null`                          | Voter's reasoning                      |
+>>>>>>> score-release-patch
 
 ---
 
@@ -238,10 +358,10 @@ An array of lightweight member objects.
 The `nuxt-auth-utils` session type is augmented in `shared/auth.d.ts`:
 
 ```ts
-declare module '#auth-utils' {
-  interface User {
-    id: number
-  }
+declare module "#auth-utils" {
+    interface User {
+        id: number;
+    }
 }
 ```
 

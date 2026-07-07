@@ -1,13 +1,11 @@
-
-
 <template>
-  <div>
-    <RoleHeader/>
+    <div>
+        <RoleHeader />
 
-    <UMain>
-      <slot />
-    </UMain>
+        <UMain>
+            <slot />
+        </UMain>
 
-    <Footer/>
-  </div>
+        <Footer />
+    </div>
 </template>
