@@ -5,7 +5,15 @@ export interface RubricData {
   weight: number
 }
 
-const rubrics = {
+export interface RubricBallot {
+  originality: RubricData,
+  presentation: RubricData,
+  technicality: RubricData,
+  theme: RubricData
+  impact: RubricData
+}
+
+const rubrics : Record<string, RubricBallot> = {
   junior: {
     originality: {
       abbr: 'ORG',

@@ -1,8 +1,14 @@
 import type { H3Event } from 'h3'
 
 // --- Active season filtered (default behavior) ---
-
+/**
+   * Gets the team by ID only in the active season.
+   * For wildcard searches use getTeamById, or set
+   * allSeason to true
+   * 
+   */
 export async function getTeam(event: H3Event, teamID: number, allSeason?: boolean): Promise<Team | null> {
+  
   if (allSeason) {
     return event.context.db.prepare('SELECT * FROM teams WHERE id = ?')
       .bind(teamID)
@@ -57,8 +63,12 @@ export async function getSubmittedTeams(event: H3Event): Promise<Team[]> {
 }
 
 // --- Unrestricted / by season ---
-
+/**
+   * Get a team by its ID. Not limited to the active season.
+   * Essentially the same as `getTeam(event, teamID, true)`
+   */
 export async function getTeamById(event: H3Event, teamID: number): Promise<Team | null> {
+  
   return event.context.db.prepare(
     'SELECT * FROM teams WHERE id = ?',
   )
