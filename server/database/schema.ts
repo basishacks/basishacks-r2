@@ -160,19 +160,6 @@ export const oauth2Applications = sqliteTable("oauth2_applications", {
     owner_id: integer("owner_id"),
 });
 
-// ---------------------------------------------------------------------------
-// Student Council votes (e.g., for themed events or side contests).
-// ---------------------------------------------------------------------------
-export const scVotes = sqliteTable(
-    "sc_votes",
-    {
-        id: integer("id").primaryKey({ autoIncrement: true }),
-        user_id: integer("user_id"),
-        vote: text("vote"),
-        submitted_at: integer("submitted_at"),
-    },
-    (table) => [uniqueIndex("sc_votes_user_id_unique").on(table.user_id)],
-);
 
 // ---------------------------------------------------------------------------
 // Seasons – each hackathon "season" is an independent event cycle.

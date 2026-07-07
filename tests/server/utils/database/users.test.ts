@@ -288,11 +288,6 @@ describe("users database helpers", () => {
                 .all() as { results: any[] };
             expect(peerVotes.results).toHaveLength(0);
 
-            const scVotes = event.context.db
-                .prepare("SELECT * FROM sc_votes WHERE user_id = 1")
-                .all() as { results: any[] };
-            expect(scVotes.results).toHaveLength(0);
-
             const apps = event.context.db
                 .prepare("SELECT * FROM oauth2_applications WHERE owner_id = 1")
                 .all() as { results: any[] };

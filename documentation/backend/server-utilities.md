@@ -480,35 +480,6 @@ interface ChatSession {
 
 ---
 
-## election.ts
-
-**File:** `server/utils/election.ts`
-
-Defines the student-council election positions/candidates and implements an instant-runoff voting (IRV) tally.
-
-```ts
-export const electionPositions: ElectionPosition[];
-```
-
-Hard-coded list of positions (President, Vice President, Treasurer, Secretary, Activities Coordinator, Director of Communications) and their candidates.
-
-```ts
-function runIRV(
-    candidates: ElectionCandidate[],
-    ballots: string[][],
-): { status: "elected" | "tie" | "no_votes"; winner?: string; details?: string };
-```
-
-- Each ballot is an ordered list of candidate IDs (rank 1 → rank N)
-- The candidate with the fewest first-preference votes is eliminated each round
-- Votes transfer to the next still-active preference
-- A winner is declared when a candidate receives more than 50% of valid ballots
-- Returns `tie` if two candidates tie for elimination or the final two tie
-
-::: info The IRV algorithm is used by `/api/election/vote` GET results. Ballots are stored in `scVotes` as JSON maps of candidate ID → rank. :::
-
----
-
 ## url-validation.ts
 
 **File:** `server/utils/url-validation.ts`

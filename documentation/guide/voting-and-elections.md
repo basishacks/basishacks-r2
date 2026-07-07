@@ -77,37 +77,7 @@ The `/voting` page renders `VotingProjectCard` components for each eligible proj
 
 ## Election Voting (Student Council)
 
-The election system uses **instant-runoff voting (IRV)** for ranked-choice ballots. It is defined in `server/utils/election.ts` and exposed through the `/api/election/*` endpoints.
-
-### Positions and Candidates
-
-Positions and candidates are hard-coded in `server/utils/election.ts`:
-
-| Position                   | Typical Candidate Count |
-| -------------------------- | ----------------------- |
-| President                  | 1                       |
-| Vice President             | 3                       |
-| Treasurer                  | 6                       |
-| Secretary                  | 6                       |
-| Activities Coordinator     | 5                       |
-| Director of Communications | 4                       |
-
-Each candidate has:
-
-| Field       | Description                 |
-| ----------- | --------------------------- |
-| `id`        | Unique candidate identifier |
-| `shortName` | Display name on the ballot  |
-| `fullName`  | Official full name          |
-| `email`     | School email address        |
-
-### Voting Flow
-
-1. Voter opens `/temp/vote`.
-2. The page fetches candidates from `GET /api/election/candidates`.
-3. Voter enters a rank (1 = first preference) for each candidate; empty inputs are treated as abstentions.
-4. Pressing <UKbd>X</UKbd> validates the ballot; pressing <UKbd>X</UKbd> again submits if there are no errors.
-5. The ballot is stored in the `scVotes` table as a JSON map of `candidate_id → rank`.
+Permanently removed (Unused)
 
 ### Validation
 

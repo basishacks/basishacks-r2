@@ -23,7 +23,6 @@ type BallotScoreBase = InferSelectModel<typeof schema.ballotScores>;
 type OAuth2ApplicationBase = InferSelectModel<typeof schema.oauth2Applications>;
 type TeamAwardBase = InferSelectModel<typeof schema.teamAwards>;
 type PeerVotingScoreBase = InferSelectModel<typeof schema.peerVotingScores>;
-type SCVoteBase = InferSelectModel<typeof schema.scVotes>;
 type SeasonBase = InferSelectModel<typeof schema.seasons>;
 
 // Re-export with narrowed types for columns that have CHECK constraints
@@ -37,7 +36,6 @@ export type BallotScore = BallotScoreBase;
 export type OAuth2Application = OAuth2ApplicationBase;
 export type TeamAward = TeamAwardBase;
 export type PeerVotingScore = PeerVotingScoreBase;
-export type SCVote = SCVoteBase;
 export type Season = SeasonBase;
 
 export type { HackathonStatus, TeamPathway };
@@ -55,7 +53,6 @@ declare global {
     type OAuth2Application = OAuth2ApplicationBase;
     type TeamAward = TeamAwardBase;
     type PeerVotingScore = PeerVotingScoreBase;
-    type SCVote = SCVoteBase;
     type Season = SeasonBase;
     type HackathonStatus = "not_started" | "in_progress" | "voting" | "finished" | "paused";
     type TeamPathway = "junior" | "senior";

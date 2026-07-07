@@ -7,7 +7,6 @@ import {
     ballotScores,
     userPastTeams,
     peerVotingScores,
-    scVotes,
     oauth2Applications,
 } from "~~/server/database/schema";
 import { hasPermission } from "~~/shared/permissions";
@@ -135,8 +134,6 @@ export async function deleteUsers(event: H3Event, userIDs: number[]) {
             tx.delete(ballots).where(eq(ballots.user_id, id)).run();
 
             tx.delete(peerVotingScores).where(eq(peerVotingScores.user_id, id)).run();
-
-            tx.delete(scVotes).where(eq(scVotes.user_id, id)).run();
 
             tx.delete(userPastTeams).where(eq(userPastTeams.user_id, id)).run();
 
