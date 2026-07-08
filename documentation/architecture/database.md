@@ -143,35 +143,23 @@ Junction table tracking which teams a user has belonged to historically.
 
 **Primary key**: `(user_id, team_id)`
 
-### `awards`
-
-Catalog of awards that can be assigned to teams.
-
-| Column        | Type                                | Description                      |
-| ------------- | ----------------------------------- | -------------------------------- |
-| `id`          | `INTEGER PRIMARY KEY AUTOINCREMENT` | Award ID                         |
-| `name`        | `TEXT NOT NULL`                     | Award display name               |
-| `description` | `TEXT NOT NULL`                     | Award description                |
-| `icon`        | `TEXT NOT NULL`                     | Icon class (e.g. `i-lucide-gem`) |
-
 ### `team_awards`
 
-Junction table mapping teams to awards. Awards are looked up at request time by joining this table with `awards` — no runtime condition evaluation is performed.
+Stores per-team award assignments. Award definitions live in `shared/awards.ts` (`AWARD_REGISTRY`); the database only stores the award namespace and JSON metadata, which are resolved at read time.
 
-| Column     | Type               | Description                               |
-| ---------- | ------------------ | ----------------------------------------- |
-| `team_id`  | `INTEGER NOT NULL` | FK to `teams.id` (ON DELETE CASCADE)      |
-| `award_id` | `INTEGER NOT NULL` | FK to `awards.id` (ON DELETE CASCADE)     |
-| `meta`     | `TEXT`             | Optional JSON metadata for the assignment |
+| Column    | Type               | Description                                     |
+| --------- | ------------------ | ----------------------------------------------- |
+| `team_id` | `INTEGER NOT NULL` | FK to `teams.id` (ON DELETE CASCADE)            |
+| `award`   | `TEXT NOT NULL`    | Award namespace from `AWARD_REGISTRY`           |
+| `meta`    | `TEXT NOT NULL`    | JSON metadata for the assignment (default `{}`) |
 
-**Primary key**: `(team_id, award_id)`
+**Primary key**: `(team_id, award)`
 
 ## Access Patterns
 
 All database access goes through `event.context.drizzle` (a Drizzle ORM instance). Per-table helpers in `server/utils/database/*.ts` wrap common queries:
 
 ```ts
-<<<<<<< HEAD
 // Read a single row via the users helper
 import { getUser } from "~~/server/utils/database/users";
 const user = await getUser(event, userId);
@@ -195,30 +183,6 @@ const user = await drizzle.select().from(users).where(eq(users.id, userId)).get(
 ```
 
 ::: tip Always use Drizzle's parameterized query builders. Never interpolate user input directly into SQL strings. :::
-=======
-// Read a single row
-const user = event.context.db
-    .prepare("SELECT * FROM users WHERE id = ?")
-    .bind(userId)
-    .first() as User | null;
-
-// Read multiple rows
-const { results } = event.context.db
-    .prepare("SELECT * FROM teams WHERE season_id = ?")
-    .bind(seasonId)
-    .all() as { results: Team[] };
-
-// Write (INSERT, UPDATE, DELETE)
-const result = event.context.db
-    .prepare("UPDATE users SET name = ? WHERE id = ?")
-    .bind(name, userId)
-    .run();
-
-const changes = result.meta.changed_db; // number of affected rows
-```
-
-::: tip Always use parameterized queries (`.bind()`) to prevent SQL injection. Never interpolate user input directly into SQL strings. :::
->>>>>>> score-release-patch
 
 ## Per-table Helpers
 
@@ -226,11 +190,7 @@ Each table has a dedicated helper module in `server/utils/database/`:
 
 | File | Key Functions |
 | --- | --- |
-<<<<<<< HEAD
-| `users.ts` | `getUser`, `getUserByEmail`, `addCodeToUser` (legacy), `updateUserName`, `updateUserProfileTheme` |
-=======
-| `users.ts` | `getUser`, `getUserByEmail`, `addCodeToUser`, `getUserByCode`, `updateUserName`, `updateUserProfileTheme` |
->>>>>>> score-release-patch
+| `users.ts` | `getUser`, `getUserByEmail`, `addCodeToUser`, `updateUserName`, `updateUserProfileTheme` |
 | `teams.ts` | Team CRUD, project submission |
 | `members.ts` | Team member management |
 | `scores.ts` | Judge score CRUD |
@@ -298,7 +258,6 @@ import { createAndMigrateDatabase } from "./migrate";
 createAndMigrateDatabase(sqlite);
 ```
 
-<<<<<<< HEAD
 ### Migration file format
 
 Files must end in `.sql` and may contain multiple statements separated by:
@@ -346,9 +305,6 @@ In practice, the dev/prod server applies migrations automatically when `createDr
 ### Seeding
 
 After migrations, `seedHackathon()` ensures the `hackathon` singleton row exists, and `seedOAuth2ApplicationRedirectUri()` auto-registers the onsite-login redirect URI for `ONSITE_LOGIN_CLIENT_ID`.
-=======
-::: warning The `seed-hackathon.ts` plugin performs lightweight auto-migrations for local development (adding missing columns), but this is not a substitute for running migrations in production. :::
->>>>>>> score-release-patch
 
 ### Notable migrations
 
@@ -361,7 +317,7 @@ After migrations, `seedHackathon()` ensures the `hackathon` singleton row exists
 | `migration-2026-06-02-21-35Z.sql` | Adds `season_id` to `teams`, seeds default season |
 | `migration-2026-06-02-22-00Z.sql` | Adds FK constraint on `teams.season_id` (table recreation) |
 | `migration-2026-06-02-22-15Z.sql` | Creates `user_past_teams` junction table |
-| `migration-2026-06-27-06-01Z.sql` | Creates `awards` catalog and `team_awards` junction table |
+| `migration-2026-06-27-06-01Z.sql` | Creates the `team_awards` table (legacy archived migration) |
 
 ## Foreign Keys
 
@@ -377,4 +333,3 @@ This is set in `createDrizzleDatabase()` (via `server/database/index.ts`) and in
 - `user_past_teams.user_id` → `users.id` (ON DELETE CASCADE)
 - `user_past_teams.team_id` → `teams.id` (ON DELETE CASCADE)
 - `team_awards.team_id` → `teams.id` (ON DELETE CASCADE)
-- `team_awards.award_id` → `awards.id` (ON DELETE CASCADE)

@@ -4,12 +4,13 @@ interface ProfileTheme {
 }
 
 interface APIAward {
-    award_id: number;
+    namespace: string;
     name: string;
     description: string;
     icon: string;
     meta: Record<string, unknown>;
     color: string;
+    text: string;
 }
 
 interface APIUser {
