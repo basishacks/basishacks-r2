@@ -233,7 +233,7 @@ definePageMeta({
     middleware: ["auth"],
 });
 
-const { user: me } = await useAPIUser();
+const { user: me } = await useApiUser();
 if (!hasPermission(me.value?.role, "admin")) {
     throw await navigateTo("/");
 }

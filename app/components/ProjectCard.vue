@@ -56,6 +56,5 @@ const { data: team } = await useFetch<GetTeamResponse>(() => "/api/teams/" + pro
                 </UTooltip>
             </div>
         </template>
-
     </UCard>
 </template>

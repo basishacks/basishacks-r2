@@ -5,13 +5,12 @@ definePageMeta({
     middleware: ["auth"],
 });
 
-
 const { data: hackathon } = await useFetch("/api/seasons/active");
 if (hackathon.value?.status !== "voting") {
     throw await navigateTo("/");
 }
 
-const { user: userData, error: userError } = await useAPIUser();
+const { user: userData, error: userError } = await useApiUser();
 if (userError.value) {
     throw userError.value;
 }

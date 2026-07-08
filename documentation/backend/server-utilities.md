@@ -81,7 +81,7 @@ Initializes the `better-sqlite3` database connection (singleton). Configures:
 
 ```ts
 export function getDatabase(): any;
-````
+```
 
 Returns the existing database instance or initializes a new one.
 
@@ -419,7 +419,6 @@ File system helpers for managing static and user assets.
 | `removeUserAsset(name)`       | Deletes a file from `public/userassets/`           |
 | `getUserAsset(name)`          | Reads a file from `public/userassets/` as a Buffer |
 
-
 All functions validate the asset name to prevent path traversal, create parent directories recursively, and remove functions silently catch missing-file errors. Invalid names throw a 400 error.
 
 ---
@@ -506,16 +505,16 @@ Per-table database helper modules in `server/utils/database/`.
 
 ### users.ts
 
-| Function | Description |
-| --- | --- |
-| `getUser(event, userID)` | Get user by ID |
-| `getUserByEmail(event, email)` | Get user by email (case-insensitive) |
-| `addCodeToUser(event, email)` | Create or update a user record for the given email |
-| `updateUserName(event, user)` | Update user's name |
-| `updateUserProfileTheme(event, user)` | Update user's profile theme |
-| `updateUserProfilePicture(event, user)` | Update user's profile picture |
-| `updateUserRole(event, userID, role)` | Update user's role |
-| `deleteUsers(event, userIDs)` | Delete users and their related records |
+| Function                                | Description                                        |
+| --------------------------------------- | -------------------------------------------------- |
+| `getUser(event, userID)`                | Get user by ID                                     |
+| `getUserByEmail(event, email)`          | Get user by email (case-insensitive)               |
+| `addCodeToUser(event, email)`           | Create or update a user record for the given email |
+| `updateUserName(event, user)`           | Update user's name                                 |
+| `updateUserProfileTheme(event, user)`   | Update user's profile theme                        |
+| `updateUserProfilePicture(event, user)` | Update user's profile picture                      |
+| `updateUserRole(event, userID, role)`   | Update user's role                                 |
+| `deleteUsers(event, userIDs)`           | Delete users and their related records             |
 
 ### teams.ts
 

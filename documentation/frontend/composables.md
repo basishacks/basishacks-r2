@@ -9,14 +9,14 @@ The basishacks frontend organizes shared logic into composables (`app/composable
 
 ## Composables
 
-### useAPIUser
+### useApiUser
 
-**File:** `app/composables/useAPIUser.ts`
+**File:** `app/composables/useApiUser.ts`
 
 Fetches the current authenticated user from the API and returns reactive state. Internally calls `useUserSession()` and guards against a missing user id so it never requests `/api/users/undefined`.
 
 ```ts
-export function useAPIUser(options?: { lazy?: boolean }) {
+export function useApiUser(options?: { lazy?: boolean }) {
     const { user: sessionUser, clear: clearSession } = useUserSession();
     const userID = computed(() => sessionUser.value?.id);
 
@@ -36,20 +36,20 @@ export function useAPIUser(options?: { lazy?: boolean }) {
 
 **Returns:**
 
-| Property      | Type                                | Description                                                  |
-| ------------- | ----------------------------------- | ------------------------------------------------------------ |
-| `user`        | `Ref<APIUser \| null \| undefined>` | Reactive user data from `/api/users/{id}` (alias for `data`) |
-| `sessionUser` | `Ref<SessionUser \| undefined>`     | Session user from `useUserSession()`                         |
-| `error`       | `Ref<FetchError \| null>`           | Fetch error, if any                                          |
-| `pending`     | `Ref<boolean>`                      | Whether the request is in flight                             |
-| `refresh`     | `() => Promise<void>`               | Re-fetch the user data                                       |
-| `clear`       | `() => Promise<void>`               | Clear the session (from `useUserSession`)                    |
+| Property | Type | Description |
+| --- | --- | --- |
+| `user` | `Ref<APIUser \| null \| undefined>` | Reactive user data from `/api/users/{id}` (alias for `data`) |
+| `sessionUser` | `Ref<SessionUser \| undefined>` | Session user from `useUserSession()` |
+| `error` | `Ref<FetchError \| null>` | Fetch error, if any |
+| `pending` | `Ref<boolean>` | Whether the request is in flight |
+| `refresh` | `() => Promise<void>` | Re-fetch the user data |
+| `clear` | `() => Promise<void>` | Clear the session (from `useUserSession`) |
 
 **Usage:**
 
 ```vue
 <script setup lang="ts">
-const { user, sessionUser, refresh, clear } = useAPIUser({ lazy: true });
+const { user, sessionUser, refresh, clear } = useApiUser({ lazy: true });
 </script>
 
 <template>

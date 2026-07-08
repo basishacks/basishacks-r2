@@ -120,7 +120,7 @@ basishacks-r2/
 ├── app/                        # Nuxt app (Vue frontend)
 │   ├── assets/css/             # Global styles (Tailwind + custom utilities)
 │   ├── components/             # Vue components
-│   ├── composables/            # Vue composables (useAPIUser, etc.)
+│   ├── composables/            # Vue composables (useApiUser, etc.)
 │   ├── layouts/                # Nuxt layouts (default, dashboard, fullwidth, etc.)
 │   ├── middleware/             # Route middleware (auth.ts)
 │   ├── pages/                  # File-based routing

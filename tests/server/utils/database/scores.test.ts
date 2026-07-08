@@ -16,7 +16,9 @@ describe("scores database helpers", () => {
         event.context.drizzle
             .prepare("INSERT INTO seasons(id, name, is_active) VALUES(42, 'S42', 1)")
             .run();
-        event.context.drizzle.prepare("INSERT INTO teams(name, season_id) VALUES('Team A', 42)").run();
+        event.context.drizzle
+            .prepare("INSERT INTO teams(name, season_id) VALUES('Team A', 42)")
+            .run();
         // Seed a judge user
         event.context.drizzle
             .prepare("INSERT INTO users(email, role) VALUES('judge@example.com', 'judge')")

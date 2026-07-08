@@ -2,7 +2,7 @@
 import type { NavigationMenuItem } from "@nuxt/ui";
 import { DevPermissions, hasPermission } from "~~/shared/permissions";
 
-const { user } = useAPIUser({ lazy: true });
+const { user } = useApiUser({ lazy: true });
 
 // console.log(user.value)
 

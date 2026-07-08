@@ -148,7 +148,9 @@ describe("teams database helpers", () => {
                 .run();
 
             // Insert a user for the judge
-            event.context.drizzle.prepare("INSERT INTO users(email) VALUES('judge@example.com')").run();
+            event.context.drizzle
+                .prepare("INSERT INTO users(email) VALUES('judge@example.com')")
+                .run();
 
             // Judge already scored Team A
             event.context.drizzle

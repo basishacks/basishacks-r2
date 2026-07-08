@@ -130,7 +130,9 @@ describe("users database helpers", () => {
 
     describe("updateUserProfileTheme", () => {
         it("updates the profile theme successfully", async () => {
-            event.context.drizzle.prepare("INSERT INTO users(email) VALUES('user@example.com')").run();
+            event.context.drizzle
+                .prepare("INSERT INTO users(email) VALUES('user@example.com')")
+                .run();
 
             await updateUserProfileTheme(event, {
                 id: 1,
@@ -153,7 +155,9 @@ describe("users database helpers", () => {
 
     describe("updateUserProfilePicture", () => {
         it("updates the profile picture successfully", async () => {
-            event.context.drizzle.prepare("INSERT INTO users(email) VALUES('user@example.com')").run();
+            event.context.drizzle
+                .prepare("INSERT INTO users(email) VALUES('user@example.com')")
+                .run();
 
             await updateUserProfilePicture(event, {
                 id: 1,
@@ -193,7 +197,9 @@ describe("users database helpers", () => {
 
     describe("deleteUsers", () => {
         it("deletes a single user", async () => {
-            event.context.drizzle.prepare("INSERT INTO users(email) VALUES('user@example.com')").run();
+            event.context.drizzle
+                .prepare("INSERT INTO users(email) VALUES('user@example.com')")
+                .run();
 
             await deleteUsers(event, [1]);
 
@@ -202,9 +208,15 @@ describe("users database helpers", () => {
         });
 
         it("deletes multiple users", async () => {
-            event.context.drizzle.prepare("INSERT INTO users(email) VALUES('user1@example.com')").run();
-            event.context.drizzle.prepare("INSERT INTO users(email) VALUES('user2@example.com')").run();
-            event.context.drizzle.prepare("INSERT INTO users(email) VALUES('user3@example.com')").run();
+            event.context.drizzle
+                .prepare("INSERT INTO users(email) VALUES('user1@example.com')")
+                .run();
+            event.context.drizzle
+                .prepare("INSERT INTO users(email) VALUES('user2@example.com')")
+                .run();
+            event.context.drizzle
+                .prepare("INSERT INTO users(email) VALUES('user3@example.com')")
+                .run();
 
             await deleteUsers(event, [1, 3]);
 
@@ -222,7 +234,9 @@ describe("users database helpers", () => {
                 .run();
 
             // Insert a season and team
-            event.context.drizzle.prepare("INSERT INTO seasons(name, is_active) VALUES('S1', 1)").run();
+            event.context.drizzle
+                .prepare("INSERT INTO seasons(name, is_active) VALUES('S1', 1)")
+                .run();
             event.context.drizzle
                 .prepare("INSERT INTO teams(name, season_id) VALUES('Team A', 1)")
                 .run();
@@ -250,7 +264,9 @@ describe("users database helpers", () => {
                     "INSERT INTO peer_voting_scores(user_id, score, reasoning) VALUES(1, '{}', 'nice')",
                 )
                 .run();
-            event.context.drizzle.prepare("INSERT INTO sc_votes(user_id, vote) VALUES(1, 'yes')").run();
+            event.context.drizzle
+                .prepare("INSERT INTO sc_votes(user_id, vote) VALUES(1, 'yes')")
+                .run();
             event.context.drizzle
                 .prepare(
                     "INSERT INTO oauth2_applications(client_id, client_secret, name, owner_id) VALUES('client-1', '', 'App', 1)",

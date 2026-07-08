@@ -19,8 +19,12 @@ describe("awards database helpers", () => {
             )
             .run();
         event.context.drizzle.prepare("INSERT INTO seasons(name, is_active) VALUES('S1', 1)").run();
-        event.context.drizzle.prepare("INSERT INTO teams(name, season_id) VALUES('Team A', 1)").run();
-        event.context.drizzle.prepare("INSERT INTO teams(name, season_id) VALUES('Team B', 1)").run();
+        event.context.drizzle
+            .prepare("INSERT INTO teams(name, season_id) VALUES('Team A', 1)")
+            .run();
+        event.context.drizzle
+            .prepare("INSERT INTO teams(name, season_id) VALUES('Team B', 1)")
+            .run();
     });
 
     describe("getAwards", () => {

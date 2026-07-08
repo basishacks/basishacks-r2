@@ -31,7 +31,7 @@ const { data, status, refresh } = await useFetch<OAuth2Application[]>("/api/appl
 });
 
 // Client-side permission guard
-const { user: me }: any = await useAPIUser();
+const { user: me }: any = await useApiUser();
 if (
     !hasPermission(me.value?.role, DevPermissions.PORTAL_APPLICATIONS_VIEW) &&
     !hasPermission(me.value?.role, "admin")

@@ -10,13 +10,12 @@ useHead({
     title: `General | ${WEBSITE_NAME}`,
 });
 
-
 const { data: hackathon, error: hackathonError } = await useFetch("/api/seasons/active");
 if (hackathonError.value) {
     throw hackathonError.value;
 }
 
-const { user: data, error, refresh } = await useAPIUser();
+const { user: data, error, refresh } = await useApiUser();
 if (error.value) {
     throw error.value;
 }

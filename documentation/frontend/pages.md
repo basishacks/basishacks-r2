@@ -309,7 +309,7 @@ OAuth2 application editor with two tabs: **General details** and **Authorization
 | Scope Permissions | Add scopes from `OAuth2Scopes` registry. Admin-only scopes require elevated permissions. Sensitive scopes show "User Consent" badge. |
 | OAuth2 URL Generator | Select scopes and redirect URI to generate an authorization URL. Includes PKCE requirement notice. |
 
-**Permission guard:** Client-side check using `useAPIUser()` — admin or `PORTAL_APPLICATIONS_VIEW_ALL` permission required.
+**Permission guard:** Client-side check using `useApiUser()` — admin or `PORTAL_APPLICATIONS_VIEW_ALL` permission required.
 
 **Layout:** `developers-dashboard`
 

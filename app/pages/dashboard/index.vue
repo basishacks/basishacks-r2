@@ -8,13 +8,12 @@ useHead({
     title: `Dashboard | ${WEBSITE_NAME}`,
 });
 
-
 const { data: hackathon, error: hackathonError } = await useFetch("/api/seasons/active");
 if (hackathonError.value) {
     throw hackathonError.value;
 }
 
-const { data, error, refresh } = await useAPIUser();
+const { data, error, refresh } = await useApiUser();
 if (error.value) {
     throw error.value;
 }

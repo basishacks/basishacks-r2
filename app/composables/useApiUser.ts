@@ -1,11 +1,14 @@
-export function useAPIUser(options?: { lazy?: boolean }) {
+export function useApiUser(options?: { lazy?: boolean }) {
     const { user: sessionUser, clear: clearSession } = useUserSession();
     const userID = computed(() => sessionUser.value?.id);
 
-    const fetchResult = useFetch<GetUserResponse>(
-        () => (userID.value ? `/api/users/${userID.value}` : null),
-        { lazy: options?.lazy ?? false },
-    );
+    if (!userID.value) {
+        return;
+    }
+
+    const fetchResult = useFetch<GetUserResponse>(() => `/api/users/${userID.value}`, {
+        lazy: options?.lazy ?? false,
+    });
 
     return {
         ...fetchResult,

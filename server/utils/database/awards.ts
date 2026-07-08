@@ -31,9 +31,7 @@ function resolveAward(row: { team_id: number; award: string; meta: string | null
     const description = definition?.description ?? namespace;
     const icon = definition?.icon ?? "i-lucide-award";
     const color = (definition as (Award & { color?: string }) | undefined)?.color ?? "gold";
-    const text = definition?.computed
-        ? definition.computed(meta).join(", ")
-        : description;
+    const text = definition?.computed ? definition.computed(meta).join(", ") : description;
 
     return {
         team_id: row.team_id,

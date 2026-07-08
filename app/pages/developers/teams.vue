@@ -32,7 +32,7 @@ const { data, status, refresh } = await useFetch<AdminTeam[]>("/api/admin/teams"
 });
 
 // Client-side permission guard
-const { user: me } = await useAPIUser();
+const { user: me } = await useApiUser();
 if (
     !hasPermission(me.value?.role, DevPermissions.PORTAL_TEAMS_VIEW) &&
     !hasPermission(me.value?.role, "admin")

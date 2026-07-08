@@ -21,7 +21,7 @@ function findVueFiles(dir: string): string[] {
 
 const vueFiles = findVueFiles(resolve(import.meta.dirname, "..", "..", "app"));
 
-describe("useAPIUser enforcement", () => {
+describe("useApiUser enforcement", () => {
     it("does not fetch GetUserResponse directly from any Vue file", () => {
         for (const file of vueFiles) {
             const source = readFileSync(file, "utf-8");
@@ -29,9 +29,9 @@ describe("useAPIUser enforcement", () => {
         }
     });
 
-    it("keeps the only direct GetUserResponse fetch inside useAPIUser.ts", () => {
+    it("keeps the only direct GetUserResponse fetch inside useApiUser.ts", () => {
         const composableSource = readFileSync(
-            resolve(import.meta.dirname, "..", "..", "app", "composables", "useAPIUser.ts"),
+            resolve(import.meta.dirname, "..", "..", "app", "composables", "useApiUser.ts"),
             "utf-8",
         );
         expect(composableSource).toContain("useFetch<GetUserResponse>");

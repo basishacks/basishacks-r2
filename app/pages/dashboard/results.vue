@@ -29,5 +29,5 @@ definePageMeta({
     middleware: ["auth"],
 });
 
-const { user } = useAPIUser({ lazy: true });
+const { user } = useApiUser({ lazy: true });
 </script>
