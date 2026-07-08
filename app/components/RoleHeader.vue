@@ -29,9 +29,6 @@ import { hasPermission } from "~~/shared/permissions";
 const { user: userRef } = useUserSession();
 // this is honestly ugly asf but i can't think of a clean solution
 const { data: user } = useFetch<GetUserResponse>(
-
-    
-
     () => (userRef.value?.id ? `/api/users/${userRef.value.id}` : ""),
     { lazy: true },
 );

@@ -216,7 +216,7 @@ interface User {
     profile_theme: string | null;
     profile_picture: string | null;
 }
-```
+````
 
 API response types in `shared/responses.d.ts` represent the public-facing shape after conversion:
 

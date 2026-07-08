@@ -65,11 +65,14 @@
                                 Login with Microsoft
                             </UButton>
 
-                            <UAlert class="text-left" icon="i-lucide-info" variant="subtle" color="neutral"
-                            description="As of July 7 2026, message code login is no longer supported. Please use Microsoft login and enter your school email and password."></UAlert>
+                            <UAlert
+                                class="text-left"
+                                icon="i-lucide-info"
+                                variant="subtle"
+                                color="neutral"
+                                description="As of July 7 2026, message code login is no longer supported. Please use Microsoft login and enter your school email and password."
+                            ></UAlert>
                         </div>
-
-                        
                     </Transition>
 
                     <Transition name="fade">

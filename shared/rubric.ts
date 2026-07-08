@@ -6,11 +6,11 @@ export interface RubricData {
 }
 
 export interface RubricBallot {
-    originality: RubricData,
-    presentation: RubricData
-    technicality: RubricData
-    theme: RubricData
-    impact: RubricData
+    originality: RubricData;
+    presentation: RubricData;
+    technicality: RubricData;
+    theme: RubricData;
+    impact: RubricData;
 }
 
 const rubrics = {
