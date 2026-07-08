@@ -196,26 +196,16 @@ const user = await drizzle.select().from(users).where(eq(users.id, userId)).get(
 
 ::: tip Always use Drizzle's parameterized query builders. Never interpolate user input directly into SQL strings. :::
 =======
-// Read a single row
-const user = event.context.db
-    .prepare("SELECT * FROM users WHERE id = ?")
-    .bind(userId)
-    .first() as User | null;
 
-// Read multiple rows
-const { results } = event.context.db
-    .prepare("SELECT * FROM teams WHERE season_id = ?")
-    .bind(seasonId)
-    .all() as { results: Team[] };
+// Read a single row const user = event.context.db .prepare("SELECT * FROM users WHERE id = ?") .bind(userId) .first() as User | null;
 
-// Write (INSERT, UPDATE, DELETE)
-const result = event.context.db
-    .prepare("UPDATE users SET name = ? WHERE id = ?")
-    .bind(name, userId)
-    .run();
+// Read multiple rows const { results } = event.context.db .prepare("SELECT * FROM teams WHERE season_id = ?") .bind(seasonId) .all() as { results: Team[] };
+
+// Write (INSERT, UPDATE, DELETE) const result = event.context.db .prepare("UPDATE users SET name = ? WHERE id = ?") .bind(name, userId) .run();
 
 const changes = result.meta.changed_db; // number of affected rows
-```
+
+````
 
 ::: tip Always use parameterized queries (`.bind()`) to prevent SQL injection. Never interpolate user input directly into SQL strings. :::
 >>>>>>> score-release-patch
@@ -256,7 +246,7 @@ interface User {
     profile_theme: string | null;
     profile_picture: string | null;
 }
-```
+````
 
 API response types in `shared/responses.d.ts` represent the public-facing shape after conversion:
 
@@ -299,6 +289,7 @@ createAndMigrateDatabase(sqlite);
 ```
 
 <<<<<<< HEAD
+
 ### Migration file format
 
 Files must end in `.sql` and may contain multiple statements separated by:
@@ -347,8 +338,10 @@ In practice, the dev/prod server applies migrations automatically when `createDr
 
 After migrations, `seedHackathon()` ensures the `hackathon` singleton row exists, and `seedOAuth2ApplicationRedirectUri()` auto-registers the onsite-login redirect URI for `ONSITE_LOGIN_CLIENT_ID`.
 =======
+
 ::: warning The `seed-hackathon.ts` plugin performs lightweight auto-migrations for local development (adding missing columns), but this is not a substitute for running migrations in production. :::
->>>>>>> score-release-patch
+
+> > > > > > > score-release-patch
 
 ### Notable migrations
 

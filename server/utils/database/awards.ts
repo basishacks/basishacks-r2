@@ -38,7 +38,7 @@ export async function getAwards(event: H3Event, teamId: number): Promise<Resolve
         description: row.description,
         icon: row.icon,
         meta: parseMeta(row.meta),
-        color: row.color
+        color: row.color,
     }));
 }
 
@@ -66,11 +66,11 @@ export async function getAwardsForTeams(
         const award: ResolvedAward = {
             team_id: row.team_id,
             award_id: row.award_id,
-            name: row.name, 
+            name: row.name,
             description: row.description,
             icon: row.icon,
             meta: parseMeta(row.meta),
-            color: row.color
+            color: row.color,
         };
 
         if (!result[row.team_id]) result[row.team_id] = [];

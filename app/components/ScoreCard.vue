@@ -81,9 +81,9 @@
                     <p v-else class="text-muted text-sm">(No members...? For some reason)</p>
                 </div>
                 <div class="flex flex-row gap-2">
-                  <div v-for="award in team.awards">
-                      <AwardButton :award="award" size="md"></AwardButton>
-                  </div>
+                    <div v-for="award in team.awards">
+                        <AwardButton :award="award" size="md"></AwardButton>
+                    </div>
                 </div>
             </div>
         </template>

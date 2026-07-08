@@ -13,43 +13,43 @@ const { data: members } = await useFetch<GetTeamMembersResponse>(
 </script>
 
 <template>
-  <div
-    class="w-96 mx-4 p-6 rounded-2xl border border-muted hover:border-primary hover:bg-muted transition-colors cursor-pointer flex-shrink-0 select-none"
-    @click="emit('click')"
-  >
-    <div class="flex items-center justify-between mb-3">
-      <div class="flex flex-row items-center gap-2">
-        <div>
-          <span
-            v-if="team.rank"
-            class="text-3xl font-bold"
-            :class="{
-              'metallic-gold': team.rank === 1,
-              'metallic-silver': team.rank === 2,
-              'metallic-bronze': team.rank === 3,
-              'text-neutral-500': team.rank > 3
-            }"
-          >
-            #{{ team.rank }}
-          </span>
-          <span v-else class="text-lg">Unranked</span>
+    <div
+        class="w-96 mx-4 p-6 rounded-2xl border border-muted hover:border-primary hover:bg-muted transition-colors cursor-pointer flex-shrink-0 select-none"
+        @click="emit('click')"
+    >
+        <div class="flex items-center justify-between mb-3">
+            <div class="flex flex-row items-center gap-2">
+                <div>
+                    <span
+                        v-if="team.rank"
+                        class="text-3xl font-bold"
+                        :class="{
+                            'metallic-gold': team.rank === 1,
+                            'metallic-silver': team.rank === 2,
+                            'metallic-bronze': team.rank === 3,
+                            'text-neutral-500': team.rank > 3,
+                        }"
+                    >
+                        #{{ team.rank }}
+                    </span>
+                    <span v-else class="text-lg">Unranked</span>
+                </div>
+                <div class="flex flex-row gap-2">
+                    <div v-for="award in team.awards" class="flex flex-row gap-2">
+                        <AwardButton :award="award" size="sm"></AwardButton>
+                    </div>
+                </div>
+            </div>
+            <UBadge
+                v-if="team.pathway"
+                variant="outline"
+                size="sm"
+                :color="team.pathway === 'junior' ? 'primary' : 'warning'"
+            >
+                {{ team.pathway === "junior" ? "Junior" : "Senior" }}
+            </UBadge>
         </div>
-      <div class="flex flex-row gap-2">
-        <div v-for="award in team.awards" class="flex flex-row gap-2">
-            <AwardButton :award="award" size="sm"></AwardButton>
-        </div>
-      </div>
-      </div>
-      <UBadge
-        v-if="team.pathway"
-        variant="outline"
-        size="sm"
-        :color="team.pathway === 'junior' ? 'primary' : 'warning'"
-      >
-        {{ team.pathway === 'junior' ? 'Junior' : 'Senior' }}
-      </UBadge>
     </div>
-  </div>
 </template>
 
 <style scoped>

@@ -50,7 +50,7 @@ export const teams = sqliteTable(
     {
         id: integer("id").primaryKey({ autoIncrement: true }),
         name: text("name").notNull(),
-        pathway: text("pathway").notNull(),     
+        pathway: text("pathway").notNull(),
         score: integer("score"),
         rank: integer("rank"),
         project_name: text("project_name").notNull().default(""),
@@ -159,7 +159,6 @@ export const oauth2Applications = sqliteTable("oauth2_applications", {
     profile_picture: text("profile_picture"),
     owner_id: integer("owner_id"),
 });
-
 
 // ---------------------------------------------------------------------------
 // Seasons – each hackathon "season" is an independent event cycle.
