@@ -15,10 +15,10 @@ describe("seasons database helpers", () => {
 
     describe("getSeasons", () => {
         it("returns all seasons ordered by id", async () => {
-            event.context.db
+            event.context.drizzle
                 .prepare("INSERT INTO seasons(name, is_active) VALUES('Season 1', 0)")
                 .run();
-            event.context.db
+            event.context.drizzle
                 .prepare("INSERT INTO seasons(name, is_active) VALUES('Season 2', 1)")
                 .run();
 
@@ -36,7 +36,7 @@ describe("seasons database helpers", () => {
 
     describe("getSeasonById", () => {
         it("returns the season when it exists", async () => {
-            event.context.db
+            event.context.drizzle
                 .prepare("INSERT INTO seasons(name, is_active) VALUES('Season 1', 1)")
                 .run();
 
@@ -53,10 +53,10 @@ describe("seasons database helpers", () => {
 
     describe("getActiveSeason", () => {
         it("returns the active season when one exists", async () => {
-            event.context.db
+            event.context.drizzle
                 .prepare("INSERT INTO seasons(name, is_active) VALUES('Inactive', 0)")
                 .run();
-            event.context.db
+            event.context.drizzle
                 .prepare("INSERT INTO seasons(name, is_active) VALUES('Active', 1)")
                 .run();
 
@@ -66,7 +66,7 @@ describe("seasons database helpers", () => {
         });
 
         it("returns null when there is no active season", async () => {
-            event.context.db
+            event.context.drizzle
                 .prepare("INSERT INTO seasons(name, is_active) VALUES('Inactive', 0)")
                 .run();
 
@@ -77,7 +77,7 @@ describe("seasons database helpers", () => {
 
     describe("setActiveSeason", () => {
         it("sets a season as active", async () => {
-            event.context.db
+            event.context.drizzle
                 .prepare("INSERT INTO seasons(name, is_active) VALUES('Season 1', 0)")
                 .run();
 
@@ -89,7 +89,7 @@ describe("seasons database helpers", () => {
         });
 
         it("deactivates all seasons when given null", async () => {
-            event.context.db
+            event.context.drizzle
                 .prepare("INSERT INTO seasons(name, is_active) VALUES('Season 1', 1)")
                 .run();
 
@@ -104,7 +104,7 @@ describe("seasons database helpers", () => {
         });
 
         it("leaves the active season unchanged when the target season does not exist", async () => {
-            event.context.db
+            event.context.drizzle
                 .prepare("INSERT INTO seasons(name, is_active) VALUES('Active', 1)")
                 .run();
 

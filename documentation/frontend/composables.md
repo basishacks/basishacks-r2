@@ -9,42 +9,47 @@ The basishacks frontend organizes shared logic into composables (`app/composable
 
 ## Composables
 
-### useApiUser
+### useAPIUser
 
-**File:** `app/composables/useApiUser.ts`
+**File:** `app/composables/useAPIUser.ts`
 
-Fetches the current authenticated user from the API and returns reactive state.
+Fetches the current authenticated user from the API and returns reactive state. Internally calls `useUserSession()` and guards against a missing user id so it never requests `/api/users/undefined`.
 
 ```ts
-export async function useApiUser() {
-    const { user: sessionUser, clear } = useUserSession();
-    const userID = computed(() => sessionUser.value?.id ?? 0);
+export function useAPIUser(options?: { lazy?: boolean }) {
+    const { user: sessionUser, clear: clearSession } = useUserSession();
+    const userID = computed(() => sessionUser.value?.id);
 
-    const { data, refresh } = await useFetch<GetUserResponse>(() =>
-        userID.value ? `/api/users/${userID.value}` : ``,
+    const fetchResult = useFetch<GetUserResponse>(
+        () => (userID.value ? `/api/users/${userID.value}` : null),
+        { lazy: options?.lazy ?? false },
     );
 
     return {
-        user: data as Ref<APIUser | null | undefined>,
-        refresh,
-        clear,
+        ...fetchResult,
+        user: fetchResult.data,
+        sessionUser,
+        clear: clearSession,
     };
 }
 ```
 
 **Returns:**
 
-| Property  | Type                                | Description                               |
-| --------- | ----------------------------------- | ----------------------------------------- |
-| `user`    | `Ref<APIUser \| null \| undefined>` | Reactive user data from `/api/users/{id}` |
-| `refresh` | `() => Promise<void>`               | Re-fetch the user data                    |
-| `clear`   | `() => Promise<void>`               | Clear the session (from `useUserSession`) |
+| Property      | Type                                | Description                                                  |
+| ------------- | ----------------------------------- | ------------------------------------------------------------ |
+| `user`        | `Ref<APIUser \| null \| undefined>` | Reactive user data from `/api/users/{id}` (alias for `data`) |
+| `sessionUser` | `Ref<SessionUser \| undefined>`     | Session user from `useUserSession()`                         |
+| `error`       | `Ref<FetchError \| null>`           | Fetch error, if any                                          |
+| `pending`     | `Ref<boolean>`                      | Whether the request is in flight                             |
+| `refresh`     | `() => Promise<void>`               | Re-fetch the user data                                       |
+| `clear`       | `() => Promise<void>`               | Clear the session (from `useUserSession`)                    |
 
 **Usage:**
 
 ```vue
 <script setup lang="ts">
-const { user, refresh, clear } = await useApiUser();
+const { user, sessionUser, refresh, clear } = useAPIUser({ lazy: true });
 </script>
 
 <template>
@@ -52,7 +57,7 @@ const { user, refresh, clear } = await useApiUser();
 </template>
 ```
 
-::: tip This composable combines `useUserSession()` (which only stores `{ id }`) with a full user fetch, giving pages access to the complete user object including role, team, and profile data. :::
+::: tip This composable combines `useUserSession()` (which only stores `{ id }`) with a full user fetch, giving pages and components access to the complete user object including role, team, and profile data. Pass `{ lazy: true }` to avoid blocking navigation. :::
 
 ## Route Middleware
 

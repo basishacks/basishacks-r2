@@ -64,16 +64,12 @@ The Drizzle ORM instance is attached to `event.context.drizzle` on every request
 ### Creating the Database Wrapper
 
 ```ts
-<<<<<<< HEAD
 export function createDatabaseWrapper(): DrizzleDatabase;
 ```
 
 Creates a new Drizzle database wrapper instance. Called per-request in the `init-database` plugin.
-=======
 
 export function initializeDatabase(): any;
-
-````
 
 Initializes the `better-sqlite3` database connection (singleton). Configures:
 
@@ -118,8 +114,6 @@ export function createDatabaseWrapper(): SQLiteDatabase;
 
 Creates a new `SQLiteDatabase` wrapper instance. Called per-request in the `init-database` plugin.
 
-> > > > > > > score-release-patch
-
 ---
 
 ## convert.ts
@@ -158,15 +152,11 @@ Strips internal fields from a `User` row and returns a public `APIUser`:
 ### `convertTeamToPublic`
 
 ```ts
-<<<<<<< HEAD
-export function convertTeamToPublic(team: Team, withScore?: boolean): APITeam;
-=======
 export function convertTeamToPublic(
     team: Team,
     withScore?: boolean,
     awards?: ResolvedAward[],
 ): APITeam;
->>>>>>> score-release-patch
 ```
 
 Converts a `Team` row to a public `APITeam`. The `withScore` parameter controls whether the score is included (default: `false`). Pass resolved awards to include them in the `awards` array.
@@ -180,11 +170,7 @@ Converts a `Team` row to a public `APITeam`. The `withScore` parameter controls 
 | `score`      | `team.score` (only if `withScore`) or `null`                   |
 | `season_id`  | `team.season_id`                                               |
 | `project`    | Nested object from `project_name`, `project_description`, etc. |
-| <<<<<<< HEAD |
-| =======      |
 | `awards`     | Resolved awards with `team_id` stripped                        |
-
-> > > > > > > score-release-patch
 
 ---
 
@@ -240,17 +226,10 @@ Microsoft OAuth2 configuration and URL construction.
 ```ts
 const oAuth2Config = {
     base: "https://login.microsoftonline.com/",
-<<<<<<< HEAD
     tenant: process.env.MICROSOFT_TENANT_ID || "",
     clientId: process.env.MICROSOFT_CLIENT_ID || "",
     responseType: "code",
     redirectUri: process.env.MICROSOFT_REDIRECT_URI || "/api/oauth2/mscallback",
-=======
-    tenant: "cbc6e1e2-a6bb-4002-bbdc-6da892a051a7",
-    clientId: "868b989e-6574-4795-bcfb-8db37bee1c37",
-    responseType: "code",
-    redirectUri: "/api/oauth2/mscallback",
->>>>>>> score-release-patch
     scope: "openid profile email",
 };
 ```
@@ -432,8 +411,6 @@ File system helpers for managing static and user assets.
 
 ### Asset Functions
 
-<<<<<<< HEAD
-
 | Function                      | Description                                        |
 | ----------------------------- | -------------------------------------------------- |
 | `createAsset(name, data)`     | Writes a Buffer to `public/assets/{name}`          |
@@ -441,16 +418,7 @@ File system helpers for managing static and user assets.
 | `removeAsset(name)`           | Deletes a file from `public/assets/`               |
 | `removeUserAsset(name)`       | Deletes a file from `public/userassets/`           |
 | `getUserAsset(name)`          | Reads a file from `public/userassets/` as a Buffer |
-| =======                       |
-| Function                      | Description                                        |
-| ----------------------------- | -----------------------------------------------    |
-| `createAsset(name, data)`     | Writes a Buffer to `public/assets/{name}`          |
-| `createUserAsset(name, data)` | Writes a Buffer to `public/userast/{name}`         |
-| `removeAsset(name)`           | Deletes a file from `public/assets/`               |
-| `removeUserAsset(name)`       | Deletes a file from `public/userast/`              |
-| `getUserAsset(name)`          | Reads a file from `public/userast/` as a Buffer    |
 
-> > > > > > > score-release-patch
 
 All functions validate the asset name to prevent path traversal, create parent directories recursively, and remove functions silently catch missing-file errors. Invalid names throw a 400 error.
 
@@ -538,8 +506,6 @@ Per-table database helper modules in `server/utils/database/`.
 
 ### users.ts
 
-<<<<<<< HEAD
-
 | Function | Description |
 | --- | --- |
 | `getUser(event, userID)` | Get user by ID |
@@ -550,20 +516,6 @@ Per-table database helper modules in `server/utils/database/`.
 | `updateUserProfilePicture(event, user)` | Update user's profile picture |
 | `updateUserRole(event, userID, role)` | Update user's role |
 | `deleteUsers(event, userIDs)` | Delete users and their related records |
-| ======= |
-| Function | Description |
-| --- | --- |
-| `getUser(event, userID)` | Get user by ID |
-| `getUserByEmail(event, email)` | Get user by email (case-insensitive) |
-| `addCodeToUser(event, email)` | Generate and store a 6-digit login code (10-min expiry, 1-min cooldown) |
-| `getUserByCode(event, email, code)` | Verify a login code and clear it (one-time use) |
-| `updateUserName(event, user)` | Update user's name |
-| `updateUserProfileTheme(event, user)` | Update user's profile theme |
-| `updateUserProfilePicture(event, user)` | Update user's profile picture |
-| `updateUserRole(event, userID, role)` | Update user's role |
-| `deleteUsers(event, userIDs)` | Delete users and their related records |
-
-> > > > > > > score-release-patch
 
 ### teams.ts
 
@@ -626,8 +578,6 @@ Per-table database helper modules in `server/utils/database/`.
 | `getActiveSeason(event)`           | Get the currently active season                |
 | `setActiveSeason(event, seasonId)` | Set the active season (deactivates all others) |
 
-<<<<<<< HEAD
-
 ### peer-voting.ts
 
 **File:** `server/utils/database/peer-voting.ts`
@@ -650,21 +600,6 @@ Per-table database helper modules in `server/utils/database/`.
 | `deleteAward(event, teamId, award)`       | Delete a specific award for a team     |
 
 Award definitions live in `shared/awards.ts`.
-=======
-
-### awards.ts
-
-| Function                                     | Description                                |
-| -------------------------------------------- | ------------------------------------------ |
-| `getAwards(event, teamID)`                   | Get resolved awards for a single team      |
-| `getAwardsForTeams(event, teamIDs)`          | Batch fetch resolved awards for many teams |
-| `createAward(event, teamID, awardID, meta?)` | Assign an award to a team                  |
-| `deleteTeamAwards(event, teamID)`            | Remove all awards from a team              |
-| `deleteAward(event, teamID, awardID)`        | Remove a specific award from a team        |
-
-Award helpers resolve `team_awards` rows by joining the `awards` catalog so each result includes `award_id`, `name`, `description`, `icon`, and parsed `meta`. No runtime condition evaluation is performed.
-
-> > > > > > > score-release-patch
 
 ### oauth2_applications.ts
 

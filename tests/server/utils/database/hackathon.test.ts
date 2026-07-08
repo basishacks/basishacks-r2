@@ -10,7 +10,7 @@ describe("hackathon database helpers", () => {
 
     describe("getHackathon", () => {
         it("returns the hackathon row when one exists", async () => {
-            event.context.db
+            event.context.drizzle
                 .prepare(
                     "INSERT INTO hackathon(id, status, start_timestamp, end_timestamp, voting_start_timestamp, voting_end_timestamp, results_open_timestamp) VALUES(1, 'in_progress', 100, 200, 300, 400, 500)",
                 )

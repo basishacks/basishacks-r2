@@ -2,11 +2,7 @@
 import type { NavigationMenuItem } from "@nuxt/ui";
 import { DevPermissions, hasPermission } from "~~/shared/permissions";
 
-const { user: sessionUser } = useUserSession();
-
-const { data: user } = useFetch<GetUserResponse>(() =>
-    sessionUser.value?.id ? `/api/users/${sessionUser.value.id}` : ``,
-);
+const { user } = useAPIUser({ lazy: true });
 
 // console.log(user.value)
 

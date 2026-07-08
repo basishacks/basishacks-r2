@@ -19,7 +19,7 @@ describe("users database helpers", () => {
 
     describe("getUser", () => {
         it("returns the user when the user exists", async () => {
-            event.context.db
+            event.context.drizzle
                 .prepare("INSERT INTO users(email, name) VALUES('test@example.com', 'Test User')")
                 .run();
 
@@ -37,7 +37,7 @@ describe("users database helpers", () => {
 
     describe("getUserByEmail", () => {
         it("returns the user when found by email (case insensitive)", async () => {
-            event.context.db
+            event.context.drizzle
                 .prepare("INSERT INTO users(email, name) VALUES('test@example.com', 'Test User')")
                 .run();
 
@@ -63,7 +63,7 @@ describe("users database helpers", () => {
         });
 
         it("updates the login code for an existing user", async () => {
-            event.context.db
+            event.context.drizzle
                 .prepare("INSERT INTO users(email, role) VALUES('existing@example.com', 'admin')")
                 .run();
 
@@ -78,7 +78,7 @@ describe("users database helpers", () => {
         it("throws a 403 error when requesting a code within 9 minutes for a non-admin user", async () => {
             // Create a user with a recent login_expiry
             const recentExpiry = Date.now() + 10 * 60 * 1000; // 10 minutes from now
-            event.context.db
+            event.context.drizzle
                 .prepare(
                     "INSERT INTO users(email, login_code, login_expiry, role) VALUES('rate-limited@example.com', '123456', ?, 'participant')",
                 )
@@ -92,7 +92,7 @@ describe("users database helpers", () => {
 
         it("allows admin users to request a code even within the rate limit window", async () => {
             const recentExpiry = Date.now() + 10 * 60 * 1000;
-            event.context.db
+            event.context.drizzle
                 .prepare(
                     "INSERT INTO users(email, login_code, login_expiry, role) VALUES('admin@example.com', '123456', ?, 'admin')",
                 )
@@ -108,7 +108,7 @@ describe("users database helpers", () => {
 
     describe("updateUserName", () => {
         it("updates the user name successfully", async () => {
-            event.context.db
+            event.context.drizzle
                 .prepare("INSERT INTO users(email, name) VALUES('user@example.com', 'Old Name')")
                 .run();
 
@@ -130,7 +130,7 @@ describe("users database helpers", () => {
 
     describe("updateUserProfileTheme", () => {
         it("updates the profile theme successfully", async () => {
-            event.context.db.prepare("INSERT INTO users(email) VALUES('user@example.com')").run();
+            event.context.drizzle.prepare("INSERT INTO users(email) VALUES('user@example.com')").run();
 
             await updateUserProfileTheme(event, {
                 id: 1,
@@ -153,7 +153,7 @@ describe("users database helpers", () => {
 
     describe("updateUserProfilePicture", () => {
         it("updates the profile picture successfully", async () => {
-            event.context.db.prepare("INSERT INTO users(email) VALUES('user@example.com')").run();
+            event.context.drizzle.prepare("INSERT INTO users(email) VALUES('user@example.com')").run();
 
             await updateUserProfilePicture(event, {
                 id: 1,
@@ -176,7 +176,7 @@ describe("users database helpers", () => {
 
     describe("updateUserRole", () => {
         it("updates the user role successfully", async () => {
-            event.context.db
+            event.context.drizzle
                 .prepare("INSERT INTO users(email, role) VALUES('user@example.com', 'participant')")
                 .run();
 
@@ -193,7 +193,7 @@ describe("users database helpers", () => {
 
     describe("deleteUsers", () => {
         it("deletes a single user", async () => {
-            event.context.db.prepare("INSERT INTO users(email) VALUES('user@example.com')").run();
+            event.context.drizzle.prepare("INSERT INTO users(email) VALUES('user@example.com')").run();
 
             await deleteUsers(event, [1]);
 
@@ -202,9 +202,9 @@ describe("users database helpers", () => {
         });
 
         it("deletes multiple users", async () => {
-            event.context.db.prepare("INSERT INTO users(email) VALUES('user1@example.com')").run();
-            event.context.db.prepare("INSERT INTO users(email) VALUES('user2@example.com')").run();
-            event.context.db.prepare("INSERT INTO users(email) VALUES('user3@example.com')").run();
+            event.context.drizzle.prepare("INSERT INTO users(email) VALUES('user1@example.com')").run();
+            event.context.drizzle.prepare("INSERT INTO users(email) VALUES('user2@example.com')").run();
+            event.context.drizzle.prepare("INSERT INTO users(email) VALUES('user3@example.com')").run();
 
             await deleteUsers(event, [1, 3]);
 
@@ -215,43 +215,43 @@ describe("users database helpers", () => {
 
         it("cleans up related records when deleting a user", async () => {
             // Insert a hackathon row for FK constraints
-            event.context.db
+            event.context.drizzle
                 .prepare(
                     "INSERT INTO hackathon(id, status, start_timestamp, end_timestamp, voting_start_timestamp, voting_end_timestamp, results_open_timestamp) VALUES(1, 'not_started', 0, 0, 0, 0, 0)",
                 )
                 .run();
 
             // Insert a season and team
-            event.context.db.prepare("INSERT INTO seasons(name, is_active) VALUES('S1', 1)").run();
-            event.context.db
+            event.context.drizzle.prepare("INSERT INTO seasons(name, is_active) VALUES('S1', 1)").run();
+            event.context.drizzle
                 .prepare("INSERT INTO teams(name, season_id) VALUES('Team A', 1)")
                 .run();
 
             // Insert user
-            event.context.db
+            event.context.drizzle
                 .prepare("INSERT INTO users(id, email) VALUES(1, 'user@example.com')")
                 .run();
 
             // Create a ballot and team_scores entry for the user
-            event.context.db.prepare("INSERT INTO ballots(user_id) VALUES(1)").run();
-            event.context.db
+            event.context.drizzle.prepare("INSERT INTO ballots(user_id) VALUES(1)").run();
+            event.context.drizzle
                 .prepare("INSERT INTO ballot_scores(ballot_id, project_id) VALUES(1, 1)")
                 .run();
-            event.context.db
+            event.context.drizzle
                 .prepare(
                     "INSERT INTO team_scores(team_id, judge_user_id, scores) VALUES(1, 1, '{}')",
                 )
                 .run();
-            event.context.db
+            event.context.drizzle
                 .prepare("INSERT INTO user_past_teams(user_id, team_id) VALUES(1, 1)")
                 .run();
-            event.context.db
+            event.context.drizzle
                 .prepare(
                     "INSERT INTO peer_voting_scores(user_id, score, reasoning) VALUES(1, '{}', 'nice')",
                 )
                 .run();
-            event.context.db.prepare("INSERT INTO sc_votes(user_id, vote) VALUES(1, 'yes')").run();
-            event.context.db
+            event.context.drizzle.prepare("INSERT INTO sc_votes(user_id, vote) VALUES(1, 'yes')").run();
+            event.context.drizzle
                 .prepare(
                     "INSERT INTO oauth2_applications(client_id, client_secret, name, owner_id) VALUES('client-1', '', 'App', 1)",
                 )
@@ -263,32 +263,32 @@ describe("users database helpers", () => {
             expect(await getUser(event, 1)).toBeNull();
 
             // Related records should be cleaned up
-            const teamScores = event.context.db
+            const teamScores = event.context.drizzle
                 .prepare("SELECT * FROM team_scores WHERE judge_user_id = 1")
                 .all() as { results: any[] };
             expect(teamScores.results).toHaveLength(0);
 
-            const ballots = event.context.db
+            const ballots = event.context.drizzle
                 .prepare("SELECT * FROM ballots WHERE user_id = 1")
                 .all() as { results: any[] };
             expect(ballots.results).toHaveLength(0);
 
-            const ballotScores = event.context.db
+            const ballotScores = event.context.drizzle
                 .prepare("SELECT * FROM ballot_scores WHERE ballot_id = 1")
                 .all() as { results: any[] };
             expect(ballotScores.results).toHaveLength(0);
 
-            const pastTeams = event.context.db
+            const pastTeams = event.context.drizzle
                 .prepare("SELECT * FROM user_past_teams WHERE user_id = 1")
                 .all() as { results: any[] };
             expect(pastTeams.results).toHaveLength(0);
 
-            const peerVotes = event.context.db
+            const peerVotes = event.context.drizzle
                 .prepare("SELECT * FROM peer_voting_scores WHERE user_id = 1")
                 .all() as { results: any[] };
             expect(peerVotes.results).toHaveLength(0);
 
-            const apps = event.context.db
+            const apps = event.context.drizzle
                 .prepare("SELECT * FROM oauth2_applications WHERE owner_id = 1")
                 .all() as { results: any[] };
             expect(apps.results).toHaveLength(0);

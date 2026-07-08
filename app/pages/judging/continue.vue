@@ -5,17 +5,13 @@ definePageMeta({
     middleware: ["auth"],
 });
 
-const { user: userRef } = useUserSession();
-const userID = computed(() => userRef.value?.id ?? 0);
 
 const { data: hackathon } = await useFetch("/api/seasons/active");
 if (hackathon.value?.status !== "voting") {
     throw await navigateTo("/");
 }
 
-const { data: userData, error: userError } = await useFetch<GetUserResponse>(
-    () => `/api/users/${userID.value}`,
-);
+const { user: userData, error: userError } = await useAPIUser();
 if (userError.value) {
     throw userError.value;
 }

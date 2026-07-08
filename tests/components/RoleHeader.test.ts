@@ -7,8 +7,9 @@ const source = readFileSync(
 );
 
 describe("RoleHeader.vue", () => {
-    it("does not fetch /api/users/undefined when the user id is missing", () => {
-        expect(source).not.toContain("`/api/users/${userRef.value?.id}`");
-        expect(source).toContain("userRef.value?.id ? `/api/users/${userRef.value.id}` : null");
+    it("uses useAPIUser instead of useUserSession and useFetch for the user", () => {
+        expect(source).toContain("useAPIUser");
+        expect(source).not.toContain("useFetch<GetUserResponse>");
+        expect(source).not.toContain("useUserSession()");
     });
 });

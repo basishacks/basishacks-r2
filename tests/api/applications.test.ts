@@ -45,7 +45,7 @@ afterEach(() => {
 
 function createEvent(overrides: Record<string, unknown> = {}) {
     return {
-        context: { db: ctx.db, drizzle: ctx.drizzle },
+        context: { drizzle: ctx.drizzle },
         ...overrides,
     };
 }

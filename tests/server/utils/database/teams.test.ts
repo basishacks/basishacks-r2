@@ -14,7 +14,7 @@ import {
 } from "~~/server/utils/database/teams";
 
 function seedHackathon(event: Awaited<ReturnType<typeof createMockEvent>>) {
-    event.context.db
+    event.context.drizzle
         .prepare(
             "INSERT INTO hackathon(id, status, start_timestamp, end_timestamp, voting_start_timestamp, voting_end_timestamp, results_open_timestamp) VALUES(1, 'not_started', 0, 0, 0, 0, 0)",
         )
@@ -26,7 +26,7 @@ function seedSeason(
     name: string,
     isActive: number,
 ) {
-    event.context.db
+    event.context.drizzle
         .prepare("INSERT INTO seasons(name, is_active) VALUES(?, ?)")
         .bind(name, isActive)
         .run();
@@ -61,10 +61,10 @@ describe("teams database helpers", () => {
             seedSeason(event, "S1", 1);
             seedSeason(event, "S2", 0);
 
-            event.context.db
+            event.context.drizzle
                 .prepare("INSERT INTO teams(name, season_id) VALUES('Team A', 1)")
                 .run();
-            event.context.db
+            event.context.drizzle
                 .prepare("INSERT INTO teams(name, season_id) VALUES('Team B', 2)")
                 .run();
 
@@ -77,7 +77,7 @@ describe("teams database helpers", () => {
             seedSeason(event, "S1", 1);
             seedSeason(event, "S2", 0);
 
-            event.context.db
+            event.context.drizzle
                 .prepare("INSERT INTO teams(name, season_id) VALUES('Team B', 2)")
                 .run();
 
@@ -89,7 +89,7 @@ describe("teams database helpers", () => {
             seedSeason(event, "S1", 1);
             seedSeason(event, "S2", 0);
 
-            event.context.db
+            event.context.drizzle
                 .prepare("INSERT INTO teams(name, season_id) VALUES('Team B', 2)")
                 .run();
 
@@ -111,13 +111,13 @@ describe("teams database helpers", () => {
             seedSeason(event, "S1", 1);
             seedSeason(event, "S2", 0);
 
-            event.context.db
+            event.context.drizzle
                 .prepare("INSERT INTO teams(name, season_id) VALUES('Team A', 1)")
                 .run();
-            event.context.db
+            event.context.drizzle
                 .prepare("INSERT INTO teams(name, season_id) VALUES('Team B', 1)")
                 .run();
-            event.context.db
+            event.context.drizzle
                 .prepare("INSERT INTO teams(name, season_id) VALUES('Team C', 2)")
                 .run();
 
@@ -131,27 +131,27 @@ describe("teams database helpers", () => {
         it("returns submitted teams that have not been judged by the given user", async () => {
             seedSeason(event, "S1", 1);
 
-            event.context.db
+            event.context.drizzle
                 .prepare(
                     "INSERT INTO teams(name, season_id, project_submitted) VALUES('Team A', 1, 1)",
                 )
                 .run();
-            event.context.db
+            event.context.drizzle
                 .prepare(
                     "INSERT INTO teams(name, season_id, project_submitted) VALUES('Team B', 1, 1)",
                 )
                 .run();
-            event.context.db
+            event.context.drizzle
                 .prepare(
                     "INSERT INTO teams(name, season_id, project_submitted) VALUES('Team C', 1, 0)",
                 )
                 .run();
 
             // Insert a user for the judge
-            event.context.db.prepare("INSERT INTO users(email) VALUES('judge@example.com')").run();
+            event.context.drizzle.prepare("INSERT INTO users(email) VALUES('judge@example.com')").run();
 
             // Judge already scored Team A
-            event.context.db
+            event.context.drizzle
                 .prepare(
                     "INSERT INTO team_scores(team_id, judge_user_id, scores) VALUES(1, 1, '{}')",
                 )
@@ -167,17 +167,17 @@ describe("teams database helpers", () => {
         it("returns all submitted teams for the active season", async () => {
             seedSeason(event, "S1", 1);
 
-            event.context.db
+            event.context.drizzle
                 .prepare(
                     "INSERT INTO teams(name, season_id, project_submitted) VALUES('Team A', 1, 1)",
                 )
                 .run();
-            event.context.db
+            event.context.drizzle
                 .prepare(
                     "INSERT INTO teams(name, season_id, project_submitted) VALUES('Team B', 1, 0)",
                 )
                 .run();
-            event.context.db
+            event.context.drizzle
                 .prepare(
                     "INSERT INTO teams(name, season_id, project_submitted) VALUES('Team C', 1, 1)",
                 )
@@ -194,7 +194,7 @@ describe("teams database helpers", () => {
             seedSeason(event, "S1", 1);
             seedSeason(event, "S2", 0);
 
-            event.context.db
+            event.context.drizzle
                 .prepare("INSERT INTO teams(name, season_id) VALUES('Team B', 2)")
                 .run();
 
@@ -214,10 +214,10 @@ describe("teams database helpers", () => {
             seedSeason(event, "S1", 1);
             seedSeason(event, "S2", 0);
 
-            event.context.db
+            event.context.drizzle
                 .prepare("INSERT INTO teams(name, season_id) VALUES('Team A', 1)")
                 .run();
-            event.context.db
+            event.context.drizzle
                 .prepare("INSERT INTO teams(name, season_id) VALUES('Team B', 2)")
                 .run();
 
@@ -230,7 +230,7 @@ describe("teams database helpers", () => {
             seedSeason(event, "S1", 1);
             seedSeason(event, "S2", 0);
 
-            event.context.db
+            event.context.drizzle
                 .prepare("INSERT INTO teams(name, season_id) VALUES('Team A', 1)")
                 .run();
 
@@ -244,10 +244,10 @@ describe("teams database helpers", () => {
             seedSeason(event, "S1", 1);
             seedSeason(event, "S2", 0);
 
-            event.context.db
+            event.context.drizzle
                 .prepare("INSERT INTO teams(name, season_id) VALUES('Team A', 1)")
                 .run();
-            event.context.db
+            event.context.drizzle
                 .prepare("INSERT INTO teams(name, season_id) VALUES('Team B', 2)")
                 .run();
 
@@ -261,13 +261,13 @@ describe("teams database helpers", () => {
             seedSeason(event, "S1", 1);
             seedSeason(event, "S2", 0);
 
-            event.context.db
+            event.context.drizzle
                 .prepare("INSERT INTO teams(name, season_id) VALUES('Team A', 1)")
                 .run();
-            event.context.db
+            event.context.drizzle
                 .prepare("INSERT INTO teams(name, season_id) VALUES('Team B', 1)")
                 .run();
-            event.context.db
+            event.context.drizzle
                 .prepare("INSERT INTO teams(name, season_id) VALUES('Team C', 2)")
                 .run();
 
@@ -281,7 +281,7 @@ describe("teams database helpers", () => {
         it("updates a team successfully", async () => {
             seedSeason(event, "S1", 1);
 
-            event.context.db
+            event.context.drizzle
                 .prepare("INSERT INTO teams(name, season_id) VALUES('Old Name', 1)")
                 .run();
 
@@ -322,7 +322,7 @@ describe("teams database helpers", () => {
         it("deletes a single team", async () => {
             seedSeason(event, "S1", 1);
 
-            event.context.db
+            event.context.drizzle
                 .prepare("INSERT INTO teams(name, season_id) VALUES('Team A', 1)")
                 .run();
 
@@ -334,13 +334,13 @@ describe("teams database helpers", () => {
         it("deletes multiple teams", async () => {
             seedSeason(event, "S1", 1);
 
-            event.context.db
+            event.context.drizzle
                 .prepare("INSERT INTO teams(name, season_id) VALUES('Team A', 1)")
                 .run();
-            event.context.db
+            event.context.drizzle
                 .prepare("INSERT INTO teams(name, season_id) VALUES('Team B', 1)")
                 .run();
-            event.context.db
+            event.context.drizzle
                 .prepare("INSERT INTO teams(name, season_id) VALUES('Team C', 1)")
                 .run();
 
@@ -354,30 +354,30 @@ describe("teams database helpers", () => {
         it("cascades properly by clearing user team references and related records", async () => {
             seedSeason(event, "S1", 1);
 
-            event.context.db
+            event.context.drizzle
                 .prepare("INSERT INTO teams(name, season_id) VALUES('Team A', 1)")
                 .run();
-            event.context.db
+            event.context.drizzle
                 .prepare("INSERT INTO users(email, team_id) VALUES('user@example.com', 1)")
                 .run();
-            event.context.db
+            event.context.drizzle
                 .prepare("INSERT INTO users(email, team_id) VALUES('judge@example.com', NULL)")
                 .run();
 
             // Create related records
-            event.context.db
+            event.context.drizzle
                 .prepare(
                     "INSERT INTO team_scores(team_id, judge_user_id, scores) VALUES(1, 2, '{}')",
                 )
                 .run();
-            event.context.db.prepare("INSERT INTO ballots(user_id) VALUES(1)").run();
-            event.context.db
+            event.context.drizzle.prepare("INSERT INTO ballots(user_id) VALUES(1)").run();
+            event.context.drizzle
                 .prepare("INSERT INTO ballot_scores(ballot_id, project_id) VALUES(1, 1)")
                 .run();
-            event.context.db
+            event.context.drizzle
                 .prepare("INSERT INTO team_awards(team_id, award, meta) VALUES(1, 'best', '{}')")
                 .run();
-            event.context.db
+            event.context.drizzle
                 .prepare("INSERT INTO user_past_teams(user_id, team_id) VALUES(1, 1)")
                 .run();
 
@@ -387,28 +387,28 @@ describe("teams database helpers", () => {
             expect(await getTeamById(event, 1)).toBeNull();
 
             // User's team_id should be cleared
-            const user = event.context.db
+            const user = event.context.drizzle
                 .prepare("SELECT * FROM users WHERE id = 1")
                 .first() as any;
             expect(user.team_id).toBeNull();
 
             // Related scores should be cleaned up
-            const teamScores = event.context.db
+            const teamScores = event.context.drizzle
                 .prepare("SELECT * FROM team_scores WHERE team_id = 1")
                 .all() as { results: any[] };
             expect(teamScores.results).toHaveLength(0);
 
-            const ballotScores = event.context.db
+            const ballotScores = event.context.drizzle
                 .prepare("SELECT * FROM ballot_scores WHERE project_id = 1")
                 .all() as { results: any[] };
             expect(ballotScores.results).toHaveLength(0);
 
-            const awards = event.context.db
+            const awards = event.context.drizzle
                 .prepare("SELECT * FROM team_awards WHERE team_id = 1")
                 .all() as { results: any[] };
             expect(awards.results).toHaveLength(0);
 
-            const pastTeams = event.context.db
+            const pastTeams = event.context.drizzle
                 .prepare("SELECT * FROM user_past_teams WHERE team_id = 1")
                 .all() as { results: any[] };
             expect(pastTeams.results).toHaveLength(0);

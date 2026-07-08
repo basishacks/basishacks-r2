@@ -7,18 +7,18 @@ describe("scores database helpers", () => {
     beforeEach(async () => {
         event = await createMockEvent();
         // Seed hackathon with id 1 (different from active season to catch the bug)
-        event.context.db
+        event.context.drizzle
             .prepare(
                 "INSERT INTO hackathon(id, status, start_timestamp, end_timestamp, voting_start_timestamp, voting_end_timestamp, results_open_timestamp) VALUES(1, 'not_started', 0, 0, 0, 0, 0)",
             )
             .run();
         // Seed an active season with a non-1 id
-        event.context.db
+        event.context.drizzle
             .prepare("INSERT INTO seasons(id, name, is_active) VALUES(42, 'S42', 1)")
             .run();
-        event.context.db.prepare("INSERT INTO teams(name, season_id) VALUES('Team A', 42)").run();
+        event.context.drizzle.prepare("INSERT INTO teams(name, season_id) VALUES('Team A', 42)").run();
         // Seed a judge user
-        event.context.db
+        event.context.drizzle
             .prepare("INSERT INTO users(email, role) VALUES('judge@example.com', 'judge')")
             .run();
     });
@@ -43,7 +43,7 @@ describe("scores database helpers", () => {
 
     describe("getTeamScoresByTeamID", () => {
         it("returns scores for a team that has them", async () => {
-            event.context.db
+            event.context.drizzle
                 .prepare(
                     "INSERT INTO team_scores(team_id, judge_user_id, scores, reasoning) VALUES(1, 1, '{\"innovation\":3}', 'Decent')",
                 )

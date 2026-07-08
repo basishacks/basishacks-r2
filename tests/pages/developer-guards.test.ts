@@ -8,8 +8,6 @@ const pages = [
     "app/pages/developers/teams.vue",
     "app/pages/developers/debug.vue",
     "app/pages/developers/deepseek.vue",
-    "app/pages/temp/vote/index.vue",
-    "app/pages/temp/vote/all.vue",
 ];
 
 describe("developer page navigation guards", () => {

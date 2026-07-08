@@ -9,7 +9,7 @@ definePageMeta({
 
 const toast = useToast();
 
-const { user: me } = await useApiUser();
+const { user: me } = await useAPIUser();
 if (
     !hasPermission(me.value?.role, DevPermissions.PORTAL_SEASONS_VIEW) &&
     !hasPermission(me.value?.role, "admin")

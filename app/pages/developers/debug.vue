@@ -7,7 +7,7 @@ definePageMeta({
 });
 
 // Client-side permission guard
-const { user: me } = await useApiUser();
+const { user: me } = await useAPIUser();
 if (
     !hasPermission(me.value?.role, DevPermissions.PORTAL_DEBUG_VIEW) &&
     !hasPermission(me.value?.role, "admin")

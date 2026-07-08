@@ -13,19 +13,19 @@ describe("awards database helpers", () => {
     beforeEach(async () => {
         event = await createMockEvent();
         // Seed hackathon, season, and teams
-        event.context.db
+        event.context.drizzle
             .prepare(
                 "INSERT INTO hackathon(id, status, start_timestamp, end_timestamp, voting_start_timestamp, voting_end_timestamp, results_open_timestamp) VALUES(1, 'not_started', 0, 0, 0, 0, 0)",
             )
             .run();
-        event.context.db.prepare("INSERT INTO seasons(name, is_active) VALUES('S1', 1)").run();
-        event.context.db.prepare("INSERT INTO teams(name, season_id) VALUES('Team A', 1)").run();
-        event.context.db.prepare("INSERT INTO teams(name, season_id) VALUES('Team B', 1)").run();
+        event.context.drizzle.prepare("INSERT INTO seasons(name, is_active) VALUES('S1', 1)").run();
+        event.context.drizzle.prepare("INSERT INTO teams(name, season_id) VALUES('Team A', 1)").run();
+        event.context.drizzle.prepare("INSERT INTO teams(name, season_id) VALUES('Team B', 1)").run();
     });
 
     describe("getAwards", () => {
         it("returns awards for a team that has them", async () => {
-            event.context.db
+            event.context.drizzle
                 .prepare(
                     "INSERT INTO team_awards(team_id, award, meta) VALUES(1, 'perfect_score', '{}')",
                 )
@@ -46,12 +46,12 @@ describe("awards database helpers", () => {
 
     describe("getAwardsForTeams", () => {
         it("returns awards for multiple teams", async () => {
-            event.context.db
+            event.context.drizzle
                 .prepare(
                     "INSERT INTO team_awards(team_id, award, meta) VALUES(1, 'perfect_score', '{}')",
                 )
                 .run();
-            event.context.db
+            event.context.drizzle
                 .prepare(
                     "INSERT INTO team_awards(team_id, award, meta) VALUES(2, 'perfect_score', '{}')",
                 )
@@ -82,12 +82,12 @@ describe("awards database helpers", () => {
 
     describe("deleteTeamAwards", () => {
         it("removes all awards for a team", async () => {
-            event.context.db
+            event.context.drizzle
                 .prepare(
                     "INSERT INTO team_awards(team_id, award, meta) VALUES(1, 'perfect_score', '{}')",
                 )
                 .run();
-            event.context.db
+            event.context.drizzle
                 .prepare(
                     "INSERT INTO team_awards(team_id, award, meta) VALUES(1, 'custom_award', '{}')",
                 )
@@ -102,10 +102,10 @@ describe("awards database helpers", () => {
 
     describe("deleteAward", () => {
         it("removes a specific award for a team", async () => {
-            event.context.db
+            event.context.drizzle
                 .prepare("INSERT INTO team_awards(team_id, award, meta) VALUES(1, 'award_a', '{}')")
                 .run();
-            event.context.db
+            event.context.drizzle
                 .prepare("INSERT INTO team_awards(team_id, award, meta) VALUES(1, 'award_b', '{}')")
                 .run();
 

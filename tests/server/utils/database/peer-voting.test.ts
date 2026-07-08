@@ -10,7 +10,7 @@ describe("peer-voting database helpers", () => {
 
     describe("getPeerVoteByUser", () => {
         it("returns the vote when the user has one", async () => {
-            event.context.db
+            event.context.drizzle
                 .prepare(
                     "INSERT INTO peer_voting_scores(user_id, score, reasoning) VALUES(1, '{\"team1\":4}', 'Good picks')",
                 )
@@ -56,7 +56,7 @@ describe("peer-voting database helpers", () => {
                 reasoning: "Second",
             });
 
-            const rows = event.context.db
+            const rows = event.context.drizzle
                 .prepare("SELECT * FROM peer_voting_scores WHERE user_id = 1")
                 .all() as { results: any[] };
             expect(rows.results).toHaveLength(1);

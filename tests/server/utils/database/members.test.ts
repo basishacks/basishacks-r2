@@ -14,24 +14,24 @@ describe("members database helpers", () => {
     beforeEach(async () => {
         event = await createMockEvent();
         // Seed hackathon, season, and team
-        event.context.db
+        event.context.drizzle
             .prepare(
                 "INSERT INTO hackathon(id, status, start_timestamp, end_timestamp, voting_start_timestamp, voting_end_timestamp, results_open_timestamp) VALUES(1, 'not_started', 0, 0, 0, 0, 0)",
             )
             .run();
-        event.context.db.prepare("INSERT INTO seasons(name, is_active) VALUES('S1', 1)").run();
-        event.context.db.prepare("INSERT INTO teams(name, season_id) VALUES('Team A', 1)").run();
-        event.context.db.prepare("INSERT INTO teams(name, season_id) VALUES('Team B', 1)").run();
+        event.context.drizzle.prepare("INSERT INTO seasons(name, is_active) VALUES('S1', 1)").run();
+        event.context.drizzle.prepare("INSERT INTO teams(name, season_id) VALUES('Team A', 1)").run();
+        event.context.drizzle.prepare("INSERT INTO teams(name, season_id) VALUES('Team B', 1)").run();
         // Seed users
-        event.context.db
+        event.context.drizzle
             .prepare(
                 "INSERT INTO users(email, name, team_id) VALUES('alice@example.com', 'Alice', 1)",
             )
             .run();
-        event.context.db
+        event.context.drizzle
             .prepare("INSERT INTO users(email, name, team_id) VALUES('bob@example.com', 'Bob', 1)")
             .run();
-        event.context.db
+        event.context.drizzle
             .prepare(
                 "INSERT INTO users(email, name, team_id) VALUES('carol@example.com', 'Carol', NULL)",
             )
@@ -54,7 +54,7 @@ describe("members database helpers", () => {
     describe("getAllTeamMembers", () => {
         it("includes past team members alongside current members", async () => {
             // Add Carol as a past team member of Team A
-            event.context.db
+            event.context.drizzle
                 .prepare("INSERT INTO user_past_teams(user_id, team_id) VALUES(3, 1)")
                 .run();
 
@@ -65,7 +65,7 @@ describe("members database helpers", () => {
 
         it("deduplicates a current member who also has past-team history", async () => {
             // Alice is a current member of Team A and also has a past-team record
-            event.context.db
+            event.context.drizzle
                 .prepare("INSERT INTO user_past_teams(user_id, team_id) VALUES(1, 1)")
                 .run();
 
@@ -77,7 +77,7 @@ describe("members database helpers", () => {
 
     describe("getUserPastTeams", () => {
         it("returns past teams for a user", async () => {
-            event.context.db
+            event.context.drizzle
                 .prepare("INSERT INTO user_past_teams(user_id, team_id) VALUES(1, 2)")
                 .run();
 
@@ -132,7 +132,7 @@ describe("members database helpers", () => {
             );
 
             // Removing a non-member must not create a past-team entry
-            const pastTeams = event.context.db
+            const pastTeams = event.context.drizzle
                 .prepare("SELECT * FROM user_past_teams WHERE user_id = 3 AND team_id = 1")
                 .all();
             expect(pastTeams.results).toHaveLength(0);

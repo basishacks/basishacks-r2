@@ -10,17 +10,13 @@ useHead({
     title: `General | ${WEBSITE_NAME}`,
 });
 
-const { user: userRef } = useUserSession();
-const user = computed(() => userRef.value!);
 
 const { data: hackathon, error: hackathonError } = await useFetch("/api/seasons/active");
 if (hackathonError.value) {
     throw hackathonError.value;
 }
 
-const { data, error, refresh } = await useFetch<GetUserResponse>(
-    () => `/api/users/${user.value.id}`,
-);
+const { user: data, error, refresh } = await useAPIUser();
 if (error.value) {
     throw error.value;
 }

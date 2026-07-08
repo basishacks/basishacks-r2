@@ -16,12 +16,7 @@ const state = reactive({
     name: "",
 });
 
-const { user: userRef } = useUserSession();
-const user = computed(() => userRef.value!);
-
-const { data, error, refresh } = await useFetch<GetUserResponse>(
-    () => `/api/users/${user.value.id}`,
-);
+const { data, error, refresh } = await useAPIUser();
 const { data: hackathon, error: hackathonError } = await useFetch("/api/seasons/active");
 if (hackathonError.value) {
     throw hackathonError.value;

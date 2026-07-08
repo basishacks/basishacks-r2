@@ -22,17 +22,21 @@ export async function getTeam(
     allSeason?: boolean,
 ): Promise<Team | null> {
     if (allSeason) {
-        return event.context.db
-            .prepare("SELECT * FROM teams WHERE id = ?")
-            .bind(teamID)
-            .first() as Team | null;
+        const row = event.context.drizzle
+            .select()
+            .from(teams)
+            .where(eq(teams.id, teamID))
+            .get() as Team | undefined;
+        return row ?? null;
     }
     const activeSeason = await getActiveSeason(event);
     const seasonId = activeSeason?.id ?? -1;
-    return event.context.db
-        .prepare("SELECT * FROM teams WHERE id = ? AND season_id = ?")
-        .bind(teamID, seasonId)
-        .first() as Team | null;
+    const row = event.context.drizzle
+        .select()
+        .from(teams)
+        .where(and(eq(teams.id, teamID), eq(teams.season_id, seasonId)))
+        .get() as Team | undefined;
+    return row ?? null;
 }
 
 export async function getAllTeams(event: H3Event): Promise<Team[]> {
@@ -82,10 +86,12 @@ export async function getSubmittedTeams(event: H3Event): Promise<Team[]> {
  * Essentially the same as `getTeam(event, teamID, true)`
  */
 export async function getTeamById(event: H3Event, teamID: number): Promise<Team | null> {
-    return event.context.db
-        .prepare("SELECT * FROM teams WHERE id = ?")
-        .bind(teamID)
-        .first() as Team | null;
+    const row = event.context.drizzle
+        .select()
+        .from(teams)
+        .where(eq(teams.id, teamID))
+        .get() as Team | undefined;
+    return row ?? null;
 }
 
 export async function getTeamBySeason(
@@ -164,7 +170,7 @@ export async function updateTeam(event: H3Event, team: Team) {
 
 export async function deleteTeams(event: H3Event, teamIDs: number[]) {
     for (const id of teamIDs) {
-        event.context.drizzle.transaction((tx) => {
+        await event.context.drizzle.transaction((tx) => {
             tx.delete(ballotScores).where(eq(ballotScores.project_id, id)).run();
 
             tx.delete(teamScores).where(eq(teamScores.team_id, id)).run();

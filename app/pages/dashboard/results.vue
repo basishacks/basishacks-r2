@@ -29,9 +29,5 @@ definePageMeta({
     middleware: ["auth"],
 });
 
-const { user: userRef } = useUserSession();
-
-const { data: user } = useFetch<GetUserResponse>(() => `/api/users/${userRef.value?.id}`, {
-    lazy: true,
-});
+const { user } = useAPIUser({ lazy: true });
 </script>

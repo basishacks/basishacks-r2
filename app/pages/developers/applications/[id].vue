@@ -16,7 +16,7 @@ const clientID = route.params.id as string;
 const toast = useToast();
 
 // Client-side permission guard
-const { user: me }: { user: any } = await useApiUser();
+const { user: me }: { user: any } = useAPIUser();
 
 const isAdminUser = computed(
     () =>

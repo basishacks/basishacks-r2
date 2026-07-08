@@ -15,15 +15,15 @@ describe("ballots database helpers", () => {
     beforeEach(async () => {
         event = await createMockEvent();
         // Seed a user
-        event.context.db.prepare("INSERT INTO users(email) VALUES('user@example.com')").run();
+        event.context.drizzle.prepare("INSERT INTO users(email) VALUES('user@example.com')").run();
         // Seed hackathon, season, and team for ballot_scores FK
-        event.context.db
+        event.context.drizzle
             .prepare(
                 "INSERT INTO hackathon(id, status, start_timestamp, end_timestamp, voting_start_timestamp, voting_end_timestamp, results_open_timestamp) VALUES(1, 'not_started', 0, 0, 0, 0, 0)",
             )
             .run();
-        event.context.db.prepare("INSERT INTO seasons(name, is_active) VALUES('S1', 1)").run();
-        event.context.db.prepare("INSERT INTO teams(name, season_id) VALUES('Team A', 1)").run();
+        event.context.drizzle.prepare("INSERT INTO seasons(name, is_active) VALUES('S1', 1)").run();
+        event.context.drizzle.prepare("INSERT INTO teams(name, season_id) VALUES('Team A', 1)").run();
     });
 
     describe("createBallot", () => {
@@ -38,7 +38,7 @@ describe("ballots database helpers", () => {
 
     describe("getBallotByUser", () => {
         it("returns the ballot for a user who has one", async () => {
-            event.context.db.prepare("INSERT INTO ballots(user_id) VALUES(1)").run();
+            event.context.drizzle.prepare("INSERT INTO ballots(user_id) VALUES(1)").run();
 
             const ballot = await getBallotByUser(event, 1);
             expect(ballot).not.toBeNull();
@@ -53,7 +53,7 @@ describe("ballots database helpers", () => {
 
     describe("updateBallot", () => {
         it("updates the reasoning and submitted fields", async () => {
-            event.context.db.prepare("INSERT INTO ballots(user_id) VALUES(1)").run();
+            event.context.drizzle.prepare("INSERT INTO ballots(user_id) VALUES(1)").run();
 
             await updateBallot(event, {
                 id: 1,
@@ -75,7 +75,7 @@ describe("ballots database helpers", () => {
 
     describe("createBallotScore", () => {
         it("creates a ballot score successfully", async () => {
-            event.context.db.prepare("INSERT INTO ballots(user_id) VALUES(1)").run();
+            event.context.drizzle.prepare("INSERT INTO ballots(user_id) VALUES(1)").run();
 
             const score = await createBallotScore(event, 1, 1);
             expect(score).not.toBeNull();
@@ -87,8 +87,8 @@ describe("ballots database helpers", () => {
 
     describe("getBallotScores", () => {
         it("returns scores for a ballot that has them", async () => {
-            event.context.db.prepare("INSERT INTO ballots(user_id) VALUES(1)").run();
-            event.context.db
+            event.context.drizzle.prepare("INSERT INTO ballots(user_id) VALUES(1)").run();
+            event.context.drizzle
                 .prepare("INSERT INTO ballot_scores(ballot_id, project_id, score) VALUES(1, 1, 4)")
                 .run();
 
@@ -100,7 +100,7 @@ describe("ballots database helpers", () => {
         });
 
         it("returns an empty array when the ballot has no scores", async () => {
-            event.context.db.prepare("INSERT INTO ballots(user_id) VALUES(1)").run();
+            event.context.drizzle.prepare("INSERT INTO ballots(user_id) VALUES(1)").run();
 
             const scores = await getBallotScores(event, 1);
             expect(scores).toHaveLength(0);
@@ -109,8 +109,8 @@ describe("ballots database helpers", () => {
 
     describe("getBallotScoresByTeamID", () => {
         it("returns scores for a specific team", async () => {
-            event.context.db.prepare("INSERT INTO ballots(user_id) VALUES(1)").run();
-            event.context.db
+            event.context.drizzle.prepare("INSERT INTO ballots(user_id) VALUES(1)").run();
+            event.context.drizzle
                 .prepare("INSERT INTO ballot_scores(ballot_id, project_id, score) VALUES(1, 1, 5)")
                 .run();
 
@@ -128,8 +128,8 @@ describe("ballots database helpers", () => {
 
     describe("updateBallotScore", () => {
         it("updates a ballot score successfully", async () => {
-            event.context.db.prepare("INSERT INTO ballots(user_id) VALUES(1)").run();
-            event.context.db
+            event.context.drizzle.prepare("INSERT INTO ballots(user_id) VALUES(1)").run();
+            event.context.drizzle
                 .prepare("INSERT INTO ballot_scores(ballot_id, project_id, score) VALUES(1, 1, 3)")
                 .run();
 

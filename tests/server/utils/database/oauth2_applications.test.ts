@@ -22,7 +22,7 @@ describe("oauth2_applications database helpers", () => {
     beforeEach(async () => {
         event = await createMockEvent();
         // Seed a user for the owner_id foreign key
-        event.context.db.prepare("INSERT INTO users(email) VALUES('owner@example.com')").run();
+        event.context.drizzle.prepare("INSERT INTO users(email) VALUES('owner@example.com')").run();
     });
 
     describe("createOAuth2Application", () => {

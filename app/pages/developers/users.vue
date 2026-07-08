@@ -35,7 +35,7 @@ const { data, status, refresh } = await useFetch<AdminUser[]>("/api/users", {
 });
 
 // Client-side permission guard
-const { user: me } = await useApiUser();
+const { user: me } = await useAPIUser();
 if (
     !hasPermission(me.value?.role, DevPermissions.PORTAL_USERS_VIEW) &&
     !hasPermission(me.value?.role, "admin")

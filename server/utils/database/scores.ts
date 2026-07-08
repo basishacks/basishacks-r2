@@ -34,10 +34,9 @@ export async function getTeamScoresBySeasonId(
     event: H3Event,
     seasonID: number,
 ): Promise<TeamScores[]> {
-    return (
-        event.context.db
-            .prepare("SELECT * FROM team_scores WHERE season_id = ?")
-            .bind(seasonID)
-            .all() as { results: TeamScores[] }
-    ).results;
+    return event.context.drizzle
+        .select()
+        .from(teamScores)
+        .where(eq(teamScores.season_id, seasonID))
+        .all();
 }
