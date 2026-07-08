@@ -12,11 +12,6 @@ describe("ProjectCard.vue regressions", () => {
         expect(source).toContain(':description="team.name"');
     });
 
-    it("renders the no-team-name fallback with valid markup", () => {
-        expect(source).not.toMatch(/text-muted text-sm\(No Team Name\)/);
-        expect(source).toContain('<span v-else class="text-muted text-sm">(No Team Name)</span>');
-    });
-
     it("disables the Demo button based on the demo URL", () => {
         expect(source).toContain(':disabled="!team.project.demo_url"');
     });

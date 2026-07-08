@@ -7,8 +7,8 @@ const source = readFileSync(
 );
 
 describe("RoleHeader.vue", () => {
-    it("uses useAPIUser instead of useUserSession and useFetch for the user", () => {
-        expect(source).toContain("useAPIUser");
+    it("uses useApiUser instead of useUserSession and useFetch for the user", () => {
+        expect(source).toContain("useApiUser");
         expect(source).not.toContain("useFetch<GetUserResponse>");
         expect(source).not.toContain("useUserSession()");
     });
