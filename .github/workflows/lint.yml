@@ -5,6 +5,10 @@ on:
         branches: [main, enhance-and-debloat]
     pull_request:
         branches: [main, enhance-and-debloat]
+    workflow_dispatch:
+
+permissions:
+    contents: read
 
 concurrency:
     group: ${{ github.workflow }}-${{ github.ref }}
