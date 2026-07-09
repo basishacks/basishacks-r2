@@ -1,3 +1,4 @@
+import { describe, it, expect } from "vitest";
 import { convertUserToPublic, convertTeamToPublic } from "~~/server/utils/convert";
 
 describe("convert utilities", () => {

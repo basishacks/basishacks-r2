@@ -1,3 +1,4 @@
+import { describe, it, expect } from "vitest";
 import { readFileSync } from "node:fs";
 import { readdirSync, statSync } from "node:fs";
 import { resolve } from "node:path";

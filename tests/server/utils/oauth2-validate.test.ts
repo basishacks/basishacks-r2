@@ -1,5 +1,6 @@
 // Setup Nitro globals before importing anything that imports server/api files
 // Use vi.mock (hoisted) since ESM static imports are also hoisted
+import { describe, it, expect, vi } from "vitest";
 vi.mock("~~/server/api/oauth2/session.post", () => ({
     addAuthorizeSession: vi.fn(),
     getAuthorizeSession: vi.fn(),

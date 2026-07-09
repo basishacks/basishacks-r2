@@ -1,3 +1,4 @@
+import { describe, it, expect } from "vitest";
 import { AWARD_REGISTRY, type Award } from "~~/shared/awards";
 
 describe("AWARD_REGISTRY", () => {
