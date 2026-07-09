@@ -1,4 +1,4 @@
-name: Production Release Build
+name: Production Release Build (bun)
 
 # Trigger when a tag starting with 'v' is pushed (e.g., v1.0.0, v1.1.2)
 on:
@@ -25,26 +25,26 @@ jobs:
               id: get_version
               run: echo "version=${GITHUB_REF#refs/tags/v}" >> $GITHUB_OUTPUT
 
-            # 4. Set up Node.js
-            - name: Set up Node.js
-              uses: actions/setup-node@v4
+            # 1. Install Bun and automatically cache dependencies using bun.lockb / bun.lock
+            - name: Setup Bun
+              uses: oven-sh/setup-bun@v2
               with:
-                  node-version: 24
-                  cache: "npm"
+                bun-version: latest # Or specify a version like 1.1.0
 
-            # 5. Install dependencies and build Nuxt
+            # 2. Install dependencies cleanly using Bun
             - name: Install dependencies
-              run: npm ci
+              run: bun install --frozen-lockfile
 
+            # 3. Build Nuxt Application using Bun
             - name: Build Nuxt Application
-              run: npm run build
+              run: bun run build
 
             # 6. Create the tarball using your exact custom naming format
             - name: Create Tarball
               run: |
                   VERSION=${{ steps.get_version.outputs.version }}
                   COMMIT=${{ steps.vars.outputs.sha_short }}
-                  FILENAME="production-${VERSION}-${COMMIT}-linux-amd64.tar.gz"
+                  FILENAME="production-${VERSION}-${COMMIT}-linux-amd64-bun.tar.gz"
 
                   tar -czf $FILENAME .output
 
