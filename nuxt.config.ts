@@ -37,7 +37,7 @@ export default defineNuxtConfig({
         build: {
             target: "es2020",
             minify: "esbuild",
-            sourcemap: false,
+            sourcemap: true,
             rollupOptions: {
                 onwarn(warning, warn) {
                     if (warning.message.includes("Sourcemap is likely to be incorrect")) return;

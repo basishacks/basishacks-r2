@@ -32,10 +32,12 @@ type AdminUser = User & { past_team_ids: string | null };
 
 const { data, status, refresh } = await useFetch<AdminUser[]>("/api/users", {
     lazy: true,
+    default: () => [],
 });
 
 // Client-side permission guard
 const { user: me } = await useApiUser();
+
 if (
     !hasPermission(me.value?.role, DevPermissions.PORTAL_USERS_VIEW) &&
     !hasPermission(me.value?.role, "admin")
@@ -307,7 +309,7 @@ const pagination = ref({
                                     onSelect(e?: Event) {
                                         e?.preventDefault();
                                     },
-                                }))
+                                })) ?? []
                         "
                         :content="{ align: 'end' }"
                     >
@@ -331,7 +333,7 @@ const pagination = ref({
                     getPaginationRowModel: getPaginationRowModel(),
                 }"
                 class="shrink-0"
-                :data="data"
+                :data="data ?? []"
                 :columns="columns"
                 :loading="status === 'pending'"
                 :ui="{
@@ -349,14 +351,14 @@ const pagination = ref({
             >
                 <div class="text-sm text-muted">
                     {{ selectedRows.length || 0 }} of
-                    {{ table?.tableApi?.getFilteredRowModel().rows.length || 0 }} row(s) selected.
+                    {{ table?.tableApi?.getFilteredRowModel().rows?.length || 0 }} row(s) selected.
                 </div>
 
                 <div class="flex items-center gap-1.5">
                     <UPagination
                         :default-page="(table?.tableApi?.getState().pagination.pageIndex || 0) + 1"
                         :items-per-page="table?.tableApi?.getState().pagination.pageSize"
-                        :total="table?.tableApi?.getFilteredRowModel().rows.length"
+                        :total="table?.tableApi?.getFilteredRowModel().rows?.length || 0"
                         @update:page="(p: number) => table?.tableApi?.setPageIndex(p - 1)"
                     />
                 </div>

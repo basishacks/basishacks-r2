@@ -276,7 +276,7 @@ const create_authorized = computed(() => {
                     getPaginationRowModel: getPaginationRowModel(),
                 }"
                 class="shrink-0"
-                :data="data"
+                :data="data ?? []"
                 :columns="columns"
                 :loading="status === 'pending'"
                 :ui="{

@@ -120,6 +120,7 @@ const name = computed(() => user.value?.name || "Log In");
                 <UNavigationMenu :collapsed="collapsed" :items="items[0]" orientation="vertical" />
 
                 <UNavigationMenu
+                    v-if="items[1]?.length"
                     :collapsed="collapsed"
                     :items="items[1]"
                     orientation="vertical"
