@@ -28,10 +28,11 @@ const rowSelection = ref<Record<string, boolean>>({});
 
 const { data, status, refresh } = await useFetch<OAuth2Application[]>("/api/applications", {
     lazy: true,
+    default: () => [],
 });
 
 // Client-side permission guard
-const { user: me }: any = await useApiUser();
+const { user: me } = await useApiUser();
 if (
     !hasPermission(me.value?.role, DevPermissions.PORTAL_APPLICATIONS_VIEW) &&
     !hasPermission(me.value?.role, "admin")
@@ -179,10 +180,44 @@ const nameFilter = computed({
     },
 });
 
+const displayColumnItems = computed(
+    () =>
+        table.value?.tableApi
+            ?.getAllColumns()
+            .filter((column: any) => column.getCanHide())
+            .map((column: any) => ({
+                label: upperFirst(column.id),
+                type: "checkbox" as const,
+                checked: column.getIsVisible(),
+                onUpdateChecked(checked: boolean) {
+                    table.value?.tableApi?.getColumn(column.id)?.toggleVisibility(!!checked);
+                },
+                onSelect(e?: Event) {
+                    e?.preventDefault();
+                },
+            })) ?? [],
+);
+
+const filteredRowCount = computed(
+    () => table.value?.tableApi?.getFilteredRowModel()?.rows?.length ?? 0,
+);
+
+const currentPage = computed(
+    () => (table.value?.tableApi?.getState()?.pagination?.pageIndex ?? 0) + 1,
+);
+
+const currentPageSize = computed(
+    () => table.value?.tableApi?.getState()?.pagination?.pageSize ?? pagination.value.pageSize,
+);
+
 const pagination = ref({
     pageIndex: 0,
     pageSize: 10,
 });
+
+const paginationOptions = {
+    getPaginationRowModel: getPaginationRowModel(),
+};
 
 const create_authorized = computed(() => {
     return (
@@ -235,27 +270,7 @@ const create_authorized = computed(() => {
                         </template>
                     </UButton>
 
-                    <UDropdownMenu
-                        :items="
-                            table?.tableApi
-                                ?.getAllColumns()
-                                .filter((column: any) => column.getCanHide())
-                                .map((column: any) => ({
-                                    label: upperFirst(column.id),
-                                    type: 'checkbox' as const,
-                                    checked: column.getIsVisible(),
-                                    onUpdateChecked(checked: boolean) {
-                                        table?.tableApi
-                                            ?.getColumn(column.id)
-                                            ?.toggleVisibility(!!checked);
-                                    },
-                                    onSelect(e?: Event) {
-                                        e?.preventDefault();
-                                    },
-                                }))
-                        "
-                        :content="{ align: 'end' }"
-                    >
+                    <UDropdownMenu :items="displayColumnItems" :content="{ align: 'end' }">
                         <UButton
                             label="Display"
                             color="neutral"
@@ -272,11 +287,9 @@ const create_authorized = computed(() => {
                 v-model:column-visibility="columnVisibility"
                 v-model:row-selection="rowSelection"
                 v-model:pagination="pagination"
-                :pagination-options="{
-                    getPaginationRowModel: getPaginationRowModel(),
-                }"
+                :pagination-options="paginationOptions"
                 class="shrink-0"
-                :data="data"
+                :data="data ?? []"
                 :columns="columns"
                 :loading="status === 'pending'"
                 :ui="{
@@ -293,15 +306,14 @@ const create_authorized = computed(() => {
                 class="flex items-center justify-between gap-3 border-t border-default pt-4 mt-auto"
             >
                 <div class="text-sm text-muted">
-                    {{ selectedRows.length || 0 }} of
-                    {{ table?.tableApi?.getFilteredRowModel().rows.length || 0 }} row(s) selected.
+                    {{ selectedRows.length || 0 }} of {{ filteredRowCount }} row(s) selected.
                 </div>
 
                 <div class="flex items-center gap-1.5">
                     <UPagination
-                        :default-page="(table?.tableApi?.getState().pagination.pageIndex || 0) + 1"
-                        :items-per-page="table?.tableApi?.getState().pagination.pageSize"
-                        :total="table?.tableApi?.getFilteredRowModel().rows.length"
+                        :default-page="currentPage"
+                        :items-per-page="currentPageSize"
+                        :total="filteredRowCount"
                         @update:page="(p: number) => table?.tableApi?.setPageIndex(p - 1)"
                     />
                 </div>

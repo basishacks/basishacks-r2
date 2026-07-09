@@ -1,3 +1,4 @@
+import { describe, it, expect } from "vitest";
 import rubrics from "~~/shared/rubric";
 
 describe("rubrics", () => {

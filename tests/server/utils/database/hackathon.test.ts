@@ -1,3 +1,4 @@
+import { describe, it, expect, beforeEach } from "vitest";
 import { createMockEvent } from "./helpers";
 import { getHackathon } from "~~/server/utils/database/hackathon";
 

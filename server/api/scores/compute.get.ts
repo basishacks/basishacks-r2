@@ -4,6 +4,6 @@ export default defineEventHandler(async (event) => {
     await computeScores(event, 1);
 
     return {
-        message: "ok",
+        message: "Computed scores for all users successfully.",
     };
 });

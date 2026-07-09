@@ -2,12 +2,15 @@
 import type { NavigationMenuItem } from "@nuxt/ui";
 import { DevPermissions, hasPermission } from "~~/shared/permissions";
 
-const { user } = useApiUser({ lazy: true });
+const { user, status } = await useApiUser({ lazy: true });
 
-// console.log(user.value)
+const lacksPermission = (permission: string) => {
+    if (status.value === "idle" || status.value === "pending") return false;
 
-// console.log(hasPermission(user.value?.role, DevPermissions.PORTAL_APPLICATIONS_VIEW))
-//console.log(hasPermission(user.value?.role, DevPermissions.PORTAL_APPLICATIONS_VIEW))
+    return (
+        !hasPermission(user.value?.role, permission) && !hasPermission(user.value?.role, "admin")
+    );
+};
 
 const items = computed<NavigationMenuItem[][]>(() => [
     [
@@ -20,35 +23,25 @@ const items = computed<NavigationMenuItem[][]>(() => [
             label: "Users",
             icon: "i-lucide-user",
             to: "/developers/users",
-            disabled:
-                !hasPermission(user.value?.role, DevPermissions.PORTAL_USERS_VIEW) &&
-                !hasPermission(user.value?.role, "admin"),
+            disabled: lacksPermission(DevPermissions.PORTAL_USERS_VIEW),
         },
         {
             label: "Teams",
             icon: "i-lucide-users",
             to: "/developers/teams",
-            disabled:
-                !hasPermission(user.value?.role, DevPermissions.PORTAL_TEAMS_VIEW) &&
-                !hasPermission(user.value?.role, "admin"),
+            disabled: lacksPermission(DevPermissions.PORTAL_TEAMS_VIEW),
         },
         {
             label: "Applications",
             icon: "i-lucide-app-window",
             to: "/developers/applications/",
-            disabled:
-                !hasPermission(user.value?.role, DevPermissions.PORTAL_APPLICATIONS_VIEW) &&
-                !hasPermission(user.value?.role, "admin"),
+            disabled: lacksPermission(DevPermissions.PORTAL_APPLICATIONS_VIEW),
             children: [
                 {
                     label: "Create New",
                     icon: "i-lucide-plus",
                     to: "/developers/applications/create",
-                    disabled:
-                        !hasPermission(
-                            user.value?.role,
-                            DevPermissions.PORTAL_APPLICATIONS_CREATE,
-                        ) && !hasPermission(user.value?.role, "admin"),
+                    disabled: lacksPermission(DevPermissions.PORTAL_APPLICATIONS_CREATE),
                 },
             ],
         },
@@ -56,25 +49,19 @@ const items = computed<NavigationMenuItem[][]>(() => [
             label: "DeepSeek",
             icon: "i-lucide-message-square",
             to: "/developers/deepseek",
-            disabled:
-                !hasPermission(user.value?.role, DevPermissions.PORTAL_DEEPSEEK_VIEW) &&
-                !hasPermission(user.value?.role, "admin"),
+            disabled: lacksPermission(DevPermissions.PORTAL_DEEPSEEK_VIEW),
         },
         {
             label: "Files",
             icon: "i-lucide-files",
             to: "/developers/debug",
-            disabled:
-                !hasPermission(user.value?.role, DevPermissions.PORTAL_DEBUG_VIEW) &&
-                !hasPermission(user.value?.role, "admin"),
+            disabled: lacksPermission(DevPermissions.PORTAL_DEBUG_VIEW),
         },
         {
             label: "Seasons",
             icon: "i-lucide-calendar",
             to: "/developers/seasons",
-            disabled:
-                !hasPermission(user.value?.role, DevPermissions.PORTAL_SEASONS_VIEW) &&
-                !hasPermission(user.value?.role, "admin"),
+            disabled: lacksPermission(DevPermissions.PORTAL_SEASONS_VIEW),
         },
     ],
 ]);
@@ -120,6 +107,7 @@ const name = computed(() => user.value?.name || "Log In");
                 <UNavigationMenu :collapsed="collapsed" :items="items[0]" orientation="vertical" />
 
                 <UNavigationMenu
+                    v-if="items[1]?.length"
                     :collapsed="collapsed"
                     :items="items[1]"
                     orientation="vertical"

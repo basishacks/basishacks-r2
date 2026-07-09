@@ -1,3 +1,4 @@
+import { describe, it, expect } from "vitest";
 import { validateExternalUrl } from "~~/server/utils/url-validation";
 
 describe("validateExternalUrl", () => {
