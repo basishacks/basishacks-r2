@@ -2,67 +2,67 @@ name: Production Release Build
 
 # Trigger when a tag starting with 'v' is pushed (e.g., v1.0.0, v1.1.2)
 on:
-  push:
-    tags:
-      - 'v*'
+    push:
+        tags:
+            - "v*"
 
 jobs:
-  create-release:
-    runs-on: ubuntu-latest
+    create-release:
+        runs-on: ubuntu-latest
 
-    steps:
-      # 1. Check out the code
-      - name: Checkout code
-        uses: actions/checkout@v4
+        steps:
+            # 1. Check out the code
+            - name: Checkout code
+              uses: actions/checkout@v4
 
-      # 2. Get the short commit ID (e.g., a1b2c3d)
-      - name: Get Short Commit SHA
-        id: vars
-        run: echo "sha_short=$(git rev-parse --short HEAD)" >> $GITHUB_OUTPUT
+            # 2. Get the short commit ID (e.g., a1b2c3d)
+            - name: Get Short Commit SHA
+              id: vars
+              run: echo "sha_short=$(git rev-parse --short HEAD)" >> $GITHUB_OUTPUT
 
-      # 3. Extract the version number from the Git tag (removes the 'v' prefix)
-      - name: Get Version
-        id: get_version
-        run: echo "version=${GITHUB_REF#refs/tags/v}" >> $GITHUB_OUTPUT
+            # 3. Extract the version number from the Git tag (removes the 'v' prefix)
+            - name: Get Version
+              id: get_version
+              run: echo "version=${GITHUB_REF#refs/tags/v}" >> $GITHUB_OUTPUT
 
-      # 4. Set up Node.js
-      - name: Set up Node.js
-        uses: actions/setup-node@v4
-        with:
-          node-version: 24
-          cache: 'npm'
+            # 4. Set up Node.js
+            - name: Set up Node.js
+              uses: actions/setup-node@v4
+              with:
+                  node-version: 24
+                  cache: "npm"
 
-      # 5. Install dependencies and build Nuxt
-      - name: Install dependencies
-        run: npm ci
+            # 5. Install dependencies and build Nuxt
+            - name: Install dependencies
+              run: npm ci
 
-      - name: Build Nuxt Application
-        run: npm run build
+            - name: Build Nuxt Application
+              run: npm run build
 
-      # 6. Create the tarball using your exact custom naming format
-      - name: Create Tarball
-        run: |
-          VERSION=${{ steps.get_version.outputs.version }}
-          COMMIT=${{ steps.vars.outputs.sha_short }}
-          FILENAME="production-${VERSION}-${COMMIT}-linux-amd64.tar.gz"
-          
-          tar -czf $FILENAME .output
-          
-          # Save filename for the next step
-          echo "filename=$FILENAME" >> $GITHUB_ENV
+            # 6. Create the tarball using your exact custom naming format
+            - name: Create Tarball
+              run: |
+                  VERSION=${{ steps.get_version.outputs.version }}
+                  COMMIT=${{ steps.vars.outputs.sha_short }}
+                  FILENAME="production-${VERSION}-${COMMIT}-linux-amd64.tar.gz"
 
-      # 7. Create formal GitHub Release and attach the tarball
-      - name: Create GitHub Release
-        uses: softprops/action-gh-release@v2
-        with:
-          tag_name: ${{ github.ref_name }}
-          name: "Basishacks ${{ github.ref_name }}" # Custom Release Title (e.g., Release v1.0.0)
-          body: |
-            ## Automated Production Build
-            
-            - **Version:** ${{ steps.get_version.outputs.version }}
-            - **Commit SHA:** `${{ steps.vars.outputs.sha_short }}`
-            - **Architecture:** Linux amd64
-          files: ${{ env.filename }}
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }} # Automatically provided by GitHub
+                  tar -czf $FILENAME .output
+
+                  # Save filename for the next step
+                  echo "filename=$FILENAME" >> $GITHUB_ENV
+
+            # 7. Create formal GitHub Release and attach the tarball
+            - name: Create GitHub Release
+              uses: softprops/action-gh-release@v2
+              with:
+                  tag_name: ${{ github.ref_name }}
+                  name: "Basishacks ${{ github.ref_name }}" # Custom Release Title (e.g., Release v1.0.0)
+                  body: |
+                      ## Automated Production Build
+
+                      - **Version:** ${{ steps.get_version.outputs.version }}
+                      - **Commit SHA:** `${{ steps.vars.outputs.sha_short }}`
+                      - **Architecture:** Linux amd64
+                  files: ${{ env.filename }}
+              env:
+                  GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }} # Automatically provided by GitHub

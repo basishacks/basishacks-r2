@@ -129,6 +129,7 @@ Do **not** use `bun test`. Bun's native test runner cannot resolve Nuxt's `~~/` 
 Two production start options are supported.
 
 After a sucessful merge into main, you can do the following to create a commit build:
+
 ```bash
 git checkout main
 git pull origin main
