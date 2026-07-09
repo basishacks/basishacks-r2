@@ -253,10 +253,7 @@ const paginationOptions = {
                         </template>
                     </UButton>
 
-                    <UDropdownMenu
-                        :items="displayColumnItems"
-                        :content="{ align: 'end' }"
-                    >
+                    <UDropdownMenu :items="displayColumnItems" :content="{ align: 'end' }">
                         <UButton
                             label="Display"
                             color="neutral"
@@ -292,8 +289,7 @@ const paginationOptions = {
                 class="flex items-center justify-between gap-3 border-t border-default pt-4 mt-auto"
             >
                 <div class="text-sm text-muted">
-                    {{ selectedRows.length || 0 }} of
-                    {{ filteredRowCount }} row(s) selected.
+                    {{ selectedRows.length || 0 }} of {{ filteredRowCount }} row(s) selected.
                 </div>
 
                 <div class="flex items-center gap-1.5">

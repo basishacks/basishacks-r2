@@ -7,7 +7,9 @@ const { user, status } = await useApiUser({ lazy: true });
 const lacksPermission = (permission: string) => {
     if (status.value === "idle" || status.value === "pending") return false;
 
-    return !hasPermission(user.value?.role, permission) && !hasPermission(user.value?.role, "admin");
+    return (
+        !hasPermission(user.value?.role, permission) && !hasPermission(user.value?.role, "admin")
+    );
 };
 
 const items = computed<NavigationMenuItem[][]>(() => [

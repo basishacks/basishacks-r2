@@ -30,15 +30,12 @@ export async function useApiUser(options?: { lazy?: boolean }): Promise<UseApiUs
 
         if (fetchResult.status.value === "pending") {
             await new Promise<void>((resolve) => {
-                const stop = watch(
-                    fetchResult.status,
-                    (status) => {
-                        if (status !== "pending") {
-                            stop();
-                            resolve();
-                        }
-                    },
-                );
+                const stop = watch(fetchResult.status, (status) => {
+                    if (status !== "pending") {
+                        stop();
+                        resolve();
+                    }
+                });
             });
         }
     }
