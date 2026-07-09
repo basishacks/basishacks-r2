@@ -10,6 +10,10 @@ jobs:
     create-release:
         runs-on: ubuntu-latest
 
+        # ─── ADD THIS PERMISSIONS BLOCK HERE ───
+        permissions:
+            contents: write # Allows the workflow to create releases and upload assets
+
         steps:
             # 1. Check out the code
             - name: Checkout code
