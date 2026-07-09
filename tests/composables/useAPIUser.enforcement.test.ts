@@ -30,11 +30,12 @@ describe("useApiUser enforcement", () => {
         }
     });
 
-    it("keeps the only direct GetUserResponse fetch inside useApiUser.ts", () => {
+    it("keeps GetUserResponse typing inside useApiUser.ts", () => {
         const composableSource = readFileSync(
             resolve(import.meta.dirname, "..", "..", "app", "composables", "useApiUser.ts"),
             "utf-8",
         );
-        expect(composableSource).toContain("useFetch<GetUserResponse>");
+        expect(composableSource).toContain("type ApiUser = GetUserResponse | null");
+        expect(composableSource).toContain("useFetch<ApiUser>");
     });
 });

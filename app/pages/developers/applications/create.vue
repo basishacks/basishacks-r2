@@ -39,7 +39,7 @@ const type_items = ref([
     { label: "Third Party", value: "third" },
 ]);
 
-const { user }: { user: Ref<APIUser | null | undefined> } = useApiUser();
+const { user } = await useApiUser();
 
 const authorized = computed(() => {
     return (
