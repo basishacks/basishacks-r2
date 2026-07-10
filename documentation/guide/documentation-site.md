@@ -1,6 +1,6 @@
 ---
 title: Documentation Site
-description: Theme and interactive components for the basishacks VitePress docs.
+description: Theme, interactive components, and live dependency tables for the basishacks VitePress docs.
 ---
 
 # Documentation Site
@@ -72,6 +72,22 @@ Click to cycle through programming and hackathon quotes:
 <QuoteCycler />
 ```
 
+### PackageVersions
+
+Render live dependency tables parsed from the root `package.json`. The data is loaded at build time by `documentation/.vitepress/data/packageVersions.data.ts`, so the tables update automatically whenever `package.json` changes and the documentation is rebuilt or the dev server restarts.
+
+```md
+<PackageVersions />
+```
+
+The component displays:
+
+- Production dependencies
+- Development dependencies
+- npm `overrides` (if any)
+- A timestamp showing when the data was generated
+- A search field for filtering packages by name or version
+
 ## Customizing the Theme
 
 - Global styles: `documentation/.vitepress/theme/style.css`
@@ -79,3 +95,21 @@ Click to cycle through programming and hackathon quotes:
 - Component registration: `documentation/.vitepress/theme/index.ts`
 
 The CSS uses CSS custom properties prefixed with `--bh-*` and overrides VitePress's own variables for consistent light/dark modes.
+
+## Live Dependency Data
+
+Dependency versions are not hard-coded in the documentation. Instead, VitePress's [data loaders](https://vitepress.dev/guide/data-loaders) read the repository's `package.json` at build time.
+
+The loader is defined in `documentation/.vitepress/data/packageVersions.data.ts`:
+
+```ts
+export default defineLoader({
+    watch: [resolve(import.meta.dirname, "../../../package.json")],
+    load(): PackageVersionsData {
+        // Read and parse package.json
+        // Return dependencies, devDependencies, overrides, and generatedAt
+    },
+});
+```
+
+Because the `watch` array includes `package.json`, VitePress reloads the data whenever the file changes during `npm run dev` and re-reads it during `npm run build`.
