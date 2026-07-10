@@ -7,6 +7,19 @@ description: Security measures and best practices in the basishacks platform
 
 The basishacks platform implements multiple layers of security to protect user data, prevent abuse, and ensure safe operation.
 
+## Security-Critical Environment Variables
+
+The following environment variables directly affect platform security and must be configured carefully in production:
+
+| Variable | Requirement | Purpose |
+| --- | --- | --- |
+| `NUXT_SESSION_PASSWORD` | At least 32 bytes | Encryption key for session cookies managed by `nuxt-auth-utils` |
+| `NUXT_OAUTH2_JWT_SECRET` | At least 32 bytes | Signing key for OAuth2 access tokens |
+| `TRUST_PROXY` | Set only when behind a trusted reverse proxy | Enables use of the `x-forwarded-for` header for client IP identification in rate limiting |
+| `MICROSOFT_TENANT_ID` | Valid Microsoft Entra ID tenant | Required for Microsoft Graph API integration |
+| `MICROSOFT_CLIENT_ID` | Valid Microsoft Entra ID application ID | Required for Microsoft Graph API integration |
+| `MICROSOFT_CLIENT_SECRET` | Valid client secret | Used for the client credentials token flow in `server/plugins/microsoft.ts` |
+
 ## Rate Limiting
 
 All API endpoints are protected by an in-memory rate limiter:
@@ -14,9 +27,9 @@ All API endpoints are protected by an in-memory rate limiter:
 - **Default limit:** 60 requests per 60,000 ms (1 minute)
 - **Client identification:** Authenticated users are identified by `user:{id}`; unauthenticated requests by `ip:{ip}`
 - **Response:** 429 status with `Retry-After` header
-- **Cleanup:** 1% probabilistic cleanup of entries older than 1 hour
+- **Cleanup:** Interval-based cleanup runs at most once every 5 minutes and removes entries with no requests in the last hour
 
-::: warning Rate limiting is in-memory and per-process. Under high concurrency or with multiple server instances, a determined attacker could potentially bypass per-IP limits by distributing requests across many IPs. :::
+::: warning Rate limiting is in-memory and per-process. Under high concurrency or with multiple server instances, the effective rate limit applies separately to each process. :::
 
 See [Rate Limiting](./rate-limiting.md) for full details.
 
@@ -46,7 +59,7 @@ See [Rate Limiting](./rate-limiting.md) for full details.
     - `requireUser(event)` — returns the full DB user row or 401
     - `requireJudge(event)` — 403 if not judge/admin
     - `requireAdmin(event)` — 403 if not admin
-- Fine-grained permissions are checked using `hasPermission(user.role, DevPermissions.XXX)`
+- Fine-grained permissions are checked using `hasPermission(user.role, permission)` from `shared/permissions.ts`
 - The `role` column stores space-separated URI-encoded permission strings
 
 ::: danger Never trust the frontend for permission checks. Always validate on the server. :::
@@ -97,7 +110,7 @@ const jwt = await new SignJWT({
     user_id: session.user.id,
     client_id: session.application.client_id,
     redirect_uri: session.redirect_uri,
-    scope: session.scopes,
+    scope: session.scopes.join(" "),
 })
     .setProtectedHeader({ alg: "HS256" })
     .setIssuer("basishacks")
@@ -107,25 +120,26 @@ const jwt = await new SignJWT({
     .sign(key);
 ```
 
-Token verification uses `jose.jwtVerify()` with the same secret.
+Token verification uses `jose.jwtVerify()` with the same secret in `server/utils/oauth2-jwt.ts`.
 
 ## PKCE Support
 
-The OAuth2 authorization flow supports **Proof Key for Code Exchange (PKCE)**:
+The OAuth2 authorization flow requires **Proof Key for Code Exchange (PKCE)**. Authorization requests that omit `code_challenge` or `code_challenge_method` are rejected with a 400 `invalid_request: PKCE required` response.
 
-- Clients can provide `code_challenge` and `code_challenge_method` parameters during authorization
-- Supported method: `S256` (SHA-256 hash of the code verifier, base64url-encoded)
+- Clients must provide `code_challenge` and `code_challenge_method` parameters during authorization
+- Supported methods: `S256` (SHA-256 hash of the code verifier, base64url-encoded) and `plain`
 - During token exchange, the `code_verifier` is verified against the stored challenge:
 
 ```ts
 if (session.bh_verifier_challenge_method === "S256") {
     const hash = createHash("sha256").update(codeVerifier).digest("base64url");
     verified = hash === session.bh_verifier_challenge;
+} else {
+    verified = codeVerifier === session.bh_verifier_challenge;
 }
 ```
 
-- If PKCE parameters are not provided, the flow falls back to protocol version 2.0 (legacy mode)
-- PKCE is strongly recommended for public clients (SPAs, mobile apps)
+- PKCE is mandatory for all clients, including confidential clients
 
 ## Sensitive Scope Consent
 
