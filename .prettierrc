@@ -7,7 +7,7 @@
     "bracketSpacing": true,
     "arrowParens": "always",
     "printWidth": 100,
-    "endOfLine": "auto",
+    "endOfLine": "lf",
     "proseWrap": "never",
     "htmlWhitespaceSensitivity": "ignore",
     "quoteProps": "as-needed",
