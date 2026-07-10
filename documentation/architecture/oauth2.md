@@ -338,13 +338,20 @@ Each session has a 10-minute expiry and tracks the full authorization state:
 
 | Field                   | Description                                               |
 | ----------------------- | --------------------------------------------------------- |
-| `token`                 | Session identifier (set as `bridge_id` cookie)            |
-| `application`           | The OAuth2 application requesting access                  |
-| `user`                  | Authenticated user (null until login completes)           |
-| `scopes`                | Requested scopes                                          |
-| `login_state`           | `identification` → `requesting` → `consent` → `completed` |
-| `code`                  | Authorization code (generated at consent)                 |
-| `bh_verifier_challenge` | PKCE code challenge                                       |
-| `expire_time`           | Session expiry timestamp                                  |
+| `token`                        | Session identifier (set as `bridge_id` cookie)            |
+| `application`                  | The OAuth2 application requesting access                  |
+| `user`                         | Authenticated user (null until login completes)           |
+| `scopes`                       | Requested scopes                                          |
+| `login_state`                  | `identification` → `requesting` → `consent` → `completed` |
+| `code`                         | Authorization code (generated at consent)                 |
+| `bh_state`                     | OAuth2 `state` parameter returned to the client           |
+| `bh_verifier_challenge`        | PKCE code challenge                                       |
+| `bh_verifier_challenge_method` | PKCE method (`S256` or `plain`)                           |
+| `ms_state`                     | Microsoft OAuth2 `state` parameter (proxy flows only)     |
+| `ms_verifier`                  | Microsoft PKCE code verifier (proxy flows only)           |
+| `teams_code`                   | Teams join code (legacy field, currently unused)          |
+| `post_login_redirect`          | Optional internal redirect after flow completion          |
+| `granted_time`                 | Session creation timestamp                                |
+| `expire_time`                  | Session expiry timestamp                                  |
 
 ::: warning The in-memory session store means authorization sessions are lost on server restart. This is acceptable because sessions are short-lived (10 minutes), but it means the OAuth2 flow cannot span server restarts. :::
