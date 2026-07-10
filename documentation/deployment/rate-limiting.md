@@ -30,8 +30,15 @@ export const DEFAULT_RATE_LIMIT_CONFIG: RateLimitConfig = {
 interface RateLimitConfig {
     maxRequests: number;
     windowMs: number;
+    keyPrefix?: string;
+    keyGenerator?: (event: H3Event) => Promise<string | null> | string | null;
 }
 ```
+
+- `maxRequests`: Maximum number of requests allowed within the window
+- `windowMs`: Time window in milliseconds
+- `keyPrefix`: Optional prefix added to the generated client identifier
+- `keyGenerator`: Optional custom function that returns a client identifier; if it returns `null`, the default identifier is used
 
 ## Usage
 
@@ -71,26 +78,42 @@ This means each authenticated user has their own rate limit bucket, regardless o
 
 ### 2. Unauthenticated Requests
 
-If no session is found, the client IP is used:
+If no session is found, the request is identified by IP address:
 
 ```
 ip:{ip}
 ```
 
-The IP address is extracted from the following headers, in priority order:
+The IP address is resolved in the following priority order:
 
-| Priority | Header            | Notes                                                             |
-| :------: | ----------------- | ----------------------------------------------------------------- |
-|    1     | `x-forwarded-for` | First value after splitting on comma (leftmost = original client) |
-|    2     | `x-real-ip`       | Set by reverse proxies                                            |
-|    3     | `unknown`         | Fallback if no header is present                                  |
+| Priority | Source | Notes |
+| :-: | --- | --- |
+| 1 | Direct socket peer address | `event.node.req.socket.remoteAddress`; used when available |
+| 2 | `x-real-ip` header | Fallback when no socket address is present |
+| 3 | `x-forwarded-for` header | Used only when `TRUST_PROXY` is set; the rightmost value is used to avoid spoofed leftmost hops |
+| 4 | `unknown` | Fallback when no address can be determined |
 
 ```ts
-const ip =
-    getHeader(event, "x-forwarded-for")?.split(",")[0]?.trim() ||
-    getHeader(event, "x-real-ip") ||
-    "unknown";
+const socketAddress = event.node.req.socket?.remoteAddress;
+let ip = socketAddress || getHeader(event, "x-real-ip") || "unknown";
+
+if (!socketAddress && process.env.TRUST_PROXY) {
+    const forwarded = getHeader(event, "x-forwarded-for");
+    if (forwarded) {
+        const parts = forwarded
+            .split(",")
+            .map((value) => value.trim())
+            .filter(Boolean);
+        if (parts.length > 0) {
+            ip = parts[parts.length - 1];
+        }
+    }
+}
+
+return `ip:${ip}`;
 ```
+
+::: tip Set `TRUST_PROXY` only when the application runs behind a trusted reverse proxy. Without this variable, the rate limiter ignores `x-forwarded-for` entirely. :::
 
 ## Rate Limit Response
 
@@ -199,4 +222,4 @@ Since the rate limit state is in-memory:
 
 ### IP Spoofing
 
-The `x-forwarded-for` header can be spoofed. In production behind a reverse proxy (e.g., nginx), `x-real-ip` is more reliable as it is set by the proxy and cannot be forged by clients.
+The rate limiter prioritizes the direct socket peer address, which cannot be spoofed by the client. When a reverse proxy is in use, set `TRUST_PROXY` so the limiter consults `x-forwarded-for`. In that mode, the rightmost value is used because the leftmost values can be spoofed by the client. The `x-real-ip` header is used only as a fallback when no socket address is present.

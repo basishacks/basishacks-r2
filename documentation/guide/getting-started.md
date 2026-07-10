@@ -5,7 +5,7 @@ description: Get the basishacks hackathon platform running on your local machine
 
 # Getting Started
 
-This guide walks you through setting up the **basishacks** development environment from scratch. By the end, you will have the app running locally with HTTPS on port 24598.
+This guide walks you through setting up the **basishacks** development environment from scratch. By the end, you will have the application running locally with HTTPS on port 24598.
 
 <StatusBadge status="online" text="Docs build status: passing" />
 
@@ -77,7 +77,7 @@ npm install
 
 The local development environment uses SQLite with Drizzle ORM. The driver is selected automatically based on your runtime: `bun:sqlite` under Bun, or `better-sqlite3` under Node.js.
 
-Migrations and seeding run **automatically** when the Nitro dev server starts via the `init-database.ts` plugin, which calls `createDrizzleDatabase()` and `createAndMigrateDatabase()` from `server/database/migrate.ts`.
+Migrations and seeding run **automatically** when the Nitro dev server starts via the `init-database.ts` plugin, which calls `createDrizzleDatabase()` in `server/database/index.ts`. That helper selects the runtime's native SQLite driver, then runs `createAndMigrateDatabase()` from `server/database/migrate.ts` to apply pending migrations and seed the default hackathon row.
 
 To manually initialize the database:
 
@@ -85,7 +85,7 @@ To manually initialize the database:
 bun run db:migrate
 ```
 
-This runs Drizzle Kit migrations, which create all required tables (`hackathon`, `teams`, `team_scores`, `users`, `ballots`, `ballot_scores`, `oauth2_applications`, `seasons`, `user_past_teams`).
+This runs Drizzle Kit migrations, which create all required tables: `hackathon`, `teams`, `team_scores`, `users`, `ballots`, `ballot_scores`, `oauth2_applications`, `seasons`, `team_awards`, `peer_voting_scores`, and `user_past_teams`.
 
 ### Seed the Hackathon Row
 
@@ -121,14 +121,17 @@ cp .env.example .env
 At minimum, set the following:
 
 ```bash
-# REQUIRED - Must be at least 32 bytes
+# REQUIRED - Session encryption key. Must be at least 32 bytes.
 NUXT_SESSION_PASSWORD=your_random_string_at_least_32_bytes_long
 
-# REQUIRED - Must be at least 32 bytes
+# REQUIRED - OAuth2 JWT signing secret. Must be at least 32 bytes.
 NUXT_OAUTH2_JWT_SECRET=your_oauth2_jwt_secret_here
+
+# REQUIRED for the onsite login flow
+ONSITE_LOGIN_CLIENT_ID=your_onsite_login_client_id_here
 ```
 
-See [Environment Setup](/guide/environment-setup) for the full list of variables.
+To log in through Microsoft Entra ID, also set `MICROSOFT_TENANT_ID` and `MICROSOFT_CLIENT_ID`. See [Environment Setup](/guide/environment-setup) for the full list.
 
 ## Run the Development Server
 
@@ -150,7 +153,7 @@ The server starts on **port 24598** with HTTPS. Open your browser to:
 https://localhost:24598
 ```
 
-:::: warning The `--https` flag is required because Microsoft OAuth2 and session cookies require a secure context. You may see a self-signed certificate warning in your browser — accept it to proceed. ::::
+:::: warning Use the `--https` flag because Microsoft OAuth2 and secure session cookies require a trusted context. You may see a self-signed certificate warning in your browser; accept it to proceed. ::::
 
 ## Production Build
 
@@ -183,7 +186,7 @@ bun run test:watch
 bun run test:coverage
 ```
 
-These invoke `vitest run --pool=forks`, which resolves Nuxt's `~~/` and `~/` path aliases via `vitest.config.ts` and runs `tests/setup.ts` as a setup file to populate in-memory SQLite databases and Microsoft OAuth2 env vars.
+These invoke `vitest run --pool=forks`, which resolves Nuxt's `~~/` and `~/` path aliases via `vitest.config.ts` and runs `tests/setup.ts` as a setup file to populate in-memory SQLite databases and Microsoft OAuth2 environment variables.
 
 ### About `bun test`
 
@@ -191,9 +194,9 @@ Bun's native test runner (`bun test`) cannot resolve Nuxt's `~~/` and `~/` path 
 
 To avoid confusion, `bunfig.toml` scopes `bun test` to a single shim (`bun-shim/shim.test.ts`) that prints guidance directing you to run `bun run test` instead. The shim exits successfully so `bun test` never appears to fail.
 
-### Legacy test script
+### Legacy Test Scripts
 
-`tests/index.js` is a legacy manual test runner invoked via `node --env-file=.env tests/index.js`. It is not part of the Vitest suite and is rarely used.
+`tests/index.js`, `tests/test.oauth2.js`, `tests/test.microsoft.ts`, and `tests/test.deepseek.ts` are legacy manual test runners kept for reference. They are not part of the active Vitest suite.
 
 ## First Login Flow
 
@@ -219,7 +222,7 @@ New users are assigned the `participant` role by default. To elevate your permis
     ```sql
     UPDATE users SET role = 'admin' WHERE email = 'your@basischina.com';
     ```
-3. Refresh the browser — you should now have access to admin features and the developer portal.
+3. Refresh the browser. You should now have access to admin features and the developer portal.
 
 ## Verify Everything Works
 

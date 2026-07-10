@@ -55,13 +55,13 @@ Stores judge scores for each team. Each judge can score a team exactly once.
 
 | Column | Type | Description |
 | --- | --- | --- |
-| `id` | `INTEGER PRIMARY KEY AUTOINCREMENT` | Score ID |
 | `team_id` | `INTEGER NOT NULL` | FK to `teams.id` |
 | `judge_user_id` | `INTEGER NOT NULL` | FK to `users.id` |
 | `scores` | `TEXT NOT NULL` | JSON object of rubric scores |
 | `reasoning` | `TEXT NOT NULL DEFAULT '<no reasoning provided>'` | Judge's reasoning |
+| `season_id` | `INTEGER` | FK to `seasons.id` |
 
-**Unique constraint**: `(team_id, judge_user_id)`
+**Primary key**: `(team_id, judge_user_id)`
 
 ### `users`
 

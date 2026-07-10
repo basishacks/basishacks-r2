@@ -5,7 +5,7 @@ description: File-based routes in the basishacks frontend — home, dashboard, v
 
 # Pages
 
-The basishacks frontend contains **27 page files** in `app/pages/`, mapped to routes via Nuxt's file-based routing. All pages use `<script setup lang="ts">`.
+The basishacks frontend contains **25 page files** in `app/pages/`, mapped to routes via Nuxt's file-based routing. All pages use `<script setup lang="ts">`.
 
 ## Public Pages
 
@@ -45,10 +45,10 @@ User profile editing page. Protected by `auth` middleware.
 
 **Features:**
 
-- Displays greeting with user name/email
+- Displays greeting with user name or email
 - **Name editing** — text input validated by `UpdateUserRequest`
 - **Avatar upload** — `UFileUpload` with live preview via `UserAvatar`. Supports removing the current avatar. Converts uploaded files to base64 before sending.
-- **Profile theme image** — `UFileUpload` for background image. Displays current theme as a CSS background. Affects the user's profile page (`/user/{id}`) and `UserPopover` card.
+- **Profile theme image** — `UFileUpload` for background image. Displays the current theme as a CSS background. Affects the user's profile page (`/user/{id}`) and `UserPopover` card.
 - **Logout button** — clears the session and navigates to `/`
 
 **API:** `PATCH /api/users/{id}` with body containing `name`, `avatar` (base64 or null), `profile_theme_image` (base64 or null).
@@ -73,7 +73,7 @@ Static rules page listing hackathon requirements:
 
 **File:** `app/pages/showcase.vue`
 
-Animated showcase page for the top 3 projects from the current season. A highly visual, scroll-driven experience.
+Animated showcase page for the top projects from the current season. A highly visual, scroll-driven experience.
 
 **Layout:** `fullwidth-nostick`
 
@@ -85,6 +85,7 @@ Animated showcase page for the top 3 projects from the current season. A highly 
 | Team #1 | Scroll-driven video playback, cursor-following gold aura effect, slide-right description transition |
 | Team #2 | Word-by-word shake animation for project name, metallic silver styling, dual image layout |
 | Team #3 | Slide-left transition, metallic bronze styling, window mockup with screenshot |
+| All Projects | Dual `UMarquee` carousels of `ShowcaseMarqueeCard` components, clickable to open a project modal |
 
 **Scroll-driven animations:**
 
@@ -92,9 +93,9 @@ Animated showcase page for the top 3 projects from the current season. A highly 
 - Team #2 and #3: visibility triggers when elements enter the viewport
 - "Scroll for more" indicator fades out after scrolling past 25% viewport height
 
-**Preloading:** All images and videos are preloaded via `<link rel="preload">` in `useHead`.
+**Preloading:** Images and videos are preloaded via `<link rel="preload">` in `useHead`.
 
-**Components used:** `GoBackUp`, `LoaderAnimation`, `ResultsProjectLinks`
+**Components used:** `GoBackUp`, `LoaderAnimation`, `ResultsProjectLinks`, `ShowcaseMarqueeCard`, `ProjectCard`
 
 ::: tip This page uses custom CSS animations including `metallic-gold`, `metallic-silver`, `metallic-bronze`, `neon` flicker, and `appearAndShake` word animations. :::
 
@@ -108,7 +109,7 @@ Peer voting page. Protected by `auth` middleware. Only accessible during the `vo
 
 1. Fetches ballot data from `/api/ballot`
 2. Displays eligible `VotingProjectCard` components in a grid
-3. User distributes **10 stars** among eligible projects in the same pathway (0–5 per project)
+3. User distributes **10 stars** among eligible projects (0–5 per project)
 4. Increment/decrement buttons with validation (total must equal 10)
 5. Reasoning textarea
 6. Submit with browser `confirm()` dialog
@@ -117,51 +118,33 @@ Peer voting page. Protected by `auth` middleware. Only accessible during the `vo
 
 **Layout:** `default`
 
-## Election Pages
-
-### `/temp/vote`
-
-**File:** `app/pages/temp/vote/index.vue`
-
-Student-council election voting page. Protected by `auth` middleware. Requires `VotePermissions.VOTE` or `admin` permission.
-
-**Flow:**
-
-1. Fetches candidates from `/api/election/candidates`
-2. Fetches current IRV results from `/api/election/vote`
-3. User enters a rank (1 = first preference) for each candidate via `UPinInput`
-4. Empty inputs are treated as abstentions
-5. Press <UKbd>X</UKbd> to validate; press again to submit if there are no errors
-6. Results can be toggled on/off before full public release
-
-**Validation:** Client-side checks for duplicate ranks and skipped ranks; server validates with `ElectionVoteRequest`.
-
-**Keybinds:**
-
-- `X` — check / submit
-- `Tab` / `Shift+Tab` — navigate candidates
-- `ArrowDown` / `ArrowUp` — move between pin inputs
-
-**Layout:** `default`
-
-### `/temp/vote/all`
-
-**File:** `app/pages/temp/vote/all.vue`
-
-Admin-only ballot listing page for the election. Shows every cast ballot with voter name, email, submission time, decoded ranked choices, and a delete button.
-
-**Layout:** `default`
+## Judging Pages
 
 ### `/judging`
 
-**File:** `app/pages/judging.vue`
+**File:** `app/pages/judging/index.vue`
 
-Judge scoring page. Protected by `auth` middleware. Accessible only by judges/admins during `voting` status.
+Judge landing page. Protected by `auth` middleware. Accessible only by judges or admins during the `voting` status.
 
 **Guards:**
 
 - Redirects to `/` if hackathon status is not `voting`
 - Redirects to `/` if user lacks judge or admin permissions
+
+**Content:**
+
+- Static summary of participation statistics
+- **Current Evaluations** section — shows `JudgeProgressCard` for the active season
+- **Past Evaluations** section — shows `JudgeProgressCard` entries for past seasons with at least one scored team
+- **Continue** button — navigates to `/judging/continue`
+
+**Layout:** `default`
+
+### `/judging/continue`
+
+**File:** `app/pages/judging/continue.vue`
+
+Active judging interface. Protected by `auth` middleware. Accessible only by judges or admins during the `voting` status.
 
 **Flow:**
 
@@ -185,10 +168,7 @@ Main dashboard overview. Protected by `auth` middleware. Uses `dashboard` layout
 - If no team: prompt to create or join a team
 - If has team: `ProjectCard` showing the current project
 - Action cards linking to General, Teams, and Results pages
-- **Confetti animation** — triggers on mount if the user's team ranks in the top 10:
-    - Ranks 1–3: metallic-colored pride + fireworks effects via `canvas-confetti`
-    - Ranks 4–10: RGB pride effect
-    - Uses `sessionStorage` to prevent repeat triggers
+- **Confetti animation** — helper functions exist for ranks 1–10 but are not automatically triggered on mount
 
 **Unsaved changes protection:** Listens for `onBeforeRouteLeave` and `beforeunload` events.
 
@@ -204,8 +184,8 @@ Project editing page. Protected by `auth` middleware.
 
 - No team and hackathon not started → "Hackathon not started yet!" CTA
 - No team and hackathon started → "You don't have a team yet!" CTA
-- Has team and hackathon in progress → `ProjectForm` (enabled)
-- Project already submitted → `ProjectForm` (disabled) with congratulations message
+- Has team → `ProjectForm` (disabled when submission is closed or already submitted)
+- Project already submitted → congratulations message with disabled form
 
 **Unsaved changes protection:** Same pattern as dashboard index — `onBeforeRouteLeave` + `beforeunload`.
 
@@ -232,8 +212,8 @@ Season results page. Protected by `auth` middleware.
 
 **Content:**
 
-- Current season results via `ResultCard`
-- Past season results via `ResultCard` for each `past_teams` entry
+- Current season results via `ScoreCard`
+- Past season results via `ScoreCard` for each `past_teams` entry
 
 **Layout:** `dashboard`
 
@@ -241,7 +221,7 @@ Season results page. Protected by `auth` middleware.
 
 **File:** `app/pages/dashboard/presentation.vue`
 
-Placeholder page for the presentation event (planned for seasons after April 2026). States that top 10 teams will be invited to present.
+Placeholder page for the presentation event. States that top 10 teams will be invited to present.
 
 **Layout:** `dashboard`
 
@@ -377,7 +357,7 @@ Full OAuth2 authorization page with login + consent flow. Uses **no layout** (`l
 
 **File:** `app/pages/user/[id].vue`
 
-Public user profile page. Sets layout to `fullwidth`.
+Public user profile page.
 
 **Features:**
 
@@ -391,7 +371,7 @@ Public user profile page. Sets layout to `fullwidth`.
 
 **File:** `app/pages/user/index.vue`
 
-User listing or redirect page.
+Redirects an authenticated user to their own profile page (`/user/{id}`). If the user is not logged in, redirects to `/login`.
 
 ## Debug
 
@@ -399,4 +379,9 @@ User listing or redirect page.
 
 **File:** `app/pages/debug.vue`
 
-Debug page for development purposes.
+Admin-only debug page with two tabs:
+
+- **File Upload** — upload files to `/assets` or `/userast`, list uploaded files, and copy permalinks
+- **DeepSeek Chat** — create chat sessions, send messages, and delete sessions via `/api/debug/deepseek/sessions`
+
+Protected by `auth` middleware and an admin permission check.

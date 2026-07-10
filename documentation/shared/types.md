@@ -82,13 +82,13 @@ These interfaces match the SQL schema exactly. They include all columns, includi
 
 ### `TeamScores`
 
-| Field           | Type     | Description                  |
-| --------------- | -------- | ---------------------------- |
-| `id`            | `number` | Primary key                  |
-| `team_id`       | `number` | Foreign key to team          |
-| `judge_user_id` | `number` | Foreign key to judge user    |
-| `scores`        | `string` | JSON string of rubric scores |
-| `reasoning`     | `string` | Judge's written reasoning    |
+| Field           | Type     | Description                                  |
+| --------------- | -------- | -------------------------------------------- |
+| `team_id`       | `number` | Foreign key to team                          |
+| `judge_user_id` | `number` | Foreign key to judge user                    |
+| `scores`        | `string` | JSON string of rubric scores                 |
+| `reasoning`     | `string` | Judge's written reasoning                    |
+| `season_id`     | `number` | Optional season context for the scored entry |
 
 ### `User`
 
@@ -124,35 +124,51 @@ These interfaces match the SQL schema exactly. They include all columns, includi
 
 ### `OAuth2Application`
 
-| Field             | Type                 | Description                                  |
-| ----------------- | -------------------- | -------------------------------------------- |
-| `client_id`       | `string`             | UUID client identifier                       |
-| `client_secret`   | `string`             | Space-separated SHA-256 hashes               |
-| `redirect_uris`   | `string \| null`     | Space-separated allowed redirect URIs        |
-| `permissions`     | `string \| null`     | Space-separated allowed OAuth2 scopes        |
-| `name`            | `string`             | Application display name                     |
-| `description`     | `string \| null`     | Application description                      |
-| `proxy_microsoft` | `number`             | Whether app proxies Microsoft OAuth (0 or 1) |
-| `type`            | `'first' \| 'third'` | First-party or third-party application       |
-| `profile_picture` | `string \| null`     | Application icon path                        |
-| `owner_id`        | `number \| null`     | Foreign key to owning user                   |
-
-### `Award`
-
-| Field         | Type     | Description       |
-| ------------- | -------- | ----------------- |
-| `id`          | `number` | Primary key       |
-| `name`        | `string` | Award name        |
-| `description` | `string` | Award description |
-| `icon`        | `string` | Icon class        |
+| Field             | Type             | Description                                  |
+| ----------------- | ---------------- | -------------------------------------------- |
+| `client_id`       | `string`         | UUID client identifier                       |
+| `client_secret`   | `string`         | Space-separated SHA-256 hashes               |
+| `redirect_uris`   | `string \| null` | Space-separated allowed redirect URIs        |
+| `permissions`     | `string \| null` | Space-separated allowed OAuth2 scopes        |
+| `name`            | `string`         | Application display name                     |
+| `description`     | `string \| null` | Application description                      |
+| `proxy_microsoft` | `number`         | Whether app proxies Microsoft OAuth (0 or 1) |
+| `type`            | `string \| null` | First-party or third-party application type  |
+| `profile_picture` | `string \| null` | Application icon path                        |
+| `owner_id`        | `number \| null` | Foreign key to owning user                   |
 
 ### `TeamAward`
 
-| Field      | Type             | Description            |
-| ---------- | ---------------- | ---------------------- |
-| `team_id`  | `number`         | Foreign key to team    |
-| `award_id` | `number`         | Foreign key to award   |
-| `meta`     | `string \| null` | Optional JSON metadata |
+There is no standalone `awards` table. Award definitions are static in `shared/awards.ts`, and per-team assignments are stored in `team_awards`.
+
+| Field     | Type     | Description                                |
+| --------- | -------- | ------------------------------------------ |
+| `team_id` | `number` | Foreign key to team                        |
+| `award`   | `string` | Award namespace from `AWARD_REGISTRY`      |
+| `meta`    | `string` | JSON metadata stored as a non-empty string |
+
+### `PeerVotingScore`
+
+| Field       | Type     | Description                            |
+| ----------- | -------- | -------------------------------------- |
+| `user_id`   | `number` | Foreign key to user                    |
+| `score`     | `string` | JSON string of peer-voting allocations |
+| `reasoning` | `string` | Voter's written reasoning              |
+
+### `Season`
+
+| Field       | Type     | Description                            |
+| ----------- | -------- | -------------------------------------- |
+| `id`        | `number` | Primary key                            |
+| `name`      | `string` | Season display name                    |
+| `is_active` | `number` | Whether this season is active (0 or 1) |
+
+### `UserPastTeams`
+
+| Field     | Type     | Description              |
+| --------- | -------- | ------------------------ |
+| `user_id` | `number` | Foreign key to user      |
+| `team_id` | `number` | Foreign key to past team |
 
 ---
 
@@ -203,15 +219,17 @@ Parsed from the database `"mode|value"` string format.
 
 ### `APIAward`
 
-| Field         | Type                      | Description                             |
-| ------------- | ------------------------- | --------------------------------------- |
-| `award_id`    | `number`                  | Award ID from the `awards` table        |
-| `name`        | `string`                  | Award display name                      |
-| `description` | `string`                  | Award description                       |
-| `icon`        | `string`                  | Icon class                              |
-| `meta`        | `Record<string, unknown>` | Parsed JSON metadata from `team_awards` |
+| Field         | Type                      | Description                                          |
+| ------------- | ------------------------- | ---------------------------------------------------- |
+| `namespace`   | `string`                  | Award namespace from `AWARD_REGISTRY`                |
+| `name`        | `string`                  | Award display name                                   |
+| `description` | `string`                  | Award description                                    |
+| `icon`        | `string`                  | Icon class                                           |
+| `meta`        | `Record<string, unknown>` | Parsed JSON metadata from `team_awards`              |
+| `color`       | `string`                  | Resolved award color (defaults to `gold`)            |
+| `text`        | `string`                  | Resolved display text, or computed text when present |
 
-Awards are resolved from the `team_awards` table joined with `awards` and attached to `APITeam` by `convertTeamToPublic`.
+Awards are resolved from the `team_awards` table through `AWARD_REGISTRY` in `shared/awards.ts` and attached to `APITeam` by `convertTeamToPublic`.
 
 ### `GetUserResponse`
 
@@ -277,15 +295,6 @@ An array of lightweight member objects.
 | --------- | --------------------------- | ----------------------------- |
 | `current` | `BallotSummaryItem \| null` | Summary for the active season |
 | `past`    | `BallotSummaryItem[]`       | Summaries for past seasons    |
-
-### `APIAward`
-
-| Field       | Type                      | Description           |
-| ----------- | ------------------------- | --------------------- |
-| `namespace` | `string`                  | Award identifier      |
-| `name`      | `string`                  | Display name          |
-| `meta`      | `Record<string, unknown>` | Stored metadata       |
-| `text`      | `string`                  | Resolved display text |
 
 ### `ElectionCandidate`
 

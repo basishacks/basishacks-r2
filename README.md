@@ -180,19 +180,38 @@ app/                    # Nuxt app (Vue frontend)
 server/                 # Nitro backend
   api/                  # API route handlers (file-based)
   middleware/           # Server middleware (OAuth2 authorize)
-  plugins/              # Nitro plugins (DB init, MS Graph token init)
+  plugins/              # Nitro plugins (DB init, MS Graph token, JWT secret guard)
   database/             # Drizzle ORM: schema, migrations, dual-runtime init
     schema.ts           # Drizzle schema definition
     migrate.ts          # createAndMigrateDatabase() + migrateLegacySchema()
     index.ts            # createDrizzleDatabase() — selects bun:sqlite or better-sqlite3
-  utils/                # Server utilities (auth, convert, rateLimit, oauth2, etc.)
+  utils/                # Server utilities
+    database/           # Per-table Drizzle helpers
+    auth.ts             # requireUser / requireJudge / requireAdmin / requirePermission
+    convert.ts          # DB row -> public API object transformers
+    rateLimit.ts        # In-memory rate limiter
+    oauth2.ts           # Microsoft OAuth2 URL construction
+    oauth2-validate.ts  # OAuth2 authorization request validation
+    oauth2-jwt.ts       # JWT verification and withOAuth2JWT() wrapper
+    profile.ts          # Profile picture helpers
+    assets.ts           # Static and user asset helpers
+    scoring.ts          # Score aggregation and final ranking
+    url-validation.ts   # Redirect URI validation
+    validate-oauth2-jwt-secret.ts # JWT secret guard
+    deepseek-store.ts   # DeepSeek AI chat session store
   types/                # Type augmentations (H3EventContext)
 
 shared/                 # Code shared between client and server
   schemas.ts            # Zod validation schemas
   database.d.ts         # DB TypeScript types
-  permissions.ts        # DevPermissions + helpers
+  responses.d.ts        # API response interface definitions
+  auth.d.ts             # nuxt-auth-utils session type augmentation
+  permissions.ts        # Fine-grained permission constants and helpers
   oauth2-scopes.ts      # OAuth2 scope definitions
+  oauth2.ts             # Microsoft OAuth2 static configuration
+  rubric.ts             # Judging rubric definitions
+  awards.ts             # Award registry definitions
+  seasons.ts            # Static season metadata
 
 sql/archive/            # ARCHIVED legacy SQL schema and migrations (not active)
   init.sql              # Historical base schema

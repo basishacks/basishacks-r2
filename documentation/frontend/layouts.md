@@ -20,7 +20,7 @@ The standard page layout used by most public pages.
 │ RoleHeader                   │
 ├──────────────────────────────┤
 │ UMain                        │
-│   UContainer                 │
+│   <div class="px-4 ...">     │
 │     <slot />                 │
 │                              │
 ├──────────────────────────────┤
@@ -29,16 +29,16 @@ The standard page layout used by most public pages.
 ```
 
 - `RoleHeader` — sticky navigation header with role-based menu items
-- Content wrapper — full-width padded container (the global `UContainer` max-width constraint was removed so the header, footer, and content span the viewport)
+- Content wrapper — padded `div` that spans the viewport width (the global `UContainer` max-width constraint was removed so the header, footer, and content span the viewport)
 - `Footer` — site-wide footer with links and copyright
 
-**Used by:** `/`, `/profile`, `/rules`, `/voting`, `/judging`
+**Used by:** `/`, `/profile`, `/rules`, `/voting`, `/judging`, `/judging/continue`
 
 ## default-background
 
 **File:** `app/layouts/default-background.vue`
 
-Identical to `default` but with a **red background** (`bg-red-100`) on the `UMain` element. Used for debugging/visual testing.
+Identical to `default` but with a **red background** (`bg-red-100`) on the `UMain` element. Used for debugging or visual testing.
 
 ::: warning This layout is intended for development only and should not be used in production pages. :::
 
@@ -46,7 +46,7 @@ Identical to `default` but with a **red background** (`bg-red-100`) on the `UMai
 
 **File:** `app/layouts/fullwidth.vue`
 
-Same header/footer structure as `default`, but **without** the `UContainer` wrapper. The slot content spans the full viewport width.
+Same header/footer structure as `default`, but **without** the inner padded container. The slot content spans the full viewport width.
 
 **Structure:**
 
@@ -151,12 +151,12 @@ Developer portal layout using `UDashboardGroup` with a collapsible, resizable si
 
 **Sidebar sections:**
 
-| Section    | Content                                                             |
-| ---------- | ------------------------------------------------------------------- |
-| Header     | "basishacks devs" link (collapses to "b" when sidebar is minimized) |
-| Search     | Search button with ⌘K keyboard shortcut hint                        |
-| Navigation | Permission-gated menu items                                         |
-| Footer     | User avatar button linking to `/profile`                            |
+| Section    | Content                                                                     |
+| ---------- | --------------------------------------------------------------------------- |
+| Header     | "{{ WEBSITE_NAME }} devs" link (collapses to "b" when sidebar is minimized) |
+| Search     | Search button with ⌘K keyboard shortcut hint                                |
+| Navigation | Permission-gated menu items                                                 |
+| Footer     | User avatar button linking to `/profile`                                    |
 
 **Navigation items with permission gates:**
 
@@ -177,11 +177,11 @@ Items are disabled (not hidden) when the user lacks the required permission. Per
 
 ## Layout Comparison
 
-| Layout | Header | Container | Footer | Sidebar | Sticky Header |
+| Layout | Header | Inner Container | Footer | Sidebar | Sticky Header |
 | --- | --- | --- | --- | --- | --- |
-| `default` | RoleHeader | UContainer | Footer | — | Yes |
-| `default-background` | RoleHeader | UContainer (red bg) | Footer | — | Yes |
+| `default` | RoleHeader | Padded `div` | Footer | — | Yes |
+| `default-background` | RoleHeader | Padded `div` (red bg) | Footer | — | Yes |
 | `fullwidth` | RoleHeader | None | Footer | — | Yes |
 | `fullwidth-nostick` | RoleHeader | None | Footer | — | No |
-| `dashboard` | RoleHeader | UContainer | Footer | Visible left | Yes |
+| `dashboard` | RoleHeader | Padded `div` | Footer | Visible left | Yes |
 | `developers-dashboard` | — | None | — | Collapsible | — |

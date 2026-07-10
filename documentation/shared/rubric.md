@@ -120,7 +120,7 @@ interface HackathonSeason {
 | 1   | Beneath the Surface | May 2026      | Explore the hidden depths of our world |
 | 2   | Signal              | February 2026 | signal                                 |
 
-The active season is tracked in the `hackathon` table and can be set via `PATCH /api/seasons/active`.
+The active season is tracked in the `seasons` table through the `is_active` column and can be set via `PATCH /api/seasons/active`. The `HackathonSeason` metadata in `shared/seasons.ts` is static and mapped to `seasons` table rows by ID; the table itself stores only `id`, `name`, and `is_active`.
 
 ## Related Schemas
 

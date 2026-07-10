@@ -10,6 +10,7 @@ import AnimatedCounter from "./components/AnimatedCounter.vue";
 import InteractiveHero from "./components/InteractiveHero.vue";
 import QuoteCycler from "./components/QuoteCycler.vue";
 import EasterEggOverlay from "./components/EasterEggOverlay.vue";
+import PackageVersions from "./components/PackageVersions.vue";
 
 import { useEasterEggs } from "./composables/useEasterEggs";
 
@@ -24,6 +25,7 @@ export default {
         app.component("InteractiveHero", InteractiveHero);
         app.component("QuoteCycler", QuoteCycler);
         app.component("EasterEggOverlay", EasterEggOverlay);
+        app.component("PackageVersions", PackageVersions);
     },
     setup() {
         useEasterEggs();

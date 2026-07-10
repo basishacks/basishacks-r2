@@ -1,21 +1,20 @@
 ---
 title: Migration from main
-description: Upgrade a main-branch checkout to the enhance-and-debloat branch.
+description: Historical migration notes for the enhance-and-debloat branch and current repository state.
 ---
 
 # Migration from main
 
-The `enhance-and-debloat` branch is a PIN-to-PIN compatible upgrade from `main`. The merge is conflict-free, legacy databases are auto-repaired on startup, and no manual SQL is required.
+::: info Historical Context The `enhance-and-debloat` branch was a PIN-to-PIN compatible upgrade from the original `main` branch. Its changes have since been merged into the current default branch, so the migration steps below are preserved for historical reference only. New clones should follow [Getting Started](/guide/getting-started). :::
 
 ## Fresh clone path
 
 If you are starting from a clean checkout:
 
 ```bash
-# Clone and switch to the branch
+# Clone the repository
 git clone <repository-url> basishacks-r2
 cd basishacks-r2
-git checkout enhance-and-debloat
 
 # Install dependencies
 bun install
@@ -36,7 +35,7 @@ node .output/server/index.mjs   # Node.js runtime (uses better-sqlite3)
 
 ## Existing-database upgrade path
 
-If you have an existing database from the `main` branch:
+If you have an existing database from the original `main` branch:
 
 1. **Back up the database** (recommended):
 
@@ -44,7 +43,7 @@ If you have an existing database from the `main` branch:
     cp database/basishacks.sqlite database/basishacks.sqlite.bak
     ```
 
-2. **Switch to the new branch and start the server** — the `init-database.ts` plugin automatically:
+2. **Start the server** — the `init-database.ts` plugin automatically:
     - Applies pending Drizzle migrations
     - Runs `migrateLegacySchema()` to add any missing tables (`seasons`, `team_awards`, `peer_voting_scores`, `user_past_teams`) and columns
     - Preserves all existing data
@@ -75,8 +74,4 @@ See [Environment Setup](/guide/environment-setup) for the complete list.
 
 ## Test command change
 
-The canonical test command is now `bun run test` (Vitest). Do not use `bun test` — Bun's native test runner cannot resolve Nuxt's `~~/` path aliases. See [Getting Started > Running Tests](/guide/getting-started#running-tests) for details.
-
-## Conflict-free merge
-
-The `enhance-and-debloat` branch merges cleanly with `origin/main`. The only new commit on `main` since the branch point is `129c1ca Update .gitignore`, which does not conflict with any changes on this branch.
+The canonical test command is `bun run test` (Vitest). Do not use `bun test` — Bun's native test runner cannot resolve Nuxt's `~~/` path aliases. See [Getting Started > Running Tests](/guide/getting-started#running-tests) for details.

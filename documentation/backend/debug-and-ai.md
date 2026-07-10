@@ -17,8 +17,8 @@ Debug file endpoints let authorized users upload and list static assets without 
 
 | Method | Path | Auth | Description |
 | --- | --- | --- | --- |
-| POST | `/api/debug/upload` | `PORTAL_DEBUG_VIEW` or admin | Upload a file to `public/assets/` or `public/userassets/` |
-| GET | `/api/debug/files` | `PORTAL_DEBUG_VIEW` or admin | List uploaded assets |
+| POST | `/api/debug/upload` | `dev_debug` or admin | Upload a file to `public/assets/` or `public/userassets/` |
+| GET | `/api/debug/files` | `portal.debug.view` or admin | List uploaded assets |
 
 ### Upload Request
 
@@ -30,6 +30,8 @@ Debug file endpoints let authorized users upload and list static assets without 
 | `mode` (query)     | `static` → `public/assets/`, `user` → `public/userassets/`                 |
 | `keepName` (query) | `true` to keep the original filename, otherwise a random name is generated |
 
+Allowed extensions: `png`, `jpg`, `jpeg`, `gif`, `webp`, `svg`, `pdf`, `txt`, `md`, `json`, `zip`, `mp4`.
+
 Response:
 
 ```json
@@ -38,7 +40,7 @@ Response:
 }
 ```
 
-The helpers in `server/utils/assets.ts` validate filenames to prevent path traversal and create parent directories as needed.
+For `mode=user` the response path is `/userast/<filename>` even though the file is written to `public/userassets/`. The helpers in `server/utils/assets.ts` validate filenames to prevent path traversal and create parent directories as needed.
 
 ---
 
@@ -63,10 +65,12 @@ This prevents the server from crashing at startup when the key is not provided.
 
 | Method | Path | Auth | Description |
 | --- | --- | --- | --- |
-| POST | `/api/debug/deepseek/sessions` | `DevPermissions.DEEPSEEK` | Create a new chat session |
-| GET | `/api/debug/deepseek/sessions/:id` | `DevPermissions.DEEPSEEK` | Get session and messages |
-| DELETE | `/api/debug/deepseek/sessions/:id` | `DevPermissions.DEEPSEEK` | Delete a session |
-| POST | `/api/debug/deepseek/sessions/:id/message` | `DevPermissions.DEEPSEEK` | Send a message and run tools |
+| POST | `/api/debug/deepseek/sessions` | `dev_deepseek` | Create a new chat session |
+| GET | `/api/debug/deepseek/sessions/:id` | `portal.deepseek.view` | Get session and messages |
+| DELETE | `/api/debug/deepseek/sessions/:id` | `dev_deepseek` | Delete a session |
+| POST | `/api/debug/deepseek/sessions/:id/message` | `dev_deepseek` | Send a message and run tools |
+
+The message endpoint also calls `requireUser` so the current user row can be injected into the system prompt.
 
 ### Session Store
 
@@ -83,15 +87,21 @@ interface ChatSession {
 
 ::: warning All chat data is lost when the server restarts. :::
 
+### Limits
+
+- `MAX_SESSIONS` = 100
+- `MAX_MESSAGES_PER_SESSION` = 200
+- `SESSION_TTL_MS` = 24 hours
+
 ### Character Prompt
 
 DeepSeek is instructed to role-play as **Barron Wang** with a casual, terse style. Key traits:
 
-- Short phrases, often 1–3 sentences
-- Frequent use of `lol`, `bruh`, `oof`, `sure`, `nice`
-- Typing-delay simulation via `<br delay=X>` tags
-- English-only responses
-- Avoids corporate or overly polite language
+- Short phrases, often 1–3 sentences.
+- Frequent use of `lol`, `bruh`, `oof`, `sure`, `nice`.
+- Typing-delay simulation via `<br delay=X>` tags.
+- English-only responses.
+- Avoids corporate or overly polite language.
 
 The system prompt also injects context about the Developers' Club (`biszweb.club`) and the current user as JSON.
 
@@ -107,11 +117,11 @@ The chatbot can invoke functions in a loop (max 10 iterations):
 | `end_conversation` | Ends the session with a severity flag  |
 | `foward_message`   | Forwards a message to club admins      |
 
-Tool results are appended to the session as `role: 'tool'` messages and the conversation continues until no more tool calls are requested.
+Tool results are appended to the session as `role: 'tool'` messages and the conversation continues until no more tool calls are requested. The model is `deepseek-v4-flash` with reasoning effort set to `high` and thinking enabled.
 
 ### UI
 
-The developer portal page `/developers/deepseek` provides the chat UI. It is gated by `PORTAL_DEEPSEEK_VIEW` or admin.
+The developer portal page `/developers/deepseek` provides the chat UI. It is gated by `portal.deepseek.view` or admin.
 
 ---
 
@@ -146,7 +156,13 @@ Microsoft Graph change notifications are received at:
 | POST   | `/api/_webhooks/update`    | Chat message change notifications    |
 | POST   | `/api/_webhooks/lifecycle` | Subscription lifecycle notifications |
 
-See [Plugins & Middleware](./plugins-middleware) for details on webhook validation and subscription management.
+Both endpoints first check for a `validationToken` query parameter; when present they respond with `200 OK` and echo the token as `text/plain`. They then validate the `clientState` against `getMicrosoftWebhookState()` and return `403 Forbidden` if it does not match.
+
+`/api/_webhooks/update` returns `200 OK` with `{ message: "Received" }` after logging the change type and resource.
+
+`/api/_webhooks/lifecycle` returns `202 Accepted` with `{ message: "Received" }`. When the lifecycle event is `reauthorizationRequired`, it calls `refreshChatbotWebhook()` to extend the subscription.
+
+See [Plugins & Middleware](./plugins-middleware) for subscription creation and refresh details.
 
 ---
 
