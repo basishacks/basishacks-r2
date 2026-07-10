@@ -23,8 +23,7 @@ export async function getTeam(
 ): Promise<Team | null> {
     if (allSeason) {
         const row = event.context.drizzle.select().from(teams).where(eq(teams.id, teamID)).get() as
-            | Team
-            | undefined;
+            Team | undefined;
         return row ?? null;
     }
     const activeSeason = await getActiveSeason(event);
@@ -85,8 +84,7 @@ export async function getSubmittedTeams(event: H3Event): Promise<Team[]> {
  */
 export async function getTeamById(event: H3Event, teamID: number): Promise<Team | null> {
     const row = event.context.drizzle.select().from(teams).where(eq(teams.id, teamID)).get() as
-        | Team
-        | undefined;
+        Team | undefined;
     return row ?? null;
 }
 
