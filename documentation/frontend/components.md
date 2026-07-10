@@ -1,11 +1,11 @@
 ---
 title: Components
-description: Vue components used across the basishacks frontend — navigation, forms, scoring, avatars, and visual effects.
+description: Vue components used across the basishacks frontend — navigation, forms, scoring, avatars, awards, and visual effects.
 ---
 
 # Components
 
-The basishacks frontend contains **24 Vue components** organized in `app/components/`. All components use `<script setup lang="ts">` and the `@nuxt/ui` component library.
+The basishacks frontend contains **25 Vue components** organized in `app/components/`. All components use `<script setup lang="ts">` and the `@nuxt/ui` component library.
 
 ## Navigation & Layout
 
@@ -29,8 +29,8 @@ The main navigation header rendered at the top of every page. Uses `UHeader` fro
 | Home | Always visible |
 | Dashboard (with children: Overview, General, Teams, Results) | Always visible |
 | Showcase | Always visible |
-| Judging | User is judge/admin **and** hackathon status is `voting` |
-| Voting | User is participant with a team **and** hackathon status is `voting` |
+| Voting | Hackathon status is `voting` and user is not a judge or admin |
+| Judging | User is a judge or admin, and hackathon status is `voting` |
 
 Permission checks use `hasPermission()` from `~~/shared/permissions`.
 
@@ -46,9 +46,9 @@ Site-wide footer using `UFooter`. Contains three sections:
 
 | Section | Content |
 | --- | --- |
-| Left | Copyright notice (auto-updates year), link to contributing page, link to developer portal |
+| Left | Copyright notice (auto-updates year), link to the contributing page, and link to the developer portal |
 | Center | Navigation links to [biszweb.club](https://biszweb.club/club_sites/developers_club) and [binj.dev](https://binj.dev) |
-| Right | Microsoft Teams button (inline SVG), GitHub button linking to the repository |
+| Right | Microsoft Teams button (inline SVG) and GitHub button linking to the repository |
 
 ```vue
 <Footer />
@@ -58,7 +58,7 @@ Site-wide footer using `UFooter`. Contains three sections:
 
 **File:** `app/components/TeamsIcon.vue`
 
-Inline SVG component for the Microsoft Teams icon used in the footer. Renders the official Teams logo with gradient fills at a default size of `w-6 h-6`.
+Inline SVG component for the Microsoft Teams icon used in the footer and user popover. Renders the official Teams logo with gradient fills at a default size of `w-6 h-6`.
 
 ```vue
 <TeamsIcon />
@@ -70,7 +70,7 @@ Inline SVG component for the Microsoft Teams icon used in the footer. Renders th
 
 **File:** `app/components/ProjectForm.vue`
 
-Edit/submit project details with auto-save functionality. Used on the dashboard general page.
+Edit and submit project details with auto-save functionality. Used on the dashboard general page.
 
 **Props:**
 
@@ -86,7 +86,7 @@ Edit/submit project details with auto-save functionality. Used on the dashboard 
 | `dirty`   | `boolean` | Emitted when form dirty state changes     |
 | `refresh` | —         | Emitted after a successful save or submit |
 
-**Auto-save:** Runs every **10 seconds** via `setInterval`. Only saves when the form is dirty and a team exists. Sends a `PATCH` to `/api/teams/{id}`.
+**Auto-save:** Runs every **10 seconds** via `setInterval`. Only saves when the form is dirty and a team exists. Sends a `PATCH` request to `/api/teams/{id}`.
 
 **Form fields:**
 
@@ -96,9 +96,9 @@ Edit/submit project details with auto-save functionality. Used on the dashboard 
 - Repository URL (`project.repo_url`)
 - Pathway (`pathway`) — radio group: Junior / Senior
 
-**Validation:** Uses `UpdateTeamRequest` schema for save, `SubmitTeamRequest` schema for submit (both from `~~/shared/schemas`).
+**Validation:** Uses `UpdateTeamRequest` for saves and `SubmitTeamRequest` for submissions (both from `~~/shared/schemas`).
 
-**Submit flow:** Clicking "Submit" shows a `ModalConfirm` dialog warning that changes cannot be made after submission.
+**Submit flow:** Clicking "Submit" sets the intent to `submit` and shows a `ModalConfirm` dialog warning that changes cannot be made after submission.
 
 ```vue
 <ProjectForm :team="team" :disabled="isSubmitted" @dirty="onDirty" @refresh="refreshData" />
@@ -155,12 +155,12 @@ Judge scoring card for evaluating a team's project against rubric criteria.
 
 **Scoring interface:**
 
-- Displays project name, team name, pathway, description, AI sourcing statement, and repo/demo links
+- Displays project name, team name, pathway badge, description rendered with `Comark`, AI sourcing statement in a `UAlert`, and repo/demo links
 - For each rubric criterion (from `~~/shared/rubric`), shows abbreviation, weight percentage, description tooltip, and a `URadioGroup` with values **0–5**
 - Reasoning textarea for score justification
-- Submit requires browser `confirm()` dialog
+- Submit requires a browser `confirm()` dialog
 
-**Validation:** Uses `CreateTeamScoresRequest` schema. Posts to `/api/teams/{id}/scores`.
+**Validation:** Uses `CreateTeamScoresRequest`. Posts to `/api/teams/{id}/scores`.
 
 ```vue
 <JudgingCard :team="team" @scored="onScored" />
@@ -170,7 +170,7 @@ Judge scoring card for evaluating a team's project against rubric criteria.
 
 **File:** `app/components/VotingProjectCard.vue`
 
-Interactive card displaying a project for peer voting. Shows project name, description, pathway badge, and repo/demo links, plus star increment/decrement controls.
+Interactive card displaying a project for peer voting. Shows project name, team name, pathway badge, description rendered with `Comark`, and repo/demo links, plus star increment and decrement controls.
 
 **Props:**
 
@@ -201,11 +201,11 @@ Interactive card displaying a project for peer voting. Shows project name, descr
 
 ## Results & Display
 
-### ResultCard / ScoreCard
+### ScoreCard
 
-**Files:** `app/components/ResultCard.vue`, `app/components/ScoreCard.vue`
+**File:** `app/components/ScoreCard.vue`
 
-Both cards display season results with metallic shimmer effects for top placements. `ScoreCard` is the primary implementation used on the dashboard results page.
+Primary results card used on the dashboard results page. Displays season results with metallic shimmer effects for top placements.
 
 **Props:**
 
@@ -222,7 +222,7 @@ Both cards display season results with metallic shimmer effects for top placemen
 | #3          | `metallic-bronze` | Bronze gradient shimmer animation |
 | Score = 800 | `rainbow-once`    | One-time rainbow sweep animation  |
 
-The card displays season date and name (from `~~/shared/seasons`), score out of 800, ranking, team name, member avatars via `UserAvatarGroup`, and a link to season details. When a project has not been submitted, the score and rank are blurred with an overlay message.
+The card displays season date and name (from `~~/shared/seasons`), score out of 800, ranking, team name, pathway badge, member avatars via `UserAvatarGroup`, awarded badges via `AwardButton`, and a link to season details. A modal trigger renders the full project inside a `ProjectCard`. When a project has not been submitted, the score and rank are blurred with an overlay message.
 
 ```vue
 <ScoreCard :team="team" />
@@ -244,46 +244,11 @@ Compact card showing judging progress for a single season: how many projects hav
 <JudgeProgressCard :season="season" />
 ```
 
-### ResultsCard
-
-**File:** `app/components/ResultsCard.vue`
-
-Simpler results card showing ranked project with name, team, description, and links. Used in judge/admin views.
-
-**Props:**
-
-| Prop   | Type             | Description        |
-| ------ | ---------------- | ------------------ |
-| `team` | `APITeam`        | The team data      |
-| `rank` | `number \| null` | The team's ranking |
-
-```vue
-<ResultsCard :team="team" :rank="rank" />
-```
-
-### ResultsProjectLinks
-
-**File:** `app/components/ResultsProjectLinks.vue`
-
-Icon-based project link buttons for GitHub, demo, and video. The video button opens a `PopupMediaBrowser` with an embedded video player.
-
-**Props:**
-
-| Prop         | Type     | Description           |
-| ------------ | -------- | --------------------- |
-| `githubLink` | `string` | GitHub repository URL |
-| `demoLink`   | `string` | Demo URL (optional)   |
-| `videoLink`  | `string` | Video URL             |
-
-```vue
-<ResultsProjectLinks github-link="..." demo-link="..." video-link="..." />
-```
-
 ### ShowcaseMarqueeCard
 
 **File:** `app/components/ShowcaseMarqueeCard.vue`
 
-Horizontal scroll card used in the showcase marquee. Displays project rank, pathway badge, project name, description, and member avatars. Applies metallic gradient text for ranks 1–3.
+Horizontal scroll card used in the showcase marquee. Displays project rank, pathway badge, and awarded badges. Applies metallic gradient text for ranks 1–3, and renders "Unranked" otherwise.
 
 **Props:**
 
@@ -305,7 +270,7 @@ Horizontal scroll card used in the showcase marquee. Displays project rank, path
 
 **File:** `app/components/ProjectCard.vue`
 
-Fetches and displays a team's project card by ID. Shows project name, team name, description, and repo/demo links.
+Fetches and displays a team's project card by ID. Shows project name, team name, description rendered with `Comark`, repo/demo links, and awarded badges via `AwardButton`.
 
 **Props:**
 
@@ -315,6 +280,43 @@ Fetches and displays a team's project card by ID. Shows project name, team name,
 
 ```vue
 <ProjectCard :id="teamId" />
+```
+
+### ResultsProjectLinks
+
+**File:** `app/components/ResultsProjectLinks.vue`
+
+Icon-based project link buttons for GitHub, demo, and video. The video button opens a `PopupMediaBrowser` with an embedded video player.
+
+**Props:**
+
+| Prop         | Type     | Description           |
+| ------------ | -------- | --------------------- |
+| `githubLink` | `string` | GitHub repository URL |
+| `demoLink`   | `string` | Demo URL (optional)   |
+| `videoLink`  | `string` | Video URL             |
+
+```vue
+<ResultsProjectLinks github-link="..." demo-link="..." video-link="..." />
+```
+
+## Awards
+
+### AwardButton
+
+**File:** `app/components/AwardButton.vue`
+
+Tooltip button that renders an award icon and description. Maps award colors (`gold`, `silver`, `bronze`, or default) to `@nuxt/ui` button colors.
+
+**Props:**
+
+| Prop    | Type      | Description            |
+| ------- | --------- | ---------------------- |
+| `award` | `APIAward` | The award to display   |
+| `size`  | `any`     | Button size to apply   |
+
+```vue
+<AwardButton :award="award" size="md" />
 ```
 
 ## Avatar System
@@ -352,6 +354,8 @@ Renders multiple `UserAvatar` components in a `UAvatarGroup` with a hover popove
 | `users` | `Array`            | —       | Array of user objects        |
 | `size`  | `string`           | —       | Avatar size (passed through) |
 | `max`   | `number \| string` | —       | Maximum visible avatars      |
+| `class` | `any`              | —       | Classes passed to the group  |
+| `ui`    | `any`              | —       | UI overrides for the group   |
 
 The popover contains a scrollable list of `UserItem` components.
 
@@ -380,15 +384,16 @@ Combines a `UserAvatar` with the user's name and email text. Used inside popover
 
 **File:** `app/components/UserPopover.vue`
 
-Hover-triggered popover that lazy-loads full user data on first hover. Shows the user's profile theme banner (if set) and `UserItem`.
+Hover-triggered popover that lazy-loads full user data on first hover. Shows the user's profile theme banner (if set), `UserItem`, an email copy button, and a "Chat on Teams" action.
 
 **Props:**
 
-| Prop   | Type                | Description                              |
-| ------ | ------------------- | ---------------------------------------- |
-| `user` | `number \| APIUser` | User ID (lazy fetch) or full user object |
+| Prop       | Type                | Description                                                              |
+| ---------- | ------------------- | ------------------------------------------------------------------------ |
+| `user`     | `number \| APIUser` | User ID (lazy fetch) or full user object                                 |
+| `external` | `boolean`           | When true, shows an indicator that the user is not registered in basishacks |
 
-**Lazy loading:** If `user` is a number, fetches `/api/users/{id}` on first hover. Shows skeleton placeholders during loading. Caches the result after first fetch.
+**Lazy loading:** If `user` is a number, fetches `/api/users/{id}` on first hover. Shows skeleton placeholders during loading. Caches the result after the first fetch.
 
 ```vue
 <UserPopover :user="userId">
