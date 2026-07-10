@@ -13,9 +13,9 @@ The basishacks platform uses a fine-grained permission system stored in the `rol
 
 The `VotePermissions` object defines the standalone permission used for peer voting:
 
-| Constant | Permission String | Description |
-| --- | --- | --- |
-| `VOTE` | `sc.vote` | Submit a peer-voting ballot |
+| Constant | Permission String | Description                 |
+| -------- | ----------------- | --------------------------- |
+| `VOTE`   | `sc.vote`         | Submit a peer-voting ballot |
 
 ## DevPermissions Constants
 

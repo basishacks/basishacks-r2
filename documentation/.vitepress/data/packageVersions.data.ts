@@ -14,9 +14,7 @@ export interface PackageVersionsData {
     generatedAt: string;
 }
 
-function parseDependencies(
-    record: Record<string, string> | undefined,
-): PackageVersion[] {
+function parseDependencies(record: Record<string, string> | undefined): PackageVersion[] {
     if (!record) return [];
     return Object.entries(record)
         .map(([name, version]) => ({ name, version }))

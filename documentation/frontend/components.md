@@ -310,10 +310,10 @@ Tooltip button that renders an award icon and description. Maps award colors (`g
 
 **Props:**
 
-| Prop    | Type      | Description            |
-| ------- | --------- | ---------------------- |
-| `award` | `APIAward` | The award to display   |
-| `size`  | `any`     | Button size to apply   |
+| Prop    | Type       | Description          |
+| ------- | ---------- | -------------------- |
+| `award` | `APIAward` | The award to display |
+| `size`  | `any`      | Button size to apply |
 
 ```vue
 <AwardButton :award="award" size="md" />
@@ -388,10 +388,10 @@ Hover-triggered popover that lazy-loads full user data on first hover. Shows the
 
 **Props:**
 
-| Prop       | Type                | Description                                                              |
-| ---------- | ------------------- | ------------------------------------------------------------------------ |
-| `user`     | `number \| APIUser` | User ID (lazy fetch) or full user object                                 |
-| `external` | `boolean`           | When true, shows an indicator that the user is not registered in basishacks |
+| Prop | Type | Description |
+| --- | --- | --- |
+| `user` | `number \| APIUser` | User ID (lazy fetch) or full user object |
+| `external` | `boolean` | When true, shows an indicator that the user is not registered in basishacks |
 
 **Lazy loading:** If `user` is a number, fetches `/api/users/{id}` on first hover. Shows skeleton placeholders during loading. Caches the result after the first fetch.
 

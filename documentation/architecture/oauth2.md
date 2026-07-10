@@ -336,8 +336,8 @@ const AUTHORIZE_SESSION_STORE: Record<string, AuthorizeSession> = {};
 
 Each session has a 10-minute expiry and tracks the full authorization state:
 
-| Field                   | Description                                               |
-| ----------------------- | --------------------------------------------------------- |
+| Field                          | Description                                               |
+| ------------------------------ | --------------------------------------------------------- |
 | `token`                        | Session identifier (set as `bridge_id` cookie)            |
 | `application`                  | The OAuth2 application requesting access                  |
 | `user`                         | Authenticated user (null until login completes)           |

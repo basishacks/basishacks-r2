@@ -141,10 +141,10 @@ These interfaces match the SQL schema exactly. They include all columns, includi
 
 There is no standalone `awards` table. Award definitions are static in `shared/awards.ts`, and per-team assignments are stored in `team_awards`.
 
-| Field     | Type     | Description                               |
-| --------- | -------- | ----------------------------------------- |
-| `team_id` | `number` | Foreign key to team                       |
-| `award`   | `string` | Award namespace from `AWARD_REGISTRY`     |
+| Field     | Type     | Description                                |
+| --------- | -------- | ------------------------------------------ |
+| `team_id` | `number` | Foreign key to team                        |
+| `award`   | `string` | Award namespace from `AWARD_REGISTRY`      |
 | `meta`    | `string` | JSON metadata stored as a non-empty string |
 
 ### `PeerVotingScore`
@@ -157,18 +157,18 @@ There is no standalone `awards` table. Award definitions are static in `shared/a
 
 ### `Season`
 
-| Field      | Type     | Description                              |
-| ---------- | -------- | ---------------------------------------- |
-| `id`       | `number` | Primary key                              |
-| `name`     | `string` | Season display name                      |
-| `is_active`| `number` | Whether this season is active (0 or 1)   |
+| Field       | Type     | Description                            |
+| ----------- | -------- | -------------------------------------- |
+| `id`        | `number` | Primary key                            |
+| `name`      | `string` | Season display name                    |
+| `is_active` | `number` | Whether this season is active (0 or 1) |
 
 ### `UserPastTeams`
 
-| Field     | Type     | Description                   |
-| --------- | -------- | ----------------------------- |
-| `user_id` | `number` | Foreign key to user           |
-| `team_id` | `number` | Foreign key to past team      |
+| Field     | Type     | Description              |
+| --------- | -------- | ------------------------ |
+| `user_id` | `number` | Foreign key to user      |
+| `team_id` | `number` | Foreign key to past team |
 
 ---
 
@@ -219,15 +219,15 @@ Parsed from the database `"mode|value"` string format.
 
 ### `APIAward`
 
-| Field         | Type                      | Description                                           |
-| ------------- | ------------------------- | ----------------------------------------------------- |
-| `namespace`   | `string`                  | Award namespace from `AWARD_REGISTRY`                 |
-| `name`        | `string`                  | Award display name                                    |
-| `description` | `string`                  | Award description                                     |
-| `icon`        | `string`                  | Icon class                                            |
-| `meta`        | `Record<string, unknown>` | Parsed JSON metadata from `team_awards`               |
-| `color`       | `string`                  | Resolved award color (defaults to `gold`)             |
-| `text`        | `string`                  | Resolved display text, or computed text when present  |
+| Field         | Type                      | Description                                          |
+| ------------- | ------------------------- | ---------------------------------------------------- |
+| `namespace`   | `string`                  | Award namespace from `AWARD_REGISTRY`                |
+| `name`        | `string`                  | Award display name                                   |
+| `description` | `string`                  | Award description                                    |
+| `icon`        | `string`                  | Icon class                                           |
+| `meta`        | `Record<string, unknown>` | Parsed JSON metadata from `team_awards`              |
+| `color`       | `string`                  | Resolved award color (defaults to `gold`)            |
+| `text`        | `string`                  | Resolved display text, or computed text when present |
 
 Awards are resolved from the `team_awards` table through `AWARD_REGISTRY` in `shared/awards.ts` and attached to `APITeam` by `convertTeamToPublic`.
 

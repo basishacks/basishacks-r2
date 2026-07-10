@@ -403,7 +403,9 @@ async function triggerAutosave() {
     try {
         await $fetch(`/api/teams/${defaultTeam.id}`, {
             method: "PATCH",
-            body: {/* form data */},
+            body: {
+                /* form data */
+            },
         });
         autosaveStatus.value = `Auto-saved at ${new Date().toLocaleTimeString()}`;
     } catch (e) {

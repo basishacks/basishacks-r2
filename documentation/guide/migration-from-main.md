@@ -5,8 +5,7 @@ description: Historical migration notes for the enhance-and-debloat branch and c
 
 # Migration from main
 
-::: info Historical Context
-The `enhance-and-debloat` branch was a PIN-to-PIN compatible upgrade from the original `main` branch. Its changes have since been merged into the current default branch, so the migration steps below are preserved for historical reference only. New clones should follow [Getting Started](/guide/getting-started). :::
+::: info Historical Context The `enhance-and-debloat` branch was a PIN-to-PIN compatible upgrade from the original `main` branch. Its changes have since been merged into the current default branch, so the migration steps below are preserved for historical reference only. New clones should follow [Getting Started](/guide/getting-started). :::
 
 ## Fresh clone path
 

@@ -87,7 +87,7 @@ ip:{ip}
 The IP address is resolved in the following priority order:
 
 | Priority | Source | Notes |
-| :------: | ------ | ----- |
+| :-: | --- | --- |
 | 1 | Direct socket peer address | `event.node.req.socket.remoteAddress`; used when available |
 | 2 | `x-real-ip` header | Fallback when no socket address is present |
 | 3 | `x-forwarded-for` header | Used only when `TRUST_PROXY` is set; the rightmost value is used to avoid spoofed leftmost hops |

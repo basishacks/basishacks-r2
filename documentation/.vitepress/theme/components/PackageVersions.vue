@@ -37,9 +37,7 @@ const generatedDate = computed(() => {
                 placeholder="Filter packages..."
                 class="package-versions__search"
             />
-            <span class="package-versions__timestamp">
-                Generated at {{ generatedDate }}
-            </span>
+            <span class="package-versions__timestamp">Generated at {{ generatedDate }}</span>
         </div>
 
         <div class="package-versions__grid">
@@ -73,7 +71,9 @@ const generatedDate = computed(() => {
             <div class="package-versions__section">
                 <h3 class="package-versions__title">
                     Dev Dependencies
-                    <span class="package-versions__count">({{ filteredDevDependencies.length }})</span>
+                    <span class="package-versions__count">
+                        ({{ filteredDevDependencies.length }})
+                    </span>
                 </h3>
                 <div class="package-versions__table-wrap">
                     <table class="package-versions__table">

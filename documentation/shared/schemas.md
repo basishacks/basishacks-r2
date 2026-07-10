@@ -80,9 +80,9 @@ An object whose keys are the rubric criteria (`originality`, `presentation`, `te
 
 ### `MicrosoftRedirectRequest`
 
-| Field   | Type     | Constraints          |
-| ------- | -------- | -------------------- |
-| `token` | `string` | Required, non-empty  |
+| Field   | Type     | Constraints         |
+| ------- | -------- | ------------------- |
+| `token` | `string` | Required, non-empty |
 
 **API endpoint:** `POST /api/oauth2/to_microsoft`
 
@@ -214,9 +214,9 @@ An object whose keys are the rubric criteria (`originality`, `presentation`, `te
 
 ### `DeleteApplicationsRequest`
 
-| Field | Type       | Constraints                                              |
-| ----- | ---------- | -------------------------------------------------------- |
-| `ids` | `string[]` | Required, 1–100 non-empty client IDs to delete at once   |
+| Field | Type       | Constraints                                            |
+| ----- | ---------- | ------------------------------------------------------ |
+| `ids` | `string[]` | Required, 1–100 non-empty client IDs to delete at once |
 
 **API endpoint:** `DELETE /api/applications`
 

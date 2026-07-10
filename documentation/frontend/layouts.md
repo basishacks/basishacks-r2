@@ -151,12 +151,12 @@ Developer portal layout using `UDashboardGroup` with a collapsible, resizable si
 
 **Sidebar sections:**
 
-| Section    | Content                                                             |
-| ---------- | ------------------------------------------------------------------- |
+| Section    | Content                                                                     |
+| ---------- | --------------------------------------------------------------------------- |
 | Header     | "{{ WEBSITE_NAME }} devs" link (collapses to "b" when sidebar is minimized) |
-| Search     | Search button with ⌘K keyboard shortcut hint                        |
-| Navigation | Permission-gated menu items                                         |
-| Footer     | User avatar button linking to `/profile`                            |
+| Search     | Search button with ⌘K keyboard shortcut hint                                |
+| Navigation | Permission-gated menu items                                                 |
+| Footer     | User avatar button linking to `/profile`                                    |
 
 **Navigation items with permission gates:**
 

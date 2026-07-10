@@ -390,13 +390,13 @@ File system helpers for managing static and user assets.
 
 ### Asset Functions
 
-| Function                      | Description                                              |
-| ----------------------------- | -------------------------------------------------------- |
-| `createAsset(name, data)`     | Writes a Buffer to `public/assets/{name}`; returns basename |
+| Function                      | Description                                                     |
+| ----------------------------- | --------------------------------------------------------------- |
+| `createAsset(name, data)`     | Writes a Buffer to `public/assets/{name}`; returns basename     |
 | `createUserAsset(name, data)` | Writes a Buffer to `public/userassets/{name}`; returns basename |
-| `removeAsset(name)`           | Deletes a file from `public/assets/`                     |
-| `removeUserAsset(name)`       | Deletes a file from `public/userassets/`                 |
-| `getUserAsset(name)`          | Reads a file from `public/userassets/` as a Buffer       |
+| `removeAsset(name)`           | Deletes a file from `public/assets/`                            |
+| `removeUserAsset(name)`       | Deletes a file from `public/userassets/`                        |
+| `getUserAsset(name)`          | Reads a file from `public/userassets/` as a Buffer              |
 
 All functions validate the asset name to prevent path traversal, create parent directories recursively, and remove functions silently catch missing-file errors. Invalid names throw a 400 error.
 
@@ -425,14 +425,14 @@ interface ChatSession {
 
 ### Functions
 
-| Function                         | Description                                                              |
-| -------------------------------- | ------------------------------------------------------------------------ |
-| `createSession(sessionName)`     | Creates a new session with auto-incrementing ID; evicts expired/oldest sessions when at capacity |
-| `getDeepSeekSession(sessionId)`  | Returns a session by ID                                                  |
-| `getAllSessions()`               | Returns all sessions                                                     |
-| `deleteSession(sessionId)`       | Deletes a session; returns whether a session was removed                 |
-| `addMessage(sessionId, message)` | Appends a message to a session; trims history to the most recent 200     |
-| `getMessages(sessionId)`         | Returns a shallow copy of all messages for a session                     |
+| Function | Description |
+| --- | --- |
+| `createSession(sessionName)` | Creates a new session with auto-incrementing ID; evicts expired/oldest sessions when at capacity |
+| `getDeepSeekSession(sessionId)` | Returns a session by ID |
+| `getAllSessions()` | Returns all sessions |
+| `deleteSession(sessionId)` | Deletes a session; returns whether a session was removed |
+| `addMessage(sessionId, message)` | Appends a message to a session; trims history to the most recent 200 |
+| `getMessages(sessionId)` | Returns a shallow copy of all messages for a session |
 
 **Note:** All data is in-memory and lost on server restart.
 
@@ -519,40 +519,40 @@ Per-table database helper modules in `server/utils/database/`.
 
 ### users.ts
 
-| Function                                | Description                                                   |
-| --------------------------------------- | ------------------------------------------------------------- |
-| `getUser(event, userID)`                | Get user by ID                                                |
-| `getUserByEmail(event, email)`          | Get user by email (case-insensitive)                          |
-| `addCodeToUser(event, email)`           | Create or update a user record for the given email            |
-| `updateUserName(event, user)`           | Update user's name                                            |
-| `updateUserProfileTheme(event, user)`   | Update user's profile theme                                   |
-| `updateUserProfilePicture(event, user)` | Update user's profile picture                                 |
-| `updateUserRole(event, userID, role)`   | Update user's role                                            |
-| `deleteUsers(event, userIDs)`           | Delete users and their related records, including owned OAuth2 applications |
+| Function | Description |
+| --- | --- |
+| `getUser(event, userID)` | Get user by ID |
+| `getUserByEmail(event, email)` | Get user by email (case-insensitive) |
+| `addCodeToUser(event, email)` | Create or update a user record for the given email |
+| `updateUserName(event, user)` | Update user's name |
+| `updateUserProfileTheme(event, user)` | Update user's profile theme |
+| `updateUserProfilePicture(event, user)` | Update user's profile picture |
+| `updateUserRole(event, userID, role)` | Update user's role |
+| `deleteUsers(event, userIDs)` | Delete users and their related records, including owned OAuth2 applications |
 
 ### teams.ts
 
-| Function                                        | Description                                                          |
-| ----------------------------------------------- | -------------------------------------------------------------------- |
-| `getTeam(event, teamID, allSeason?)`            | Get team by ID (active season by default; pass `true` for any season) |
-| `getAllTeams(event)`                            | Get all teams for active season                                      |
-| `getSubmittedUnjudgedTeams(event, judgeUserID)` | Get submitted teams not yet scored by a judge                        |
-| `getSubmittedTeams(event)`                      | Get all submitted teams for active season                            |
-| `getTeamById(event, teamID)`                    | Get team by ID (any season)                                          |
-| `getTeamBySeason(event, teamID, seasonId)`      | Get team by ID and season                                            |
-| `getAllTeamsAllSeasons(event)`                  | Get all teams across all seasons                                     |
-| `getTeamsBySeason(event, seasonId)`             | Get teams by season ID                                               |
-| `createTeam(event, teamName)`                   | Create a new team in the active season; throws 403 if no season is active |
-| `updateTeam(event, team)`                       | Update all team fields; throws 404 if the team does not exist        |
-| `deleteTeams(event, teamIDs)`                   | Delete teams and related records                                     |
+| Function | Description |
+| --- | --- |
+| `getTeam(event, teamID, allSeason?)` | Get team by ID (active season by default; pass `true` for any season) |
+| `getAllTeams(event)` | Get all teams for active season |
+| `getSubmittedUnjudgedTeams(event, judgeUserID)` | Get submitted teams not yet scored by a judge |
+| `getSubmittedTeams(event)` | Get all submitted teams for active season |
+| `getTeamById(event, teamID)` | Get team by ID (any season) |
+| `getTeamBySeason(event, teamID, seasonId)` | Get team by ID and season |
+| `getAllTeamsAllSeasons(event)` | Get all teams across all seasons |
+| `getTeamsBySeason(event, seasonId)` | Get teams by season ID |
+| `createTeam(event, teamName)` | Create a new team in the active season; throws 403 if no season is active |
+| `updateTeam(event, team)` | Update all team fields; throws 404 if the team does not exist |
+| `deleteTeams(event, teamIDs)` | Delete teams and related records |
 
 ### scores.ts
 
-| Function                                  | Description                 |
-| ----------------------------------------- | --------------------------- |
-| `createTeamScores(event, scores)`         | Create a judge score record |
-| `getTeamScoresByTeamID(event, teamID)`    | Get all scores for a team   |
-| `getTeamScoresBySeasonId(event, seasonID)`| Get all scores for a season |
+| Function                                   | Description                 |
+| ------------------------------------------ | --------------------------- |
+| `createTeamScores(event, scores)`          | Create a judge score record |
+| `getTeamScoresByTeamID(event, teamID)`     | Get all scores for a team   |
+| `getTeamScoresBySeasonId(event, seasonID)` | Get all scores for a season |
 
 ### members.ts
 
@@ -585,11 +585,11 @@ Per-table database helper modules in `server/utils/database/`.
 
 ### seasons.ts
 
-| Function                           | Description                                    |
-| ---------------------------------- | ---------------------------------------------- |
-| `getSeasons(event)`                | List all seasons ordered by ID                 |
-| `getSeasonById(event, seasonId)`   | Get a season by ID                             |
-| `getActiveSeason(event)`           | Get the currently active season                |
+| Function | Description |
+| --- | --- |
+| `getSeasons(event)` | List all seasons ordered by ID |
+| `getSeasonById(event, seasonId)` | Get a season by ID |
+| `getActiveSeason(event)` | Get the currently active season |
 | `setActiveSeason(event, seasonId)` | Set the active season; pass `null` to clear the active flag from every season |
 
 ### peer-voting.ts

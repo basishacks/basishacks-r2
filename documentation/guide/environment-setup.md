@@ -283,7 +283,7 @@ Example:
 const name = "basishacks";
 
 // Wrong
-const name = 'basishacks';
+const name = "basishacks";
 ```
 
 ## Production Configuration

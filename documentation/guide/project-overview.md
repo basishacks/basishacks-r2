@@ -74,11 +74,11 @@ The OAuth2 flow supports:
 
 Users are assigned one of three core roles in the database:
 
-| Role | Description |
-| --- | --- |
-| `participant` | Default role. Can join teams, submit projects, and vote. |
-| `judge` | Can score projects using the rubric system. Has access to the judging interface. |
-| `admin` | Full access to all features, including the developer portal. |
+| Role          | Description                                                                      |
+| ------------- | -------------------------------------------------------------------------------- |
+| `participant` | Default role. Can join teams, submit projects, and vote.                         |
+| `judge`       | Can score projects using the rubric system. Has access to the judging interface. |
+| `admin`       | Full access to all features, including the developer portal.                     |
 
 ### Fine-Grained Developer Permissions
 
@@ -233,13 +233,13 @@ basishacks-r2/
 
 The `hackathon` table contains a single row (`id = 1`) that controls the global event state. The status field determines what actions are available:
 
-| Status | Description |
-| --- | --- |
+| Status        | Description                                           |
+| ------------- | ----------------------------------------------------- |
 | `not_started` | Before the event: teams can form and submit projects. |
-| `in_progress` | During the event: project submissions are accepted. |
-| `voting` | After the event: peer voting is open. |
-| `finished` | Event completed: results are published. |
-| `paused` | Event paused for maintenance. |
+| `in_progress` | During the event: project submissions are accepted.   |
+| `voting`      | After the event: peer voting is open.                 |
+| `finished`    | Event completed: results are published.               |
+| `paused`      | Event paused for maintenance.                         |
 
 ### Pathways
 
@@ -252,13 +252,13 @@ Teams are categorized into two pathways with different judging rubrics:
 
 Each pathway has five criteria scored 0–5 by judges:
 
-| Criterion | Junior Weight | Senior Weight |
-| --- | :---: | :---: |
-| Innovation & Originality | 30% | 10% |
-| Presentation & Design | 25% | 25% |
-| Technical Complexity | 20% | 20% |
-| Theme Alignment | 15% | 15% |
-| Impact & Usefulness | 10% | 30% |
+| Criterion                | Junior Weight | Senior Weight |
+| ------------------------ | :-----------: | :-----------: |
+| Innovation & Originality |      30%      |      10%      |
+| Presentation & Design    |      25%      |      25%      |
+| Technical Complexity     |      20%      |      20%      |
+| Theme Alignment          |      15%      |      15%      |
+| Impact & Usefulness      |      10%      |      30%      |
 
 ### Peer Voting
 

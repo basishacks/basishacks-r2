@@ -74,11 +74,11 @@ Passing `null` deactivates all seasons.
 
 `server/utils/database/seasons.ts` provides:
 
-| Function                           | Description                                   |
-| ---------------------------------- | --------------------------------------------- |
-| `getSeasons(event)`                | List all seasons ordered by ID                |
-| `getSeasonById(event, seasonId)`   | Get a season by ID                            |
-| `getActiveSeason(event)`           | Get the currently active season               |
+| Function | Description |
+| --- | --- |
+| `getSeasons(event)` | List all seasons ordered by ID |
+| `getSeasonById(event, seasonId)` | Get a season by ID |
+| `getActiveSeason(event)` | Get the currently active season |
 | `setActiveSeason(event, seasonId)` | Activate one season and deactivate all others; throws 404 if the season does not exist |
 
 ## Usage in the UI
