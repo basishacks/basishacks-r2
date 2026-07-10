@@ -21,6 +21,8 @@ export interface HackathonSeason {
 }
 ```
 
+This metadata is checked into source control and is not stored in the database. The `seasons` table in the database stores only `id`, `name`, and `is_active`; static metadata is resolved by matching the database ID to the map in `shared/seasons.ts`.
+
 Example:
 
 ```ts
@@ -46,15 +48,17 @@ const hackathonSeasons: Record<number, HackathonSeason> = {
 
 ## Active Season
 
-The database tracks the currently active season in the `hackathon` table (`active_season_id`). Only one season can be active at a time.
+The database tracks the currently active season in the `seasons` table through the `is_active` column. Only one season can be active at a time.
 
 ### API Endpoints
 
 | Method | Path | Auth | Description |
 | --- | --- | --- | --- |
-| GET | `/api/seasons` | `PORTAL_SEASONS_VIEW` or admin | List all seasons |
-| GET | `/api/seasons/active` | None | Get the currently active season |
+| GET | `/api/seasons` | `PORTAL_SEASONS_VIEW` or admin | List all database seasons |
+| GET | `/api/seasons/active` | None | Get the active season merged with the global hackathon state |
 | PATCH | `/api/seasons/active` | `PORTAL_SEASONS_EDIT` or admin | Set the active season |
+
+`GET /api/seasons/active` returns the active season record together with the global `hackathon` state, including `status`, `start_timestamp`, `end_timestamp`, `voting_start_timestamp`, `voting_end_timestamp`, `results_open_timestamp`, `theme_name`, and `theme_description`. Theme fields are hidden when the hackathon status is `not_started` or `paused`.
 
 `PATCH /api/seasons/active` accepts `SetActiveSeasonRequest`:
 
@@ -75,7 +79,7 @@ Passing `null` deactivates all seasons.
 | `getSeasons(event)`                | List all seasons ordered by ID                |
 | `getSeasonById(event, seasonId)`   | Get a season by ID                            |
 | `getActiveSeason(event)`           | Get the currently active season               |
-| `setActiveSeason(event, seasonId)` | Activate one season and deactivate all others |
+| `setActiveSeason(event, seasonId)` | Activate one season and deactivate all others; throws 404 if the season does not exist |
 
 ## Usage in the UI
 

@@ -9,6 +9,14 @@ The basishacks platform uses a fine-grained permission system stored in the `rol
 
 ::: info Source `shared/permissions.ts` :::
 
+## VotePermissions Constants
+
+The `VotePermissions` object defines the standalone permission used for peer voting:
+
+| Constant | Permission String | Description |
+| --- | --- | --- |
+| `VOTE` | `sc.vote` | Submit a peer-voting ballot |
+
 ## DevPermissions Constants
 
 The `DevPermissions` object defines all recognized permission strings:
@@ -65,7 +73,7 @@ Previously, the `role` column used a SQL `CHECK` constraint limiting values to `
 function parsePermissions(role: string | null | undefined): string[];
 ```
 
-Parses the space-separated, URI-encoded `role` string into an array of decoded permission strings. Returns an empty array for nullish input.
+Parses the space-separated, URI-encoded `role` string into an array of decoded permission strings. Returns an empty array for nullish input. If the input contains a malformed URI sequence, the function falls back to parsing the raw string.
 
 **Example:**
 

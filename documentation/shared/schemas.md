@@ -80,9 +80,9 @@ An object whose keys are the rubric criteria (`originality`, `presentation`, `te
 
 ### `MicrosoftRedirectRequest`
 
-| Field   | Type     | Constraints |
-| ------- | -------- | ----------- |
-| `token` | `string` | Required    |
+| Field   | Type     | Constraints          |
+| ------- | -------- | -------------------- |
+| `token` | `string` | Required, non-empty  |
 
 **API endpoint:** `POST /api/oauth2/to_microsoft`
 
@@ -212,6 +212,14 @@ An object whose keys are the rubric criteria (`originality`, `presentation`, `te
 
 **API endpoint:** `POST /api/applications`
 
+### `DeleteApplicationsRequest`
+
+| Field | Type       | Constraints                                              |
+| ----- | ---------- | -------------------------------------------------------- |
+| `ids` | `string[]` | Required, 1–100 non-empty client IDs to delete at once   |
+
+**API endpoint:** `DELETE /api/applications`
+
 ### `ManageRedirectUriRequest`
 
 | Field | Type     | Constraints                                                                  |
@@ -259,7 +267,7 @@ An object whose keys are the rubric criteria (`originality`, `presentation`, `te
 | `positions[].candidates[].id` | `string` | Candidate ID |
 | `positions[].candidates[].rank` | `number \| null` | Rank (1 = first preference); `null` means abstain |
 
-**Refinement:** Ranks within a position must be unique and contiguous starting at 1 (e.g., 1, 2, 3 with no gaps or duplicates). Abstained candidates are ignored.
+A `null` rank records an abstention for that candidate. The schema does not enforce uniqueness or contiguity of ranks; application logic handles tabulation rules.
 
 **API endpoint:** `POST /api/election/vote`
 
