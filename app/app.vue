@@ -15,7 +15,7 @@ useHead({
             href: "/fonts/Monaspace-Neon.woff2",
             as: "font",
             type: "font/woff2",
-            crossorigin: "",
+            crossorigin: "anonymous",
         },
     ],
 });
