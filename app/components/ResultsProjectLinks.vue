@@ -18,16 +18,21 @@ const demoText = computed(() => (demoLink ? "Play demo" : "Demo link not provide
 const videoText = computed(() =>
     videoLink ? "View presentation video" : "Video link not provided",
 );
+
+const safeGithubLink = computed(() => safeUrl(githubLink));
+const safeDemoLink = computed(() => safeUrl(demoLink));
+const safeVideoLink = computed(() => safeUrl(videoLink));
 </script>
 
 <template>
     <UTooltip :text="githubText" :delay-duration="0">
         <UButton
             variant="ghost"
-            :disabled="!githubLink"
-            :href="githubLink"
+            :disabled="!safeGithubLink"
+            :href="safeGithubLink"
             external
             target="_blank"
+            rel="noopener noreferrer"
         >
             <svg
                 class="w-10 h-10 fill-neutral-400"
@@ -41,7 +46,14 @@ const videoText = computed(() =>
         </UButton>
     </UTooltip>
     <UTooltip :text="demoText" :delay-duration="0">
-        <UButton variant="ghost" :disabled="!demoLink" :href="demoLink" external target="_blank">
+        <UButton
+            variant="ghost"
+            :disabled="!safeDemoLink"
+            :href="safeDemoLink"
+            external
+            target="_blank"
+            rel="noopener noreferrer"
+        >
             <svg
                 class="w-10 h-10 fill-neutral-400"
                 xmlns="http://www.w3.org/2000/svg"
@@ -59,8 +71,8 @@ const videoText = computed(() =>
         <PopupMediaBrowser
             variant="ghost"
             title="Demonstration Video / Recording"
-            :disabled="!videoLink"
-            :media-url="videoLink"
+            :disabled="!safeVideoLink"
+            :media-url="safeVideoLink"
             external
             target="_blank"
         >
@@ -78,7 +90,13 @@ const videoText = computed(() =>
                 </svg>
             </template>
 
-            <video v-if="videoLink" :src="videoLink" controls autoplay class="w-[50vw] h-auto" />
+            <video
+                v-if="safeVideoLink"
+                :src="safeVideoLink"
+                controls
+                autoplay
+                class="w-[50vw] h-auto"
+            />
         </PopupMediaBrowser>
     </UTooltip>
 </template>

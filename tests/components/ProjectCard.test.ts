@@ -13,7 +13,7 @@ describe("ProjectCard.vue regressions", () => {
         expect(source).toContain(':description="team.name"');
     });
 
-    it("disables the Demo button based on the demo URL", () => {
-        expect(source).toContain(':disabled="!team.project.demo_url"');
+    it("disables the Demo button based on the safe demo URL", () => {
+        expect(source).toContain(':disabled="!safeDemoUrl"');
     });
 });

@@ -4,6 +4,9 @@ const props = defineProps<{
 }>();
 
 const { data: team } = await useFetch<GetTeamResponse>(() => "/api/teams/" + props.id);
+
+const safeRepoUrl = computed(() => safeUrl(team.value?.project.repo_url));
+const safeDemoUrl = computed(() => safeUrl(team.value?.project.demo_url));
 </script>
 
 <template>
@@ -13,7 +16,7 @@ const { data: team } = await useFetch<GetTeamResponse>(() => "/api/teams/" + pro
             <h3 v-else class="text-muted">(No Project Name)</h3>
             <span class="text-sm">Team:</span>
             <span v-if="team && team.name" class="text-muted text-sm">{{ team.name }}</span>
-            <span v-else class="text-muted text-sm" (No Team Name)></span>
+            <span v-else class="text-muted text-sm">(No Team Name)</span>
             <div class="flex flex-row gap-2 mt-2">
                 <div v-for="award in team.awards">
                     <AwardButton :award="award" size="md"></AwardButton>
@@ -22,34 +25,36 @@ const { data: team } = await useFetch<GetTeamResponse>(() => "/api/teams/" + pro
         </template>
 
         <template #default>
-            <Comark v-if="team.project.description" class="whitespace-pre-wrap">
+            <SafeComark v-if="team.project.description" class="whitespace-pre-wrap">
                 {{ team.project.description }}
-            </Comark>
+            </SafeComark>
             <p v-else class="text-muted">(No Project Description)</p>
         </template>
 
         <template #footer>
             <div class="flex flex-row gap-2">
-                <UTooltip :text="team.project.repo_url!">
+                <UTooltip :text="safeRepoUrl ?? 'Repo link not available'">
                     <UButton
                         variant="subtle"
                         icon="i-material-symbols-merge"
-                        :href="team.project.repo_url!"
+                        :href="safeRepoUrl"
                         external
                         target="_blank"
-                        :disabled="!team.project.repo_url"
+                        rel="noopener noreferrer"
+                        :disabled="!safeRepoUrl"
                     >
                         Repo
                     </UButton>
                 </UTooltip>
-                <UTooltip :text="team.project.demo_url!">
+                <UTooltip :text="safeDemoUrl ?? 'Demo link not available'">
                     <UButton
                         variant="subtle"
                         icon="i-material-symbols-play-arrow"
-                        :href="team.project.demo_url!"
+                        :href="safeDemoUrl"
                         external
                         target="_blank"
-                        :disabled="!team.project.demo_url"
+                        rel="noopener noreferrer"
+                        :disabled="!safeDemoUrl"
                     >
                         Demo
                     </UButton>
