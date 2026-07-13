@@ -134,6 +134,7 @@ export default defineEventHandler(async (event) => {
             Buffer.from(JSON.stringify(payload)).toString("base64url"),
             {
                 maxAge: 10 * 60, // 10 mins
+                httpOnly: true,
                 secure: true,
                 sameSite: "lax",
             },
