@@ -24,6 +24,7 @@ if (
 const file = ref<File | null>(null);
 const uploading = ref(false);
 const permalink = ref("");
+const safePermalink = computed(() => safeUrl(permalink.value));
 const uploadError = ref("");
 const loadingFiles = ref(false);
 const fileLists = ref({
@@ -150,12 +151,17 @@ onMounted(loadFiles);
                         <p class="text-sm">
                             Permalink:
                             <a
-                                :href="permalink"
+                                v-if="safePermalink"
+                                :href="safePermalink"
                                 target="_blank"
+                                rel="noopener noreferrer"
                                 class="text-primary hover:underline"
                             >
                                 {{ permalink }}
                             </a>
+                            <span v-else class="text-muted">
+                                {{ permalink }} (blocked unsafe URL)
+                            </span>
                         </p>
                     </div>
                 </UCard>

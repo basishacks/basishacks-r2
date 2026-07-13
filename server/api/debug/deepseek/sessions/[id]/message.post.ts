@@ -1,10 +1,20 @@
 import { getDeepSeekSession, addMessage, getMessages } from "~~/server/utils/deepseek-store";
 import { requirePermission } from "~~/server/utils/auth";
 import { DevPermissions } from "~~/shared/permissions";
+import { DeepSeekSessionIdParams } from "~~/shared/schemas";
 import { fetchExternalHtml } from "~~/server/utils/url-validation";
 import OpenAI from "openai";
+import z from "zod";
+import { applyRateLimit, DEFAULT_RATE_LIMIT_CONFIG } from "~~/server/utils/rateLimit";
 
 import { NodeHtmlMarkdown } from "node-html-markdown";
+
+const SendMessageRequest = z.object({
+    message: z.string().min(1, "Message is required").max(4000, "Message is too long"),
+    role: z.enum(["user", "tool_result"]),
+    toolCallId: z.string().max(128).optional(),
+    toolResult: z.string().max(10000).optional(),
+});
 
 let openai: OpenAI | null = null;
 
@@ -240,115 +250,109 @@ async function processToolCalls(
     };
 }
 
-export default defineEventHandler(async (event) => {
-    await requirePermission(event, DevPermissions.DEEPSEEK);
+export default defineEventHandler(
+    applyRateLimit(async (event) => {
+        await requirePermission(event, DevPermissions.DEEPSEEK);
 
-    const user = await requireUser(event);
+        const user = await requireUser(event);
 
-    const sessionId = getRouterParam(event, "id");
-    const body = await readBody(event);
-    const { message, role, toolCallId, toolResult } = body;
+        const { id: sessionId } = await getValidatedRouterParams(
+            event,
+            DeepSeekSessionIdParams.parse,
+        );
+        const { message, role, toolCallId, toolResult } = await readValidatedBody(
+            event,
+            SendMessageRequest.parse,
+        );
 
-    if (!sessionId || isNaN(Number(sessionId))) {
-        throw createError({
-            statusCode: 400,
-            statusMessage: "Invalid session ID",
-        });
-    }
+        try {
+            const session = getDeepSeekSession(sessionId);
 
-    if (!message || typeof message !== "string") {
-        throw createError({
-            statusCode: 400,
-            statusMessage: "message is required and must be a string",
-        });
-    }
-
-    try {
-        const session = getDeepSeekSession(Number(sessionId));
-
-        if (!session) {
-            throw createError({
-                statusCode: 404,
-                statusMessage: "Session not found",
-            });
-        }
-
-        const messages = getMessages(Number(sessionId));
-
-        // Handle user message or tool result
-        if (role === "user") {
-            addMessage(Number(sessionId), {
-                role: "user",
-                content: message,
-            } as any);
-        } else if (role === "tool_result" && toolCallId) {
-            addMessage(Number(sessionId), {
-                role: "tool",
-                tool_call_id: toolCallId,
-                content: message,
-            } as any);
-        }
-
-        // Get fresh message list after adding
-        const updatedMessages = getMessages(Number(sessionId));
-
-        // Process tool calls in a loop until no more tool calls
-        let result = await processToolCalls(Number(sessionId), updatedMessages, user);
-        let callCount = 0;
-        const maxCalls = 10; // Prevent infinite loops
-
-        let end = false;
-
-        while (result.hasToolCalls && callCount < maxCalls) {
-            callCount++;
-
-            for (const tc of result.toolCalls) {
-                const args =
-                    typeof tc.arguments === "string" ? JSON.parse(tc.arguments) : tc.arguments;
-                const result = await executeTool(tc.function, args);
-
-                if (result.startsWith("<|SESSION_END_FLAG_qweiurohoanciwcoinwaskcn>")) end = true;
-
-                // Add tool result to messages
-                addMessage(Number(sessionId), {
-                    role: "tool",
-                    tool_call_id: tc.id,
-                    content: result,
-                } as any);
-
-                const allMessages = getMessages(Number(sessionId));
-                //g(allMessages)
+            if (!session) {
+                throw createError({
+                    statusCode: 404,
+                    statusMessage: "Session not found",
+                });
             }
 
-            // Get updated messages and process again
-            const allMessages = getMessages(Number(sessionId));
+            const messages = getMessages(sessionId);
 
-            result = await processToolCalls(Number(sessionId), allMessages, user);
+            // Handle user message or tool result
+            if (role === "user") {
+                addMessage(sessionId, {
+                    role: "user",
+                    content: message,
+                } as any);
+            } else if (role === "tool_result" && toolCallId) {
+                addMessage(sessionId, {
+                    role: "tool",
+                    tool_call_id: toolCallId,
+                    content: message,
+                } as any);
+            }
+
+            // Get fresh message list after adding
+            const updatedMessages = getMessages(sessionId);
+
+            // Process tool calls in a loop until no more tool calls
+            let result = await processToolCalls(sessionId, updatedMessages, user);
+            let callCount = 0;
+            const maxCalls = 10; // Prevent infinite loops
+
+            let end = false;
+
+            while (result.hasToolCalls && callCount < maxCalls) {
+                callCount++;
+
+                for (const tc of result.toolCalls) {
+                    const args =
+                        typeof tc.arguments === "string" ? JSON.parse(tc.arguments) : tc.arguments;
+                    const result = await executeTool(tc.function, args);
+
+                    if (result.startsWith("<|SESSION_END_FLAG_qweiurohoanciwcoinwaskcn>"))
+                        end = true;
+
+                    // Add tool result to messages
+                    addMessage(sessionId, {
+                        role: "tool",
+                        tool_call_id: tc.id,
+                        content: result,
+                    } as any);
+
+                    const allMessages = getMessages(sessionId);
+                    //g(allMessages)
+                }
+
+                // Get updated messages and process again
+                const allMessages = getMessages(sessionId);
+
+                result = await processToolCalls(sessionId, allMessages, user);
+            }
+
+            const finalSession = getDeepSeekSession(sessionId);
+            const finalMessages = getMessages(sessionId);
+
+            if (end) {
+                deleteSession(sessionId);
+            }
+
+            return {
+                sessionId: session.id,
+                userMessage: message,
+                allMessages: finalMessages,
+                toolCalls: result.toolCalls,
+                assistantMessage: result.response,
+                hasMoreToolCalls: result.hasToolCalls && callCount >= maxCalls,
+            };
+        } catch (error: any) {
+            console.error("Error sending message to deepseek session:", error);
+            if (error.statusCode) {
+                throw error;
+            }
+            throw createError({
+                statusCode: 500,
+                statusMessage: "Failed to send message",
+            });
         }
-
-        const finalSession = getDeepSeekSession(Number(sessionId));
-        const finalMessages = getMessages(Number(sessionId));
-
-        if (end) {
-            deleteSession(Number(sessionId));
-        }
-
-        return {
-            sessionId: session.id,
-            userMessage: message,
-            allMessages: finalMessages,
-            toolCalls: result.toolCalls,
-            assistantMessage: result.response,
-            hasMoreToolCalls: result.hasToolCalls && callCount >= maxCalls,
-        };
-    } catch (error: any) {
-        console.error("Error sending message to deepseek session:", error);
-        if (error.statusCode) {
-            throw error;
-        }
-        throw createError({
-            statusCode: 500,
-            statusMessage: "Failed to send message",
-        });
-    }
-});
+    }, DEFAULT_RATE_LIMIT_CONFIG),
+);
