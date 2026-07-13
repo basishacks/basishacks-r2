@@ -58,6 +58,13 @@ The canonical list of variables lives in `.env.example`. The table below summari
 | `REDIRECT_URI` | Optional | Onsite OAuth2 redirect URI path used by `/api/login`. Defaults to `/api/oauth2/dccallback`. The server auto-registers it for `ONSITE_LOGIN_CLIENT_ID` |
 | `DEEPSEEK_API_KEY` | Optional | DeepSeek API key for AI chat features (debug routes only) |
 | `PORT` / `HOST` | Optional | Server port/host override (defaults: `3000` / `0.0.0.0`) |
+| `RATE_LIMIT_GENERAL_MAX` | Optional | General API rate limit, requests per minute (default: `60`) |
+| `RATE_LIMIT_AUTH_MAX` | Optional | Authentication endpoint rate limit, attempts per minute (default: `10`) |
+| `RATE_LIMIT_VOTE_MAX` | Optional | Voting/scoring endpoint rate limit, submissions per minute (default: `10`) |
+| `RATE_LIMIT_UPLOAD_MAX` | Optional | File upload endpoint rate limit, uploads per minute (default: `10`) |
+| `RATE_LIMIT_WINDOW_MS` | Optional | Rate limit window in milliseconds (default: `60000`) |
+| `TRUST_PROXY` | Optional | Set to any truthy value when behind a trusted reverse proxy so `x-forwarded-for` is used for rate-limit client IP resolution |
+| `DISABLE_DEBUG_ROUTES` | Optional | Set to any truthy value in production to disable `/api/debug/*` and `/debug` routes entirely |
 
 > Note: `MICROSOFT_TENANT_ID`, `MICROSOFT_CLIENT_ID`, and `ONSITE_LOGIN_CLIENT_ID` were previously hardcoded in the `main` branch. They are now read from environment variables and must be set explicitly.
 
@@ -68,6 +75,8 @@ The database auto-migrates on startup — no manual SQL is required. The init pl
 1. Selects the runtime's native SQLite driver (`bun:sqlite` under Bun, `better-sqlite3` under Node.js) via dynamic import
 2. Applies `PRAGMA journal_mode = WAL` and `PRAGMA foreign_keys = ON`
 3. Runs `createAndMigrateDatabase()` from `server/database/migrate.ts` to bring the schema up to date
+
+All application queries use Drizzle ORM's parameterized query builders. User input is never interpolated into raw SQL strings, eliminating SQL injection risk. See `tests/api/sql-injection.test.ts` for regression coverage.
 
 For manual schema management (e.g., generating migration files after editing `server/database/schema.ts`), Drizzle Kit is available:
 
@@ -166,6 +175,17 @@ The application is deployed as a Node.js server on a VPS:
 
 The SQLite database file lives at `./database/basishacks.sqlite` and uses WAL mode. Back up the `database/` directory (including `-wal` and `-shm` files) for point-in-time snapshots.
 
+### Production performance defaults
+
+The following performance settings are configured in `nuxt.config.ts` and apply automatically to production builds:
+
+- **Static asset compression**: `nitro.compressPublicAssets: true` pre-compresses public assets with gzip/brotli.
+- **Long-lived cache headers**: `routeRules` set `Cache-Control: public, max-age=31536000, immutable` for `/_nuxt/**`, `/assets/**`, and `/fonts/**`.
+- **Font display swap**: `@nuxt/fonts` is configured with `defaults.display: "swap"` and `preload: true` so the preloaded Monaspace Neon font renders with a fallback until it loads.
+- **Build target**: `vite.build.target` is kept at `es2020` for stable compatibility across Node.js >= v24 and Bun.
+
+These defaults can be adjusted in `nuxt.config.ts` if your deployment environment requires different caching or compression behavior.
+
 ## Project Structure
 
 ```
@@ -179,7 +199,7 @@ app/                    # Nuxt app (Vue frontend)
 
 server/                 # Nitro backend
   api/                  # API route handlers (file-based)
-  middleware/           # Server middleware (OAuth2 authorize)
+  middleware/           # Server middleware (security headers, OAuth2 authorize)
   plugins/              # Nitro plugins (DB init, MS Graph token, JWT secret guard)
   database/             # Drizzle ORM: schema, migrations, dual-runtime init
     schema.ts           # Drizzle schema definition

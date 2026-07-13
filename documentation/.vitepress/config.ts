@@ -94,6 +94,7 @@ export default defineConfig({
                     items: [
                         { text: "Security", link: "/deployment/security" },
                         { text: "Rate Limiting", link: "/deployment/rate-limiting" },
+                        { text: "Performance", link: "/deployment/performance" },
                     ],
                 },
             ],

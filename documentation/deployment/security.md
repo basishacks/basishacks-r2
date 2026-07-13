@@ -5,7 +5,22 @@ description: Security measures and best practices in the basishacks platform
 
 # Security Considerations
 
-The basishacks platform implements multiple layers of security to protect user data, prevent abuse, and ensure safe operation.
+The basishacks platform implements multiple layers of security to protect user data, prevent abuse, and ensure safe operation across all deployment environments.
+
+## HTTP Security Headers
+
+Every response from the Nitro server includes a baseline set of security headers, set by `server/middleware/security-headers.ts`:
+
+| Header | Value |
+| --- | --- |
+| `Strict-Transport-Security` | `max-age=63072000; includeSubDomains; preload` |
+| `X-Frame-Options` | `DENY` |
+| `X-Content-Type-Options` | `nosniff` |
+| `Referrer-Policy` | `strict-origin-when-cross-origin` |
+| `Permissions-Policy` | `camera=(), microphone=(), geolocation=(), payment=(), usb=(), magnetometer=(), gyroscope=(), accelerometer=(), ambient-light-sensor=(), autoplay=(), encrypted-media=(), picture-in-picture=()` |
+| `Content-Security-Policy` | `default-src 'self'; script-src 'self' 'unsafe-inline'; style-src 'self' 'unsafe-inline'; font-src 'self'; img-src 'self' blob: data:; connect-src 'self' https://login.microsoftonline.com; object-src 'none'; base-uri 'self'; form-action 'self'; frame-ancestors 'none'` |
+
+The middleware runs for API routes, rendered HTML pages, and static assets. The `'unsafe-inline'` source expression is required for `script-src` because Nuxt SSR hydration injects `window.__NUXT__` as an inline script, and for `style-src` because Vue and Nuxt UI components apply inline style bindings. The `'unsafe-eval'` source expression is intentionally omitted.
 
 ## Security-Critical Environment Variables
 
@@ -22,29 +37,51 @@ The following environment variables directly affect platform security and must b
 
 ## Rate Limiting
 
-All API endpoints are protected by an in-memory rate limiter:
+All API endpoints are protected by an in-memory rate limiter. Sensitive routes consume requests from dedicated buckets:
 
-- **Default limit:** 60 requests per 60,000 ms (1 minute)
+| Bucket           | Default              | Routes                                 |
+| ---------------- | -------------------- | -------------------------------------- |
+| General API      | 60 requests / minute | All non-sensitive API routes           |
+| Authentication   | 10 requests / minute | `/api/login`, `/api/oauth2/*`          |
+| Voting / scoring | 10 requests / minute | `/api/ballot`, `/api/teams/:id/scores` |
+| File upload      | 10 requests / minute | `/api/debug/upload`                    |
+
 - **Client identification:** Authenticated users are identified by `user:{id}`; unauthenticated requests by `ip:{ip}`
 - **Response:** 429 status with `Retry-After` header
+- **Configuration:** Override defaults via `RATE_LIMIT_GENERAL_MAX`, `RATE_LIMIT_AUTH_MAX`, `RATE_LIMIT_VOTE_MAX`, `RATE_LIMIT_UPLOAD_MAX`, and `RATE_LIMIT_WINDOW_MS`
 - **Cleanup:** Interval-based cleanup runs at most once every 5 minutes and removes entries with no requests in the last hour
 
 ::: warning Rate limiting is in-memory and per-process. Under high concurrency or with multiple server instances, the effective rate limit applies separately to each process. :::
 
 See [Rate Limiting](./rate-limiting.md) for full details.
 
+## Debug Route Lockdown
+
+All `/api/debug/*` routes and both `/debug` pages require an administrator or an appropriately scoped developer permission. In production, debug utilities can be disabled entirely by setting:
+
+```bash
+DISABLE_DEBUG_ROUTES=true
+```
+
+When this variable is truthy, requests to `/api/debug/*` or `/debug*` return `404 Not Found` before any route handler executes. This guard is enforced by `server/middleware/debug-lockdown.ts` and operates independently of route-level permission checks.
+
 ## Session Security
 
-- **Session password** (`NUXT_SESSION_PASSWORD`) must be at least 32 bytes
-- Sessions are managed by `nuxt-auth-utils` with encrypted cookies
-- The session cookie stores only `{ user: { id: number } }` — no sensitive data is stored client-side
-- The full user record is fetched from the database on each authenticated request
+- **Session password** (`NUXT_SESSION_PASSWORD`) must be at least 32 bytes.
+- Sessions are managed by `nuxt-auth-utils` with encrypted cookies.
+- Session cookies are issued with `httpOnly: true`, `sameSite: "lax"`, and `secure: true` in production.
+- The OAuth2 `bridge_id` and `bridge_error` cookies use `httpOnly: true`, `secure: true`, and `sameSite: "lax"`.
+- The session cookie stores only `{ user: { id: number } }`; no sensitive data is stored client-side.
+- The full user record is fetched from the database on every authenticated request.
 
 ## Database Security
 
-- **Foreign keys** are enforced with `PRAGMA foreign_keys = ON`
-- All database access goes through Drizzle ORM (`event.context.drizzle.select()/insert()/update()/delete()`) — no raw string interpolation
-- The database layer uses Drizzle ORM with `bun:sqlite` under Bun and `better-sqlite3` under Node.js, ensuring consistent behavior between local and production environments
+- **Foreign keys** are enforced with `PRAGMA foreign_keys = ON`.
+- All database access goes through Drizzle ORM (`event.context.drizzle.select()/insert()/update()/delete()`); no raw string interpolation is used.
+- User input is bound as query parameters; SQL metacharacters such as `' OR 1=1 --` or `'; DROP TABLE users; --` are treated as literal values and cannot alter query logic.
+- Raw SQL exists only in `server/database/migrate.ts` and `server/database/index.ts` for schema setup, migrations, and PRAGMAs; these statements use hardcoded identifiers and constants, never user input.
+- Regression tests in `tests/api/sql-injection.test.ts` exercise endpoints and database helpers with SQL metacharacters to verify they are stored and matched as literals.
+- The database layer uses Drizzle ORM with `bun:sqlite` under Bun and `better-sqlite3` under Node.js, ensuring consistent behavior between local and production environments.
 
 ## Input Validation
 
@@ -54,13 +91,13 @@ See [Rate Limiting](./rate-limiting.md) for full details.
 
 ## Role-Based Access Control (RBAC)
 
-- RBAC is enforced **server-side** — the frontend never performs permission checks for authorization
+- RBAC is enforced **server-side**; the frontend never performs permission checks for authorization.
 - Three helper functions enforce access:
-    - `requireUser(event)` — returns the full DB user row or 401
-    - `requireJudge(event)` — 403 if not judge/admin
-    - `requireAdmin(event)` — 403 if not admin
-- Fine-grained permissions are checked using `hasPermission(user.role, permission)` from `shared/permissions.ts`
-- The `role` column stores space-separated URI-encoded permission strings
+    - `requireUser(event)` — returns the full database user row or `401 Unauthorized`.
+    - `requireJudge(event)` — returns `403 Forbidden` if the caller is not a judge or administrator.
+    - `requireAdmin(event)` — returns `403 Forbidden` if the caller is not an administrator.
+- Fine-grained permissions are checked using `hasPermission(user.role, permission)` from `shared/permissions.ts`.
+- The `role` column stores space-separated, URI-encoded permission strings.
 
 ::: danger Never trust the frontend for permission checks. Always validate on the server. :::
 

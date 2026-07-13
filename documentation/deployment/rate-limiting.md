@@ -24,6 +24,21 @@ export const DEFAULT_RATE_LIMIT_CONFIG: RateLimitConfig = {
 };
 ```
 
+## Environment Variables
+
+The following environment variables override the default limits:
+
+| Variable | Default | Purpose |
+| --- | --- | --- |
+| `RATE_LIMIT_GENERAL_MAX` | `60` | General API rate limit, requests per window |
+| `RATE_LIMIT_AUTH_MAX` | `10` | Authentication endpoint rate limit, attempts per window |
+| `RATE_LIMIT_VOTE_MAX` | `10` | Voting/scoring endpoint rate limit, submissions per window |
+| `RATE_LIMIT_UPLOAD_MAX` | `10` | File upload endpoint rate limit, uploads per window |
+| `RATE_LIMIT_WINDOW_MS` | `60000` | Rate limit window in milliseconds |
+| `TRUST_PROXY` | unset | Set to any truthy value when behind a trusted reverse proxy so `x-forwarded-for` is used for client IP resolution |
+
+These values are read at process startup in `server/utils/rateLimit.ts`.
+
 ## Configuration Interface
 
 ```ts

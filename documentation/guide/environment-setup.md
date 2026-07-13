@@ -144,6 +144,12 @@ Copy the output and paste it as the value for `NUXT_SESSION_PASSWORD`.
 | `MICROSOFT_DUMMY_USER_PASSWORD` | ROPC test user password (rarely used, testing only) | — |
 | `PORT` | Server port override | `3000` |
 | `HOST` | Server host override | `0.0.0.0` |
+| `RATE_LIMIT_GENERAL_MAX` | General API rate limit, requests per minute | `60` |
+| `RATE_LIMIT_AUTH_MAX` | Authentication endpoint rate limit, attempts per minute | `10` |
+| `RATE_LIMIT_VOTE_MAX` | Voting/scoring endpoint rate limit, submissions per minute | `10` |
+| `RATE_LIMIT_UPLOAD_MAX` | File upload endpoint rate limit, uploads per minute | `10` |
+| `RATE_LIMIT_WINDOW_MS` | Rate limit window in milliseconds | `60000` |
+| `TRUST_PROXY` | Set to any truthy value when behind a trusted reverse proxy so `x-forwarded-for` is used for rate-limit client IP resolution | unset |
 
 ### Complete .env Example
 
@@ -190,6 +196,16 @@ ONSITE_LOGIN_CLIENT_ID=your_onsite_login_client_id_here
 # OPTIONAL - Server port/host
 # PORT=3000
 # HOST=0.0.0.0
+
+# OPTIONAL - Rate limiting overrides
+# RATE_LIMIT_GENERAL_MAX=60
+# RATE_LIMIT_AUTH_MAX=10
+# RATE_LIMIT_VOTE_MAX=10
+# RATE_LIMIT_UPLOAD_MAX=10
+# RATE_LIMIT_WINDOW_MS=60000
+
+# OPTIONAL - Trust proxy for rate-limit client IP resolution
+# TRUST_PROXY=true
 ```
 
 ## HTTPS Dev Server Setup
