@@ -3,6 +3,7 @@ import type { AuthorizeSession } from "./session.post";
 import { getAuthorizeSession } from "./session.post";
 import { createHash, randomBytes } from "crypto";
 import { structureLink } from "~~/server/utils/oauth2";
+import { applyRateLimit, AUTH_RATE_LIMIT_CONFIG } from "~~/server/utils/rateLimit";
 
 export function generateMicrosoftOAuth2Link(session: AuthorizeSession) {
     const state = randomBytes(75).toString("base64url");
@@ -25,29 +26,31 @@ export function generateMicrosoftOAuth2Link(session: AuthorizeSession) {
     return structureLink(state, pkce_code_challenge);
 }
 
-export default defineEventHandler(async (event) => {
-    const token = getCookie(event, "bridge_id");
+export default defineEventHandler(
+    applyRateLimit(async (event) => {
+        const token = getCookie(event, "bridge_id");
 
-    if (!token) {
-        throw createError({
-            status: 400,
-            message: "Cookie 'bridge_id' is required",
-        });
-    }
+        if (!token) {
+            throw createError({
+                status: 400,
+                message: "Cookie 'bridge_id' is required",
+            });
+        }
 
-    const session = getAuthorizeSession(token);
+        const session = getAuthorizeSession(token);
 
-    if (!session) {
-        throw createError({
-            status: 400,
-            message: "session_expired",
-        });
-    }
+        if (!session) {
+            throw createError({
+                status: 400,
+                message: "session_expired",
+            });
+        }
 
-    const link = generateMicrosoftOAuth2Link(session);
-    session.login_state = "requesting";
+        const link = generateMicrosoftOAuth2Link(session);
+        session.login_state = "requesting";
 
-    return {
-        redirect_to: link,
-    };
-});
+        return {
+            redirect_to: link,
+        };
+    }, AUTH_RATE_LIMIT_CONFIG),
+);

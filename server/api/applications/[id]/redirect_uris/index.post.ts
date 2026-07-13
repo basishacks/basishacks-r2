@@ -3,13 +3,13 @@ import {
     getOAuth2Application,
     addOAuth2ApplicationRedirectUri,
 } from "~~/server/utils/database/oauth2_applications";
-import { ManageRedirectUriRequest } from "~~/shared/schemas";
+import { ManageRedirectUriRequest, ApplicationIdParams } from "~~/shared/schemas";
 import { applyRateLimit } from "~~/server/utils/rateLimit";
 
 export default defineEventHandler(
     applyRateLimit(async (event) => {
         const user = await requireUser(event);
-        const clientID = getRouterParam(event, "id")!;
+        const { id: clientID } = await getValidatedRouterParams(event, ApplicationIdParams.parse);
 
         const app = await getOAuth2Application(event, clientID);
         if (!app) {

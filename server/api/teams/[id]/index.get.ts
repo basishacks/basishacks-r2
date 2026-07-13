@@ -1,8 +1,9 @@
 import { DevPermissions, hasPermission } from "~~/shared/permissions";
+import { TeamIdParams } from "~~/shared/schemas";
 
 export default defineEventHandler(async (event) => {
     const user = await requireUser(event);
-    const id = parseInt(getRouterParam(event, "id")!);
+    const { id } = await getValidatedRouterParams(event, TeamIdParams.parse);
     const isMember = user.team_id === id;
 
     const team = await getTeam(event, id, true);

@@ -26,6 +26,8 @@ vi.mock("~~/server/utils/auth", () => ({
 
 vi.mock("~~/server/utils/rateLimit", () => ({
     applyRateLimit: (fn: any) => fn,
+    DEFAULT_RATE_LIMIT_CONFIG: { maxRequests: 60, windowMs: 60 * 1000 },
+    VOTE_RATE_LIMIT_CONFIG: { maxRequests: 10, windowMs: 60 * 1000 },
 }));
 
 let ctx: TestContext;

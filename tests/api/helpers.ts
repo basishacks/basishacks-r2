@@ -230,6 +230,17 @@ function paramMock(_event: any, name: string) {
     return mockParams.values[name];
 }
 
+async function getValidatedRouterParamsMock(_event: any, schema: any) {
+    const params: Record<string, string> = {};
+    for (const [key, value] of Object.entries(mockParams.values)) {
+        if (value !== undefined) {
+            params[key] = value;
+        }
+    }
+    const validate = typeof schema === "function" ? schema : schema.parse;
+    return validate(params);
+}
+
 function queryMock(_event: any) {
     return mockQueryState.value;
 }
@@ -291,6 +302,7 @@ export function setupNitroGlobals() {
     vi.stubGlobal("getValidatedQuery", readQueryMock);
     vi.stubGlobal("getCookie", cookieMock);
     vi.stubGlobal("getRouterParam", paramMock);
+    vi.stubGlobal("getValidatedRouterParams", getValidatedRouterParamsMock);
     vi.stubGlobal("getQuery", queryMock);
     vi.stubGlobal("getHeader", headerMock);
     vi.stubGlobal("setHeader", setHeaderMock);

@@ -1,6 +1,7 @@
 import { createHash, randomBytes } from "crypto";
 import { buildOnsiteRedirectUri } from "~~/server/utils/oauth2";
 import { AuthorizeSession } from "./oauth2/session.post";
+import { applyRateLimit, AUTH_RATE_LIMIT_CONFIG } from "~~/server/utils/rateLimit";
 
 export function constructOnSiteLoginURL(event: any, postLoginRedirect?: string) {
     /* Constructs DevConnect OAuth URL with PKCE
@@ -36,11 +37,13 @@ export function constructOnSiteLoginURL(event: any, postLoginRedirect?: string) 
     return url.pathname + url.search;
 }
 
-export default defineEventHandler(async (event) => {
-    const query = getQuery(event);
-    await sendRedirect(
-        event,
-        constructOnSiteLoginURL(event, query.redirect as string | undefined),
-        302,
-    );
-});
+export default defineEventHandler(
+    applyRateLimit(async (event) => {
+        const query = getQuery(event);
+        await sendRedirect(
+            event,
+            constructOnSiteLoginURL(event, query.redirect as string | undefined),
+            302,
+        );
+    }, AUTH_RATE_LIMIT_CONFIG),
+);

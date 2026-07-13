@@ -1,5 +1,5 @@
 import { getUserAsset } from "~~/server/utils/assets";
-
+import { ApplicationIdParams } from "~~/shared/schemas";
 import { toPng } from "jdenticon";
 import { sendStream } from "h3";
 import { Readable } from "stream";
@@ -8,7 +8,7 @@ export default defineEventHandler(async (event) => {
     const currentUser = await getUserSession(event);
 
     setResponseHeader(event, "Content-Type", "image/png");
-    const id = getRouterParam(event, "id") as string;
+    const { id } = await getValidatedRouterParams(event, ApplicationIdParams.parse);
 
     const user = await getOAuth2Application(event, id);
     if (!user) {

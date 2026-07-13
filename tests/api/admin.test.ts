@@ -7,10 +7,14 @@ import {
     mockQueryState,
     seedHackathon,
     seedSeason,
-    seedUser,
     seedTeam,
     type TestContext,
 } from "./helpers";
+
+vi.mock("~~/server/utils/rateLimit", () => ({
+    applyRateLimit: (fn: any) => fn,
+    DEFAULT_RATE_LIMIT_CONFIG: { maxRequests: 60, windowMs: 60 * 1000 },
+}));
 
 let ctx: TestContext;
 let scoresHandler: any;

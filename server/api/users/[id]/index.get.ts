@@ -1,10 +1,11 @@
 import { getUserPastTeams } from "~~/server/utils/database/members";
 import { getTeamById } from "~~/server/utils/database/teams";
+import { UserIdParams } from "~~/shared/schemas";
 
 export default defineEventHandler(async (event) => {
     const currentUser = await getUserSession(event);
 
-    const id = parseInt(getRouterParam(event, "id")!);
+    const { id } = await getValidatedRouterParams(event, UserIdParams.parse);
     const isSelf = currentUser.user?.id === id;
 
     const user = await getUser(event, id);

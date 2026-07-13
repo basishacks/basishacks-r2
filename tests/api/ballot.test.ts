@@ -25,6 +25,11 @@ vi.mock("~~/server/utils/auth", () => ({
     requirePermission: vi.fn(),
 }));
 
+vi.mock("~~/server/utils/rateLimit", () => ({
+    applyRateLimit: (fn: any) => fn,
+    VOTE_RATE_LIMIT_CONFIG: { maxRequests: 10, windowMs: 60 * 1000 },
+}));
+
 let ctx: TestContext;
 let getBallotHandler: any;
 let postBallotHandler: any;

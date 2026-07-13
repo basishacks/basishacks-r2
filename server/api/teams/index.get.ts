@@ -1,5 +1,7 @@
+import { GetTeamsQuery } from "~~/shared/schemas";
+
 export default defineEventHandler(async (event) => {
-    const query = getQuery(event);
+    const query = await getValidatedQuery(event, GetTeamsQuery.parse);
 
     if (query.judging) {
         const { id: userID } = await requireJudge(event);
@@ -12,7 +14,7 @@ export default defineEventHandler(async (event) => {
 
         return teams.map((t) => convertTeamToPublic(t, false, awardsByTeam[t.id] ?? []));
     } else {
-        const seasonId = query.season_id ? Number(query.season_id) : -1;
+        const seasonId = query.season_id ?? -1;
         const teams =
             seasonId === -1 ? await getAllTeams(event) : await getTeamsBySeason(event, seasonId);
         const awardsByTeam = await getAwardsForTeams(

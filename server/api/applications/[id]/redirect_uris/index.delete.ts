@@ -4,14 +4,19 @@ import {
     getOAuth2Application,
     removeOAuth2ApplicationRedirectUri,
 } from "~~/server/utils/database/oauth2_applications";
+import { ApplicationIdParams } from "~~/shared/schemas";
 
 const DeleteRedirectUriRequest = z.object({
-    uri: z.string().min(1),
+    uri: z
+        .string()
+        .min(1, "Redirect URI is required")
+        .url("Invalid URL format")
+        .max(2048, "Redirect URI is too long"),
 });
 
 export default defineEventHandler(async (event) => {
     const user = await requireUser(event);
-    const clientID = getRouterParam(event, "id")!;
+    const { id: clientID } = await getValidatedRouterParams(event, ApplicationIdParams.parse);
 
     const app = await getOAuth2Application(event, clientID);
     if (!app) {
