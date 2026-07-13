@@ -2,6 +2,7 @@ import { describe, it, expect } from "vitest";
 import {
     MicrosoftRedirectRequest,
     CreateTeamQuery,
+    GetTeamsQuery,
     CreateTeamRequest,
     UpdateTeamRequest,
     SubmitTeamRequest,
@@ -15,6 +16,10 @@ import {
     OAuth2SessionActionRequest,
     SetActiveSeasonRequest,
     ElectionVoteRequest,
+    ApplicationIdParams,
+    TeamIdParams,
+    UserIdParams,
+    DeepSeekSessionIdParams,
 } from "~~/shared/schemas";
 
 describe("MicrosoftRedirectRequest", () => {
@@ -135,8 +140,8 @@ describe("UpdateTeamRequest", () => {
         expect(resultWithNull.project?.repo_url).toBeUndefined();
     });
 
-    it("rejects a project name longer than 50 characters", () => {
-        expect(() => UpdateTeamRequest.parse({ project: { name: "A".repeat(51) } })).toThrow();
+    it("rejects a project name longer than 100 characters", () => {
+        expect(() => UpdateTeamRequest.parse({ project: { name: "A".repeat(101) } })).toThrow();
     });
 
     it("rejects a project description longer than 2000 characters", () => {
@@ -147,6 +152,20 @@ describe("UpdateTeamRequest", () => {
 
     it("rejects an invalid demo URL", () => {
         expect(() => UpdateTeamRequest.parse({ project: { demo_url: "not-a-url" } })).toThrow();
+    });
+
+    it("rejects a demo URL longer than 2048 characters", () => {
+        expect(() =>
+            UpdateTeamRequest.parse({
+                project: { demo_url: "https://example.com/" + "a".repeat(2048) },
+            }),
+        ).toThrow();
+    });
+
+    it("rejects sourcing notes longer than 2000 characters", () => {
+        expect(() =>
+            UpdateTeamRequest.parse({ project: { sourcing: "A".repeat(2001) } }),
+        ).toThrow();
     });
 });
 
@@ -233,6 +252,63 @@ describe("SubmitTeamRequest", () => {
             }),
         ).toThrow();
     });
+
+    it("rejects a project name longer than 100 characters", () => {
+        expect(() =>
+            SubmitTeamRequest.parse({
+                pathway: "junior",
+                project: {
+                    name: "A".repeat(101),
+                    description: "A".repeat(30),
+                    demo_url: "https://example.com",
+                    repo_url: "https://github.com/user/repo",
+                },
+            }),
+        ).toThrow();
+    });
+
+    it("rejects a project description longer than 2000 characters", () => {
+        expect(() =>
+            SubmitTeamRequest.parse({
+                pathway: "junior",
+                project: {
+                    name: "Cool Project",
+                    description: "A".repeat(2001),
+                    demo_url: "https://example.com",
+                    repo_url: "https://github.com/user/repo",
+                },
+            }),
+        ).toThrow();
+    });
+
+    it("rejects a demo URL longer than 2048 characters", () => {
+        expect(() =>
+            SubmitTeamRequest.parse({
+                pathway: "junior",
+                project: {
+                    name: "Cool Project",
+                    description: "A".repeat(30),
+                    demo_url: "https://example.com/" + "a".repeat(2048),
+                    repo_url: "https://github.com/user/repo",
+                },
+            }),
+        ).toThrow();
+    });
+
+    it("rejects sourcing notes longer than 2000 characters", () => {
+        expect(() =>
+            SubmitTeamRequest.parse({
+                pathway: "junior",
+                project: {
+                    name: "Cool Project",
+                    description: "A".repeat(30),
+                    demo_url: "https://example.com",
+                    repo_url: "https://github.com/user/repo",
+                    sourcing: "A".repeat(2001),
+                },
+            }),
+        ).toThrow();
+    });
 });
 
 describe("AddTeamMemberRequest", () => {
@@ -246,6 +322,13 @@ describe("AddTeamMemberRequest", () => {
 
     it("rejects an invalid email format", () => {
         expect(() => AddTeamMemberRequest.parse({ email: "not-an-email" })).toThrow();
+    });
+
+    it("rejects an email longer than 254 characters", () => {
+        const longLocal = "a".repeat(250);
+        expect(() =>
+            AddTeamMemberRequest.parse({ email: `${longLocal}@basischina.com` }),
+        ).toThrow();
     });
 });
 
@@ -416,6 +499,18 @@ describe("SubmitVoteRequest", () => {
                 reasoning: "Great work",
             }),
         ).toThrow("Stars must sum to 10");
+    });
+
+    it("rejects more than 50 scores", () => {
+        const scores = Array(51).fill(0);
+        scores[0] = 5;
+        scores[1] = 5;
+        expect(() =>
+            SubmitVoteRequest.parse({
+                scores,
+                reasoning: "Great work",
+            }),
+        ).toThrow();
     });
 });
 
@@ -623,6 +718,63 @@ describe("OAuth2TokenRequest", () => {
             }),
         ).toThrow();
     });
+
+    it("rejects a code longer than 1024 characters", () => {
+        expect(() =>
+            OAuth2TokenRequest.parse({
+                grant_type: "authorization_code",
+                code: "a".repeat(1025),
+                client_id: "my-client",
+                client_secret: "my-secret",
+            }),
+        ).toThrow();
+    });
+
+    it("rejects a client_id longer than 256 characters", () => {
+        expect(() =>
+            OAuth2TokenRequest.parse({
+                grant_type: "authorization_code",
+                code: "abc123",
+                client_id: "a".repeat(257),
+                client_secret: "my-secret",
+            }),
+        ).toThrow();
+    });
+
+    it("rejects a client_secret longer than 512 characters", () => {
+        expect(() =>
+            OAuth2TokenRequest.parse({
+                grant_type: "authorization_code",
+                code: "abc123",
+                client_id: "my-client",
+                client_secret: "a".repeat(513),
+            }),
+        ).toThrow();
+    });
+
+    it("rejects a redirect_uri longer than 2048 characters", () => {
+        expect(() =>
+            OAuth2TokenRequest.parse({
+                grant_type: "authorization_code",
+                code: "abc123",
+                client_id: "my-client",
+                client_secret: "my-secret",
+                redirect_uri: "https://example.com/" + "a".repeat(2048),
+            }),
+        ).toThrow();
+    });
+
+    it("rejects a code_verifier longer than 128 characters", () => {
+        expect(() =>
+            OAuth2TokenRequest.parse({
+                grant_type: "authorization_code",
+                code: "abc123",
+                client_id: "my-client",
+                client_secret: "my-secret",
+                code_verifier: "a".repeat(129),
+            }),
+        ).toThrow();
+    });
 });
 
 describe("OAuth2SessionActionRequest", () => {
@@ -734,5 +886,118 @@ describe("ElectionVoteRequest", () => {
                 ],
             }),
         ).toThrow();
+    });
+
+    it("rejects more than 20 positions", () => {
+        const positions = Array(21).fill({
+            title: "Position",
+            candidates: [{ id: "c1", rank: 1 }],
+        });
+        expect(() => ElectionVoteRequest.parse({ positions })).toThrow();
+    });
+
+    it("rejects more than 50 candidates in a position", () => {
+        const candidates = Array(51).fill({ id: "c1", rank: 1 });
+        expect(() =>
+            ElectionVoteRequest.parse({
+                positions: [{ title: "President", candidates }],
+            }),
+        ).toThrow();
+    });
+
+    it("rejects a position title longer than 128 characters", () => {
+        expect(() =>
+            ElectionVoteRequest.parse({
+                positions: [
+                    {
+                        title: "A".repeat(129),
+                        candidates: [{ id: "c1", rank: 1 }],
+                    },
+                ],
+            }),
+        ).toThrow();
+    });
+
+    it("rejects a candidate ID longer than 64 characters", () => {
+        expect(() =>
+            ElectionVoteRequest.parse({
+                positions: [
+                    {
+                        title: "President",
+                        candidates: [{ id: "a".repeat(65), rank: 1 }],
+                    },
+                ],
+            }),
+        ).toThrow();
+    });
+});
+
+describe("GetTeamsQuery", () => {
+    it("accepts valid judging and season_id", () => {
+        const result = GetTeamsQuery.parse({ judging: "true", season_id: "1" });
+        expect(result.judging).toBe(true);
+        expect(result.season_id).toBe(1);
+    });
+
+    it("accepts an empty query", () => {
+        const result = GetTeamsQuery.parse({});
+        expect(result.judging).toBeUndefined();
+        expect(result.season_id).toBeUndefined();
+    });
+
+    it("rejects an invalid season_id", () => {
+        expect(() => GetTeamsQuery.parse({ season_id: "not-a-number" })).toThrow();
+    });
+
+    it("rejects a non-positive season_id", () => {
+        expect(() => GetTeamsQuery.parse({ season_id: "0" })).toThrow();
+    });
+});
+
+describe("ApplicationIdParams", () => {
+    it("accepts a valid client_id", () => {
+        expect(() => ApplicationIdParams.parse({ id: "my-client" })).not.toThrow();
+    });
+
+    it("rejects an empty client_id", () => {
+        expect(() => ApplicationIdParams.parse({ id: "" })).toThrow();
+    });
+
+    it("rejects a client_id longer than 256 characters", () => {
+        expect(() => ApplicationIdParams.parse({ id: "a".repeat(257) })).toThrow();
+    });
+});
+
+describe("TeamIdParams", () => {
+    it("accepts a positive integer id", () => {
+        expect(() => TeamIdParams.parse({ id: "1" })).not.toThrow();
+    });
+
+    it("rejects a non-numeric id", () => {
+        expect(() => TeamIdParams.parse({ id: "abc" })).toThrow();
+    });
+
+    it("rejects a negative id", () => {
+        expect(() => TeamIdParams.parse({ id: "-1" })).toThrow();
+    });
+});
+
+describe("UserIdParams", () => {
+    it("accepts a positive integer id", () => {
+        expect(() => UserIdParams.parse({ id: "1" })).not.toThrow();
+    });
+
+    it("rejects a non-numeric id", () => {
+        expect(() => UserIdParams.parse({ id: "abc" })).toThrow();
+    });
+});
+
+describe("DeepSeekSessionIdParams", () => {
+    it("accepts a positive integer id", () => {
+        expect(() => DeepSeekSessionIdParams.parse({ id: "1" })).not.toThrow();
+    });
+
+    it("rejects a non-numeric id", () => {
+        expect(() => DeepSeekSessionIdParams.parse({ id: "abc" })).toThrow();
     });
 });
