@@ -1,6 +1,10 @@
 import { describe, it, expect, beforeEach } from "vitest";
 import { createMockEvent } from "./helpers";
-import { createTeamScores, getTeamScoresByTeamID } from "~~/server/utils/database/scores";
+import {
+    createTeamScores,
+    getTeamScoresByTeamID,
+    getTeamScoresBySeasonId,
+} from "~~/server/utils/database/scores";
 
 describe("scores database helpers", () => {
     let event: Awaited<ReturnType<typeof createMockEvent>>;
@@ -60,6 +64,26 @@ describe("scores database helpers", () => {
 
         it("returns an empty array when the team has no scores", async () => {
             const scores = await getTeamScoresByTeamID(event, 1);
+            expect(scores).toHaveLength(0);
+        });
+    });
+
+    describe("getTeamScoresBySeasonId", () => {
+        it("returns scores for a season that has them", async () => {
+            event.context.drizzle
+                .prepare(
+                    "INSERT INTO team_scores(team_id, judge_user_id, scores, reasoning, season_id) VALUES(1, 1, '{\"innovation\":3}', 'Decent', 42)",
+                )
+                .run();
+
+            const scores = await getTeamScoresBySeasonId(event, 42);
+            expect(scores).toHaveLength(1);
+            expect(scores[0]!.team_id).toBe(1);
+            expect(scores[0]!.season_id).toBe(42);
+        });
+
+        it("returns an empty array when the season has no scores", async () => {
+            const scores = await getTeamScoresBySeasonId(event, 42);
             expect(scores).toHaveLength(0);
         });
     });
