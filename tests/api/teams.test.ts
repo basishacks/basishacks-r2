@@ -631,4 +631,54 @@ describe("DELETE /api/teams/:id/users/:user", () => {
         const updated = ctx.drizzle.select().from(users).where(eq(users.id, member.id)).get();
         expect(updated!.team_id).toBeNull();
     });
+
+    it("returns 403 when current user is not a team member", async () => {
+        const team = seedTeam(ctx, { name: "Team" });
+        const otherTeam = seedTeam(ctx, { name: "Other Team" });
+        seedUser(ctx, { email: "outsider@basischina.com", team_id: otherTeam.id });
+        const member = seedUser(ctx, { email: "member@basischina.com", team_id: team.id });
+
+        mockSession.value = { user: { id: 1 } };
+        mockParams.values["id"] = String(team.id);
+        mockParams.values["user"] = String(member.id);
+
+        await expect(removeMemberHandler(createEvent())).rejects.toMatchObject({
+            statusCode: 403,
+            message: "Cannot remove members of other teams",
+        });
+    });
+
+    it("returns 403 when hackathon has finished", async () => {
+        resetTestContext(ctx);
+        seedHackathon(ctx, { status: "finished" });
+        seedSeason(ctx);
+
+        const team = seedTeam(ctx, { name: "Team" });
+        seedUser(ctx, { email: "owner@basischina.com", team_id: team.id });
+        const member = seedUser(ctx, { email: "member@basischina.com", team_id: team.id });
+
+        mockSession.value = { user: { id: 1 } };
+        mockParams.values["id"] = String(team.id);
+        mockParams.values["user"] = String(member.id);
+
+        await expect(removeMemberHandler(createEvent())).rejects.toMatchObject({
+            statusCode: 403,
+            message: "Cannot remove members after hackathon has finished",
+        });
+    });
+
+    it("returns 403 when project is already submitted", async () => {
+        const team = seedTeam(ctx, { name: "Team", project_submitted: 1 });
+        seedUser(ctx, { email: "owner@basischina.com", team_id: team.id });
+        const member = seedUser(ctx, { email: "member@basischina.com", team_id: team.id });
+
+        mockSession.value = { user: { id: 1 } };
+        mockParams.values["id"] = String(team.id);
+        mockParams.values["user"] = String(member.id);
+
+        await expect(removeMemberHandler(createEvent())).rejects.toMatchObject({
+            statusCode: 403,
+            message: "Cannot remove members after project is submitted",
+        });
+    });
 });
