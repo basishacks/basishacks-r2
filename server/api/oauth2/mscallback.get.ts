@@ -1,4 +1,7 @@
-import oAuth2Config, { structureLink, buildOnsiteRedirectUri } from "~~/server/utils/oauth2";
+import oAuth2Config, {
+    buildOnsiteRedirectUri,
+    buildMicrosoftRedirectUri,
+} from "~~/server/utils/oauth2";
 import { generateExchangeCode, getAuthorizeSession } from "./session.post";
 import { createHash } from "crypto";
 import { determinePostMicrosoft } from "~~/server/utils/oauth2-validate";
@@ -12,8 +15,8 @@ function decodeJWT(token: string) {
             throw new Error("Invalid JWT format");
         }
         const payload = parts[1];
-        //@ts-ignore Lol.
-        const decoded = Buffer.from(payload, "base64").toString("utf-8");
+        const padding = "=".repeat((4 - (payload.length % 4)) % 4);
+        const decoded = Buffer.from(payload + padding, "base64url").toString("utf-8");
         return JSON.parse(decoded);
     } catch (error) {
         console.error("Failed to decode JWT:", error);
@@ -94,9 +97,17 @@ export default defineEventHandler(
             );
         }
 
-        const hashed = createHash("sha256")
-            .update(session.ms_verifier || "")
-            .digest("base64url");
+        if (!query.state || query.state !== session.ms_state) {
+            return redirectWithOAuth2Error(
+                event,
+                errorRedirectUri,
+                "invalid_request",
+                "Login Failed: Invalid or missing OAuth2 state parameter. Please restart the login flow.",
+                errorState,
+            );
+        }
+
+        const hashed = createHash("sha256").update(session.ms_verifier).digest("base64url");
         console.log(
             "[Authorize -> MSCallBack] Requested Redeeming MS Code: T:" +
                 token.substring(0, 16) +
@@ -118,6 +129,16 @@ export default defineEventHandler(
             );
         }
 
+        if (!session.ms_verifier || session.ms_verifier.length === 0) {
+            return redirectWithOAuth2Error(
+                event,
+                errorRedirectUri,
+                "invalid_request",
+                "Login Failed: Missing PKCE code verifier. Please restart the login flow.",
+                errorState,
+            );
+        }
+
         try {
             const tokenResponse = await fetch(
                 `https://login.microsoftonline.com/${oAuth2Config.tenant}/oauth2/v2.0/token`,
@@ -130,10 +151,8 @@ export default defineEventHandler(
                         client_id: oAuth2Config.clientId,
                         code: code,
                         client_secret: msClientSecret,
-                        code_verifier: session.ms_verifier || "",
-                        redirect_uri:
-                            (process.env.CURRENT_URL_ORIGIN || "http://localhost:3000") +
-                            oAuth2Config.redirectUri,
+                        code_verifier: session.ms_verifier,
+                        redirect_uri: buildMicrosoftRedirectUri(),
                         grant_type: "authorization_code",
                         scope: oAuth2Config.scope,
                     }).toString(),
