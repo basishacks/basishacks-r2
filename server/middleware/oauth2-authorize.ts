@@ -1,5 +1,5 @@
 import { defineEventHandler } from "h3";
-import { validateOAuth2AuthorizationRequest } from "~/../server/utils/oauth2-validate";
+import { validateOAuth2AuthorizationRequest } from "~~/server/utils/oauth2-validate";
 import type { AuthorizeSession } from "../api/oauth2/session.post";
 import {
     addAuthorizeSession,
