@@ -5,6 +5,7 @@ import {
     requireScopes,
     verifyAccessToken,
     withOAuth2JWT,
+    resolveOAuth2User,
 } from "~~/server/utils/oauth2-jwt";
 
 // ---------------------------------------------------------------------------
@@ -26,7 +27,13 @@ vi.mock("jose", () => ({
     jwtVerify: vi.fn(),
 }));
 
+// Mock database users helper
+vi.mock("~~/server/utils/database/users", () => ({
+    getUser: vi.fn(),
+}));
+
 import { jwtVerify } from "jose";
+import { getUser } from "~~/server/utils/database/users";
 
 function makeMockEvent(headers: Record<string, string> = {}) {
     return {
@@ -311,6 +318,23 @@ describe("verifyAccessToken", () => {
             expect(err.statusCode).toBe(401);
         }
     });
+
+    it("throws 500 when NUXT_OAUTH2_JWT_SECRET is not set", async () => {
+        const original = process.env.NUXT_OAUTH2_JWT_SECRET;
+        delete (process.env as any).NUXT_OAUTH2_JWT_SECRET;
+        expect(process.env.NUXT_OAUTH2_JWT_SECRET).toBeUndefined();
+
+        await expect(verifyAccessToken("valid-token")).rejects.toMatchObject({
+            statusCode: 500,
+            message: "NUXT_OAUTH2_JWT_SECRET is not set",
+        });
+
+        if (original === undefined) {
+            delete (process.env as any).NUXT_OAUTH2_JWT_SECRET;
+        } else {
+            process.env.NUXT_OAUTH2_JWT_SECRET = original;
+        }
+    });
 });
 
 // ---------------------------------------------------------------------------
@@ -371,5 +395,120 @@ describe("withOAuth2JWT", () => {
             statusCode: 401,
         });
         expect(handler).not.toHaveBeenCalled();
+    });
+
+    it("does not enforce scopes when requiredScopes is empty", async () => {
+        (globalThis as any).getHeader = vi.fn().mockReturnValue("Bearer valid-token");
+
+        const mockPayload = { sub: "user-42", scope: "openid" };
+        (jwtVerify as any).mockResolvedValue({ payload: mockPayload });
+
+        const handler = vi.fn().mockResolvedValue({ ok: true });
+        const wrapped = withOAuth2JWT(handler, { requiredScopes: [] });
+
+        const event = makeMockEvent();
+        const result = await wrapped(event);
+
+        expect(result).toEqual({ ok: true });
+        expect(handler).toHaveBeenCalledTimes(1);
+    });
+
+    it("throws 403 when required scopes are missing", async () => {
+        (globalThis as any).getHeader = vi.fn().mockReturnValue("Bearer valid-token");
+
+        const mockPayload = { sub: "user-42", scope: "openid" };
+        (jwtVerify as any).mockResolvedValue({ payload: mockPayload });
+
+        const handler = vi.fn();
+        const wrapped = withOAuth2JWT(handler, { requiredScopes: ["profile"] });
+
+        const event = makeMockEvent();
+
+        await expect(wrapped(event)).rejects.toMatchObject({
+            statusCode: 403,
+            statusMessage: "insufficient_scope",
+        });
+        expect(handler).not.toHaveBeenCalled();
+    });
+
+    it("loads the DB user when loadUser is true", async () => {
+        (globalThis as any).getHeader = vi.fn().mockReturnValue("Bearer valid-token");
+
+        const mockUser = { id: 42, email: "user@example.com" };
+        (jwtVerify as any).mockResolvedValue({
+            payload: { sub: "user-42", user_id: 42, scope: "openid profile" },
+        });
+        (getUser as any).mockResolvedValue(mockUser);
+
+        const handler = vi.fn().mockResolvedValue({ ok: true });
+        const wrapped = withOAuth2JWT(handler, { loadUser: true });
+
+        const event = makeMockEvent();
+        await wrapped(event);
+
+        expect(getUser).toHaveBeenCalledWith(event, 42);
+        expect(event.context.oauth2.user).toEqual(mockUser);
+    });
+});
+
+// ---------------------------------------------------------------------------
+// resolveOAuth2User
+// ---------------------------------------------------------------------------
+
+describe("resolveOAuth2User", () => {
+    beforeEach(() => {
+        (getUser as any).mockReset();
+    });
+
+    it("throws 401 when the payload has no user identification", async () => {
+        const event = makeMockEvent();
+
+        await expect(resolveOAuth2User(event, {})).rejects.toMatchObject({
+            statusCode: 401,
+            statusMessage: "invalid_token",
+            message: "Token missing user identification",
+        });
+    });
+
+    it("throws 401 when the user_id is not a number", async () => {
+        const event = makeMockEvent();
+
+        await expect(
+            resolveOAuth2User(event, { user_id: "not-a-number" as any }),
+        ).rejects.toMatchObject({
+            statusCode: 401,
+            statusMessage: "invalid_token",
+        });
+    });
+
+    it("throws 404 when the user does not exist", async () => {
+        (getUser as any).mockResolvedValue(null);
+        const event = makeMockEvent();
+
+        await expect(resolveOAuth2User(event, { user_id: 42 })).rejects.toMatchObject({
+            statusCode: 404,
+            message: "User not found",
+        });
+    });
+
+    it("returns the user row when found", async () => {
+        const mockUser = { id: 42, email: "user@example.com" };
+        (getUser as any).mockResolvedValue(mockUser);
+        const event = makeMockEvent();
+
+        const result = await resolveOAuth2User(event, { user_id: 42 });
+
+        expect(result).toEqual(mockUser);
+    });
+
+    it("falls back to sub when user_id is missing", async () => {
+        const mockUser = { id: 7, email: "sub@example.com" };
+        (getUser as any).mockResolvedValue(mockUser);
+        const event = makeMockEvent();
+
+        const result = await resolveOAuth2User(event, { sub: "7" });
+
+        expect(result).toEqual(mockUser);
+        expect(getUser).toHaveBeenCalledWith(event, 7);
     });
 });
