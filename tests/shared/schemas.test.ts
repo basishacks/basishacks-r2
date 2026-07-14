@@ -8,6 +8,7 @@ import {
     SubmitTeamRequest,
     AddTeamMemberRequest,
     UpdateUserRequest,
+    formatBytes,
     CreateTeamScoresRequest,
     SubmitVoteRequest,
     CreateApplicationRequest,
@@ -351,8 +352,46 @@ describe("UpdateUserRequest", () => {
         ).not.toThrow();
     });
 
+    it("accepts a profile_theme_image as a valid File", () => {
+        const file = new File([new Uint8Array([1, 2, 3])], "theme.png", { type: "image/png" });
+        expect(() => UpdateUserRequest.parse({ profile_theme_image: file })).not.toThrow();
+    });
+
+    it("rejects a profile_theme_image File that is too large", () => {
+        const file = new File([new Uint8Array(10 * 1024 * 1024 + 1)], "theme.png", {
+            type: "image/png",
+        });
+        expect(() => UpdateUserRequest.parse({ profile_theme_image: file })).toThrow(
+            "smaller than 10 MB",
+        );
+    });
+
+    it("rejects a profile_theme_image File with an invalid type", () => {
+        const file = new File([new Uint8Array([1, 2, 3])], "theme.gif", { type: "image/gif" });
+        expect(() => UpdateUserRequest.parse({ profile_theme_image: file })).toThrow(
+            "valid image file",
+        );
+    });
+
     it("accepts an avatar as null", () => {
         expect(() => UpdateUserRequest.parse({ avatar: null })).not.toThrow();
+    });
+
+    it("accepts an avatar as a valid File", () => {
+        const file = new File([new Uint8Array([1, 2, 3])], "avatar.png", { type: "image/png" });
+        expect(() => UpdateUserRequest.parse({ avatar: file })).not.toThrow();
+    });
+
+    it("rejects an avatar File that is too large", () => {
+        const file = new File([new Uint8Array(10 * 1024 * 1024 + 1)], "avatar.png", {
+            type: "image/png",
+        });
+        expect(() => UpdateUserRequest.parse({ avatar: file })).toThrow("smaller than 10 MB");
+    });
+
+    it("rejects an avatar File with an invalid type", () => {
+        const file = new File([new Uint8Array([1, 2, 3])], "avatar.gif", { type: "image/gif" });
+        expect(() => UpdateUserRequest.parse({ avatar: file })).toThrow("valid image file");
     });
 
     it("rejects a name longer than 30 characters", () => {
@@ -363,6 +402,21 @@ describe("UpdateUserRequest", () => {
         expect(() =>
             UpdateUserRequest.parse({ profile_theme_image: "not-data-or-file" }),
         ).toThrow();
+    });
+});
+
+describe("formatBytes", () => {
+    it("returns 0 Bytes for zero", () => {
+        expect(formatBytes(0)).toBe("0 Bytes");
+    });
+
+    it("formats bytes with default decimals", () => {
+        expect(formatBytes(1024)).toBe("1 KB");
+        expect(formatBytes(10 * 1024 * 1024)).toBe("10 MB");
+    });
+
+    it("clamps negative decimals to 0", () => {
+        expect(formatBytes(1536, -1)).toBe("2 KB");
     });
 });
 
