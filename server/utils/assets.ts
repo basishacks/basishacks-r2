@@ -1,5 +1,6 @@
 import { mkdir, writeFile, rm, readFile } from "node:fs/promises";
-import { join, dirname, basename, sep } from "node:path";
+import { join, dirname, sep } from "node:path";
+import { basename } from "node:path/posix";
 import { createError } from "h3";
 
 function sanitizeAssetName(name: string) {
@@ -17,7 +18,7 @@ function sanitizeAssetName(name: string) {
 
 function resolveAssetPath(assetsDir: string, name: string) {
     const filePath = join(assetsDir, name);
-    const prefix = assetsDir.endsWith(sep) ? assetsDir : assetsDir + sep;
+    const prefix = assetsDir + sep;
     if (!filePath.startsWith(prefix)) {
         throw createError({ statusCode: 400, statusMessage: "Invalid asset name" });
     }
