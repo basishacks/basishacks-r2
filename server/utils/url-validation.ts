@@ -84,7 +84,7 @@ export async function fetchExternalHtml(urlString: string, init?: RequestInit): 
             }
             redirects++;
             if (redirects > MAX_REDIRECTS) {
-                return "Error: Too many redirects";
+                break;
             }
             current = validateExternalUrl(new URL(location, current).toString()).toString();
             continue;
