@@ -23,7 +23,7 @@ export default defineEventHandler(
             const description = getQuery(event).error_description;
             console.log("[Authorize -> OAuth2] Recieved error: " + description);
 
-            await sendRedirect(event, "/", 302);
+            return await sendRedirect(event, "/", 302);
         }
 
         // Require bridge_id cookie to bind the callback to an existing authorize session
