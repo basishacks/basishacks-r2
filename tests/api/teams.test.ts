@@ -15,7 +15,7 @@ import {
     type TestContext,
 } from "./helpers";
 import { eq } from "drizzle-orm";
-import { teams, users } from "~~/server/database/schema";
+import { teams, users, userPastTeams, seasons } from "~~/server/database/schema";
 
 vi.mock("~~/server/utils/auth", () => ({
     requireUser: vi.fn(),
@@ -155,6 +155,17 @@ describe("POST /api/teams", () => {
         await expect(createHandler(createEvent())).rejects.toMatchObject({ statusCode: 401 });
     });
 
+    it("returns 401 when logged-in user is not found", async () => {
+        // No user seeded with id 1, so getUser returns undefined
+        mockSession.value = { user: { id: 1 } };
+        mockBody.value = { name: "Ghost Team" };
+
+        await expect(createHandler(createEvent())).rejects.toMatchObject({
+            statusCode: 401,
+            message: "Logged in user not found",
+        });
+    });
+
     it("returns 403 when user is already in a team", async () => {
         const team = seedTeam(ctx, { name: "Existing Team" });
         seedUser(ctx, { email: "user@basischina.com", team_id: team.id });
@@ -179,6 +190,21 @@ describe("POST /api/teams", () => {
         // Verify the user was added to the team
         const updatedUser = ctx.drizzle.select().from(users).where(eq(users.id, 1)).get();
         expect(updatedUser!.team_id).toBe(result.id);
+    });
+
+    it("creates a team without joining when add query is false", async () => {
+        seedUser(ctx, { email: "user@basischina.com", name: "Creator" });
+
+        mockSession.value = { user: { id: 1 } };
+        mockBody.value = { name: "Solo Team" };
+        mockQueryState.value = { add: false };
+
+        const result = await createHandler(createEvent());
+
+        expect(result).toHaveProperty("name", "Solo Team");
+
+        const updatedUser = ctx.drizzle.select().from(users).where(eq(users.id, 1)).get();
+        expect(updatedUser!.team_id).toBeNull();
     });
 
     it("returns 403 when hackathon is not in progress", async () => {
