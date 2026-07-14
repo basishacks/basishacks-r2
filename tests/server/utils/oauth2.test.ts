@@ -1,6 +1,12 @@
-import { structureLink } from "~~/server/utils/oauth2";
+import oAuth2Config, {
+    structureLink,
+    getMicrosoftRedirectUri,
+    buildMicrosoftRedirectUri,
+    getOnsiteRedirectPath,
+    buildOnsiteRedirectUri,
+} from "~~/server/utils/oauth2";
 import { createHash } from "crypto";
-import { vi, describe, it, expect, beforeAll, beforeEach } from "vitest";
+import { vi, describe, it, expect, beforeAll, beforeEach, afterEach } from "vitest";
 
 // Stub defineEventHandler so importing the API route module doesn't fail.
 // to_microsoft.post.ts calls defineEventHandler() at module load for its default export.
@@ -21,6 +27,108 @@ function getParam(link: string, name: string): string | null {
     const parsed = new URL(link);
     return parsed.searchParams.get(name);
 }
+
+describe("redirect URI helpers", () => {
+    const originalEnv = { ...process.env };
+
+    beforeEach(() => {
+        vi.resetModules();
+        delete process.env.MICROSOFT_REDIRECT_URI;
+        delete process.env.REDIRECT_URI;
+        delete process.env.CURRENT_URL_ORIGIN;
+    });
+
+    afterEach(() => {
+        if (originalEnv.MICROSOFT_REDIRECT_URI === undefined) {
+            delete process.env.MICROSOFT_REDIRECT_URI;
+        } else {
+            process.env.MICROSOFT_REDIRECT_URI = originalEnv.MICROSOFT_REDIRECT_URI;
+        }
+        if (originalEnv.REDIRECT_URI === undefined) {
+            delete process.env.REDIRECT_URI;
+        } else {
+            process.env.REDIRECT_URI = originalEnv.REDIRECT_URI;
+        }
+        if (originalEnv.CURRENT_URL_ORIGIN === undefined) {
+            delete process.env.CURRENT_URL_ORIGIN;
+        } else {
+            process.env.CURRENT_URL_ORIGIN = originalEnv.CURRENT_URL_ORIGIN;
+        }
+    });
+
+    it("getMicrosoftRedirectUri returns env value or default", () => {
+        expect(getMicrosoftRedirectUri()).toBe("/api/oauth2/mscallback");
+        process.env.MICROSOFT_REDIRECT_URI = "/custom/ms";
+        expect(getMicrosoftRedirectUri()).toBe("/custom/ms");
+    });
+
+    it("buildMicrosoftRedirectUri builds absolute URL from env and default path", () => {
+        process.env.CURRENT_URL_ORIGIN = "https://app.example.com";
+        expect(buildMicrosoftRedirectUri()).toBe("https://app.example.com/api/oauth2/mscallback");
+    });
+
+    it("buildMicrosoftRedirectUri uses provided origin and redirect path", () => {
+        expect(buildMicrosoftRedirectUri("https://custom.example.com", "/cb")).toBe(
+            "https://custom.example.com/cb",
+        );
+    });
+
+    it("buildMicrosoftRedirectUri falls back to localhost when origin missing", () => {
+        expect(buildMicrosoftRedirectUri(undefined, "/cb")).toBe("http://localhost:3000/cb");
+    });
+
+    it("getOnsiteRedirectPath returns env value or default", () => {
+        expect(getOnsiteRedirectPath()).toBe("/api/oauth2/dccallback");
+        process.env.REDIRECT_URI = "/custom/dc";
+        expect(getOnsiteRedirectPath()).toBe("/custom/dc");
+    });
+
+    it("buildOnsiteRedirectUri builds absolute URL from env and default path", () => {
+        process.env.CURRENT_URL_ORIGIN = "https://app.example.com";
+        expect(buildOnsiteRedirectUri()).toBe("https://app.example.com/api/oauth2/dccallback");
+    });
+
+    it("buildOnsiteRedirectUri uses provided origin", () => {
+        expect(buildOnsiteRedirectUri("https://custom.example.com")).toBe(
+            "https://custom.example.com/api/oauth2/dccallback",
+        );
+    });
+
+    it("buildOnsiteRedirectUri falls back to localhost when origin missing", () => {
+        expect(buildOnsiteRedirectUri()).toBe("http://localhost:3000/api/oauth2/dccallback");
+    });
+
+    it("oAuth2Config redirectUri getter returns getMicrosoftRedirectUri()", () => {
+        process.env.MICROSOFT_REDIRECT_URI = "/config/ms";
+        expect(oAuth2Config.redirectUri).toBe("/config/ms");
+    });
+
+    it("falls back to empty tenant and clientId when env vars are unset", async () => {
+        const originalTenant = process.env.MICROSOFT_TENANT_ID;
+        const originalClientId = process.env.MICROSOFT_CLIENT_ID;
+        delete process.env.MICROSOFT_TENANT_ID;
+        delete process.env.MICROSOFT_CLIENT_ID;
+
+        const mod = await import("~~/server/utils/oauth2");
+        expect(mod.default.tenant).toBe("");
+        expect(mod.default.clientId).toBe("");
+
+        if (originalTenant === undefined) {
+            delete process.env.MICROSOFT_TENANT_ID;
+        } else {
+            process.env.MICROSOFT_TENANT_ID = originalTenant;
+        }
+        if (originalClientId === undefined) {
+            delete process.env.MICROSOFT_CLIENT_ID;
+        } else {
+            process.env.MICROSOFT_CLIENT_ID = originalClientId;
+        }
+    });
+});
+
+// ---------------------------------------------------------------------------
+// structureLink
+// ---------------------------------------------------------------------------
 
 describe("structureLink", () => {
     const expectedBase =
