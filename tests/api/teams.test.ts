@@ -364,6 +364,88 @@ describe("POST /api/teams/:id/submit", () => {
 
         await expect(submitHandler(createEvent())).rejects.toMatchObject({ statusCode: 403 });
     });
+
+    it("returns 403 when hackathon has finished", async () => {
+        resetTestContext(ctx);
+        seedHackathon(ctx, { status: "finished" });
+        seedSeason(ctx);
+
+        const team = seedTeam(ctx, { name: "My Team", pathway: "junior" });
+        seedUser(ctx, { email: "user@basischina.com", team_id: team.id });
+
+        mockSession.value = { user: { id: 1 } };
+        mockParams.values["id"] = String(team.id);
+        mockBody.value = {
+            pathway: "junior",
+            project: {
+                name: "Awesome Project",
+                description: "This is a really awesome project that we built over the weekend.",
+                demo_url: "https://demo.example.com",
+                repo_url: "https://github.com/example/repo",
+            },
+        };
+
+        await expect(submitHandler(createEvent())).rejects.toMatchObject({
+            statusCode: 403,
+            message: "Cannot submit project when hackathon is finished",
+        });
+    });
+
+    it("returns 404 when team is not found", async () => {
+        // Stub getUser so the user appears to belong to a non-existent team
+        // without violating the users.team_id foreign key constraint.
+        const originalGetUser = globalThis.getUser;
+        vi.stubGlobal(
+            "getUser",
+            vi.fn().mockResolvedValue({ id: 1, team_id: 9999, role: "participant" }),
+        );
+
+        mockSession.value = { user: { id: 1 } };
+        mockParams.values["id"] = "9999";
+        mockBody.value = {
+            pathway: "junior",
+            project: {
+                name: "Awesome Project",
+                description: "This is a really awesome project that we built over the weekend.",
+                demo_url: "https://demo.example.com",
+                repo_url: "https://github.com/example/repo",
+            },
+        };
+
+        await expect(submitHandler(createEvent())).rejects.toMatchObject({
+            statusCode: 404,
+            message: "Team not found or not accessible currently",
+        });
+
+        vi.stubGlobal("getUser", originalGetUser);
+    });
+
+    it("returns 403 when project is already submitted", async () => {
+        const team = seedTeam(ctx, {
+            name: "My Team",
+            pathway: "junior",
+            project_submitted: 1,
+            project_name: "Existing Project",
+        });
+        seedUser(ctx, { email: "user@basischina.com", team_id: team.id });
+
+        mockSession.value = { user: { id: 1 } };
+        mockParams.values["id"] = String(team.id);
+        mockBody.value = {
+            pathway: "junior",
+            project: {
+                name: "Awesome Project",
+                description: "This is a really awesome project that we built over the weekend.",
+                demo_url: "https://demo.example.com",
+                repo_url: "https://github.com/example/repo",
+            },
+        };
+
+        await expect(submitHandler(createEvent())).rejects.toMatchObject({
+            statusCode: 403,
+            message: "Project is already submitted",
+        });
+    });
 });
 
 describe("GET /api/teams/:id/users", () => {
