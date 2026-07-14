@@ -1,4 +1,4 @@
-import { describe, it, expect, beforeEach, afterEach, vi } from "vitest";
+import { describe, it, expect, beforeEach, afterEach } from "vitest";
 import { join } from "node:path";
 import { mkdtemp, rm, readdir } from "node:fs/promises";
 import { tmpdir } from "node:os";
@@ -70,6 +70,27 @@ describe("asset helpers", () => {
                 "Invalid asset name",
             );
         });
+
+        it("rejects non-string names", async () => {
+            await expect(createAsset(null as any, Buffer.from("x"))).rejects.toThrow(
+                "Invalid asset name",
+            );
+            await expect(createAsset(123 as any, Buffer.from("x"))).rejects.toThrow(
+                "Invalid asset name",
+            );
+        });
+
+        it("rejects empty, dot, and double-dot names", async () => {
+            await expect(createAsset("", Buffer.from("x"))).rejects.toThrow("Invalid asset name");
+            await expect(createAsset(".", Buffer.from("x"))).rejects.toThrow("Invalid asset name");
+            await expect(createAsset("..", Buffer.from("x"))).rejects.toThrow("Invalid asset name");
+        });
+
+        it("rejects names containing backslashes", async () => {
+            await expect(createAsset("foo\\bar.txt", Buffer.from("x"))).rejects.toThrow(
+                "Invalid asset name",
+            );
+        });
     });
 
     describe("createUserAsset", () => {
@@ -108,6 +129,15 @@ describe("asset helpers", () => {
         it("rejects path traversal names", async () => {
             await expect(removeAsset("../escape.txt")).rejects.toThrow("Invalid asset name");
         });
+
+        it("returns early when name is null or undefined", async () => {
+            await expect(removeAsset(null)).resolves.toBeUndefined();
+            await expect(removeAsset(undefined)).resolves.toBeUndefined();
+        });
+
+        it("ignores errors when the file does not exist", async () => {
+            await expect(removeAsset("missing-file.txt")).resolves.toBeUndefined();
+        });
     });
 
     describe("removeUserAsset", () => {
@@ -121,6 +151,15 @@ describe("asset helpers", () => {
 
         it("rejects path traversal names", async () => {
             await expect(removeUserAsset("../escape.txt")).rejects.toThrow("Invalid asset name");
+        });
+
+        it("returns early when name is null or undefined", async () => {
+            await expect(removeUserAsset(null)).resolves.toBeUndefined();
+            await expect(removeUserAsset(undefined)).resolves.toBeUndefined();
+        });
+
+        it("ignores errors when the file does not exist", async () => {
+            await expect(removeUserAsset("missing-file.png")).resolves.toBeUndefined();
         });
     });
 
