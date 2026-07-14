@@ -44,6 +44,7 @@ export async function verifyAccessToken(token: string): Promise<OAuth2JWTPayload
         });
     }
 
+    const secret = getJWTSecret();
     try {
         const { payload } = await jwtVerify(token, getJWTSecret(), {
             issuer: getOAuth2Issuer(),
