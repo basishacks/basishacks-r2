@@ -14,15 +14,15 @@ export interface ResolvedAward {
     text: string;
 }
 
-function parseMeta(meta: string | null): Record<string, unknown> {
+function parseMeta(meta: string): Record<string, unknown> {
     try {
-        return JSON.parse(meta ?? "{}") as Record<string, unknown>;
+        return JSON.parse(meta) as Record<string, unknown>;
     } catch {
         return {};
     }
 }
 
-function resolveAward(row: { team_id: number; award: string; meta: string | null }): ResolvedAward {
+function resolveAward(row: { team_id: number; award: string; meta: string }): ResolvedAward {
     const definition: Award | undefined = AWARD_REGISTRY[row.award];
     const meta = parseMeta(row.meta);
     const namespace = row.award;
