@@ -20,6 +20,7 @@ import {
     TeamIdParams,
     UserIdParams,
     DeepSeekSessionIdParams,
+    formatBytes,
 } from "~~/shared/schemas";
 
 describe("MicrosoftRedirectRequest", () => {
@@ -1047,5 +1048,23 @@ describe("DeepSeekSessionIdParams", () => {
 
     it("rejects a non-numeric id", () => {
         expect(() => DeepSeekSessionIdParams.parse({ id: "abc" })).toThrow();
+    });
+});
+
+describe("formatBytes", () => {
+    it("returns 0 Bytes for zero", () => {
+        expect(formatBytes(0)).toBe("0 Bytes");
+    });
+
+    it("formats bytes with default decimals", () => {
+        expect(formatBytes(1024)).toBe("1 KB");
+    });
+
+    it("clamps negative decimals to zero", () => {
+        expect(formatBytes(1536, -1)).toBe("2 KB");
+    });
+
+    it("uses the requested number of decimals", () => {
+        expect(formatBytes(1536, 2)).toBe("1.5 KB");
     });
 });
