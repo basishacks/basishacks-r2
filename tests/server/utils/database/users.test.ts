@@ -72,10 +72,16 @@ describe("users database helpers", () => {
 
         it("updates the name of an existing user when a new name is provided", async () => {
             event.context.drizzle
-                .prepare("INSERT INTO users(email, name) VALUES('existing@example.com', 'Old Name')")
+                .prepare(
+                    "INSERT INTO users(email, name) VALUES('existing@example.com', 'Old Name')",
+                )
                 .run();
 
-            const user = await createUserFromMicrosoftProfile(event, "existing@example.com", "New Name");
+            const user = await createUserFromMicrosoftProfile(
+                event,
+                "existing@example.com",
+                "New Name",
+            );
 
             expect(user.name).toBe("New Name");
 
@@ -85,7 +91,9 @@ describe("users database helpers", () => {
 
         it("leaves the name unchanged when no name is provided for an existing user", async () => {
             event.context.drizzle
-                .prepare("INSERT INTO users(email, name) VALUES('existing@example.com', 'Existing Name')")
+                .prepare(
+                    "INSERT INTO users(email, name) VALUES('existing@example.com', 'Existing Name')",
+                )
                 .run();
 
             const user = await createUserFromMicrosoftProfile(event, "existing@example.com");
@@ -97,7 +105,11 @@ describe("users database helpers", () => {
         });
 
         it("normalizes the email to lowercase", async () => {
-            const user = await createUserFromMicrosoftProfile(event, "UPPER@EXAMPLE.COM", "Upper User");
+            const user = await createUserFromMicrosoftProfile(
+                event,
+                "UPPER@EXAMPLE.COM",
+                "Upper User",
+            );
 
             expect(user.email).toBe("upper@example.com");
 

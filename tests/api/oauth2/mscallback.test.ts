@@ -183,7 +183,9 @@ describe("GET /api/oauth2/mscallback - hardened callback", () => {
 
         expect(fetchSpy).toHaveBeenCalledTimes(1);
         const [tokenUrl, tokenOptions] = fetchSpy.mock.calls[0];
-        expect(tokenUrl).toContain("https://login.microsoftonline.com/test-tenant/oauth2/v2.0/token");
+        expect(tokenUrl).toContain(
+            "https://login.microsoftonline.com/test-tenant/oauth2/v2.0/token",
+        );
         expect(tokenOptions.method).toBe("POST");
         expect(tokenOptions.headers["Content-Type"]).toBe("application/x-www-form-urlencoded");
 

@@ -39,12 +39,12 @@ The following environment variables directly affect platform security and must b
 
 All API endpoints are protected by an in-memory rate limiter. Sensitive routes consume requests from dedicated buckets:
 
-| Bucket           | Default              | Routes                                 |
-| ---------------- | -------------------- | -------------------------------------- |
+| Bucket           | Default                | Routes                                 |
+| ---------------- | ---------------------- | -------------------------------------- |
 | General API      | 6000 requests / minute | All non-sensitive API routes           |
-| Authentication   | 600 requests / minute | `/api/login`, `/api/oauth2/*`          |
-| Voting / scoring | 600 requests / minute | `/api/ballot`, `/api/teams/:id/scores` |
-| File upload      | 600 requests / minute | `/api/debug/upload`                    |
+| Authentication   | 600 requests / minute  | `/api/login`, `/api/oauth2/*`          |
+| Voting / scoring | 600 requests / minute  | `/api/ballot`, `/api/teams/:id/scores` |
+| File upload      | 600 requests / minute  | `/api/debug/upload`                    |
 
 - **Client identification:** Authenticated users are identified by `user:{id}`; unauthenticated requests by `ip:{ip}`
 - **Response:** 429 status with `Retry-After` header

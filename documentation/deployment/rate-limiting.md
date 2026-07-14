@@ -11,10 +11,10 @@ All API endpoints are protected by an in-memory rate limiter that prevents abuse
 
 ## Default Configuration
 
-| Setting      | Value                  |
-| ------------ | ---------------------- |
+| Setting      | Value                    |
+| ------------ | ------------------------ |
 | Max requests | 6000                     |
-| Window       | 60,000 ms (1 minute)   |
+| Window       | 60,000 ms (1 minute)     |
 | Rate         | 6000 requests per minute |
 
 ```ts

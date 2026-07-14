@@ -92,15 +92,15 @@ These interfaces match the SQL schema exactly. They include all columns, includi
 
 ### `User`
 
-| Field | Type | Description |
-| --- | --- | --- |
-| `id` | `number` | Primary key |
-| `email` | `string` | User email (`@basischina.com`) |
-| `role` | `string` | Space-separated URI-encoded permission strings |
-| `name` | `string \| null` | Display name |
-| `team_id` | `number \| null` | Foreign key to team |
-| `profile_theme` | `string \| null` | Profile theme as `"mode\|value"` string |
-| `profile_picture` | `string \| null` | Profile picture path |
+| Field             | Type             | Description                                    |
+| ----------------- | ---------------- | ---------------------------------------------- |
+| `id`              | `number`         | Primary key                                    |
+| `email`           | `string`         | User email (`@basischina.com`)                 |
+| `role`            | `string`         | Space-separated URI-encoded permission strings |
+| `name`            | `string \| null` | Display name                                   |
+| `team_id`         | `number \| null` | Foreign key to team                            |
+| `profile_theme`   | `string \| null` | Profile theme as `"mode\|value"` string        |
+| `profile_picture` | `string \| null` | Profile picture path                           |
 
 ### `Ballot`
 

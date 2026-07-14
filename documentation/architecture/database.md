@@ -65,15 +65,15 @@ Stores judge scores for each team. Each judge can score a team exactly once.
 
 ### `users`
 
-| Column | Type | Description |
-| --- | --- | --- |
-| `id` | `INTEGER PRIMARY KEY AUTOINCREMENT` | User ID |
-| `email` | `TEXT NOT NULL UNIQUE` | User email |
-| `role` | `TEXT NOT NULL DEFAULT 'participant'` | Space-separated permission string |
-| `name` | `TEXT` | Display name |
-| `team_id` | `INTEGER` | FK to `teams.id` |
-| `profile_theme` | `TEXT` | Profile theme as `"mode\|value"` |
-| `profile_picture` | `TEXT` | Profile picture URL or identifier |
+| Column            | Type                                  | Description                       |
+| ----------------- | ------------------------------------- | --------------------------------- |
+| `id`              | `INTEGER PRIMARY KEY AUTOINCREMENT`   | User ID                           |
+| `email`           | `TEXT NOT NULL UNIQUE`                | User email                        |
+| `role`            | `TEXT NOT NULL DEFAULT 'participant'` | Space-separated permission string |
+| `name`            | `TEXT`                                | Display name                      |
+| `team_id`         | `INTEGER`                             | FK to `teams.id`                  |
+| `profile_theme`   | `TEXT`                                | Profile theme as `"mode\|value"`  |
+| `profile_picture` | `TEXT`                                | Profile picture URL or identifier |
 
 ::: warning The `role` column originally had a `CHECK` constraint limiting it to `participant`, `judge`, or `admin`. This was removed via `migration-permissions.sql` to support space-separated permission strings such as `"participant portal.users.view portal.teams.view"`. :::
 
