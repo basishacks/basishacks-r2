@@ -1,5 +1,6 @@
 import { DevPermissions, hasPermission } from "~~/shared/permissions";
 import { ApplicationIdParams } from "~~/shared/schemas";
+import { getOAuth2Application } from "~~/server/utils/database/oauth2_applications";
 
 export default defineEventHandler(async (event) => {
     const user = await requireUser(event);
