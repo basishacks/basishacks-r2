@@ -110,13 +110,14 @@ Initiate Microsoft OAuth2 login flow.
 
 ### GET `/api/oauth2/mscallback`
 
-Microsoft OAuth2 callback. Exchanges the authorization code for a Microsoft token, creates or updates the user, and continues the OAuth2 flow.
+Microsoft OAuth2 callback. Validates the returned `state` and PKCE verifier, exchanges the authorization code for a Microsoft token, creates or updates the user from the Microsoft profile, and continues the OAuth2 flow.
 
 | Field        | Details                                                  |
 | ------------ | -------------------------------------------------------- |
 | **Auth**     | None                                                     |
 | **Query**    | `code`, `state`, `session_state`                         |
 | **Cookies**  | `bridge_id` (required, binds to authorize session)       |
+| **Validation** | Requires matching `state` and a valid PKCE `code_verifier` stored in the authorize session |
 | **Response** | 302 redirect to consent page or application redirect URI |
 
 ### GET `/api/oauth2/dccallback`

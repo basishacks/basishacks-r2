@@ -149,7 +149,7 @@ In-memory rate limiting middleware.
 
 ```ts
 interface RateLimitConfig {
-    maxRequests: number; // Default: 60
+    maxRequests: number; // Default: 6000
     windowMs: number; // Default: 60000 (1 minute)
     keyPrefix?: string; // Optional prefix for the client identifier
     keyGenerator?: (event: H3Event) => Promise<string | null> | string | null; // Optional custom identifier generator
@@ -598,7 +598,7 @@ Per-table database helper modules in `server/utils/database/`.
 | --- | --- |
 | `getUser(event, userID)` | Get user by ID |
 | `getUserByEmail(event, email)` | Get user by email (case-insensitive) |
-| `addCodeToUser(event, email)` | Create or update a user record for the given email |
+| `createUserFromMicrosoftProfile(event, email, name?)` | Find or create a user from a Microsoft profile email/name; updates the existing user's name if a match is found |
 | `updateUserName(event, user)` | Update user's name |
 | `updateUserProfileTheme(event, user)` | Update user's profile theme |
 | `updateUserProfilePicture(event, user)` | Update user's profile picture |

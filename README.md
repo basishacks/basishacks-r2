@@ -68,6 +68,14 @@ The canonical list of variables lives in `.env.example`. The table below summari
 
 > Note: `MICROSOFT_TENANT_ID`, `MICROSOFT_CLIENT_ID`, and `ONSITE_LOGIN_CLIENT_ID` were previously hardcoded in the `main` branch. They are now read from environment variables and must be set explicitly.
 
+## Authentication
+
+The only login method for the hackathon registry is **Microsoft OAuth2**. Users authenticate through Microsoft Entra ID (configured via `MICROSOFT_TENANT_ID` and `MICROSOFT_CLIENT_ID`), and the application creates or updates the local user record from the Microsoft profile.
+
+The legacy email-verification-code login flow has been removed, and the `login_code` / `login_expiry` columns no longer exist in the `users` table.
+
+The `/api/login` endpoint initiates the **basishacks connect** onsite OAuth2 flow (`/api/login` → `/api/oauth2/authorize` → Microsoft) for the first-party application identified by `ONSITE_LOGIN_CLIENT_ID`.
+
 ## Database Setup
 
 The database auto-migrates on startup — no manual SQL is required. The init plugin `server/plugins/init-database.ts` calls `createDrizzleDatabase()` (in `server/database/index.ts`), which:

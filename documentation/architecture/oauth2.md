@@ -107,8 +107,8 @@ The `oauth2-authorize.ts` middleware validates the request, creates an `Authoriz
 
 The user authenticates through one of:
 
-- **Microsoft OAuth2**: Redirect to Microsoft Entra ID (the only login method for the hackathon registry)
-- **basishacks connect**: Internal first-party OAuth2 flow
+- **Microsoft OAuth2**: Redirect to Microsoft Entra ID (the only login method for the hackathon registry). The authorize middleware generates a random `state` and PKCE `code_verifier`, stores them in the session, and redirects to Microsoft with `response_type=code`, `code_challenge`, `code_challenge_method=S256`, and `state`.
+- **basishacks connect**: Internal first-party OAuth2 flow, initiated by `/api/login` with its own PKCE verifier cookie.
 
 ### Step 3: Consent and code generation
 
@@ -263,6 +263,20 @@ removeOAuth2ApplicationRedirectUri(event, clientID, uri);
 
 ::: warning Redirect URIs must match exactly during the authorization flow. No pattern matching or wildcard support is provided. :::
 
+## Microsoft OAuth2 Login
+
+The hackathon registry uses Microsoft Entra ID as its sole identity provider. The flow is hardened with state validation and PKCE:
+
+1. **Authorize request** — `/api/oauth2/authorize` (via middleware) creates an `AuthorizeSession` containing a random `ms_state` and PKCE `ms_verifier`.
+2. **Redirect to Microsoft** — `POST /api/oauth2/to_microsoft` or the authorize middleware redirects the user to `https://login.microsoftonline.com/{tenant}/oauth2/v2.0/authorize` with `response_type=code`, `code_challenge=SHA256(ms_verifier)`, `code_challenge_method=S256`, and `state=ms_state`.
+3. **Callback** — Microsoft redirects to `/api/oauth2/mscallback` with `code`, `state`, and optionally `session_state`.
+4. **Validation** — The handler requires the `bridge_id` cookie, verifies the returned `state` matches `session.ms_state`, and ensures `session.ms_verifier` exists.
+5. **Token exchange** — The handler sends the code and original `code_verifier` to Microsoft's token endpoint, authenticated with `MICROSOFT_CLIENT_SECRET`.
+6. **User provisioning** — The Microsoft ID token is decoded to obtain `email` and `name`; `createUserFromMicrosoftProfile` creates or updates the local user record.
+7. **Flow completion** — The user is attached to the session and redirected to the consent page (if sensitive scopes are requested) or directly to the application's redirect URI.
+
+The `/api/auth` endpoint is an alias for `/api/oauth2/mscallback`, registered to accommodate Azure App Registration redirect URIs that point to `/api/auth`.
+
 ## Microsoft Graph Proxy
 
 Applications with `proxy_microsoft = 1` can proxy Microsoft Graph API calls through basishacks. When such an application initiates the authorization flow:
@@ -286,7 +300,13 @@ This allows external applications to leverage basishacks as a proxy for Microsof
 | `type` | `first` |
 | `proxy_microsoft` | `0` |
 
-This application is used for site login via the custom OAuth2 flow.
+This application is used for site login. The full onsite login path is:
+
+```
+/api/login → /api/oauth2/authorize → Microsoft OAuth2 → /api/oauth2/mscallback → /api/oauth2/dccallback
+```
+
+Because hackathon accounts are backed by Microsoft Entra ID, the authorize step ultimately delegates authentication to Microsoft before returning to the basishacks callback.
 
 ### Onsite login PKCE flow
 

@@ -72,8 +72,6 @@ Stores judge scores for each team. Each judge can score a team exactly once.
 | `role` | `TEXT NOT NULL DEFAULT 'participant'` | Space-separated permission string |
 | `name` | `TEXT` | Display name |
 | `team_id` | `INTEGER` | FK to `teams.id` |
-| `login_code` | `TEXT` | Legacy login code (unused by current authentication) |
-| `login_expiry` | `INTEGER` | Legacy login code expiry timestamp |
 | `profile_theme` | `TEXT` | Profile theme as `"mode\|value"` |
 | `profile_picture` | `TEXT` | Profile picture URL or identifier |
 
@@ -190,7 +188,7 @@ Each table has a dedicated helper module in `server/utils/database/`:
 
 | File | Key Functions |
 | --- | --- |
-| `users.ts` | `getUser`, `getUserByEmail`, `addCodeToUser`, `updateUserName`, `updateUserProfileTheme` |
+| `users.ts` | `getUser`, `getUserByEmail`, `createUserFromMicrosoftProfile`, `updateUserName`, `updateUserProfileTheme` |
 | `teams.ts` | Team CRUD, project submission |
 | `members.ts` | Team member management |
 | `scores.ts` | Judge score CRUD |
@@ -211,8 +209,6 @@ interface User {
     role: string;
     name: string | null;
     team_id: number | null;
-    login_code: string | null;
-    login_expiry: number | null;
     profile_theme: string | null;
     profile_picture: string | null;
 }

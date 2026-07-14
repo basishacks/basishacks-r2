@@ -99,8 +99,6 @@ These interfaces match the SQL schema exactly. They include all columns, includi
 | `role` | `string` | Space-separated URI-encoded permission strings |
 | `name` | `string \| null` | Display name |
 | `team_id` | `number \| null` | Foreign key to team |
-| `login_code` | `string \| null` | Legacy login code (unused by current authentication) |
-| `login_expiry` | `number \| null` | Legacy login code expiry timestamp (unused by current authentication) |
 | `profile_theme` | `string \| null` | Profile theme as `"mode\|value"` string |
 | `profile_picture` | `string \| null` | Profile picture path |
 
@@ -174,7 +172,7 @@ There is no standalone `awards` table. Award definitions are static in `shared/a
 
 ## API Response Interfaces
 
-These types define the shape of data returned by API endpoints. Internal fields (such as `login_code`, `login_expiry`) are stripped by `convertUserToPublic` and `convertTeamToPublic` in `server/utils/convert.ts`.
+These types define the shape of data returned by API endpoints. Internal fields are stripped by `convertUserToPublic` and `convertTeamToPublic` in `server/utils/convert.ts`.
 
 ### `ProfileTheme`
 

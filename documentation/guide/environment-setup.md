@@ -119,7 +119,14 @@ cp .env.example .env
 | --- | --- | --- |
 | `NUXT_SESSION_PASSWORD` | Session encryption key. **Must be at least 32 bytes.** | Output of `openssl rand -base64 32` |
 | `NUXT_OAUTH2_JWT_SECRET` | JWT signing secret for OAuth2 token exchange. **Must be at least 32 bytes.** Used by `jose` to sign and verify access tokens (HS256). | Output of `openssl rand -base64 32` |
+
+#### Required for Onsite Login
+
+| Variable | Description | Example |
+| --- | --- | --- |
 | `ONSITE_LOGIN_CLIENT_ID` | OAuth2 `client_id` of the basishacks app used by the onsite login flow. The server auto-adds `${CURRENT_URL_ORIGIN}${REDIRECT_URI}` to this app's allowed redirect URIs on startup. | `your_onsite_login_client_id_here` |
+
+::: tip The legacy email-verification-code login flow has been removed. The only login method for the hackathon registry is Microsoft OAuth2. :::
 
 #### Generating a Session Password
 
@@ -131,19 +138,36 @@ Copy the output and paste it as the value for `NUXT_SESSION_PASSWORD`.
 
 ### Optional Variables
 
+#### Microsoft Entra ID
+
 | Variable | Description | Default |
 | --- | --- | --- |
-| `MICROSOFT_CLIENT_SECRET` | Microsoft Entra ID client secret for Graph API integration. Enables MS OAuth2 login and MS Graph features (meeting scheduling, Teams chat). | — |
 | `MICROSOFT_TENANT_ID` | Microsoft Entra ID tenant (directory) ID. Required together with `MICROSOFT_CLIENT_ID` for MS OAuth2 login and MS Graph features. If unset, Microsoft features are disabled gracefully. | — |
 | `MICROSOFT_CLIENT_ID` | Microsoft Entra ID application (client) ID. Required together with `MICROSOFT_TENANT_ID` for MS OAuth2 login and MS Graph features. If unset, Microsoft features are disabled gracefully. | — |
+| `MICROSOFT_CLIENT_SECRET` | Microsoft Entra ID client secret for Graph API integration. Enables MS OAuth2 login and MS Graph features (meeting scheduling, Teams chat). | — |
+
+#### OAuth2 Redirects
+
+| Variable | Description | Default |
+| --- | --- | --- |
 | `CURRENT_URL_ORIGIN` | Public base origin (no trailing slash). Used for OAuth2 redirect callbacks, JWT `iss`, and `/.well-known/openid-configuration`. Must match the redirect URI registered in Azure Portal. | `http://localhost:3000` |
-| `MICROSOFT_REDIRECT_URI` | Microsoft OAuth2 redirect URI path (must start with `/`). Must exactly match the redirect URI registered in Azure Portal. Defaults to `/api/oauth2/mscallback`. | `/api/oauth2/mscallback` |
+| `MICROSOFT_REDIRECT_URI` | Microsoft OAuth2 redirect URI path (must start with `/`). Must exactly match the redirect URI registered in Azure Portal. | `/api/oauth2/mscallback` |
+| `REDIRECT_URI` | Onsite OAuth2 redirect URI path used by `/api/login`. The server auto-registers `${CURRENT_URL_ORIGIN}${REDIRECT_URI}` for `ONSITE_LOGIN_CLIENT_ID`. | `/api/oauth2/dccallback` |
+
+#### Integrations & Server
+
+| Variable | Description | Default |
+| --- | --- | --- |
 | `DEEPSEEK_API_KEY` | DeepSeek API key for AI chat features (debug routes only). Uses the OpenAI SDK under the hood. | — |
-| `REDIRECT_URI` | Onsite OAuth2 redirect URI path used by `/api/login`. The server auto-registers `${CURRENT_URL_ORIGIN}${REDIRECT_URI}` for `ONSITE_LOGIN_CLIENT_ID`. Defaults to `/api/oauth2/dccallback`. | `/api/oauth2/dccallback` |
-| `MICROSOFT_DUMMY_USER_NAME` | ROPC test user email (rarely used, testing only) | — |
-| `MICROSOFT_DUMMY_USER_PASSWORD` | ROPC test user password (rarely used, testing only) | — |
 | `PORT` | Server port override | `3000` |
 | `HOST` | Server host override | `0.0.0.0` |
+| `MICROSOFT_DUMMY_USER_NAME` | ROPC test user email (rarely used, testing only) | — |
+| `MICROSOFT_DUMMY_USER_PASSWORD` | ROPC test user password (rarely used, testing only) | — |
+
+#### Rate Limiting
+
+| Variable | Description | Default |
+| --- | --- | --- |
 | `RATE_LIMIT_GENERAL_MAX` | General API rate limit, requests per minute | `6000` |
 | `RATE_LIMIT_AUTH_MAX` | Authentication endpoint rate limit, attempts per minute | `600` |
 | `RATE_LIMIT_VOTE_MAX` | Voting/scoring endpoint rate limit, submissions per minute | `600` |
@@ -151,17 +175,21 @@ Copy the output and paste it as the value for `NUXT_SESSION_PASSWORD`.
 | `RATE_LIMIT_WINDOW_MS` | Rate limit window in milliseconds | `60000` |
 | `TRUST_PROXY` | Set to any truthy value when behind a trusted reverse proxy so `x-forwarded-for` is used for rate-limit client IP resolution | unset |
 
+#### Production
+
+| Variable | Description | Default |
+| --- | --- | --- |
+| `DISABLE_DEBUG_ROUTES` | Set to any truthy value in production to disable `/api/debug/*` and `/debug` routes entirely | unset |
+
 ### Complete .env Example
 
 ```bash
-# REQUIRED - Session encryption key (>= 32 bytes)
+# REQUIRED - Session encryption key, must be at least 32 bytes
 NUXT_SESSION_PASSWORD=your_random_string_at_least_32_bytes_long
 
-# REQUIRED - OAuth2 JWT signing secret (>= 32 bytes)
+# REQUIRED - JWT signing secret for OAuth2 token exchange
 NUXT_OAUTH2_JWT_SECRET=your_oauth2_jwt_secret_here
 
-# OPTIONAL - Microsoft Entra ID client secret
-MICROSOFT_CLIENT_SECRET=your_microsoft_client_secret_here
 
 # OPTIONAL - Microsoft Entra ID tenant ID (directory ID)
 MICROSOFT_TENANT_ID=your_microsoft_tenant_id_here
@@ -169,19 +197,18 @@ MICROSOFT_TENANT_ID=your_microsoft_tenant_id_here
 # OPTIONAL - Microsoft Entra ID application (client) ID
 MICROSOFT_CLIENT_ID=your_microsoft_client_id_here
 
-# OPTIONAL - Base origin URL for OAuth2 callbacks
+# OPTIONAL - Microsoft Entra ID client secret for MS Graph API integration
+MICROSOFT_CLIENT_SECRET=your_microsoft_client_secret_here
+
+# OPTIONAL - Base origin URL for OAuth2 redirect callbacks
 CURRENT_URL_ORIGIN=http://localhost:3000
 
 # OPTIONAL - Microsoft OAuth2 redirect URI path
 # Must match the redirect URI registered in Azure Portal
-# Defaults to /api/oauth2/mscallback
 MICROSOFT_REDIRECT_URI=/api/oauth2/mscallback
 
-# OPTIONAL - DeepSeek API key
-DEEPSEEK_API_KEY=your_deepseek_api_key_here
 
-# OPTIONAL - Onsite OAuth2 redirect URI path for /api/login
-# Defaults to /api/oauth2/dccallback.
+# OPTIONAL - OAuth2 redirect URI path for the onsite basishacks login flow
 REDIRECT_URI=/api/oauth2/dccallback
 
 # REQUIRED for onsite login - OAuth2 client_id of the basishacks app
@@ -189,13 +216,18 @@ REDIRECT_URI=/api/oauth2/dccallback
 # redirect URIs on startup if missing.
 ONSITE_LOGIN_CLIENT_ID=your_onsite_login_client_id_here
 
+
+# OPTIONAL - DeepSeek API key for AI chat features (debug routes only)
+DEEPSEEK_API_KEY=your_deepseek_api_key_here
+
+# OPTIONAL - Server port/host override
+# PORT=3000
+# HOST=0.0.0.0
+
 # OPTIONAL - ROPC test credentials (testing only)
 # MICROSOFT_DUMMY_USER_NAME=test_user@example.com
 # MICROSOFT_DUMMY_USER_PASSWORD=test_password
 
-# OPTIONAL - Server port/host
-# PORT=3000
-# HOST=0.0.0.0
 
 # OPTIONAL - Rate limiting overrides (defaults shown)
 # RATE_LIMIT_GENERAL_MAX=6000
@@ -204,8 +236,12 @@ ONSITE_LOGIN_CLIENT_ID=your_onsite_login_client_id_here
 # RATE_LIMIT_UPLOAD_MAX=600
 # RATE_LIMIT_WINDOW_MS=60000
 
+
 # OPTIONAL - Trust proxy for rate-limit client IP resolution
 # TRUST_PROXY=true
+
+# OPTIONAL - Disable debug routes in production
+# DISABLE_DEBUG_ROUTES=true
 ```
 
 ## HTTPS Dev Server Setup
