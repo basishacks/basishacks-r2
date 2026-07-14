@@ -7,7 +7,9 @@ import {
     migrateDatabase,
     seedOAuth2ApplicationRedirectUri,
     columnExists,
+    createAndMigrateDatabase,
 } from "~~/server/database/migrate";
+import { buildOnsiteRedirectUri } from "~~/server/utils/oauth2";
 
 describe("migrateDatabase", () => {
     it("applies an ALTER-only migration instead of skipping it", async () => {
@@ -74,6 +76,32 @@ describe("seedOAuth2ApplicationRedirectUri", () => {
         }
     });
 
+    it("does nothing when the redirect URI is already allowed", async () => {
+        const wrapper = await createTestDatabase();
+        const rawDb = wrapper.getRawDb();
+        const originalClientId = process.env.ONSITE_LOGIN_CLIENT_ID;
+
+        process.env.ONSITE_LOGIN_CLIENT_ID = "onsite-client-id";
+        const redirectUri = buildOnsiteRedirectUri();
+        rawDb
+            .prepare(
+                "INSERT INTO oauth2_applications (client_id, client_secret, name, redirect_uris) VALUES (?, ?, ?, ?)",
+            )
+            .run("onsite-client-id", "secret", "Onsite App", redirectUri);
+
+        try {
+            seedOAuth2ApplicationRedirectUri(rawDb);
+
+            const app = rawDb
+                .prepare("SELECT redirect_uris FROM oauth2_applications WHERE client_id = ?")
+                .get<{ redirect_uris: string }>("onsite-client-id");
+            expect(app!.redirect_uris).toBe(redirectUri);
+        } finally {
+            process.env.ONSITE_LOGIN_CLIENT_ID = originalClientId;
+            wrapper.close();
+        }
+    });
+
     it("does nothing when the onsite application does not exist", async () => {
         const wrapper = await createTestDatabase();
         const rawDb = wrapper.getRawDb();
@@ -106,6 +134,46 @@ describe("columnExists", () => {
         };
 
         expect(columnExists(throwingDb, "hackathon", "status")).toBe(false);
+        wrapper.close();
+    });
+});
+
+describe("seedOAuth2ApplicationRedirectUri — null redirect_uris branch", () => {
+    it("adds the redirect URI when redirect_uris is null", async () => {
+        const wrapper = await createTestDatabase();
+        const rawDb = wrapper.getRawDb();
+        const originalClientId = process.env.ONSITE_LOGIN_CLIENT_ID;
+
+        process.env.ONSITE_LOGIN_CLIENT_ID = "onsite-client-id";
+        rawDb
+            .prepare(
+                "INSERT INTO oauth2_applications (client_id, client_secret, name, redirect_uris) VALUES (?, ?, ?, ?)",
+            )
+            .run("onsite-client-id", "secret", "Onsite App", null);
+
+        try {
+            seedOAuth2ApplicationRedirectUri(rawDb);
+
+            const app = rawDb
+                .prepare("SELECT redirect_uris FROM oauth2_applications WHERE client_id = ?")
+                .get<{ redirect_uris: string }>("onsite-client-id");
+            expect(app!.redirect_uris).toBe("http://localhost:3000/api/oauth2/dccallback");
+        } finally {
+            process.env.ONSITE_LOGIN_CLIENT_ID = originalClientId;
+            wrapper.close();
+        }
+    });
+});
+
+describe("createAndMigrateDatabase — fully migrated database", () => {
+    it("takes the else branches in migrateLegacySchema when tables/columns exist", async () => {
+        const wrapper = await createTestDatabase();
+        const rawDb = wrapper.getRawDb();
+
+        // All legacy tables and columns are already present, so migrateLegacySchema
+        // should hit every else branch without throwing.
+        expect(() => createAndMigrateDatabase(rawDb)).not.toThrow();
+
         wrapper.close();
     });
 });
