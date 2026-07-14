@@ -501,6 +501,36 @@ describe("GET /api/teams/:id/users", () => {
             team_id: team.id,
         });
     });
+
+    it("returns all current and past members for an old team", async () => {
+        // The default active season (id=1) becomes inactive so we can create a
+        // new active season; the legacy team belongs to the now-inactive season.
+        ctx.drizzle.update(seasons).set({ is_active: 0 }).where(eq(seasons.id, 1)).run();
+        const newSeason = seedSeason(ctx, { name: "New Season", is_active: 1 });
+
+        const team = seedTeam(ctx, { name: "Legacy Team", season_id: 1 });
+        const alice = seedUser(ctx, {
+            email: "alice@basischina.com",
+            name: "Alice",
+            team_id: team.id,
+        });
+        const bob = seedUser(ctx, {
+            email: "bob@basischina.com",
+            name: "Bob",
+            team_id: null,
+        });
+
+        // Record Bob as a past member of the legacy team
+        ctx.drizzle.insert(userPastTeams).values({ user_id: bob.id, team_id: team.id }).run();
+
+        mockParams.values["id"] = String(team.id);
+
+        const result = await membersHandler(createEvent());
+
+        expect(result).toHaveLength(2);
+        const ids = result.map((u: any) => u.id).sort((a: number, b: number) => a - b);
+        expect(ids).toEqual([alice.id, bob.id].sort((a, b) => a - b));
+    });
 });
 
 describe("POST /api/teams/:id/users", () => {
