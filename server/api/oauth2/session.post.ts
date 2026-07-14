@@ -96,7 +96,6 @@ export async function exchangeAuthorizationCode(
     // probably gonna put this in the database later
     for (const token in AUTHORIZE_SESSION_STORE) {
         const session = AUTHORIZE_SESSION_STORE[token];
-        if (!session) continue;
 
         if (session.code === code) {
             // Invalidate IMMEDIATELY before any await to prevent double exchange (RFC 6749 4.1.2)
