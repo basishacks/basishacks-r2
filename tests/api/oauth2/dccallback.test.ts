@@ -222,3 +222,91 @@ describe("GET /api/oauth2/dccallback - PKCE verifier handling", () => {
         expect(sendRedirectSpy).toHaveBeenCalledWith(expect.anything(), "/teams", 302);
     });
 });
+
+describe("GET /api/oauth2/dccallback - error and validation paths", () => {
+    it("redirects to home when the upstream OAuth2 returns an error", async () => {
+        getAuthorizeSession.mockReturnValue(createMockSession());
+        mockCookies.values["bridge_id"] = "test-bridge-id";
+        mockQueryState.value = {
+            error: "access_denied",
+            error_description: "User denied access",
+            state: "test-state",
+        };
+
+        await handler(createEvent());
+
+        expect(sendRedirectSpy).toHaveBeenCalledTimes(1);
+        expect(sendRedirectSpy).toHaveBeenCalledWith(expect.anything(), "/", 302);
+        expect(exchangeAuthorizationCode).not.toHaveBeenCalled();
+    });
+
+    it("throws 400 when the bridge_id cookie is missing", async () => {
+        mockQueryState.value = { code: "test-code", state: "test-state" };
+        // bridge_id cookie is intentionally not set
+
+        await expect(handler(createEvent())).rejects.toMatchObject({
+            statusCode: 400,
+            message: "Missing bridge_id cookie",
+        });
+
+        expect(exchangeAuthorizationCode).not.toHaveBeenCalled();
+    });
+
+    it("throws 400 when the authorize session is not found", async () => {
+        getAuthorizeSession.mockReturnValue(null);
+        mockCookies.values["bridge_id"] = "test-bridge-id";
+        mockQueryState.value = { code: "test-code", state: "test-state" };
+
+        await expect(handler(createEvent())).rejects.toMatchObject({
+            statusCode: 400,
+            message: "Authorize session not found or expired",
+        });
+
+        expect(exchangeAuthorizationCode).not.toHaveBeenCalled();
+    });
+
+    it("throws 400 when the state parameter is missing", async () => {
+        getAuthorizeSession.mockReturnValue(createMockSession());
+        mockCookies.values["bridge_id"] = "test-bridge-id";
+        mockCookies.values["pkce_verifier"] = VERIFIER;
+        mockQueryState.value = { code: "test-code" };
+
+        await expect(handler(createEvent())).rejects.toMatchObject({
+            statusCode: 400,
+            message: "State parameter mismatch",
+        });
+
+        expect(exchangeAuthorizationCode).not.toHaveBeenCalled();
+    });
+
+    it("throws 400 when the state parameter does not match the session", async () => {
+        getAuthorizeSession.mockReturnValue(createMockSession());
+        mockCookies.values["bridge_id"] = "test-bridge-id";
+        mockCookies.values["pkce_verifier"] = VERIFIER;
+        mockQueryState.value = { code: "test-code", state: "wrong-state" };
+
+        await expect(handler(createEvent())).rejects.toMatchObject({
+            statusCode: 400,
+            message: "State parameter mismatch",
+        });
+
+        expect(exchangeAuthorizationCode).not.toHaveBeenCalled();
+    });
+
+    it("throws 500 when NUXT_OAUTH2_JWT_SECRET is not set", async () => {
+        const originalSecret = process.env.NUXT_OAUTH2_JWT_SECRET;
+        delete process.env.NUXT_OAUTH2_JWT_SECRET;
+
+        getAuthorizeSession.mockReturnValue(createMockSession());
+        mockCookies.values["bridge_id"] = "test-bridge-id";
+        mockCookies.values["pkce_verifier"] = VERIFIER;
+        mockQueryState.value = { code: "test-code", state: "test-state" };
+        exchangeAuthorizationCode.mockResolvedValue("fake-jwt-token");
+
+        await expect(handler(createEvent())).rejects.toMatchObject({
+            message: "NUXT_OAUTH2_JWT_SECRET is not set",
+        });
+
+        process.env.NUXT_OAUTH2_JWT_SECRET = originalSecret;
+    });
+});
