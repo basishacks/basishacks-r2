@@ -565,6 +565,53 @@ describe("POST /api/teams/:id/users", () => {
 
         await expect(addMemberHandler(createEvent())).rejects.toMatchObject({ statusCode: 404 });
     });
+
+    it("returns 403 when current user is not a team member", async () => {
+        const team = seedTeam(ctx, { name: "Team" });
+        const otherTeam = seedTeam(ctx, { name: "Other Team" });
+        seedUser(ctx, { email: "outsider@basischina.com", team_id: otherTeam.id });
+
+        mockSession.value = { user: { id: 1 } };
+        mockParams.values["id"] = String(team.id);
+        mockBody.value = { email: "nobody@basischina.com" };
+
+        await expect(addMemberHandler(createEvent())).rejects.toMatchObject({
+            statusCode: 403,
+            message: "Cannot add members to other teams",
+        });
+    });
+
+    it("returns 403 when hackathon has finished", async () => {
+        resetTestContext(ctx);
+        seedHackathon(ctx, { status: "finished" });
+        seedSeason(ctx);
+
+        const team = seedTeam(ctx, { name: "Team" });
+        seedUser(ctx, { email: "owner@basischina.com", team_id: team.id });
+
+        mockSession.value = { user: { id: 1 } };
+        mockParams.values["id"] = String(team.id);
+        mockBody.value = { email: "nobody@basischina.com" };
+
+        await expect(addMemberHandler(createEvent())).rejects.toMatchObject({
+            statusCode: 403,
+            message: "Cannot add members after hackathon has finished",
+        });
+    });
+
+    it("returns 403 when project is already submitted", async () => {
+        const team = seedTeam(ctx, { name: "Team", project_submitted: 1 });
+        seedUser(ctx, { email: "owner@basischina.com", team_id: team.id });
+
+        mockSession.value = { user: { id: 1 } };
+        mockParams.values["id"] = String(team.id);
+        mockBody.value = { email: "nobody@basischina.com" };
+
+        await expect(addMemberHandler(createEvent())).rejects.toMatchObject({
+            statusCode: 403,
+            message: "Cannot add members after project is submitted",
+        });
+    });
 });
 
 describe("DELETE /api/teams/:id/users/:user", () => {
