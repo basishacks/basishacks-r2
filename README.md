@@ -139,6 +139,8 @@ bun run test:watch      # watch mode
 bun run test:coverage   # with coverage
 ```
 
+The suite maintains **100% line, branch, function, and statement coverage** on all tracked source files. Coverage configuration in `vitest.config.ts` excludes build artifacts, generated migrations, documentation, configuration files, and test helpers.
+
 Do **not** use `bun test`. Bun's native test runner cannot resolve Nuxt's `~~/` and `~/` path aliases (which are configured in `vitest.config.ts`), and the test files import their assertions from `vitest` rather than `bun:test`. Running `bun test` is intentionally redirected by `bunfig.toml` to a shim (`bun-shim/shim.test.ts`) that prints guidance pointing you to `bun run test`.
 
 ## Production

@@ -173,7 +173,7 @@ The preview server runs on port 24598.
 
 ## Running Tests
 
-The project uses [Vitest](https://vitest.dev) as its test framework. The suite contains **647 passing tests** covering the API, server utilities, database helpers, shared schemas, and frontend components.
+The project uses [Vitest](https://vitest.dev) as its test framework. The suite maintains **100% line, branch, function, and statement coverage** on all tracked source files and currently contains **938 passing tests** covering the API, server utilities, database helpers, shared schemas, and frontend components.
 
 ```bash
 # Run the full test suite (canonical command)
@@ -186,7 +186,7 @@ bun run test:watch
 bun run test:coverage
 ```
 
-These invoke `vitest run --pool=forks`, which resolves Nuxt's `~~/` and `~/` path aliases via `vitest.config.ts` and runs `tests/setup.ts` as a setup file to populate in-memory SQLite databases and Microsoft OAuth2 environment variables.
+These invoke `vitest run --pool=forks`, which resolves Nuxt's `~~/` and `~/` path aliases via `vitest.config.ts` and runs `tests/setup.ts` as a setup file to populate in-memory SQLite databases and Microsoft OAuth2 environment variables. See the [Testing guide](/guide/testing) for more details on the coverage policy and excluded files.
 
 ### About `bun test`
 
