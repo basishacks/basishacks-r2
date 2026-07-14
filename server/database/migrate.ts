@@ -180,7 +180,7 @@ function tableExists(sqlite: PortableSqlite, table: string): boolean {
     return row ? row.count > 0 : false;
 }
 
-function columnExists(sqlite: PortableSqlite, table: string, column: string): boolean {
+export function columnExists(sqlite: PortableSqlite, table: string, column: string): boolean {
     try {
         const rows = sqlite.prepare(`PRAGMA table_info(${table})`).all<{ name: string }>();
         return rows.some((row) => row.name === column);
