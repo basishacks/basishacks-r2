@@ -1,6 +1,6 @@
 // Setup Nitro globals before importing anything that imports server/api files
 // Use vi.mock (hoisted) since ESM static imports are also hoisted
-import { describe, it, expect, vi } from "vitest";
+import { describe, it, expect, vi, beforeEach } from "vitest";
 vi.mock("~~/server/api/oauth2/session.post", () => ({
     addAuthorizeSession: vi.fn(),
     getAuthorizeSession: vi.fn(),
@@ -10,6 +10,9 @@ vi.mock("~~/server/api/oauth2/session.post", () => ({
     constructSession: vi.fn(),
     removeIfSessionExpired: vi.fn(),
     attachAuthorizeSessionCookie: vi.fn(),
+}));
+vi.mock("~~/server/utils/database/oauth2_applications", () => ({
+    getOAuth2Application: vi.fn(),
 }));
 vi.stubGlobal("defineEventHandler", (fn: any) => fn);
 vi.stubGlobal("createError", (input: any) => {
@@ -31,6 +34,7 @@ import {
     completeConsentFlow,
     validateOAuth2AuthorizationRequest,
 } from "~~/server/utils/oauth2-validate";
+import { getOAuth2Application } from "~~/server/utils/database/oauth2_applications";
 
 // ---------------------------------------------------------------------------
 // usedSensitiveScopes
@@ -146,6 +150,20 @@ describe("determinePostMicrosoft", () => {
         expect(parsed.searchParams.get("response_type")).toBe("code");
         expect(parsed.searchParams.get("code_challenge")).toBe("challenge");
         expect(parsed.searchParams.get("code_challenge_method")).toBe("S256");
+    });
+
+    it("omits code_challenge and code_challenge_method when missing", () => {
+        const session = makeFullSession({
+            scopes: ["openid", "chat.read"],
+            bh_verifier_challenge: "",
+            bh_verifier_challenge_method: "",
+        });
+
+        const url = determinePostMicrosoft({}, session);
+        const parsed = new URL("https://example.com" + url);
+
+        expect(parsed.searchParams.has("code_challenge")).toBe(false);
+        expect(parsed.searchParams.has("code_challenge_method")).toBe(false);
     });
 
     it("completes the consent flow when no sensitive scopes are requested", () => {
@@ -327,6 +345,281 @@ describe("validateOAuth2AuthorizationRequest", () => {
             ),
         ).rejects.not.toMatchObject({
             statusMessage: "invalid_request: code_challenge_method must be S256 or plain",
+        });
+    });
+
+    it("rejects when client_id is missing", async () => {
+        await expect(
+            validateOAuth2AuthorizationRequest(
+                {} as any,
+                "",
+                "openid",
+                "https://example.com/callback",
+                "state",
+                "code",
+                "challenge",
+                "S256",
+            ),
+        ).rejects.toMatchObject({
+            statusCode: 400,
+            message: "Parameter 'client_id' is required",
+        });
+    });
+
+    it("rejects when scope is missing", async () => {
+        await expect(
+            validateOAuth2AuthorizationRequest(
+                {} as any,
+                "test-client",
+                "",
+                "https://example.com/callback",
+                "state",
+                "code",
+                "challenge",
+                "S256",
+            ),
+        ).rejects.toMatchObject({
+            statusCode: 400,
+            message: "Parameter 'scope' is required",
+        });
+    });
+
+    it("rejects when state is missing", async () => {
+        await expect(
+            validateOAuth2AuthorizationRequest(
+                {} as any,
+                "test-client",
+                "openid",
+                "https://example.com/callback",
+                "",
+                "code",
+                "challenge",
+                "S256",
+            ),
+        ).rejects.toMatchObject({
+            statusCode: 400,
+            message: "Parameter 'state' is required",
+        });
+    });
+
+    it("rejects when redirect_uri is missing", async () => {
+        await expect(
+            validateOAuth2AuthorizationRequest(
+                {} as any,
+                "test-client",
+                "openid",
+                "",
+                "state",
+                "code",
+                "challenge",
+                "S256",
+            ),
+        ).rejects.toMatchObject({
+            statusCode: 400,
+            message: "Parameter 'redirect_uri' is required",
+        });
+    });
+
+    it("rejects when only code_challenge is provided", async () => {
+        await expect(
+            validateOAuth2AuthorizationRequest(
+                {} as any,
+                "test-client",
+                "openid",
+                "https://example.com/callback",
+                "state",
+                "code",
+                "challenge",
+                "",
+            ),
+        ).rejects.toMatchObject({
+            statusCode: 400,
+            statusMessage: "invalid_request: PKCE required",
+        });
+    });
+
+    it("rejects an invalid percent-encoded scope", async () => {
+        await expect(
+            validateOAuth2AuthorizationRequest(
+                {} as any,
+                "test-client",
+                "%ZZ-invalid",
+                "https://example.com/callback",
+                "state",
+                "code",
+                "challenge",
+                "S256",
+            ),
+        ).rejects.toMatchObject({
+            statusCode: 400,
+            message: "Invalid 'scope' parameter",
+        });
+    });
+
+    it("rejects when the decoded scope contains only whitespace", async () => {
+        await expect(
+            validateOAuth2AuthorizationRequest(
+                {} as any,
+                "test-client",
+                "   ",
+                "https://example.com/callback",
+                "state",
+                "code",
+                "challenge",
+                "S256",
+            ),
+        ).rejects.toMatchObject({
+            statusCode: 400,
+            message: "At least one scope must be requested",
+        });
+    });
+
+    it("rejects when no application matches the client_id", async () => {
+        (getOAuth2Application as any).mockResolvedValue(null);
+
+        await expect(
+            validateOAuth2AuthorizationRequest(
+                { context: {} } as any,
+                "unknown-client",
+                "openid",
+                "https://example.com/callback",
+                "state",
+                "code",
+                "challenge",
+                "S256",
+            ),
+        ).rejects.toMatchObject({
+            statusCode: 404,
+            message: "No matching application found for client_id 'unknown-client'",
+        });
+    });
+
+    it("returns validated request data for a valid confidential app", async () => {
+        (getOAuth2Application as any).mockResolvedValue({
+            client_id: "test-client",
+            name: "Test App",
+            permissions: "openid profile",
+            redirect_uris: "https://example.com/callback",
+        });
+
+        const result = await validateOAuth2AuthorizationRequest(
+            { context: {} } as any,
+            "test-client",
+            "openid%20profile",
+            "https://example.com/callback",
+            "state",
+            "code",
+            "challenge",
+            "S256",
+        );
+
+        expect(result).toMatchObject({
+            client_id: "test-client",
+            app_name: "Test App",
+            requested_scopes: ["openid", "profile"],
+            redirect_uri: "https://example.com/callback",
+        });
+    });
+
+    it("rejects scopes not permitted by the application", async () => {
+        (getOAuth2Application as any).mockResolvedValue({
+            client_id: "test-client",
+            name: "Test App",
+            permissions: "openid",
+            redirect_uris: "https://example.com/callback",
+        });
+
+        await expect(
+            validateOAuth2AuthorizationRequest(
+                { context: {} } as any,
+                "test-client",
+                "openid profile",
+                "https://example.com/callback",
+                "state",
+                "code",
+                "challenge",
+                "S256",
+            ),
+        ).rejects.toMatchObject({
+            statusCode: 403,
+            message: expect.stringContaining(
+                "does not have permission for the following scope(s): profile",
+            ),
+        });
+    });
+
+    it("rejects any scope when the application has no permissions", async () => {
+        (getOAuth2Application as any).mockResolvedValue({
+            client_id: "test-client",
+            name: "Test App",
+            permissions: null,
+            redirect_uris: "https://example.com/callback",
+        });
+
+        await expect(
+            validateOAuth2AuthorizationRequest(
+                { context: {} } as any,
+                "test-client",
+                "openid",
+                "https://example.com/callback",
+                "state",
+                "code",
+                "challenge",
+                "S256",
+            ),
+        ).rejects.toMatchObject({
+            statusCode: 403,
+            message: "Application 'Test App' has no configured permissions",
+        });
+    });
+
+    it("rejects redirect_uri not registered for the application", async () => {
+        (getOAuth2Application as any).mockResolvedValue({
+            client_id: "test-client",
+            name: "Test App",
+            permissions: "openid",
+            redirect_uris: "https://example.com/callback",
+        });
+
+        await expect(
+            validateOAuth2AuthorizationRequest(
+                { context: {} } as any,
+                "test-client",
+                "openid",
+                "https://evil.com/callback",
+                "state",
+                "code",
+                "challenge",
+                "S256",
+            ),
+        ).rejects.toMatchObject({
+            statusCode: 403,
+            message: expect.stringContaining("does not allow redirect_uri"),
+        });
+    });
+
+    it("rejects redirect_uri when the application has none configured", async () => {
+        (getOAuth2Application as any).mockResolvedValue({
+            client_id: "test-client",
+            name: "Test App",
+            permissions: "openid",
+            redirect_uris: null,
+        });
+
+        await expect(
+            validateOAuth2AuthorizationRequest(
+                { context: {} } as any,
+                "test-client",
+                "openid",
+                "https://example.com/callback",
+                "state",
+                "code",
+                "challenge",
+                "S256",
+            ),
+        ).rejects.toMatchObject({
+            statusCode: 403,
+            message: "Application 'Test App' has no configured redirect URIs",
         });
     });
 });
