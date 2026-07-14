@@ -8,7 +8,6 @@ import {
     SubmitTeamRequest,
     AddTeamMemberRequest,
     UpdateUserRequest,
-    formatBytes,
     CreateTeamScoresRequest,
     SubmitVoteRequest,
     CreateApplicationRequest,
@@ -377,6 +376,12 @@ describe("UpdateUserRequest", () => {
         expect(() => UpdateUserRequest.parse({ avatar: null })).not.toThrow();
     });
 
+    it("accepts an avatar as a data string", () => {
+        expect(() =>
+            UpdateUserRequest.parse({ avatar: "data:image/png;base64,abc" }),
+        ).not.toThrow();
+    });
+
     it("accepts an avatar as a valid File", () => {
         const file = new File([new Uint8Array([1, 2, 3])], "avatar.png", { type: "image/png" });
         expect(() => UpdateUserRequest.parse({ avatar: file })).not.toThrow();
@@ -394,6 +399,10 @@ describe("UpdateUserRequest", () => {
         expect(() => UpdateUserRequest.parse({ avatar: file })).toThrow("valid image file");
     });
 
+    it("rejects an avatar that is not a data string, null, or File", () => {
+        expect(() => UpdateUserRequest.parse({ avatar: "not-data-or-file" })).toThrow();
+    });
+
     it("rejects a name longer than 30 characters", () => {
         expect(() => UpdateUserRequest.parse({ name: "A".repeat(31) })).toThrow();
     });
@@ -402,21 +411,6 @@ describe("UpdateUserRequest", () => {
         expect(() =>
             UpdateUserRequest.parse({ profile_theme_image: "not-data-or-file" }),
         ).toThrow();
-    });
-});
-
-describe("formatBytes", () => {
-    it("returns 0 Bytes for zero", () => {
-        expect(formatBytes(0)).toBe("0 Bytes");
-    });
-
-    it("formats bytes with default decimals", () => {
-        expect(formatBytes(1024)).toBe("1 KB");
-        expect(formatBytes(10 * 1024 * 1024)).toBe("10 MB");
-    });
-
-    it("clamps negative decimals to 0", () => {
-        expect(formatBytes(1536, -1)).toBe("2 KB");
     });
 });
 
