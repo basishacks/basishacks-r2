@@ -21,7 +21,7 @@ vi.mock("~~/server/utils/auth", () => ({
 // Mock the rate limit wrapper
 vi.mock("~~/server/utils/rateLimit", () => ({
     applyRateLimit: (fn: any) => fn,
-    AUTH_RATE_LIMIT_CONFIG: { maxRequests: 10, windowMs: 60 * 1000 },
+    AUTH_RATE_LIMIT_CONFIG: { maxRequests: 600, windowMs: 60 * 1000 },
 }));
 
 let ctx: TestContext;

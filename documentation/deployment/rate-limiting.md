@@ -13,13 +13,13 @@ All API endpoints are protected by an in-memory rate limiter that prevents abuse
 
 | Setting      | Value                  |
 | ------------ | ---------------------- |
-| Max requests | 60                     |
+| Max requests | 6000                     |
 | Window       | 60,000 ms (1 minute)   |
-| Rate         | 60 requests per minute |
+| Rate         | 6000 requests per minute |
 
 ```ts
 export const DEFAULT_RATE_LIMIT_CONFIG: RateLimitConfig = {
-    maxRequests: 60,
+    maxRequests: 6000,
     windowMs: 60 * 1000,
 };
 ```
@@ -30,10 +30,10 @@ The following environment variables override the default limits:
 
 | Variable | Default | Purpose |
 | --- | --- | --- |
-| `RATE_LIMIT_GENERAL_MAX` | `60` | General API rate limit, requests per window |
-| `RATE_LIMIT_AUTH_MAX` | `10` | Authentication endpoint rate limit, attempts per window |
-| `RATE_LIMIT_VOTE_MAX` | `10` | Voting/scoring endpoint rate limit, submissions per window |
-| `RATE_LIMIT_UPLOAD_MAX` | `10` | File upload endpoint rate limit, uploads per window |
+| `RATE_LIMIT_GENERAL_MAX` | `6000` | General API rate limit, requests per window |
+| `RATE_LIMIT_AUTH_MAX` | `600` | Authentication endpoint rate limit, attempts per window |
+| `RATE_LIMIT_VOTE_MAX` | `600` | Voting/scoring endpoint rate limit, submissions per window |
+| `RATE_LIMIT_UPLOAD_MAX` | `600` | File upload endpoint rate limit, uploads per window |
 | `RATE_LIMIT_WINDOW_MS` | `60000` | Rate limit window in milliseconds |
 | `TRUST_PROXY` | unset | Set to any truthy value when behind a trusted reverse proxy so `x-forwarded-for` is used for client IP resolution |
 
@@ -75,7 +75,7 @@ export default applyRateLimit(
 );
 ```
 
-If `config` is omitted, the default configuration (60 req/min) is used.
+If `config` is omitted, the default configuration (6000 req/min) is used.
 
 ## Client Identification
 
@@ -139,7 +139,7 @@ When the rate limit is exceeded, the handler throws a **429 Too Many Requests** 
     "statusCode": 429,
     "statusMessage": "Too Many Requests",
     "data": {
-        "message": "Rate limit exceeded. Max 60 requests per 60s.",
+        "message": "Rate limit exceeded. Max 6000 requests per 60s.",
         "retryAfter": 42,
         "resetTime": "2026-06-03T14:30:00.000Z"
     }
@@ -223,7 +223,7 @@ if (requestHistory.size > MAX_TRACKED_KEYS) {
 
 ::: warning Single Process Rate limiting is **in-memory and per-process**. Each server process maintains its own `requestHistory` Map. This means:
 
-- A client making 60 requests to process A and 60 requests to process B within the same minute would not be rate-limited
+- A client making 6000 requests to process A and 6000 requests to process B within the same minute would not be rate-limited
 - The effective rate limit is per-process, not globally distributed
 - For global rate limiting, consider using a distributed store (e.g., Redis) :::
 

@@ -58,10 +58,10 @@ The canonical list of variables lives in `.env.example`. The table below summari
 | `REDIRECT_URI` | Optional | Onsite OAuth2 redirect URI path used by `/api/login`. Defaults to `/api/oauth2/dccallback`. The server auto-registers it for `ONSITE_LOGIN_CLIENT_ID` |
 | `DEEPSEEK_API_KEY` | Optional | DeepSeek API key for AI chat features (debug routes only) |
 | `PORT` / `HOST` | Optional | Server port/host override (defaults: `3000` / `0.0.0.0`) |
-| `RATE_LIMIT_GENERAL_MAX` | Optional | General API rate limit, requests per minute (default: `60`) |
-| `RATE_LIMIT_AUTH_MAX` | Optional | Authentication endpoint rate limit, attempts per minute (default: `10`) |
-| `RATE_LIMIT_VOTE_MAX` | Optional | Voting/scoring endpoint rate limit, submissions per minute (default: `10`) |
-| `RATE_LIMIT_UPLOAD_MAX` | Optional | File upload endpoint rate limit, uploads per minute (default: `10`) |
+| `RATE_LIMIT_GENERAL_MAX` | Optional | General API rate limit, requests per minute (default: `6000`) |
+| `RATE_LIMIT_AUTH_MAX` | Optional | Authentication endpoint rate limit, attempts per minute (default: `600`) |
+| `RATE_LIMIT_VOTE_MAX` | Optional | Voting/scoring endpoint rate limit, submissions per minute (default: `600`) |
+| `RATE_LIMIT_UPLOAD_MAX` | Optional | File upload endpoint rate limit, uploads per minute (default: `600`) |
 | `RATE_LIMIT_WINDOW_MS` | Optional | Rate limit window in milliseconds (default: `60000`) |
 | `TRUST_PROXY` | Optional | Set to any truthy value when behind a trusted reverse proxy so `x-forwarded-for` is used for rate-limit client IP resolution |
 | `DISABLE_DEBUG_ROUTES` | Optional | Set to any truthy value in production to disable `/api/debug/*` and `/debug` routes entirely |

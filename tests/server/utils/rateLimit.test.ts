@@ -255,8 +255,8 @@ describe("applyRateLimit", () => {
     });
 
     it("uses DEFAULT_RATE_LIMIT_CONFIG when no custom config is provided", async () => {
-        // The default is 60 requests per minute
-        expect(DEFAULT_RATE_LIMIT_CONFIG.maxRequests).toBe(60);
+        // The default is 6000 requests per minute
+        expect(DEFAULT_RATE_LIMIT_CONFIG.maxRequests).toBe(6000);
         expect(DEFAULT_RATE_LIMIT_CONFIG.windowMs).toBe(60_000);
 
         const handler = vi.fn().mockResolvedValue({ ok: true });
@@ -264,13 +264,13 @@ describe("applyRateLimit", () => {
 
         const event = makeMockEvent();
 
-        // Make 60 calls (should all succeed)
-        for (let i = 0; i < 60; i++) {
+        // Make 6000 calls (should all succeed)
+        for (let i = 0; i < 6000; i++) {
             await wrapped(event);
         }
-        expect(handler).toHaveBeenCalledTimes(60);
+        expect(handler).toHaveBeenCalledTimes(6000);
 
-        // 61st should fail
+        // 6001st should fail
         await expect(wrapped(event)).rejects.toMatchObject({
             statusCode: 429,
         });

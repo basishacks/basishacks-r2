@@ -184,7 +184,7 @@ basishacks-r2/
 │       │   └── users.ts
 │       ├── auth.ts             # requireUser, requireJudge, requireAdmin, requirePermission
 │       ├── convert.ts          # DB row to public API object transformers
-│       ├── rateLimit.ts        # In-memory rate limiter (60 req/min default)
+│       ├── rateLimit.ts        # In-memory rate limiter (6000 req/min default)
 │       ├── oauth2.ts           # Microsoft OAuth2 configuration and link generation
 │       ├── oauth2-jwt.ts       # JWT verification and withOAuth2JWT() wrapper for API routes
 │       ├── oauth2-validate.ts  # OAuth2 authorization request validation and consent flow
