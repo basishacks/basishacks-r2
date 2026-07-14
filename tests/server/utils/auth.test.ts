@@ -1,11 +1,6 @@
 import { describe, it, expect, vi, beforeEach, afterEach } from "vitest";
 import { createMockEvent } from "./database/helpers";
-import {
-    requireUser,
-    requireJudge,
-    requireAdmin,
-    requirePermission,
-} from "~~/server/utils/auth";
+import { requireUser, requireJudge, requireAdmin, requirePermission } from "~~/server/utils/auth";
 import { getUser } from "~~/server/utils/database/users";
 
 async function createEvent() {
@@ -28,7 +23,9 @@ describe("server/utils/auth", () => {
     describe("requireUser", () => {
         it("returns the user when session and database user exist", async () => {
             event.context.drizzle
-                .prepare("INSERT INTO users(id, email, role) VALUES(1, 'user@example.com', 'participant')")
+                .prepare(
+                    "INSERT INTO users(id, email, role) VALUES(1, 'user@example.com', 'participant')",
+                )
                 .run();
             vi.stubGlobal("getUserSession", async () => ({ user: { id: 1 } }));
 
@@ -70,7 +67,9 @@ describe("server/utils/auth", () => {
     describe("requireJudge", () => {
         it("returns the user when role is judge", async () => {
             event.context.drizzle
-                .prepare("INSERT INTO users(id, email, role) VALUES(1, 'judge@example.com', 'judge')")
+                .prepare(
+                    "INSERT INTO users(id, email, role) VALUES(1, 'judge@example.com', 'judge')",
+                )
                 .run();
             vi.stubGlobal("getUserSession", async () => ({ user: { id: 1 } }));
 
@@ -81,7 +80,9 @@ describe("server/utils/auth", () => {
 
         it("returns the user when role is admin", async () => {
             event.context.drizzle
-                .prepare("INSERT INTO users(id, email, role) VALUES(1, 'admin@example.com', 'admin')")
+                .prepare(
+                    "INSERT INTO users(id, email, role) VALUES(1, 'admin@example.com', 'admin')",
+                )
                 .run();
             vi.stubGlobal("getUserSession", async () => ({ user: { id: 1 } }));
 
@@ -92,7 +93,9 @@ describe("server/utils/auth", () => {
 
         it("throws 403 when role is participant", async () => {
             event.context.drizzle
-                .prepare("INSERT INTO users(id, email, role) VALUES(1, 'user@example.com', 'participant')")
+                .prepare(
+                    "INSERT INTO users(id, email, role) VALUES(1, 'user@example.com', 'participant')",
+                )
                 .run();
             vi.stubGlobal("getUserSession", async () => ({ user: { id: 1 } }));
 
@@ -106,7 +109,9 @@ describe("server/utils/auth", () => {
     describe("requireAdmin", () => {
         it("returns the user when role is admin", async () => {
             event.context.drizzle
-                .prepare("INSERT INTO users(id, email, role) VALUES(1, 'admin@example.com', 'admin')")
+                .prepare(
+                    "INSERT INTO users(id, email, role) VALUES(1, 'admin@example.com', 'admin')",
+                )
                 .run();
             vi.stubGlobal("getUserSession", async () => ({ user: { id: 1 } }));
 
@@ -117,7 +122,9 @@ describe("server/utils/auth", () => {
 
         it("throws 403 when role is judge", async () => {
             event.context.drizzle
-                .prepare("INSERT INTO users(id, email, role) VALUES(1, 'judge@example.com', 'judge')")
+                .prepare(
+                    "INSERT INTO users(id, email, role) VALUES(1, 'judge@example.com', 'judge')",
+                )
                 .run();
             vi.stubGlobal("getUserSession", async () => ({ user: { id: 1 } }));
 
@@ -129,7 +136,9 @@ describe("server/utils/auth", () => {
 
         it("throws 403 when role is participant", async () => {
             event.context.drizzle
-                .prepare("INSERT INTO users(id, email, role) VALUES(1, 'user@example.com', 'participant')")
+                .prepare(
+                    "INSERT INTO users(id, email, role) VALUES(1, 'user@example.com', 'participant')",
+                )
                 .run();
             vi.stubGlobal("getUserSession", async () => ({ user: { id: 1 } }));
 
@@ -143,7 +152,9 @@ describe("server/utils/auth", () => {
     describe("requirePermission", () => {
         it("returns the user when role has the required permission", async () => {
             event.context.drizzle
-                .prepare("INSERT INTO users(id, email, role) VALUES(1, 'judge@example.com', 'judge')")
+                .prepare(
+                    "INSERT INTO users(id, email, role) VALUES(1, 'judge@example.com', 'judge')",
+                )
                 .run();
             vi.stubGlobal("getUserSession", async () => ({ user: { id: 1 } }));
 
@@ -154,7 +165,9 @@ describe("server/utils/auth", () => {
 
         it("returns the user when role is admin", async () => {
             event.context.drizzle
-                .prepare("INSERT INTO users(id, email, role) VALUES(1, 'admin@example.com', 'admin')")
+                .prepare(
+                    "INSERT INTO users(id, email, role) VALUES(1, 'admin@example.com', 'admin')",
+                )
                 .run();
             vi.stubGlobal("getUserSession", async () => ({ user: { id: 1 } }));
 
@@ -165,7 +178,9 @@ describe("server/utils/auth", () => {
 
         it("throws 403 when role lacks the permission and is not admin", async () => {
             event.context.drizzle
-                .prepare("INSERT INTO users(id, email, role) VALUES(1, 'user@example.com', 'participant')")
+                .prepare(
+                    "INSERT INTO users(id, email, role) VALUES(1, 'user@example.com', 'participant')",
+                )
                 .run();
             vi.stubGlobal("getUserSession", async () => ({ user: { id: 1 } }));
 

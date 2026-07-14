@@ -181,7 +181,8 @@ describe("PATCH /api/users/:id", () => {
 
             await expect(handler(createEvent())).rejects.toMatchObject({
                 statusCode: 400,
-                message: "Invalid image type for profile theme. Only JPEG, PNG, GIF, and WebP are allowed.",
+                message:
+                    "Invalid image type for profile theme. Only JPEG, PNG, GIF, and WebP are allowed.",
             });
         });
 
@@ -194,7 +195,8 @@ describe("PATCH /api/users/:id", () => {
 
             await expect(handler(createEvent())).rejects.toMatchObject({
                 statusCode: 400,
-                message: "Invalid image type for profile theme. Only JPEG, PNG, GIF, and WebP are allowed.",
+                message:
+                    "Invalid image type for profile theme. Only JPEG, PNG, GIF, and WebP are allowed.",
             });
         });
 
@@ -247,7 +249,11 @@ describe("PATCH /api/users/:id", () => {
                     expect.any(Buffer),
                 );
 
-                const updated = ctx.drizzle.select().from(users).where(eq(users.id, alice.id)).get();
+                const updated = ctx.drizzle
+                    .select()
+                    .from(users)
+                    .where(eq(users.id, alice.id))
+                    .get();
                 expect(updated!.profile_theme).toMatch(/^url\|test-asset\.png$/);
             }
         });
@@ -284,7 +290,8 @@ describe("PATCH /api/users/:id", () => {
 
             await expect(handler(createEvent())).rejects.toMatchObject({
                 statusCode: 400,
-                message: "Invalid image type for avatar. Only JPEG, PNG, GIF, and WebP are allowed.",
+                message:
+                    "Invalid image type for avatar. Only JPEG, PNG, GIF, and WebP are allowed.",
             });
         });
 
@@ -337,7 +344,11 @@ describe("PATCH /api/users/:id", () => {
                     expect.any(Buffer),
                 );
 
-                const updated = ctx.drizzle.select().from(users).where(eq(users.id, alice.id)).get();
+                const updated = ctx.drizzle
+                    .select()
+                    .from(users)
+                    .where(eq(users.id, alice.id))
+                    .get();
                 expect(updated!.profile_picture).toBe("test-asset.png");
             }
         });

@@ -148,7 +148,10 @@ describe("GET /api/users/:id", () => {
             team_id: team.id,
         });
 
-        ctx.drizzle.insert(teamAwards).values({ team_id: team.id, award: "best_overall", meta: "{}" }).run();
+        ctx.drizzle
+            .insert(teamAwards)
+            .values({ team_id: team.id, award: "best_overall", meta: "{}" })
+            .run();
 
         mockParams.values["id"] = String(alice.id);
         mockSession.value = { user: { id: alice.id } };

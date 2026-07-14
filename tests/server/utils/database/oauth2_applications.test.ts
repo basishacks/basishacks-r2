@@ -193,21 +193,21 @@ describe("oauth2_applications database helpers", () => {
 
         it("validates a legacy plain-text secret", async () => {
             event.context.drizzle
-                .prepare(
-                    "UPDATE oauth2_applications SET client_secret = ? WHERE client_id = ?",
-                )
+                .prepare("UPDATE oauth2_applications SET client_secret = ? WHERE client_id = ?")
                 .bind("legacy-plain-secret", clientId)
                 .run();
 
-            const valid = await validateOAuth2ApplicationSecret(event, clientId, "legacy-plain-secret");
+            const valid = await validateOAuth2ApplicationSecret(
+                event,
+                clientId,
+                "legacy-plain-secret",
+            );
             expect(valid).toBe(true);
         });
 
         it("rejects a legacy plain-text secret that does not match", async () => {
             event.context.drizzle
-                .prepare(
-                    "UPDATE oauth2_applications SET client_secret = ? WHERE client_id = ?",
-                )
+                .prepare("UPDATE oauth2_applications SET client_secret = ? WHERE client_id = ?")
                 .bind("legacy-plain-secret", clientId)
                 .run();
 
@@ -390,9 +390,9 @@ describe("oauth2_applications database helpers", () => {
         it("throws when removing a scope that is not in the list", async () => {
             await addOAuth2ApplicationScopes(event, clientId, ["read"]);
 
-            await expect(
-                removeOAuth2ApplicationScope(event, clientId, "write"),
-            ).rejects.toThrow("Scope not found");
+            await expect(removeOAuth2ApplicationScope(event, clientId, "write")).rejects.toThrow(
+                "Scope not found",
+            );
         });
 
         it("keeps both scopes when two batches are added concurrently", async () => {

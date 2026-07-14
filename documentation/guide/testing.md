@@ -42,20 +42,20 @@ These exclusions are configured in `vitest.config.ts` under `test.coverage.exclu
 
 Tests live in the `tests/` directory and mirror the project structure:
 
-| Directory | Contents |
-| --- | --- |
-| `tests/api/` | API route handlers (`server/api/**`) |
-| `tests/server/utils/` | Server utilities and helpers |
-| `tests/server/utils/database/` | Database helper functions |
-| `tests/server/middleware/` | Nitro middleware |
-| `tests/server/plugins/` | Nitro plugins |
-| `tests/server/database/` | Database initialization and migration logic |
-| `tests/shared/` | Shared schemas, permissions, rubric, etc. |
-| `tests/components/` | Vue components |
-| `tests/composables/` | Vue composables |
-| `tests/pages/` | Nuxt pages |
-| `tests/middleware/` | Route middleware |
-| `tests/frontend/` | Frontend-specific behavior |
+| Directory                      | Contents                                    |
+| ------------------------------ | ------------------------------------------- |
+| `tests/api/`                   | API route handlers (`server/api/**`)        |
+| `tests/server/utils/`          | Server utilities and helpers                |
+| `tests/server/utils/database/` | Database helper functions                   |
+| `tests/server/middleware/`     | Nitro middleware                            |
+| `tests/server/plugins/`        | Nitro plugins                               |
+| `tests/server/database/`       | Database initialization and migration logic |
+| `tests/shared/`                | Shared schemas, permissions, rubric, etc.   |
+| `tests/components/`            | Vue components                              |
+| `tests/composables/`           | Vue composables                             |
+| `tests/pages/`                 | Nuxt pages                                  |
+| `tests/middleware/`            | Route middleware                            |
+| `tests/frontend/`              | Frontend-specific behavior                  |
 
 ## Writing Tests
 

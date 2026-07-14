@@ -213,9 +213,24 @@ describe("GET /api/admin/scores", () => {
         ctx.drizzle
             .insert(teamScores)
             .values([
-                { team_id: teamA.id, judge_user_id: 1, scores: JSON.stringify(perfectScores), reasoning: "" },
-                { team_id: teamB.id, judge_user_id: 1, scores: JSON.stringify(perfectScores), reasoning: "" },
-                { team_id: teamC.id, judge_user_id: 1, scores: JSON.stringify(lowScores), reasoning: "" },
+                {
+                    team_id: teamA.id,
+                    judge_user_id: 1,
+                    scores: JSON.stringify(perfectScores),
+                    reasoning: "",
+                },
+                {
+                    team_id: teamB.id,
+                    judge_user_id: 1,
+                    scores: JSON.stringify(perfectScores),
+                    reasoning: "",
+                },
+                {
+                    team_id: teamC.id,
+                    judge_user_id: 1,
+                    scores: JSON.stringify(lowScores),
+                    reasoning: "",
+                },
             ])
             .run();
 
