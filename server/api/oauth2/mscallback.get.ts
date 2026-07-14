@@ -3,6 +3,7 @@ import { generateExchangeCode, getAuthorizeSession } from "./session.post";
 import { createHash } from "crypto";
 import { determinePostMicrosoft } from "~~/server/utils/oauth2-validate";
 import { applyRateLimit, AUTH_RATE_LIMIT_CONFIG } from "~~/server/utils/rateLimit";
+import { createUserFromMicrosoftProfile } from "~~/server/utils/database/users";
 
 function decodeJWT(token: string) {
     try {
@@ -178,24 +179,7 @@ export default defineEventHandler(
             }
 
             // Step 3: Find or create user in database
-            let user = await getUserByEmail(event, email);
-
-            if (!user) {
-                // Create new user
-                user = await addCodeToUser(event, email);
-                if (!user.id) {
-                    return redirectWithOAuth2Error(
-                        event,
-                        errorRedirectUri,
-                        "access_denied",
-                        "Failed to exchange authorization code: Failed to create user",
-                        errorState,
-                    );
-                }
-            }
-
-            user.name = name || user.name;
-            await updateUserName(event, user);
+            const user = await createUserFromMicrosoftProfile(event, email, name);
 
             session.user = user;
 

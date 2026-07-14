@@ -67,8 +67,6 @@ CREATE TABLE IF NOT EXISTS "users" (
 	"email"	TEXT NOT NULL UNIQUE,
 	"name"	TEXT,
 	"team_id"	INTEGER,
-	"login_code"	TEXT,
-	"login_expiry"	INTEGER,
 	"role"	TEXT NOT NULL DEFAULT 'participant',
 	"profile_theme"	TEXT,
 	"profile_picture"	TEXT,

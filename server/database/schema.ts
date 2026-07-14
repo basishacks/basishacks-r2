@@ -96,8 +96,6 @@ export const users = sqliteTable(
         role: text("role").notNull().default("participant"),
         name: text("name"),
         team_id: integer("team_id"),
-        login_code: text("login_code"),
-        login_expiry: integer("login_expiry"),
         profile_theme: text("profile_theme"),
         profile_picture: text("profile_picture"),
     },
