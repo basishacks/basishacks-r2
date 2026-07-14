@@ -5,7 +5,7 @@ import { join, resolve } from "node:path";
 import Database from "better-sqlite3";
 import { sql } from "drizzle-orm";
 import * as schema from "~~/server/database/schema";
-import { createDrizzleDatabase } from "~~/server/database";
+import { createDrizzleDatabase, getDb } from "~~/server/database";
 
 // Hoisted mocks for the Bun branch. `vi.mock` is hoisted to the top of the
 // file, so the factories can only reference values created via `vi.hoisted`.
@@ -121,5 +121,14 @@ describe("createDrizzleDatabase — Bun / bun:sqlite path", () => {
 
         expect(bunDatabaseCtor).toHaveBeenCalledWith(":memory:");
         expect(db).toBe(bunDrizzleResult);
+    });
+});
+
+describe("getDb", () => {
+    it("delegates to createDrizzleDatabase and returns a Drizzle instance", async () => {
+        db = await getDb(dbPath);
+
+        expect(typeof db.select).toBe("function");
+        expect(typeof db.insert).toBe("function");
     });
 });
