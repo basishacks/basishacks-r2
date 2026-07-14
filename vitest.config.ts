@@ -14,6 +14,19 @@ export default defineConfig({
         environment: "node",
         // Setup file that runs before every test suite
         setupFiles: ["tests/setup.ts"],
+        coverage: {
+            provider: "v8",
+            exclude: [
+                "nuxt.config.ts",
+                "tests/**/helpers.ts",
+                "bun-shim/**",
+                "drizzle/**",
+                "sql/archive/**",
+                "documentation/**",
+                "**/*.d.ts",
+                "**/node_modules/**",
+            ],
+        },
     },
     resolve: {
         alias: {
