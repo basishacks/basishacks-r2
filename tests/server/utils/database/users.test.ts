@@ -3,7 +3,7 @@ import { createMockEvent } from "./helpers";
 import {
     getUser,
     getUserByEmail,
-    addCodeToUser,
+    createUserFromMicrosoftProfile,
     updateUserName,
     updateUserProfileTheme,
     updateUserProfilePicture,
@@ -53,57 +53,57 @@ describe("users database helpers", () => {
         });
     });
 
-    describe("addCodeToUser", () => {
-        it("creates a new user and sets a login code and expiry", async () => {
-            const user = await addCodeToUser(event, "new@example.com");
+    describe("createUserFromMicrosoftProfile", () => {
+        it("creates a new user with email and name", async () => {
+            const user = await createUserFromMicrosoftProfile(event, "new@example.com", "New User");
+
             expect(user).not.toBeNull();
             expect(user.email).toBe("new@example.com");
-            expect(user.login_code).not.toBeNull();
-            expect(user.login_code!.length).toBe(6);
-            expect(user.login_expiry).toBeGreaterThan(Date.now());
+            expect(user.name).toBe("New User");
         });
 
-        it("updates the login code for an existing user", async () => {
-            event.context.drizzle
-                .prepare("INSERT INTO users(email, role) VALUES('existing@example.com', 'admin')")
-                .run();
+        it("creates a new user with email only", async () => {
+            const user = await createUserFromMicrosoftProfile(event, "emailonly@example.com");
 
-            const firstCall = await addCodeToUser(event, "existing@example.com");
-            const firstCode = firstCall.login_code;
-
-            const secondCall = await addCodeToUser(event, "existing@example.com");
-            // Should have a new code (random, so very unlikely to match)
-            expect(secondCall.login_code).toBeDefined();
+            expect(user).not.toBeNull();
+            expect(user.email).toBe("emailonly@example.com");
+            expect(user.name).toBeNull();
         });
 
-        it("throws a 403 error when requesting a code within 9 minutes for a non-admin user", async () => {
-            // Create a user with a recent login_expiry
-            const recentExpiry = Date.now() + 10 * 60 * 1000; // 10 minutes from now
+        it("updates the name of an existing user when a new name is provided", async () => {
             event.context.drizzle
-                .prepare(
-                    "INSERT INTO users(email, login_code, login_expiry, role) VALUES('rate-limited@example.com', '123456', ?, 'participant')",
-                )
-                .bind(recentExpiry)
+                .prepare("INSERT INTO users(email, name) VALUES('existing@example.com', 'Old Name')")
                 .run();
 
-            await expect(addCodeToUser(event, "rate-limited@example.com")).rejects.toThrow(
-                "Please wait 1 minute before requesting another code!",
-            );
+            const user = await createUserFromMicrosoftProfile(event, "existing@example.com", "New Name");
+
+            expect(user.name).toBe("New Name");
+
+            const fetched = await getUserByEmail(event, "existing@example.com");
+            expect(fetched!.name).toBe("New Name");
         });
 
-        it("allows admin users to request a code even within the rate limit window", async () => {
-            const recentExpiry = Date.now() + 10 * 60 * 1000;
+        it("leaves the name unchanged when no name is provided for an existing user", async () => {
             event.context.drizzle
-                .prepare(
-                    "INSERT INTO users(email, login_code, login_expiry, role) VALUES('admin@example.com', '123456', ?, 'admin')",
-                )
-                .bind(recentExpiry)
+                .prepare("INSERT INTO users(email, name) VALUES('existing@example.com', 'Existing Name')")
                 .run();
 
-            const user = await addCodeToUser(event, "admin@example.com");
-            expect(user.login_code).toBeDefined();
-            // Admin should get a new code, not the old one
-            expect(user.login_code).not.toBe("123456");
+            const user = await createUserFromMicrosoftProfile(event, "existing@example.com");
+
+            expect(user.name).toBe("Existing Name");
+
+            const fetched = await getUserByEmail(event, "existing@example.com");
+            expect(fetched!.name).toBe("Existing Name");
+        });
+
+        it("normalizes the email to lowercase", async () => {
+            const user = await createUserFromMicrosoftProfile(event, "UPPER@EXAMPLE.COM", "Upper User");
+
+            expect(user.email).toBe("upper@example.com");
+
+            const fetched = await getUserByEmail(event, "UPPER@EXAMPLE.COM");
+            expect(fetched).not.toBeNull();
+            expect(fetched!.email).toBe("upper@example.com");
         });
     });
 

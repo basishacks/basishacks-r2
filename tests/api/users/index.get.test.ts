@@ -47,8 +47,6 @@ describe("GET /api/users", () => {
         seedUser(ctx, {
             email: "alice@basischina.com",
             name: "Alice",
-            login_code: "123456",
-            login_expiry: Date.now() + 10 * 60 * 1000,
         });
 
         const result = await listHandler(createEvent());

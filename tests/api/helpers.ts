@@ -146,8 +146,6 @@ export function seedUser(
         role?: string;
         name?: string | null;
         team_id?: number | null;
-        login_code?: string | null;
-        login_expiry?: number | null;
     } = {},
 ) {
     return ctx.drizzle
@@ -157,8 +155,6 @@ export function seedUser(
             role: overrides.role ?? "participant",
             name: overrides.name ?? "Test User",
             team_id: overrides.team_id ?? null,
-            login_code: overrides.login_code ?? null,
-            login_expiry: overrides.login_expiry ?? null,
         } as any)
         .returning()
         .get();
