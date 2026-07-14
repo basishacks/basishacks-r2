@@ -148,7 +148,7 @@ export type AddTeamMemberRequest = z.infer<typeof AddTeamMemberRequest>;
 const MAX_FILE_SIZE = 10 * 1024 * 1024; // 10MB
 const ACCEPTED_IMAGE_TYPES = ["image/jpeg", "image/jpg", "image/png", "image/webp"];
 
-const formatBytes = (bytes: number, decimals = 2) => {
+export const formatBytes = (bytes: number, decimals = 2) => {
     if (bytes === 0) return "0 Bytes";
     const k = 1024;
     const dm = decimals < 0 ? 0 : decimals;
