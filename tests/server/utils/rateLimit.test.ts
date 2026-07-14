@@ -118,6 +118,39 @@ describe("getClientIdentifier", () => {
         expect(id).toBe("ip:10.0.0.3");
     });
 
+    it("falls back to x-real-ip when x-forwarded-for is missing and TRUST_PROXY is set", async () => {
+        (globalThis as any).getUserSession = vi.fn().mockResolvedValue({});
+        (globalThis as any).getHeader = vi.fn((_event: any, name: string) => {
+            if (name === "x-real-ip") return "5.6.7.8";
+            return undefined;
+        });
+        process.env.TRUST_PROXY = "true";
+
+        const event = makeMockEvent({
+            node: { req: { socket: { remoteAddress: undefined } } },
+        });
+        const id = await getClientIdentifier(event);
+
+        expect(id).toBe("ip:5.6.7.8");
+    });
+
+    it("falls back to x-real-ip when x-forwarded-for contains only separators", async () => {
+        (globalThis as any).getUserSession = vi.fn().mockResolvedValue({});
+        (globalThis as any).getHeader = vi.fn((_event: any, name: string) => {
+            if (name === "x-forwarded-for") return ", , ,";
+            if (name === "x-real-ip") return "5.6.7.8";
+            return undefined;
+        });
+        process.env.TRUST_PROXY = "true";
+
+        const event = makeMockEvent({
+            node: { req: { socket: { remoteAddress: undefined } } },
+        });
+        const id = await getClientIdentifier(event);
+
+        expect(id).toBe("ip:5.6.7.8");
+    });
+
     it("rotation of x-forwarded-for does not bypass the limiter", async () => {
         (globalThis as any).getUserSession = vi.fn().mockResolvedValue({});
         let forwarded = "10.0.0.1, 10.0.0.2";
@@ -144,6 +177,34 @@ describe("getClientIdentifier", () => {
 // ---------------------------------------------------------------------------
 // applyRateLimit
 // ---------------------------------------------------------------------------
+
+describe("environment parsing", () => {
+    it("falls back to defaults when rate-limit env vars are invalid", async () => {
+        const originalValue = process.env.RATE_LIMIT_GENERAL_MAX;
+        process.env.RATE_LIMIT_GENERAL_MAX = "not-a-number";
+        vi.resetModules();
+        const { RATE_LIMIT_GENERAL_MAX } = await import("~~/server/utils/rateLimit");
+        expect(RATE_LIMIT_GENERAL_MAX).toBe(6000);
+        if (originalValue === undefined) {
+            delete process.env.RATE_LIMIT_GENERAL_MAX;
+        } else {
+            process.env.RATE_LIMIT_GENERAL_MAX = originalValue;
+        }
+    });
+
+    it("parses valid rate-limit env vars as integers", async () => {
+        const originalValue = process.env.RATE_LIMIT_GENERAL_MAX;
+        process.env.RATE_LIMIT_GENERAL_MAX = "1234";
+        vi.resetModules();
+        const { RATE_LIMIT_GENERAL_MAX } = await import("~~/server/utils/rateLimit");
+        expect(RATE_LIMIT_GENERAL_MAX).toBe(1234);
+        if (originalValue === undefined) {
+            delete process.env.RATE_LIMIT_GENERAL_MAX;
+        } else {
+            process.env.RATE_LIMIT_GENERAL_MAX = originalValue;
+        }
+    });
+});
 
 describe("applyRateLimit", () => {
     beforeEach(() => {
@@ -320,4 +381,93 @@ describe("applyRateLimit", () => {
         });
         expect(handler).not.toHaveBeenCalled();
     });
+
+    it("falls back to getClientIdentifier when keyGenerator returns null", async () => {
+        const handler = vi.fn().mockResolvedValue({ ok: true });
+        (globalThis as any).getUserSession = vi.fn().mockResolvedValue({ user: { id: 77 } });
+        const wrapped = applyRateLimit(handler, {
+            keyGenerator: () => null,
+        });
+
+        const event = makeMockEvent();
+        await wrapped(event);
+
+        expect(handler).toHaveBeenCalledTimes(1);
+        expect(handler).toHaveBeenCalledWith(event);
+    });
+
+    it("falls back to getClientIdentifier when keyGenerator returns undefined", async () => {
+        const handler = vi.fn().mockResolvedValue({ ok: true });
+        (globalThis as any).getUserSession = vi.fn().mockResolvedValue({ user: { id: 88 } });
+        const wrapped = applyRateLimit(handler, {
+            keyGenerator: () => undefined as any,
+        });
+
+        const event = makeMockEvent();
+        await wrapped(event);
+
+        expect(handler).toHaveBeenCalledTimes(1);
+        expect(handler).toHaveBeenCalledWith(event);
+    });
+
+    it("deletes stale entries during periodic cleanup", async () => {
+        const nowSpy = vi.spyOn(Date, "now");
+        const handler = vi.fn().mockResolvedValue({ ok: true });
+        const wrapped = applyRateLimit(handler, { maxRequests: 1, windowMs: 60_000 });
+        const event = makeMockEvent();
+
+        // First request at time 0
+        nowSpy.mockReturnValue(0);
+        await wrapped(event);
+
+        // Second request 61 minutes later triggers cleanup; the old entry is stale
+        nowSpy.mockReturnValue(61 * 60 * 1000);
+        await wrapped(event);
+
+        expect(handler).toHaveBeenCalledTimes(2);
+        nowSpy.mockRestore();
+    });
+
+    it("retains recent entries during periodic cleanup", async () => {
+        const nowSpy = vi.spyOn(Date, "now");
+        const handler = vi.fn().mockResolvedValue({ ok: true });
+        const wrapped = applyRateLimit(handler, { maxRequests: 1, windowMs: 60_000 });
+        const event = makeMockEvent();
+
+        // First request at time 0
+        nowSpy.mockReturnValue(0);
+        await wrapped(event);
+
+        // Second request 6 minutes later triggers cleanup; the old entry is still recent
+        nowSpy.mockReturnValue(6 * 60 * 1000);
+        await wrapped(event);
+
+        expect(handler).toHaveBeenCalledTimes(2);
+        nowSpy.mockRestore();
+    });
+
+    it("evicts the oldest tracked key when the request history Map exceeds the cap", async () => {
+        const handler = vi.fn().mockResolvedValue({ ok: true });
+        let counter = 0;
+        const wrapped = applyRateLimit(handler, {
+            maxRequests: 1,
+            windowMs: 60_000,
+            keyGenerator: () => `key-${++counter}`,
+        });
+
+        // First request for key-1 succeeds
+        await wrapped(makeMockEvent());
+        expect(handler).toHaveBeenCalledTimes(1);
+
+        // Create 10_000 additional unique keys to exceed the 10_000 entry cap
+        for (let i = 0; i < 10_000; i++) {
+            await wrapped(makeMockEvent());
+        }
+        expect(handler).toHaveBeenCalledTimes(10_001);
+
+        // key-1 should have been evicted, so this is treated as a brand-new first request
+        counter = 0;
+        await wrapped(makeMockEvent());
+        expect(handler).toHaveBeenCalledTimes(10_002);
+    }, 30_000);
 });

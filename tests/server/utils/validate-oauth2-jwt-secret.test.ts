@@ -92,4 +92,44 @@ describe("validateOAuth2JWTSecret", () => {
         expect(warnings.some((m) => m.includes("NUXT_OAUTH2_JWT_SECRET is not set"))).toBe(true);
         expect(env.NUXT_OAUTH2_JWT_SECRET).toBe(DEV_OAUTH2_JWT_SECRET_FALLBACK);
     });
+
+    it("uses default options when called without arguments", () => {
+        const originalSecret = process.env.NUXT_OAUTH2_JWT_SECRET;
+        process.env.NUXT_OAUTH2_JWT_SECRET = "a-secret-that-is-exactly-32-bytes!";
+        try {
+            expect(() => validateOAuth2JWTSecret()).not.toThrow();
+        } finally {
+            if (originalSecret === undefined) {
+                delete process.env.NUXT_OAUTH2_JWT_SECRET;
+            } else {
+                process.env.NUXT_OAUTH2_JWT_SECRET = originalSecret;
+            }
+        }
+    });
+
+    it("uses process.exit as the default exit handler in production", () => {
+        const originalSecret = process.env.NUXT_OAUTH2_JWT_SECRET;
+        const originalEnv = process.env.NODE_ENV;
+        const exitSpy = vi.spyOn(process, "exit").mockImplementation(() => {
+            throw new Error("process.exit called") as never;
+        });
+        process.env.NUXT_OAUTH2_JWT_SECRET = "";
+        process.env.NODE_ENV = "production";
+        try {
+            expect(() => validateOAuth2JWTSecret()).toThrow("process.exit called");
+            expect(exitSpy).toHaveBeenCalledWith(1);
+        } finally {
+            exitSpy.mockRestore();
+            if (originalSecret === undefined) {
+                delete process.env.NUXT_OAUTH2_JWT_SECRET;
+            } else {
+                process.env.NUXT_OAUTH2_JWT_SECRET = originalSecret;
+            }
+            if (originalEnv === undefined) {
+                delete process.env.NODE_ENV;
+            } else {
+                process.env.NODE_ENV = originalEnv;
+            }
+        }
+    });
 });

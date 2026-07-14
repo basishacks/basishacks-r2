@@ -1,4 +1,4 @@
-import { describe, it, expect, beforeEach } from "vitest";
+import { describe, it, expect, beforeEach, vi } from "vitest";
 import {
     createSession,
     getDeepSeekSession,
@@ -324,5 +324,26 @@ describe("MAX_SESSIONS eviction", () => {
 
         // Total count should remain at the cap
         expect(getAllSessions()).toHaveLength(100);
+    });
+
+    it("sweeps expired sessions when creating a new one at capacity", () => {
+        // Create a session that is already past the 24-hour TTL
+        const realNow = Date.now();
+        const expiredTime = realNow - 25 * 60 * 60 * 1000;
+        vi.spyOn(Date, "now").mockReturnValue(expiredTime);
+        const expiredSession = createSession("Expired Session");
+        vi.restoreAllMocks();
+
+        // Fill the store to just under the cap with fresh sessions
+        for (let i = 0; i < 99; i++) {
+            createSession(`Session ${i}`);
+        }
+        expect(getAllSessions()).toHaveLength(100);
+        expect(getDeepSeekSession(expiredSession.id)).toBeDefined();
+
+        // Creating one more triggers sweepExpiredSessions, deleting the expired entry
+        createSession("Overflow Session");
+        expect(getAllSessions()).toHaveLength(100);
+        expect(getDeepSeekSession(expiredSession.id)).toBeUndefined();
     });
 });
