@@ -1,4 +1,4 @@
-import { describe, it, expect, beforeEach } from "vitest";
+import { describe, it, expect, beforeEach, afterEach } from "vitest";
 import { createMockEvent } from "./helpers";
 import {
     getAwards,
@@ -7,6 +7,7 @@ import {
     deleteTeamAwards,
     deleteAward,
 } from "~~/server/utils/database/awards";
+import { AWARD_REGISTRY, type Award } from "~~/shared/awards";
 
 describe("awards database helpers", () => {
     let event: Awaited<ReturnType<typeof createMockEvent>>;
@@ -28,6 +29,12 @@ describe("awards database helpers", () => {
             .run();
     });
 
+    afterEach(() => {
+        // Clean up any temporary awards registered by individual tests
+        delete AWARD_REGISTRY["unknown_award"];
+        delete AWARD_REGISTRY["computed_award"];
+    });
+
     describe("getAwards", () => {
         it("returns awards for a team that has them", async () => {
             event.context.drizzle
@@ -46,6 +53,54 @@ describe("awards database helpers", () => {
         it("returns an empty array for a team with no awards", async () => {
             const awards = await getAwards(event, 1);
             expect(awards).toHaveLength(0);
+        });
+
+        it("falls back to empty meta when stored meta is invalid JSON", async () => {
+            event.context.drizzle
+                .prepare(
+                    "INSERT INTO team_awards(team_id, award, meta) VALUES(1, 'perfect_score', 'not-json')",
+                )
+                .run();
+
+            const awards = await getAwards(event, 1);
+            expect(awards).toHaveLength(1);
+            expect(awards[0]!.meta).toEqual({});
+        });
+
+        it("falls back to namespace defaults for awards not in the registry", async () => {
+            event.context.drizzle
+                .prepare(
+                    "INSERT INTO team_awards(team_id, award, meta) VALUES(1, 'unknown_award', '{}')",
+                )
+                .run();
+
+            const awards = await getAwards(event, 1);
+            expect(awards).toHaveLength(1);
+            expect(awards[0]!.name).toBe("unknown_award");
+            expect(awards[0]!.description).toBe("unknown_award");
+            expect(awards[0]!.icon).toBe("i-lucide-award");
+            expect(awards[0]!.color).toBe("gold");
+            expect(awards[0]!.text).toBe("unknown_award");
+        });
+
+        it("uses a computed text function when present", async () => {
+            AWARD_REGISTRY["computed_award"] = {
+                namespace: "computed_award",
+                name: "Computed",
+                description: "A computed award",
+                icon: "i-lucide-star",
+                computed: (meta: Record<string, unknown>) => [`by ${meta.by}`],
+            } as Award;
+
+            event.context.drizzle
+                .prepare(
+                    "INSERT INTO team_awards(team_id, award, meta) VALUES(1, 'computed_award', '{\"by\":\"judge\"}')",
+                )
+                .run();
+
+            const awards = await getAwards(event, 1);
+            expect(awards).toHaveLength(1);
+            expect(awards[0]!.text).toBe("by judge");
         });
     });
 
@@ -72,6 +127,20 @@ describe("awards database helpers", () => {
             const awards = await getAwardsForTeams(event, []);
             expect(awards).toEqual({});
         });
+
+        it("groups multiple awards for the same team", async () => {
+            event.context.drizzle
+                .prepare(
+                    "INSERT INTO team_awards(team_id, award, meta) VALUES(1, 'perfect_score', '{}')",
+                )
+                .run();
+            event.context.drizzle
+                .prepare("INSERT INTO team_awards(team_id, award, meta) VALUES(1, 'best_ui', '{}')")
+                .run();
+
+            const awards = await getAwardsForTeams(event, [1]);
+            expect(awards[1]).toHaveLength(2);
+        });
     });
 
     describe("createAward", () => {
@@ -82,6 +151,12 @@ describe("awards database helpers", () => {
             expect(award.team_id).toBe(1);
             expect(award.award).toBe("perfect_score");
             expect(award.meta).toBe('{"by":"judge1"}');
+        });
+
+        it("defaults meta to an empty object when not provided", async () => {
+            const award = await createAward(event, 1, "perfect_score");
+
+            expect(award.meta).toBe("{}");
         });
     });
 
