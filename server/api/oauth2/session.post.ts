@@ -29,8 +29,8 @@ export interface AuthorizeSession {
     scopes: string[];
     post_login_redirect: string | null;
     /**
-     * "identification" = just identified the app. user has to login or enter email
-     * "requesting" = requesting external resource, from ms oauth or from email/code
+     * "identification" = just identified the app. user has to login
+     * "requesting" = requesting external resource, from ms oauth
      * "consent" = user logged in and awaiting for consent (skippabe if trusted app or insensitive scopes)
      * "completed" = session completed, code generated, waiting for token exchange
      */
