@@ -116,6 +116,74 @@ describe("GET /api/oauth2/mscallback - hardened callback", () => {
         expect(createUserFromMicrosoftProfile).not.toHaveBeenCalled();
     });
 
+    it("redirects with access_denied when MICROSOFT_CLIENT_SECRET is not set", async () => {
+        const originalSecret = process.env.MICROSOFT_CLIENT_SECRET;
+        delete process.env.MICROSOFT_CLIENT_SECRET;
+
+        getAuthorizeSession.mockReturnValue(createMockSession());
+        mockCookies.values["bridge_id"] = "test-bridge-id";
+        mockQueryState.value = { code: "test-code", state: MS_STATE };
+
+        await handler(createEvent());
+
+        expect(sendRedirectSpy).toHaveBeenCalledTimes(1);
+        const redirectUrl = sendRedirectSpy.mock.calls[0][1];
+        expect(redirectUrl).toContain("error=access_denied");
+        expect(redirectUrl).toContain("MICROSOFT_CLIENT_SECRET");
+        expect(fetchSpy).not.toHaveBeenCalled();
+
+        process.env.MICROSOFT_CLIENT_SECRET = originalSecret;
+    });
+
+    it("redirects with access_denied when Microsoft returns a non-ok token response", async () => {
+        getAuthorizeSession.mockReturnValue(createMockSession());
+        fetchSpy.mockResolvedValue({
+            ok: false,
+            json: () => Promise.resolve({ error: "invalid_grant", error_description: "Bad code" }),
+        });
+
+        mockCookies.values["bridge_id"] = "test-bridge-id";
+        mockQueryState.value = { code: "test-code", state: MS_STATE };
+
+        await handler(createEvent());
+
+        expect(sendRedirectSpy).toHaveBeenCalledTimes(1);
+        const redirectUrl = sendRedirectSpy.mock.calls[0][1];
+        expect(redirectUrl).toContain("error=access_denied");
+        expect(redirectUrl).toContain("Bad+code");
+    });
+
+    it("uses a default description when the non-ok token response omits one", async () => {
+        getAuthorizeSession.mockReturnValue(createMockSession());
+        fetchSpy.mockResolvedValue({
+            ok: false,
+            json: () => Promise.resolve({ error: "invalid_grant" }),
+        });
+
+        mockCookies.values["bridge_id"] = "test-bridge-id";
+        mockQueryState.value = { code: "test-code", state: MS_STATE };
+
+        await handler(createEvent());
+
+        const redirectUrl = sendRedirectSpy.mock.calls[0][1];
+        expect(redirectUrl).toContain("error=access_denied");
+        expect(redirectUrl).toContain("Unknown+error");
+    });
+
+    it("stringifies non-Error exceptions during the token exchange", async () => {
+        getAuthorizeSession.mockReturnValue(createMockSession());
+        fetchSpy.mockRejectedValue("plain string failure");
+
+        mockCookies.values["bridge_id"] = "test-bridge-id";
+        mockQueryState.value = { code: "test-code", state: MS_STATE };
+
+        await handler(createEvent());
+
+        const redirectUrl = sendRedirectSpy.mock.calls[0][1];
+        expect(redirectUrl).toContain("error=access_denied");
+        expect(redirectUrl).toContain("plain+string+failure");
+    });
+
     it("redirects with invalid_request when the state query parameter does not match the session", async () => {
         getAuthorizeSession.mockReturnValue(createMockSession());
         mockCookies.values["bridge_id"] = "test-bridge-id";
@@ -160,6 +228,57 @@ describe("GET /api/oauth2/mscallback - hardened callback", () => {
         expect(redirectUrl).toContain("Missing+PKCE+code+verifier");
         expect(fetchSpy).not.toHaveBeenCalled();
         expect(createUserFromMicrosoftProfile).not.toHaveBeenCalled();
+    });
+
+    it("redirects with invalid_request when the authorization code is missing", async () => {
+        getAuthorizeSession.mockReturnValue(createMockSession());
+        mockCookies.values["bridge_id"] = "test-bridge-id";
+        mockQueryState.value = { state: MS_STATE };
+
+        await handler(createEvent());
+
+        expect(sendRedirectSpy).toHaveBeenCalledTimes(1);
+        const redirectUrl = sendRedirectSpy.mock.calls[0][1];
+        expect(redirectUrl).toContain("error=invalid_request");
+        expect(redirectUrl).toContain("No+valid+Microsoft+OAuth2+code+provided");
+        expect(fetchSpy).not.toHaveBeenCalled();
+        expect(createUserFromMicrosoftProfile).not.toHaveBeenCalled();
+    });
+
+    it("redirects with access_denied when the Microsoft token has no email claim", async () => {
+        const accessToken = createAccessToken({ name: "No Email User" });
+
+        getAuthorizeSession.mockReturnValue(createMockSession());
+        fetchSpy.mockResolvedValue({
+            ok: true,
+            json: () => Promise.resolve({ access_token: accessToken }),
+        });
+
+        mockCookies.values["bridge_id"] = "test-bridge-id";
+        mockQueryState.value = { code: "test-code", state: MS_STATE };
+
+        await handler(createEvent());
+
+        expect(sendRedirectSpy).toHaveBeenCalledTimes(1);
+        const redirectUrl = sendRedirectSpy.mock.calls[0][1];
+        expect(redirectUrl).toContain("error=access_denied");
+        expect(redirectUrl).toContain("Invalid+or+malformed+token");
+        expect(createUserFromMicrosoftProfile).not.toHaveBeenCalled();
+    });
+
+    it("redirects with access_denied when the Microsoft token exchange throws", async () => {
+        getAuthorizeSession.mockReturnValue(createMockSession());
+        fetchSpy.mockRejectedValue(new Error("Network failure"));
+
+        mockCookies.values["bridge_id"] = "test-bridge-id";
+        mockQueryState.value = { code: "test-code", state: MS_STATE };
+
+        await handler(createEvent());
+
+        expect(sendRedirectSpy).toHaveBeenCalledTimes(1);
+        const redirectUrl = sendRedirectSpy.mock.calls[0][1];
+        expect(redirectUrl).toContain("error=access_denied");
+        expect(redirectUrl).toContain("Network+failure");
     });
 
     it("exchanges the code with the correct verifier and redirect_uri, creates/updates the user, and redirects", async () => {
@@ -209,5 +328,77 @@ describe("GET /api/oauth2/mscallback - hardened callback", () => {
         expect(redirectUrl).toContain("https://example.com/callback");
         expect(redirectUrl).toContain("code=");
         expect(redirectUrl).toContain(`state=${BH_STATE}`);
+    });
+
+    it("redirects with the upstream error when Microsoft returns an error in the query", async () => {
+        getAuthorizeSession.mockReturnValue(createMockSession());
+        mockCookies.values["bridge_id"] = "test-bridge-id";
+        mockQueryState.value = {
+            error: "access_denied",
+            error_description: "User cancelled",
+            state: MS_STATE,
+        };
+
+        await handler(createEvent());
+
+        expect(sendRedirectSpy).toHaveBeenCalledTimes(1);
+        const redirectUrl = sendRedirectSpy.mock.calls[0][1];
+        expect(redirectUrl).toContain("error=access_denied");
+        expect(redirectUrl).toContain("User+cancelled");
+        expect(redirectUrl).toContain(`state=${BH_STATE}`);
+        expect(fetchSpy).not.toHaveBeenCalled();
+    });
+
+    it("uses a default error description when Microsoft omits it", async () => {
+        getAuthorizeSession.mockReturnValue(createMockSession());
+        mockCookies.values["bridge_id"] = "test-bridge-id";
+        mockQueryState.value = {
+            error: "server_error",
+            state: MS_STATE,
+        };
+
+        await handler(createEvent());
+
+        const redirectUrl = sendRedirectSpy.mock.calls[0][1];
+        expect(redirectUrl).toContain("error=server_error");
+        expect(redirectUrl).toContain("Unknown+error");
+    });
+
+    it("redirects with access_denied when the access token has an invalid JWT format", async () => {
+        getAuthorizeSession.mockReturnValue(createMockSession());
+        fetchSpy.mockResolvedValue({
+            ok: true,
+            json: () => Promise.resolve({ access_token: "not-a-jwt" }),
+        });
+
+        mockCookies.values["bridge_id"] = "test-bridge-id";
+        mockQueryState.value = { code: "test-code", state: MS_STATE };
+
+        await handler(createEvent());
+
+        expect(sendRedirectSpy).toHaveBeenCalledTimes(1);
+        const redirectUrl = sendRedirectSpy.mock.calls[0][1];
+        expect(redirectUrl).toContain("error=access_denied");
+        expect(redirectUrl).toContain("Invalid+or+malformed+token");
+        expect(createUserFromMicrosoftProfile).not.toHaveBeenCalled();
+    });
+
+    it("redirects with access_denied when the access token payload cannot be decoded", async () => {
+        getAuthorizeSession.mockReturnValue(createMockSession());
+        fetchSpy.mockResolvedValue({
+            ok: true,
+            json: () => Promise.resolve({ access_token: "header.not-base64.signature" }),
+        });
+
+        mockCookies.values["bridge_id"] = "test-bridge-id";
+        mockQueryState.value = { code: "test-code", state: MS_STATE };
+
+        await handler(createEvent());
+
+        expect(sendRedirectSpy).toHaveBeenCalledTimes(1);
+        const redirectUrl = sendRedirectSpy.mock.calls[0][1];
+        expect(redirectUrl).toContain("error=access_denied");
+        expect(redirectUrl).toContain("Invalid+or+malformed+token");
+        expect(createUserFromMicrosoftProfile).not.toHaveBeenCalled();
     });
 });
