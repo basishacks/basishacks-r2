@@ -63,6 +63,7 @@ let lastCleanup = 0;
 /** Clear the rate limit history — exposed for testing. */
 export function clearRateLimitHistory() {
     requestHistory.clear();
+    lastCleanup = 0;
 }
 
 function cleanupStaleEntries(now: number) {
@@ -179,10 +180,8 @@ export function applyRateLimit(
 
         // Enforce Map size cap by evicting the oldest entry
         if (requestHistory.size > MAX_TRACKED_KEYS) {
-            const firstKey = requestHistory.keys().next().value;
-            if (firstKey !== undefined) {
-                requestHistory.delete(firstKey);
-            }
+            const firstKey = requestHistory.keys().next().value!;
+            requestHistory.delete(firstKey);
         }
 
         return await handler(event);

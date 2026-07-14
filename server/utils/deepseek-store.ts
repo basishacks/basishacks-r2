@@ -43,9 +43,7 @@ export function createSession(sessionName: string): ChatSession {
                 oldestId = id;
             }
         }
-        if (oldestId !== null) {
-            sessions.delete(oldestId);
-        }
+        sessions.delete(oldestId!);
     }
 
     const id = sessionIdCounter++;
