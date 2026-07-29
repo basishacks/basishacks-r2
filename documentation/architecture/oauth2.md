@@ -47,18 +47,18 @@ bun run test -- tests/api/oauth2/token-flow.test.ts
 
 ## Endpoints
 
-| Endpoint                              | Method | Description                                    |
-| ------------------------------------- | ------ | ---------------------------------------------- |
-| `/.well-known/openid-configuration`   | GET    | OpenID Connect Discovery metadata              |
-| `/api/oauth2/authorize`               | GET    | Authorization endpoint (middleware-validated)  |
-| `/api/oauth2/session`                 | POST   | Create/refresh an authorization session        |
-| `/api/oauth2/session`                 | GET    | Get current session state                      |
-| `/api/oauth2/session`                 | DELETE | Cancel an authorization session                |
-| `/api/oauth2/token`                   | POST   | Exchange authorization code for JWT            |
-| `/api/oauth2/userinfo`                | GET    | OIDC UserInfo endpoint (Bearer token required) |
-| `/api/oauth2/to_microsoft`            | POST   | Generate Microsoft OAuth2 redirect link        |
-| `/api/oauth2/mscallback`              | GET    | Microsoft OAuth2 callback handler              |
-| `/api/oauth2/dccallback`              | GET    | basishacks connect callback handler            |
+| Endpoint                            | Method | Description                                    |
+| ----------------------------------- | ------ | ---------------------------------------------- |
+| `/.well-known/openid-configuration` | GET    | OpenID Connect Discovery metadata              |
+| `/api/oauth2/authorize`             | GET    | Authorization endpoint (middleware-validated)  |
+| `/api/oauth2/session`               | POST   | Create/refresh an authorization session        |
+| `/api/oauth2/session`               | GET    | Get current session state                      |
+| `/api/oauth2/session`               | DELETE | Cancel an authorization session                |
+| `/api/oauth2/token`                 | POST   | Exchange authorization code for JWT            |
+| `/api/oauth2/userinfo`              | GET    | OIDC UserInfo endpoint (Bearer token required) |
+| `/api/oauth2/to_microsoft`          | POST   | Generate Microsoft OAuth2 redirect link        |
+| `/api/oauth2/mscallback`            | GET    | Microsoft OAuth2 callback handler              |
+| `/api/oauth2/dccallback`            | GET    | basishacks connect callback handler            |
 
 ### OpenID Connect Discovery
 
@@ -161,24 +161,24 @@ const jwt = await new SignJWT({
     redirect_uri: session.redirect_uri,
     scope: session.scopes.join(" "),
 })
-                .setProtectedHeader({ alg: "HS256" })
-                .setIssuer(getOAuth2Issuer()) // CURRENT_URL_ORIGIN
-                .setAudience(session.application.client_id)
-                .setIssuedAt(Date.now())
-                .setExpirationTime("1h")
-                .sign(key);
+    .setProtectedHeader({ alg: "HS256" })
+    .setIssuer(getOAuth2Issuer()) // CURRENT_URL_ORIGIN
+    .setAudience(session.application.client_id)
+    .setIssuedAt(Date.now())
+    .setExpirationTime("1h")
+    .sign(key);
 ```
 
-| JWT Claim      | Value                                              |
-| -------------- | -------------------------------------------------- |
-| `sub`          | User ID (string)                                   |
-| `user_id`      | User ID (number)                                   |
-| `client_id`    | Application client ID                              |
-| `redirect_uri` | Original redirect URI                              |
-| `scope`        | Granted scopes                                     |
-| `iss`          | `getOAuth2Issuer()` (`CURRENT_URL_ORIGIN`)         |
-| `aud`          | Application client ID                              |
-| `exp`          | 1 hour from issuance                               |
+| JWT Claim      | Value                                      |
+| -------------- | ------------------------------------------ |
+| `sub`          | User ID (string)                           |
+| `user_id`      | User ID (number)                           |
+| `client_id`    | Application client ID                      |
+| `redirect_uri` | Original redirect URI                      |
+| `scope`        | Granted scopes                             |
+| `iss`          | `getOAuth2Issuer()` (`CURRENT_URL_ORIGIN`) |
+| `aud`          | Application client ID                      |
+| `exp`          | 1 hour from issuance                       |
 
 The JWT is signed with `NUXT_OAUTH2_JWT_SECRET` using HS256. The `iss` claim matches the OpenID Discovery `issuer` field.
 

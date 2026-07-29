@@ -1,9 +1,5 @@
 import type { H3Event } from "h3";
-import {
-    parseJWScopes,
-    resolveOAuth2User,
-    verifyAccessToken,
-} from "~~/server/utils/oauth2-jwt";
+import { parseJWScopes, resolveOAuth2User, verifyAccessToken } from "~~/server/utils/oauth2-jwt";
 
 export interface OAuth2UserInfoClaims {
     sub: string;
@@ -17,10 +13,7 @@ export interface OAuth2UserInfoClaims {
  * Build OIDC UserInfo claims from a DB user and granted scopes.
  * Shared by GET /api/oauth2/userinfo and first-party onsite login.
  */
-export function buildUserInfoClaims(
-    user: User,
-    scopes: string[],
-): OAuth2UserInfoClaims {
+export function buildUserInfoClaims(user: User, scopes: string[]): OAuth2UserInfoClaims {
     const claims: OAuth2UserInfoClaims = {
         sub: String(user.id),
     };

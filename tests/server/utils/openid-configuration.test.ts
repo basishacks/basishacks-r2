@@ -29,9 +29,7 @@ describe("buildOpenIdConfiguration", () => {
         const doc = buildOpenIdConfiguration();
 
         expect(doc.issuer).toBe("https://hacks.example.com");
-        expect(doc.authorization_endpoint).toBe(
-            "https://hacks.example.com/api/oauth2/authorize",
-        );
+        expect(doc.authorization_endpoint).toBe("https://hacks.example.com/api/oauth2/authorize");
         expect(doc.token_endpoint).toBe("https://hacks.example.com/api/oauth2/token");
         expect(doc.userinfo_endpoint).toBe("https://hacks.example.com/api/oauth2/userinfo");
     });
