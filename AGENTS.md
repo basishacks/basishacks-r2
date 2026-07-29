@@ -272,7 +272,7 @@ Copy `.env.example` to `.env` and fill in at least the required values:
 
 | Variable | Purpose |
 | --- | --- |
-| `CURRENT_URL_ORIGIN` | Base origin for OAuth2 callbacks (default `http://localhost:3000`) |
+| `CURRENT_URL_ORIGIN` | Public base origin for OAuth2 callbacks, JWT `iss`, and OpenID Discovery (default `http://localhost:3000`) |
 | `REDIRECT_URI` | Onsite OAuth2 redirect path (default `/api/oauth2/dccallback`) |
 | `DEEPSEEK_API_KEY` | DeepSeek API key for AI chat features |
 | `PORT` / `HOST` | Server port/host override (defaults: `3000` / `0.0.0.0`) |

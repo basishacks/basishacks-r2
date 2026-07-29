@@ -9,6 +9,7 @@
  */
 import { createHash, randomBytes } from "crypto";
 import { SignJWT } from "jose";
+import { getOAuth2Issuer } from "~~/server/utils/oauth2";
 import { validateOAuth2AuthorizationRequest } from "~~/server/utils/oauth2-validate";
 import { applyRateLimit } from "~~/server/utils/rateLimit";
 
@@ -145,7 +146,7 @@ export async function exchangeAuthorizationCode(
                 scope: session.scopes.join(" "),
             })
                 .setProtectedHeader({ alg: "HS256" })
-                .setIssuer("basishacks")
+                .setIssuer(getOAuth2Issuer())
                 .setAudience(session.application.client_id)
                 .setIssuedAt(Date.now())
                 .setExpirationTime("1h")

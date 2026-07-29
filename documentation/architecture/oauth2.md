@@ -14,42 +14,76 @@ basishacks implements a complete OAuth2 authorization server that supports the *
 │  Client   │     │  basishacks  │     │  Microsoft   │     │  SQLite  │
 │  App      │     │  OAuth2      │     │  Entra ID    │     │   DB     │
 └────┬──────┘     └──────┬───────┘     └──────┬───────┘     └────┬────┘
-     │  1. /authorize       │                    │                 │
-     │ ───────────────────► │                    │                 │
-     │                      │  2. Login page     │                 │
-     │                      │    (or MS redirect)│                 │
-     │                      │ ◄─────────────────►│                 │
-     │                      │                    │                 │
-     │  3. Redirect back    │                    │                 │
-     │    with code         │                    │                 │
-     │ ◄─────────────────── │                    │                 │
-     │                      │                    │                 │
-     │  4. /token           │                    │                 │
-     │ ───────────────────► │                    │                 │
-     │                      │  5. Verify code,   │                 │
-     │                      │     issue JWT      │                 │
-     │  6. JWT access token │                    │                 │
-     │ ◄─────────────────── │                    │                 │
-     │                      │                    │                 │
-     │  7. /userinfo        │                    │                 │
-     │ ───────────────────► │                    │                 │
-     │  8. User claims      │                    │                 │
-     │ ◄─────────────────── │                    │                 │
+      │  1. /authorize       │                    │                 │
+      │ ───────────────────► │                    │                 │
+      │                      │  2. Login page     │                 │
+      │                      │    (or MS redirect)│                 │
+      │                      │ ◄─────────────────►│                 │
+      │                      │                    │                 │
+      │  3. Redirect back    │                    │                 │
+      │    with code         │                    │                 │
+      │ ◄─────────────────── │                    │                 │
+      │                      │                    │                 │
+      │  4. /token           │                    │                 │
+      │ ───────────────────► │                    │                 │
+      │                      │  5. Verify code,   │                 │
+      │                      │     issue JWT      │                 │
+      │  6. JWT access token │                    │                 │
+      │ ◄─────────────────── │                    │                 │
+      │                      │                    │                 │
+      │  7. /userinfo        │                    │                 │
+      │ ───────────────────► │                    │                 │
+      │  8. User claims      │                    │                 │
+      │ ◄─────────────────── │                    │                 │
+```
+
+### Integration test (token flow)
+
+`tests/api/oauth2/token-flow.test.ts` exercises code → `POST /api/oauth2/token` → UserInfo **in-process** (Vitest + in-memory SQLite). It does **not** open a production backdoor around Microsoft login: the only skip is attaching a seeded user to the in-memory `AuthorizeSession` inside the test (the same state `mscallback` would set). HTTP clients cannot perform that mutation. A session with `user === null` still fails token exchange with `invalid_grant`.
+
+```bash
+bun run test -- tests/api/oauth2/token-flow.test.ts
 ```
 
 ## Endpoints
 
-| Endpoint                   | Method | Description                                    |
-| -------------------------- | ------ | ---------------------------------------------- |
-| `/api/oauth2/authorize`    | GET    | Authorization endpoint (middleware-validated)  |
-| `/api/oauth2/session`      | POST   | Create/refresh an authorization session        |
-| `/api/oauth2/session`      | GET    | Get current session state                      |
-| `/api/oauth2/session`      | DELETE | Cancel an authorization session                |
-| `/api/oauth2/token`        | POST   | Exchange authorization code for JWT            |
-| `/api/oauth2/userinfo`     | GET    | OIDC UserInfo endpoint (Bearer token required) |
-| `/api/oauth2/to_microsoft` | POST   | Generate Microsoft OAuth2 redirect link        |
-| `/api/oauth2/mscallback`   | GET    | Microsoft OAuth2 callback handler              |
-| `/api/oauth2/dccallback`   | GET    | basishacks connect callback handler            |
+| Endpoint                              | Method | Description                                    |
+| ------------------------------------- | ------ | ---------------------------------------------- |
+| `/.well-known/openid-configuration`   | GET    | OpenID Connect Discovery metadata              |
+| `/api/oauth2/authorize`               | GET    | Authorization endpoint (middleware-validated)  |
+| `/api/oauth2/session`                 | POST   | Create/refresh an authorization session        |
+| `/api/oauth2/session`                 | GET    | Get current session state                      |
+| `/api/oauth2/session`                 | DELETE | Cancel an authorization session                |
+| `/api/oauth2/token`                   | POST   | Exchange authorization code for JWT            |
+| `/api/oauth2/userinfo`                | GET    | OIDC UserInfo endpoint (Bearer token required) |
+| `/api/oauth2/to_microsoft`            | POST   | Generate Microsoft OAuth2 redirect link        |
+| `/api/oauth2/mscallback`              | GET    | Microsoft OAuth2 callback handler              |
+| `/api/oauth2/dccallback`              | GET    | basishacks connect callback handler            |
+
+### OpenID Connect Discovery
+
+Clients can discover the authorization server configuration at:
+
+```
+GET /.well-known/openid-configuration
+```
+
+The document is built by `buildOpenIdConfiguration()` in `server/utils/openid-configuration.ts` and served from `server/routes/.well-known/openid-configuration.get.ts`.
+
+| Field | Value |
+| --- | --- |
+| `issuer` | `CURRENT_URL_ORIGIN` (no trailing slash; default `http://localhost:3000`) |
+| `authorization_endpoint` | `{issuer}/api/oauth2/authorize` |
+| `token_endpoint` | `{issuer}/api/oauth2/token` |
+| `userinfo_endpoint` | `{issuer}/api/oauth2/userinfo` |
+| `response_types_supported` | `["code"]` |
+| `grant_types_supported` | `["authorization_code"]` |
+| `code_challenge_methods_supported` | `["S256", "plain"]` |
+| `token_endpoint_auth_methods_supported` | `["client_secret_post"]` |
+| `scopes_supported` | All keys from `shared/oauth2-scopes.ts` |
+| `claims_supported` | `sub`, `name`, `picture`, `email`, `email_verified` |
+
+**Not advertised** (not implemented): `jwks_uri` (access tokens use HS256 with a shared secret), introspection, revocation, dynamic client registration, refresh tokens, or ID token issuance. The `openid` scope still enables UserInfo `sub` claims; no separate `id_token` is returned from the token endpoint.
 
 ## Authorization Flow
 
@@ -127,26 +161,26 @@ const jwt = await new SignJWT({
     redirect_uri: session.redirect_uri,
     scope: session.scopes.join(" "),
 })
-    .setProtectedHeader({ alg: "HS256" })
-    .setIssuer("basishacks")
-    .setAudience(session.application.client_id)
-    .setIssuedAt(Date.now())
-    .setExpirationTime("1h")
-    .sign(key);
+                .setProtectedHeader({ alg: "HS256" })
+                .setIssuer(getOAuth2Issuer()) // CURRENT_URL_ORIGIN
+                .setAudience(session.application.client_id)
+                .setIssuedAt(Date.now())
+                .setExpirationTime("1h")
+                .sign(key);
 ```
 
-| JWT Claim      | Value                 |
-| -------------- | --------------------- |
-| `sub`          | User ID (string)      |
-| `user_id`      | User ID (number)      |
-| `client_id`    | Application client ID |
-| `redirect_uri` | Original redirect URI |
-| `scope`        | Granted scopes        |
-| `iss`          | `basishacks`          |
-| `aud`          | Application client ID |
-| `exp`          | 1 hour from issuance  |
+| JWT Claim      | Value                                              |
+| -------------- | -------------------------------------------------- |
+| `sub`          | User ID (string)                                   |
+| `user_id`      | User ID (number)                                   |
+| `client_id`    | Application client ID                              |
+| `redirect_uri` | Original redirect URI                              |
+| `scope`        | Granted scopes                                     |
+| `iss`          | `getOAuth2Issuer()` (`CURRENT_URL_ORIGIN`)         |
+| `aud`          | Application client ID                              |
+| `exp`          | 1 hour from issuance                               |
 
-The JWT is signed with `NUXT_OAUTH2_JWT_SECRET` using HS256.
+The JWT is signed with `NUXT_OAUTH2_JWT_SECRET` using HS256. The `iss` claim matches the OpenID Discovery `issuer` field.
 
 ## Scope System
 
@@ -263,7 +297,19 @@ The onsite login (`server/api/login.get.ts`) initiates a full OAuth2 + PKCE flow
 3. Includes `code_challenge` and `code_challenge_method=S256` in the authorize URL
 4. Sets a `pkce_verifier` cookie containing the `code_verifier` (httpOnly, secure, sameSite lax, 10-minute maxAge)
 
-The authorize middleware stores the `code_challenge` in `session.bh_verifier_challenge`. When the OAuth2 flow completes, the callback at `server/api/oauth2/dccallback.get.ts` reads the `pkce_verifier` cookie and passes it as the `code_verifier` to `exchangeAuthorizationCode`, which verifies it hashes (S256) to `session.bh_verifier_challenge`. The cookie is cleared immediately after the exchange.
+The authorize middleware stores the `code_challenge` in `session.bh_verifier_challenge`. When the OAuth2 flow completes, `server/api/oauth2/dccallback.get.ts` follows the **same logical steps as an external OIDC client**, using shared server helpers (no self-HTTP):
+
+1. Validate `state` and read `pkce_verifier` (not `session.ms_verifier`)
+2. **Token** — `redeemAuthorizationCodeForToken()` in `server/utils/oauth2-token.ts` (same core path as `POST /api/oauth2/token` after client authentication)
+3. **UserInfo** — `resolveUserInfoFromAccessToken()` in `server/utils/oauth2-userinfo.ts` (same claims as `GET /api/oauth2/userinfo`)
+4. `setUserSession({ user: { id } })` from UserInfo `sub`, then redirect (`post_login_redirect` or `/dashboard`)
+
+External clients still call the HTTP endpoints only:
+
+| Step | External client | Onsite (`dccallback`) |
+| --- | --- | --- |
+| Token | `POST /api/oauth2/token` + `client_secret` | `redeemAuthorizationCodeForToken` (client bound via `bridge_id` + cookies) |
+| UserInfo | `GET /api/oauth2/userinfo` Bearer token | `resolveUserInfoFromAccessToken` in-process |
 
 ::: warning Verifier selection The `pkce_verifier` cookie (basishacks flow) must not be confused with `session.ms_verifier`, which is the PKCE verifier for the Microsoft proxy flow (basishacks → Microsoft). The `dccallback` endpoint uses the cookie value, never `session.ms_verifier`. :::
 
@@ -302,25 +348,13 @@ interface OAuth2JWTContext {
 
 ### UserInfo endpoint example
 
-The `/api/oauth2/userinfo` endpoint demonstrates the wrapper in action:
+The `/api/oauth2/userinfo` endpoint uses `withOAuth2JWT` plus shared `buildUserInfoClaims()`:
 
 ```ts
 export default withOAuth2JWT(
     async (event) => {
         const { scopes, user } = event.context.oauth2!;
-        const claims: Record<string, any> = { sub: String(user!.id) };
-
-        if (scopes.includes("profile")) {
-            claims.name = user!.name;
-            claims.picture = user!.profile_picture;
-        }
-
-        if (scopes.includes("email")) {
-            claims.email = user!.email;
-            claims.email_verified = true;
-        }
-
-        return claims;
+        return buildUserInfoClaims(user!, scopes);
     },
     { loadUser: true },
 );

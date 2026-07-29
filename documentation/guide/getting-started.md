@@ -191,6 +191,14 @@ Bun's native test runner (`bun test`) cannot resolve Nuxt's `~~/` and `~/` path 
 
 To avoid confusion, `bunfig.toml` scopes `bun test` to a single shim (`bun-shim/shim.test.ts`) that prints guidance directing you to run `bun run test` instead. The shim exits successfully so `bun test` never appears to fail.
 
+### OAuth2 token-flow integration test
+
+`tests/api/oauth2/token-flow.test.ts` simulates a completed authorize session (user attached in-test only), exchanges the code through `POST /api/oauth2/token`, and checks UserInfo. It does not add a runtime Microsoft-login bypass — see the security note in that file.
+
+```bash
+bun run test -- tests/api/oauth2/token-flow.test.ts
+```
+
 ### Legacy test script
 
 `tests/index.js` is a legacy manual test runner invoked via `node --env-file=.env tests/index.js`. It is not part of the Vitest suite and is rarely used.

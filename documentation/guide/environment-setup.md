@@ -136,7 +136,7 @@ Copy the output and paste it as the value for `NUXT_SESSION_PASSWORD`.
 | `MICROSOFT_CLIENT_SECRET` | Microsoft Entra ID client secret for Graph API integration. Enables MS OAuth2 login and MS Graph features (meeting scheduling, Teams chat). | — |
 | `MICROSOFT_TENANT_ID` | Microsoft Entra ID tenant (directory) ID. Required together with `MICROSOFT_CLIENT_ID` for MS OAuth2 login and MS Graph features. If unset, Microsoft features are disabled gracefully. | — |
 | `MICROSOFT_CLIENT_ID` | Microsoft Entra ID application (client) ID. Required together with `MICROSOFT_TENANT_ID` for MS OAuth2 login and MS Graph features. If unset, Microsoft features are disabled gracefully. | — |
-| `CURRENT_URL_ORIGIN` | Base origin URL for OAuth2 redirect callbacks (no trailing slash). Must match the redirect URI registered in Azure Portal. | `http://localhost:3000` |
+| `CURRENT_URL_ORIGIN` | Public base origin (no trailing slash). Used for OAuth2 redirect callbacks, JWT `iss`, and `/.well-known/openid-configuration`. Must match the redirect URI registered in Azure Portal. | `http://localhost:3000` |
 | `MICROSOFT_REDIRECT_URI` | Microsoft OAuth2 redirect URI path (must start with `/`). Must exactly match the redirect URI registered in Azure Portal. Defaults to `/api/oauth2/mscallback`. | `/api/oauth2/mscallback` |
 | `DEEPSEEK_API_KEY` | DeepSeek API key for AI chat features (debug routes only). Uses the OpenAI SDK under the hood. | — |
 | `REDIRECT_URI` | Onsite OAuth2 redirect URI path used by `/api/login`. The server auto-registers `${CURRENT_URL_ORIGIN}${REDIRECT_URI}` for `ONSITE_LOGIN_CLIENT_ID`. Defaults to `/api/oauth2/dccallback`. | `/api/oauth2/dccallback` |

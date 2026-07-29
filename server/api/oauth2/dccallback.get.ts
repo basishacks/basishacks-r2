@@ -1,17 +1,19 @@
-import { jwtVerify } from "jose";
-import { exchangeAuthorizationCode, getAuthorizeSession } from "./session.post";
+import { getAuthorizeSession } from "./session.post";
+import { redeemAuthorizationCodeForToken } from "~~/server/utils/oauth2-token";
+import { resolveUserInfoFromAccessToken } from "~~/server/utils/oauth2-userinfo";
 
 /*
- * Note: This is like an demo app endpoint that DevConnect redirects to
+ * First-party onsite OAuth2 redirect_uri (basishacks connect).
  *
- * In other words, this endpoint is like a valid redirect_uri of a valid app
- * in DevConnect. It takes the code and exchange for a token just like any
- * OAuth2 app would do.
+ * Follows the same logical steps as an external OIDC client:
+ *   1. Validate state / PKCE
+ *   2. Redeem authorization code → access token (shared token helper)
+ *   3. Resolve identity via UserInfo claims (shared userinfo helper)
+ *   4. Establish the site session
  *
- * When uesd externally, the exchange code function (exchangeAuthorizationCode)
- * would be written in a fetch request to a specific endpoint (basically token.post.ts)
- * to get the token instead
- *
+ * Steps 2–3 run in-process (no self-HTTP). External clients still use
+ * POST /api/oauth2/token and GET /api/oauth2/userinfo over the network;
+ * those handlers call the same shared utilities.
  */
 export default defineEventHandler(async (event) => {
     const error = getQuery(event).error;
@@ -19,8 +21,7 @@ export default defineEventHandler(async (event) => {
     if (error) {
         const description = getQuery(event).error_description;
         console.log("[Authorize -> OAuth2] Recieved error: " + description);
-
-        await sendRedirect(event, "/", 302);
+        return await sendRedirect(event, "/", 302);
     }
 
     // Require bridge_id cookie to bind the callback to an existing authorize session
@@ -63,44 +64,51 @@ export default defineEventHandler(async (event) => {
         });
     }
 
-    let result: string;
+    let accessToken: string;
     try {
-        result = await exchangeAuthorizationCode(
-            getQuery(event).code as string,
-            session.application.client_id,
-            session.redirect_uri,
-            session.scopes.join(" "),
-            pkceVerifier,
-        );
+        // Same code→token path as POST /api/oauth2/token after client auth.
+        // Client auth here is first-party: bridge_id + state + pkce_verifier cookies
+        // (external clients authenticate with client_secret on the HTTP token endpoint).
+        const tokenResponse = await redeemAuthorizationCodeForToken({
+            code: getQuery(event).code as string,
+            clientId: session.application.client_id,
+            redirectUri: session.redirect_uri,
+            appPermissions: session.scopes.join(" "),
+            codeVerifier: pkceVerifier,
+        });
+        accessToken = tokenResponse.access_token;
     } catch (e: any) {
         throw createError({
             statusCode: 400,
             message: "invalid_grant: " + e.message,
         });
     }
+
     // Clear the PKCE verifier cookie now that it's been used
     deleteCookie(event, "pkce_verifier");
-    // this function can be used externally like in another website
 
-    const secret = process.env.NUXT_OAUTH2_JWT_SECRET;
-    if (!secret) {
-        throw new Error("NUXT_OAUTH2_JWT_SECRET is not set");
+    // Same identity resolution as GET /api/oauth2/userinfo (in-process).
+    const claims = await resolveUserInfoFromAccessToken(event, accessToken);
+    const userId = Number(claims.sub);
+    if (!userId || Number.isNaN(userId)) {
+        throw createError({
+            statusCode: 400,
+            message: "UserInfo response missing subject",
+        });
     }
-
-    const { payload } = await jwtVerify(result, new TextEncoder().encode(secret));
-    const userId = Number(payload.user_id);
 
     await setUserSession(event, {
         user: {
             id: userId,
-            token: payload,
-            token_raw: result,
         },
     });
 
     // Authorization is complete; clear the session binding cookie
     deleteCookie(event, "bridge_id");
 
-    const redirect = getQuery(event).redirect as string | undefined;
-    await sendRedirect(event, redirect || "/dashboard", 302);
+    const redirect =
+        session.post_login_redirect ||
+        (getQuery(event).redirect as string | undefined) ||
+        "/dashboard";
+    await sendRedirect(event, redirect, 302);
 });
