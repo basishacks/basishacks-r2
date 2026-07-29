@@ -47,6 +47,17 @@ Alias for the Microsoft OAuth2 callback handler (`/api/oauth2/mscallback`). Regi
 
 ## OAuth2
 
+### GET `/.well-known/openid-configuration`
+
+OpenID Connect Discovery metadata for this authorization server.
+
+| Field | Details |
+| --- | --- |
+| **Auth** | None |
+| **Response** | Standard OIDC discovery JSON (`issuer`, `authorization_endpoint`, `token_endpoint`, `userinfo_endpoint`, supported grants/scopes/PKCE methods, etc.) |
+| **Headers** | `Cache-Control: public, max-age=3600` |
+| **Notes** | `issuer` is `CURRENT_URL_ORIGIN` (no trailing slash). No `jwks_uri` — access tokens are HS256 JWTs signed with `NUXT_OAUTH2_JWT_SECRET`. No ID tokens, refresh tokens, introspection, or revocation. |
+
 ### POST `/api/oauth2/session`
 
 Create a new OAuth2 authorization session. Rate-limited to 20 requests per minute.
@@ -110,15 +121,17 @@ Microsoft OAuth2 callback. Exchanges the authorization code for a Microsoft toke
 
 ### GET `/api/oauth2/dccallback`
 
-basishacks connect OAuth2 callback (for the built-in first-party app). Exchanges the authorization code for a JWT and establishes the user session.
+basishacks connect OAuth2 callback (first-party onsite app). Mirrors an external OIDC client **in-process**: redeem code via `redeemAuthorizationCodeForToken`, resolve identity via `resolveUserInfoFromAccessToken`, then `setUserSession`.
 
 | Field | Details |
 | --- | --- |
 | **Auth** | None |
-| **Query** | `code`, `state`, `redirect` |
-| **Cookies** | `bridge_id` (required), `pkce_verifier` (required, set by `/api/login`) |
-| **Response** | 302 redirect to `redirect` query value or `/dashboard` |
-| **Errors** | 400 if `bridge_id` cookie is missing, authorize session is not found, `state` mismatches, `pkce_verifier` cookie is missing, or code exchange fails |
+| **Query** | `code`, `state` |
+| **Cookies** | `bridge_id` (required, binds to authorize session), `pkce_verifier` (required, PKCE code verifier set by `/api/login`) |
+| **Response** | 302 redirect to `session.post_login_redirect`, else `redirect` query, else `/dashboard` |
+| **Errors** | `400` if `bridge_id` cookie missing, authorize session not found, `state` mismatch, `pkce_verifier` cookie missing, or code exchange fails |
+
+External third-party apps must still use `POST /api/oauth2/token` + `GET /api/oauth2/userinfo` over HTTP; those handlers share the same server utilities.
 
 ::: tip PKCE verifier The `pkce_verifier` cookie is set by `constructOnSiteLoginURL` in `server/api/login.get.ts` and contains the `code_verifier` for the basishacks OAuth2 flow (client → basishacks). It is distinct from `session.ms_verifier`, which is the verifier for the Microsoft proxy flow (basishacks → Microsoft). The cookie is cleared immediately after the code exchange. :::
 

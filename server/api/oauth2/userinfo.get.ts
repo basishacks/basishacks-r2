@@ -1,4 +1,5 @@
 import { withOAuth2JWT } from "~~/server/utils/oauth2-jwt";
+import { buildUserInfoClaims } from "~~/server/utils/oauth2-userinfo";
 
 /**
  * OAuth2 UserInfo Endpoint
@@ -10,26 +11,14 @@ import { withOAuth2JWT } from "~~/server/utils/oauth2-jwt";
  * - sub (always)
  * - name, picture (if 'profile' scope granted)
  * - email, email_verified (if 'email' scope granted)
+ *
+ * External clients call this HTTP endpoint. First-party onsite login uses the
+ * same buildUserInfoClaims / resolveUserInfoFromAccessToken helpers in-process.
  */
 export default withOAuth2JWT(
     async (event) => {
-        const { payload, scopes, user } = event.context.oauth2!;
-
-        const claims: Record<string, any> = {
-            sub: String(user!.id),
-        };
-
-        if (scopes.includes("profile")) {
-            claims.name = user!.name;
-            claims.picture = user!.profile_picture;
-        }
-
-        if (scopes.includes("email")) {
-            claims.email = user!.email;
-            claims.email_verified = true;
-        }
-
-        return claims;
+        const { scopes, user } = event.context.oauth2!;
+        return buildUserInfoClaims(user!, scopes);
     },
     { loadUser: true },
 );

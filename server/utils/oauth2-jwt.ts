@@ -1,6 +1,7 @@
 import type { H3Event, EventHandler } from "h3";
 import { jwtVerify } from "jose";
 import { getUser } from "./database/users";
+import { getOAuth2Issuer } from "./oauth2";
 
 // ------------------------------------------------------------------
 // Config
@@ -45,7 +46,7 @@ export async function verifyAccessToken(token: string): Promise<OAuth2JWTPayload
 
     try {
         const { payload } = await jwtVerify(token, getJWTSecret(), {
-            issuer: "basishacks",
+            issuer: getOAuth2Issuer(),
         });
         return payload as OAuth2JWTPayload;
     } catch {

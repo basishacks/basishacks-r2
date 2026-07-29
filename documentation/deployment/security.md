@@ -113,7 +113,7 @@ const jwt = await new SignJWT({
     scope: session.scopes.join(" "),
 })
     .setProtectedHeader({ alg: "HS256" })
-    .setIssuer("basishacks")
+    .setIssuer(getOAuth2Issuer()) // CURRENT_URL_ORIGIN
     .setAudience(session.application.client_id)
     .setIssuedAt(Date.now())
     .setExpirationTime("1h")

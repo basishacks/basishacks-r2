@@ -4,6 +4,7 @@ import { verifyAccessToken } from "~~/server/utils/oauth2-jwt";
 
 beforeEach(() => {
     process.env.NUXT_OAUTH2_JWT_SECRET = "test-secret-key-at-least-32-bytes!!";
+    process.env.CURRENT_URL_ORIGIN = "http://localhost:3000";
     (globalThis as any).createError = (input: any) => {
         const err = new Error(input.message || input.statusMessage || "Error");
         (err as any).statusCode = input.statusCode ?? input.status ?? 500;
@@ -16,7 +17,7 @@ function getKey(): Uint8Array {
     return new TextEncoder().encode(process.env.NUXT_OAUTH2_JWT_SECRET);
 }
 
-function signToken(payload: Record<string, unknown>, issuer = "basishacks") {
+function signToken(payload: Record<string, unknown>, issuer = "http://localhost:3000") {
     return new SignJWT(payload)
         .setProtectedHeader({ alg: "HS256" })
         .setIssuer(issuer)

@@ -198,7 +198,16 @@ Clears the in-memory rate limit history. Exposed primarily for tests.
 
 ## oauth2.ts
 
-Microsoft OAuth2 configuration and URL construction.
+Microsoft OAuth2 configuration, public origin helpers, and URL construction.
+
+### Public origin / issuer
+
+```ts
+export function getPublicOrigin(): string;
+export function getOAuth2Issuer(): string;
+```
+
+Both return `CURRENT_URL_ORIGIN` with trailing slashes stripped (default `http://localhost:3000`). `getOAuth2Issuer()` is the OIDC issuer used for JWT `iss` claims and OpenID Discovery.
 
 ### Configuration helpers
 
@@ -226,6 +235,20 @@ export function structureLink(
 ```
 
 Constructs a Microsoft OAuth2 authorization URL with PKCE parameters.
+
+---
+
+## openid-configuration.ts
+
+Builds the OpenID Connect Discovery document served at `/.well-known/openid-configuration`.
+
+### `buildOpenIdConfiguration`
+
+```ts
+export function buildOpenIdConfiguration(issuer?: string): OpenIdConfiguration;
+```
+
+Returns metadata matching implemented endpoints only: authorization code + PKCE, `client_secret_post`, UserInfo, scopes from `shared/oauth2-scopes.ts`. Does not include `jwks_uri`, introspection, or revocation.
 
 ---
 
@@ -283,6 +306,58 @@ export function completeConsentFlow(event: H3Event, session: AuthorizeSession): 
 ```
 
 Generates an exchange code, marks the session as completed, and returns the redirect URI with `code` and `state` parameters. The `bridge_id` cookie is cleared by the caller.
+
+---
+
+## oauth2-token.ts
+
+Shared authorization-code → access-token issuance.
+
+### `redeemAuthorizationCodeForToken`
+
+```ts
+export async function redeemAuthorizationCodeForToken(
+    input: RedeemAuthorizationCodeInput,
+): Promise<OAuth2AccessTokenResponse>;
+```
+
+Core code exchange after the caller has authenticated the client. Used in-process by onsite `dccallback` (first-party cookie binding). Returns `{ access_token, token_type: "Bearer", expires_in: 3600 }`.
+
+### `issueOAuth2AccessToken`
+
+```ts
+export async function issueOAuth2AccessToken(
+    event: H3Event,
+    input: IssueOAuth2AccessTokenInput,
+): Promise<OAuth2AccessTokenResponse>;
+```
+
+Full confidential-client path used by `POST /api/oauth2/token`: validates `client_id`, `client_secret`, and optional `redirect_uri`, then redeems the code. External clients must use the HTTP endpoint; they do not import this module.
+
+---
+
+## oauth2-userinfo.ts
+
+Shared OIDC UserInfo claim building.
+
+### `buildUserInfoClaims`
+
+```ts
+export function buildUserInfoClaims(user: User, scopes: string[]): OAuth2UserInfoClaims;
+```
+
+Returns `sub` always; `name`/`picture` with `profile`; `email`/`email_verified` with `email`.
+
+### `resolveUserInfoFromAccessToken`
+
+```ts
+export async function resolveUserInfoFromAccessToken(
+    event: H3Event,
+    accessToken: string,
+): Promise<OAuth2UserInfoClaims>;
+```
+
+Verifies the access token, loads the user, and builds claims. Same result as `GET /api/oauth2/userinfo`. Used in-process by onsite login.
 
 ---
 
