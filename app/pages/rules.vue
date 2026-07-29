@@ -18,9 +18,11 @@
                 <li>
                     <span class="bold text-blue-400">Full source code</span>
                     must be publicly hosted on a platform such as GitHub, GitLab, Codeberg, or
-                    Gitee. Executable-only uploads are
-                    <span class="bold text-blue-400">not</span>
-                    permitted.
+                    Gitee.
+                    <span class="bold text-blue-400">
+                        Executable-only uploads are not permitted
+                    </span>
+                    .
                 </li>
                 <li>
                     A
@@ -32,9 +34,9 @@
                     <span class="bold text-blue-400">publicly accessible demo URL</span>
                     and a
                     <span class="bold text-blue-400">demo video hosted on a video platform</span>
-                    (e.g., YouTube, Bilibili, OneDrive) are required. Local file uploads are
-                    <span class="bold text-blue-400">not</span>
-                    supported.
+                    (e.g., YouTube, Bilibili, OneDrive) are required.
+                    <span class="bold text-blue-400">Local file uploads are not supported</span>
+                    .
                 </li>
                 <li>
                     <span class="bold text-blue-400">No login walls</span>
@@ -42,7 +44,9 @@
                     evaluation will incur penalties.
                 </li>
                 <li>
-                    <span class="bold text-blue-400">Open source is at the heart of this competition.</span>
+                    <span class="bold text-blue-400">
+                        Open source is at the heart of this competition.
+                    </span>
                     Closed-source projects are incompatible with our values.
                 </li>
                 <li>
@@ -50,7 +54,9 @@
                     is required. Generic statements are insufficient.
                 </li>
                 <li>
-                    <span class="bold text-blue-400">All costs are the participant's responsibility.</span>
+                    <span class="bold text-blue-400">
+                        All costs are the participant's responsibility.
+                    </span>
                     Organizers shall not be held liable for any expenses incurred.
                 </li>
                 <li>
@@ -58,14 +64,21 @@
                     <span class="bold text-blue-400">grant a showcase license</span>
                     while retaining the freedom to choose any OSI-approved license for your code.
                 </li>
+                <li>
+                    If you do not include a license file, your source code is
+                    <span class="bold text-blue-400">
+                        automatically licensed under the MIT License
+                    </span>
+                    .
+                </li>
             </ul>
         </div>
 
         <h2 class="text-3xl bold mb-2">Project Requirements</h2>
         <p class="mb-2">
             The items enumerated below are
-            <span class="bold text-blue-400">required</span>
-            for a valid submission.
+            <span class="bold text-blue-400">required for a valid submission</span>
+            .
             <span class="bold text-blue-400">
                 Failure to comply with any single requirement will result in immediate
                 disqualification.
@@ -74,7 +87,9 @@
 
         <ul class="mb-4">
             <li class="mb-2">
-                <span class="bold text-blue-400">* Open-source repository with complete source code.</span>
+                <span class="bold text-blue-400">
+                    * Open-source repository with complete source code.
+                </span>
                 Your project must be open-source and publicly hosted on a recognized version control
                 platform. Acceptable platforms include, but are not limited to,
                 <ULink href="https://github.com" target="_blank">GitHub</ULink>
@@ -87,13 +102,13 @@
                 . Any platform that permits
                 <span class="bold text-blue-400">free public cloning and browsing</span>
                 without authentication is acceptable. The repository
-                <span class="bold text-blue-400">must</span>
-                contain the
-                <span class="bold text-blue-400">complete source code</span>
+                <span class="bold text-blue-400">must contain the complete source code</span>
                 of your project. Providing only a compiled executable, a compressed archive, or any
-                similar opaque delivery is
-                <span class="bold text-blue-400">not</span>
-                acceptable and will result in disqualification.
+                similar
+                <span class="bold text-blue-400">
+                    opaque delivery is not acceptable and will result in disqualification
+                </span>
+                .
             </li>
             <li class="mb-2">
                 <span class="bold text-blue-400">* README file.</span>
@@ -123,8 +138,8 @@
                         Deployed on a publicly accessible server. If authentication is required, the
                         system must allow any new user to register freely; a single demonstration
                         account is
-                        <span class="bold text-blue-400">not</span>
-                        acceptable.
+                        <span class="bold text-blue-400">not acceptable</span>
+                        .
                     </li>
                     <li class="mb-1">
                         <span class="bold text-blue-400">Desktop applications:</span>
@@ -158,18 +173,24 @@
                 You must submit a video
                 <span class="bold text-blue-400">between one and three minutes</span>
                 that demonstrates the primary features of your project. The video
-                <span class="bold text-blue-400">must</span>
-                be hosted on a platform that
-                <span class="bold text-blue-400">does not require the viewer to log in or create an account</span>
+                <span class="bold text-blue-400">
+                    must be hosted on a platform that does not require the viewer to log in or
+                    create an account
+                </span>
                 . Acceptable platforms include YouTube, Bilibili, OneDrive/SharePoint (with shared
                 view-only links), or similar non-restrictive services.
-                <span class="bold text-blue-400">Local file uploads are not supported</span>
-                and will not be accepted.
+                <span class="bold text-blue-400">
+                    Local file uploads are not supported and will not be accepted
+                </span>
+                .
                 <br />
                 For desktop applications that do not meet the two-platform recommendation, this
                 video
-                <span class="bold text-blue-400">must include narration</span>
-                and a detailed walkthrough of the application's functionality.
+                <span class="bold text-blue-400">
+                    must include narration and a detailed walkthrough of the application's
+                    functionality
+                </span>
+                .
             </li>
             <li class="mb-2">
                 <span class="bold text-blue-400">* Thematic relevance.</span>
@@ -189,12 +210,13 @@
             <li class="mb-2">
                 <span class="bold text-blue-400">* No login walls.</span>
                 Your project must
-                <span class="bold text-blue-400">not</span>
-                require evaluators to create an account on a third-party platform solely for the
-                purpose of accessing your work. This includes, but is not limited to, projects that
-                require a Roblox account, a specific game client login, or any other registration
-                that is not part of your own application. If your project is deployed on a platform
-                that inherently requires authentication, you must
+                <span class="bold text-blue-400">
+                    not require evaluators to create an account on a third-party platform
+                </span>
+                solely for the purpose of accessing your work. This includes, but is not limited to,
+                projects that require a Roblox account, a specific game client login, or any other
+                registration that is not part of your own application. If your project is deployed
+                on a platform that inherently requires authentication, you must
                 <span class="bold text-blue-400">explicitly state this in your README</span>
                 and understand that
                 <span class="bold text-blue-400">
@@ -207,8 +229,10 @@
                 Do not require judges to install uncommon software, purchase hardware, or perform
                 tasks that are unreasonable for a standard evaluation. If your project depends on
                 specific peripherals or environments, you must provide a
-                <span class="bold text-blue-400">fully narrated video demonstration</span>
-                that captures the complete experience.
+                <span class="bold text-blue-400">
+                    fully narrated video demonstration that captures the complete experience
+                </span>
+                .
             </li>
         </ul>
 
@@ -220,8 +244,8 @@
             <span class="bold text-blue-400">demo video</span>
             . In addition, you may submit a long-form written description (separate from the README)
             that expands on your design decisions and features. This description is
-            <span class="bold text-blue-400">optional</span>
-            but can strengthen your submission.
+            <span class="bold text-blue-400">optional but can strengthen your submission</span>
+            .
         </p>
         <p class="mb-4">
             The competition awards
@@ -234,13 +258,14 @@
             <span class="bold text-blue-400">Honorable Mentions</span>
             may also be granted, though these are not guaranteed to include monetary awards. The
             specific monetary value of all prizes is
-            <span class="bold text-blue-400">tentative</span>
-            and subject to confirmation, but we are committed to providing meaningful recognition to
-            the winners.
+            <span class="bold text-blue-400">tentative and subject to confirmation</span>
+            , but we are committed to providing meaningful recognition to the winners.
         </p>
         <ul class="mb-4">
             <li class="mb-2">
-                <span class="bold text-blue-400">* Platform-agnostic projects (e.g., websites):</span>
+                <span class="bold text-blue-400">
+                    * Platform-agnostic projects (e.g., websites):
+                </span>
                 Providing all three elements – demo URL, demo video, and optional long-form
                 description –
                 <span class="bold text-blue-400">
@@ -255,10 +280,11 @@
                     * Platform-dependent projects (e.g., desktop apps, mobile apps):
                 </span>
                 You
-                <span class="bold text-blue-400">must</span>
-                provide both a demo URL (pointing to the executable or store listing) and a demo
-                video. If your project is accessible on only one platform, the video becomes even
-                more critical and must be comprehensive.
+                <span class="bold text-blue-400">
+                    must provide both a demo URL and a demo video
+                </span>
+                . If your project is accessible on only one platform, the video becomes even more
+                critical and must be comprehensive.
             </li>
         </ul>
 
@@ -279,8 +305,8 @@
         <p class="mb-4">
             All participants are expected to behave in a
             <span class="bold text-blue-400">professional and respectful manner</span>
-            . Harassment, discrimination, or any form of intimidation will
-            <span class="bold text-blue-400">not be tolerated</span>
+            . Harassment, discrimination, or any form of intimidation
+            <span class="bold text-blue-400">will not be tolerated</span>
             . Any such behavior that surpasses an arbitrary threshold determined by the organizers
             <span class="bold text-blue-400">will be reported to the appropriate authorities</span>
             .
@@ -295,8 +321,8 @@
                 Directly forking an existing project without meaningful modifications constitutes
                 plagiarism
             </span>
-            and will be addressed by the upper administration. Such cases will result in
-            <span class="bold text-blue-400">immediate disqualification</span>
+            and will be addressed by the upper administration. Such cases
+            <span class="bold text-blue-400">will result in immediate disqualification</span>
             .
         </p>
         <p class="mb-4">
@@ -322,8 +348,8 @@
             <span class="bold text-blue-400">in detail</span>
             every component of your project that was generated or substantially assisted by an AI
             tool. A vague statement such as "AI was used in implementation" is
-            <span class="bold text-blue-400">not</span>
-            acceptable. Instead, describe:
+            <span class="bold text-blue-400">not acceptable</span>
+            . Instead, describe:
         </p>
         <ul class="mb-4 list-disc list-inside">
             <li>
@@ -368,9 +394,8 @@
             </li>
             <li class="mb-2">
                 * Grant others the
-                <span class="bold text-blue-400">same freedoms</span>
-                you have received, never restricting access to knowledge or tools beyond what is
-                ethically necessary.
+                <span class="bold text-blue-400">same freedoms you have received</span>
+                , never restricting access to knowledge or tools beyond what is ethically necessary.
             </li>
             <li>
                 * Act with
@@ -390,18 +415,21 @@
                     * Automatic MIT license for source code (if no other license specified).
                 </span>
                 We
-                <span class="bold text-blue-400">strongly encourage</span>
-                you to include an explicit open-source license file (for example,
+                <span class="bold text-blue-400">
+                    strongly encourage you to include an explicit open-source license file
+                </span>
+                (for example,
                 <code>LICENSE</code>
                 or
                 <code>LICENSE.md</code>
                 ) in your repository. If your repository does
-                <span class="bold text-blue-400">not</span>
-                contain such a file at the time of submission, you agree that the source code of
-                your project is automatically made available under the terms of the
-                <ULink href="https://opensource.org/licenses/MIT" target="_blank">
-                    MIT License
-                </ULink>
+                <span class="bold text-blue-400">
+                    not contain such a file at the time of submission
+                </span>
+                , you agree that the source code of your project is
+                <span class="bold text-blue-400">
+                    automatically made available under the terms of the MIT License
+                </span>
                 . If you include a valid license file that specifies another OSI-approved license
                 (for example, GPL, Apache-2.0, BSD), that license will govern your code, and we will
                 <span class="bold text-blue-400">fully respect your choice</span>
@@ -419,9 +447,11 @@
                 distribute, and publicly display your submitted project, in whole or in part, in any
                 medium, for the limited purpose of advertising, promoting, and showcasing the
                 hackathon and its results. This license is
-                <span class="bold text-blue-400">independent</span>
-                of the source-code license you choose and does not restrict your rights to continue
-                distributing your project under that license.
+                <span class="bold text-blue-400">
+                    independent of the source-code license you choose
+                </span>
+                and does not restrict your rights to continue distributing your project under that
+                license.
             </li>
             <li class="mb-2">
                 <span class="bold text-blue-400">* Representations and warranties.</span>
@@ -433,16 +463,18 @@
             <li class="mb-2">
                 <span class="bold text-blue-400">* No obligation to use.</span>
                 The organizers are under
-                <span class="bold text-blue-400">no obligation</span>
-                to exercise the rights granted above.
+                <span class="bold text-blue-400">
+                    no obligation to exercise the rights granted above
+                </span>
+                .
             </li>
             <li class="mb-2">
                 <span class="bold text-blue-400">* Withdrawal of showcase consent.</span>
                 If you prefer that your project not be showcased, you must contact the organizers
                 with a
-                <span class="bold text-blue-400">legitimate reason</span>
-                at least
-                <span class="bold text-blue-400">24 hours before the competition submission deadline</span>
+                <span class="bold text-blue-400">
+                    legitimate reason at least 24 hours before the competition submission deadline
+                </span>
                 . In such a case, your submission will be
                 <span class="bold text-blue-400">disqualified</span>
                 . If you withdraw your consent without meeting this requirement, the license granted
@@ -451,9 +483,10 @@
             <li>
                 <span class="bold text-blue-400">* Waiver of compensation.</span>
                 You agree that you will receive
-                <span class="bold text-blue-400">no compensation</span>
-                , beyond any prizes explicitly awarded by the hackathon, in connection with the use
-                of your project as described above.
+                <span class="bold text-blue-400">
+                    no compensation beyond any prizes explicitly awarded by the hackathon
+                </span>
+                in connection with the use of your project as described above.
             </li>
         </ul>
 
@@ -461,11 +494,13 @@
         <p class="mb-4">
             <span class="bold text-blue-400">Financial responsibility.</span>
             The organizers of {{ WEBSITE_NAME }} shall
-            <span class="bold text-blue-400">not</span>
-            be held liable for any costs, damages, or expenses incurred by participants in relation
-            to the competition. This includes, but is not limited to, fees for third-party services,
-            cloud computing resources, AI tool subscriptions, hardware purchases, or any other
-            expenditure. Any potential reimbursement of offline-event costs by the organizers is
+            <span class="bold text-blue-400">
+                not be held liable for any costs, damages, or expenses incurred by participants
+            </span>
+            in relation to the competition. This includes, but is not limited to, fees for
+            third-party services, cloud computing resources, AI tool subscriptions, hardware
+            purchases, or any other expenditure. Any potential reimbursement of offline-event costs
+            by the organizers is
             <span class="bold text-blue-400">purely tentative and not guaranteed</span>
             . Participants assume full responsibility for all such costs.
         </p>
@@ -494,10 +529,8 @@
             . This address will be answered by members of the BISZ Developers' Club leadership.
         </p>
 
-        <div class="mt-4 text-center">
-            <blockquote
-                class="italic text-gray-700 border-l-4 border-gray-300 pl-4 inline-block text-left"
-            >
+        <div class="my-4 text-center">
+            <blockquote class="italic border-l-4 border-gray-300 pl-4 inline-block text-left">
                 <p class="mb-1">May thy labor bring a harvest sweet,</p>
                 <p class="mb-1">And wisdom's light thy eager mind shall greet;</p>
                 <p class="mb-1">In open fellowship thy craft shall shine,</p>
