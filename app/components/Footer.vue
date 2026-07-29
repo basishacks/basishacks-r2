@@ -245,7 +245,7 @@ import type { NavigationMenuItem } from "@nuxt/ui";
 const items: NavigationMenuItem[] = [
     {
         label: "biszweb.club",
-        to: "https://biszweb.club/club_sites/developers_club",
+        to: "https://biszweb.club/clubs/developers_club",
         target: "_blank",
     },
     {
