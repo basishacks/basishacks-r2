@@ -72,11 +72,11 @@ interface APIAward {
 | --- | --- |
 | `getAwards(event, teamId)` | Select resolved awards for a single team from `team_awards` |
 | `getAwardsForTeams(event, teamIds)` | Select resolved awards for multiple teams, grouped by team |
-| `createAward(event, teamId, award, meta)` | Insert a team award (award is a registry namespace) |
+| `createAward(event, teamId, award, meta?)` | Insert a team award (`award` is a registry namespace); `meta` is an optional JSON string defaulting to `{}` |
 | `deleteTeamAwards(event, teamId)` | Delete all awards for a team |
 | `deleteAward(event, teamId, award)` | Delete a specific award namespace for a team |
 
-Award storage uses the `team_awards` table with columns `team_id`, `award` (the registry namespace), and `meta` (JSON). Metadata is resolved at read time through `AWARD_REGISTRY` in `shared/awards.ts`.
+Award storage uses the `team_awards` table with columns `team_id`, `award` (the registry namespace), and `meta` (a JSON string). The `meta` column is non-null and defaults to `{}` at insert time. Metadata is parsed and resolved at read time through `AWARD_REGISTRY` in `shared/awards.ts`.
 
 ## Source Files
 

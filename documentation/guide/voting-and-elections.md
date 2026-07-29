@@ -1,18 +1,11 @@
 ---
-title: Voting & Elections
-description: How peer voting and student-council election voting work in basishacks.
+title: Voting
+description: How peer voting works in basishacks.
 ---
 
-# Voting & Elections
+# Voting
 
-basishacks supports two separate voting systems:
-
-1. **Peer Voting** — participants distribute stars across hackathon projects during the `voting` phase.
-2. **Election Voting** — ranked-choice ballots for student-council positions using instant-runoff voting (IRV).
-
-Both systems are independent, use different data tables, and are gated by the current hackathon state and user permissions.
-
----
+basishacks uses a single peer voting system. Participants distribute stars across hackathon projects during the `voting` phase. There is no separate election voting system in the current codebase.
 
 ## Peer Voting
 
@@ -73,63 +66,19 @@ The `/voting` page renders `VotingProjectCard` components for each eligible proj
 - A reasoning textarea
 - A submit button that is disabled until the total equals 10
 
----
-
-## Election Voting (Student Council)
-
-Permanently removed (Unused)
-
-### Validation
-
-Both client and server validate:
-
-- Ranks within a position must be unique.
-- Ranks must be contiguous starting at 1 (e.g., 1, 2, 3 with no gaps).
-- Abstained candidates are ignored.
-- Unknown positions or candidate IDs are rejected.
-
-### IRV Tally
-
-`GET /api/election/vote` runs the IRV algorithm:
-
-1. Count only active first-preference votes.
-2. If a candidate has more than 50% of valid ballots, they win.
-3. Otherwise, eliminate the candidate with the fewest votes and redistribute their ballots to the next active preference.
-4. Repeat until a winner emerges or a tie/no-votes condition is reached.
-
-Result statuses:
-
-| Status     | Meaning                                  |
-| ---------- | ---------------------------------------- |
-| `elected`  | A candidate won                          |
-| `tie`      | Tie for elimination or final two-way tie |
-| `no_votes` | No valid ballots for the position        |
-
-::: info Results visibility Full IRV results are only returned after `hackathon.results_open_timestamp`. Before that time, the endpoint returns only the total ballot count with empty positions. :::
-
-### Admin Tools
-
-- `GET /api/election/vote/all` lists every cast ballot with voter info and decoded choices.
-- `DELETE /api/election/vote/:id` deletes a ballot by ID.
-- `/temp/vote/all` is the admin UI for viewing and deleting ballots.
-
 ### API Endpoints
 
 | Method | Path | Auth | Description |
 | --- | --- | --- | --- |
-| GET | `/api/election/candidates` | `VotePermissions.VOTE` or admin | List positions and candidates |
-| POST | `/api/election/vote` | `VotePermissions.VOTE` or admin | Submit a ranked ballot |
-| GET | `/api/election/vote` | `VotePermissions.VOTE` or admin | Get IRV results |
-| GET | `/api/election/vote/all` | Admin | List all ballots |
-| DELETE | `/api/election/vote/:id` | Admin | Delete a ballot |
+| GET | `/api/ballot` | Authenticated participant with a submitted project | Get the current peer voting ballot |
+| POST | `/api/ballot` | Authenticated participant with a submitted project | Submit or update a peer vote |
+| GET | `/api/ballot/summary` | Authenticated user | Per-season judging progress summary |
 
 ### Source Files
 
-- `server/utils/election.ts` — positions, candidates, and IRV algorithm
-- `server/api/election/candidates.get.ts`
-- `server/api/election/vote/index.post.ts`
-- `server/api/election/vote/index.get.ts`
-- `server/api/election/vote/all.get.ts`
-- `server/api/election/vote/[id].delete.ts`
-- `app/pages/temp/vote/index.vue`
-- `app/pages/temp/vote/all.vue`
+- `server/api/ballot/index.get.ts`
+- `server/api/ballot/index.post.ts`
+- `server/api/ballot/summary.get.ts`
+- `server/utils/database/peer-voting.ts`
+- `app/pages/voting.vue`
+- `app/components/VotingProjectCard.vue`

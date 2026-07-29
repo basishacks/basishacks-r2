@@ -5,7 +5,7 @@ description: Configure environment variables, install tooling, and prepare your 
 
 # Environment Setup
 
-This guide covers everything you need to configure before developing basishacks — from environment variables to IDE setup.
+This guide covers everything you need to configure before developing basishacks, from environment variables to IDE setup.
 
 ## Prerequisites
 
@@ -65,7 +65,7 @@ bun i
 ::: tip Dependency pins `package.json` uses `overrides` to pin two transitive dependencies:
 
 - `vite` is pinned to `8.0.16`. Vite `8.1.x` combined with Nuxt `4.4.8` creates two HMR WebSocket listeners on the same HTTP server, crashing the dev server with `server.handleUpgrade() was called more than once with the same socket` ([nuxt/nuxt#35450](https://github.com/nuxt/nuxt/issues/35450)).
-- `entities` is pinned to `7.0.1`. `entities@8` changes the `entities/decode` export and breaks `@vue/compiler-core`'s entity decoder, causing errors such as `decode.fromCodePoint is not a function` when Vue parses SFC templates (e.g. `rules.vue`).
+- `entities` is pinned to `7.0.1`. `entities@8` changes the `entities/decode` export and breaks `@vue/compiler-core`'s entity decoder, causing errors such as `decode.fromCodePoint is not a function` when Vue parses SFC templates (for example, `rules.vue`).
 
 Keep both overrides in place until the affected packages release compatible versions. :::
 
@@ -194,7 +194,7 @@ ONSITE_LOGIN_CLIENT_ID=your_onsite_login_client_id_here
 
 ## HTTPS Dev Server Setup
 
-The dev server requires HTTPS because Microsoft OAuth2 and session cookies need a secure context:
+Use HTTPS for local development because Microsoft OAuth2 and secure session cookies require a trusted context:
 
 ```bash
 bun dev --https
@@ -210,10 +210,10 @@ https://localhost:24598
 
 ### Custom Port
 
-To use a different port, set the `PORT` environment variable:
+To use a different port, pass the `--port` flag:
 
 ```bash
-PORT=3000 bun dev --https
+bun dev --https --port 3000
 ```
 
 Or modify `nuxt.config.ts`:
@@ -288,14 +288,14 @@ const name = "basishacks";
 
 ## Production Configuration
 
-In production on the VPS, environment variables are configured through the server environment (e.g., systemd service file, `.env` file on the server, or a process manager). Set them before starting the server:
+In production on the VPS, environment variables are configured through the server environment (for example, systemd service file, `.env` file on the server, or a process manager). Set them before starting the server:
 
 ```bash
 # Example: setting environment variables before starting the server
 NUXT_SESSION_PASSWORD=<your-secret> bun run start
 ```
 
-Or configure them in the server's environment file (e.g., `/etc/environment`, systemd `EnvironmentFile`, or a `.env` file in the app directory).
+Or configure them in the server's environment file (for example, `/etc/environment`, systemd `EnvironmentFile`, or a `.env` file in the app directory).
 
 :::: warning Never commit `.env` files to version control. The `.gitignore` file excludes `.env` by default. ::::
 

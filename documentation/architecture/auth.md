@@ -27,6 +27,14 @@ A custom OAuth2 integration that allows users to log in through the basishacks O
 
 See [OAuth2 System](./oauth2) for full details on the authorization code flow.
 
+## Auth Endpoints
+
+| Endpoint | Method | Description |
+| --- | --- | --- |
+| `/api/login` | GET | Initiates the basishacks connect OAuth2 flow and redirects to `/api/oauth2/authorize` |
+| `/api/auth` | GET | Alias for `/api/oauth2/mscallback` (supports Azure App Registrations that use `/api/auth` as the redirect URI) |
+| `/api/auth/impersonate` | POST | Replaces the current session with the target user's session (admin only) |
+
 ## Session Management
 
 Sessions are handled by `nuxt-auth-utils`:
@@ -93,6 +101,10 @@ participant portal.users.view portal.teams.view portal.debug.view
 The permission system is defined in `shared/permissions.ts`:
 
 ```ts
+export const VotePermissions = {
+    VOTE: "sc.vote",
+} as const;
+
 export const DevPermissions = {
     USERS: "dev_users",
     TEAMS: "dev_teams",

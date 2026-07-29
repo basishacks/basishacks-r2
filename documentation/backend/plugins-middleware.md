@@ -15,48 +15,17 @@ Nitro plugins run at server startup and can hook into the request lifecycle. Ser
 
 **File:** `server/plugins/init-database.ts`
 
-Initializes the SQLite database schema and attaches the database wrapper to every request's event context.
+Initializes the SQLite database and attaches the Drizzle ORM instance to every request's event context.
 
-#### Schema Creation
+At startup the plugin calls `createDrizzleDatabase()` from `server/database/index.ts`, which performs the following steps:
 
-On first run (when no tables exist), creates the following tables:
-
-| Table                 | Description                                             |
-| --------------------- | ------------------------------------------------------- |
-| `hackathon`           | Single-row table controlling global event state         |
-| `teams`               | Team records with project details, scores, and rankings |
-| `team_scores`         | Judge scoring records (UNIQUE per team+judge)           |
-| `users`               | User accounts with email, role, team membership         |
-| `ballots`             | Peer voting ballots                                     |
-| `ballot_scores`       | Individual project scores within a ballot               |
-| `oauth2_applications` | OAuth2 client application registrations                 |
-
-#### Key Schema Details
-
-**hackathon table:**
-
-- Single row enforced via `CHECK (id = 1)`
-- Status enum: `not_started`, `in_progress`, `voting`, `finished`, `paused`
-- Timestamps for start, end, voting start/end, results open
-- Theme name and description
-
-**teams table:**
-
-- Pathway enum: `NULL`, `junior`, `senior`
-- Project fields: name, description, demo_url, repo_url, submitted flag, sourcing (AI statement)
-- Score and rank indexes
-
-**users table:**
-
-- Unique email with case-insensitive index
-- Legacy `login_code` / `login_expiry` columns (unused by current Microsoft-only authentication)
-- Profile theme and picture fields
-- Foreign key to teams
-
-**ballot_scores table:**
-
-- Score enum: 1–5 (or NULL)
-- UNIQUE constraint on (ballot_id, project_id)
+1. Opens `database/basishacks.sqlite` using `bun:sqlite` under Bun or `better-sqlite3` under Node.js.
+2. Enables WAL mode and foreign-key enforcement.
+3. Runs `createAndMigrateDatabase()` from `server/database/migrate.ts`:
+    - Repairs legacy schemas created from `sql/archive/init.sql`.
+    - Applies pending Drizzle Kit migrations from the `drizzle/` directory, tracked in `_drizzle_migrations`.
+    - Seeds the `hackathon` singleton row if the table is empty.
+    - Seeds the configured onsite-login OAuth2 redirect URI if `ONSITE_LOGIN_CLIENT_ID` is set.
 
 #### Request Hook
 
@@ -66,7 +35,7 @@ nitroApp.hooks.hook("request", (event) => {
 });
 ```
 
-Every incoming request receives the same Drizzle ORM instance attached to `event.context.drizzle`. The instance is created once at server startup and shared across requests because SQLite handles concurrent readers safely and the migration/seeding work has already completed.
+Every incoming request receives the same Drizzle instance attached to `event.context.drizzle`. The instance is created once at startup and shared across requests because SQLite handles concurrent readers safely and the migration and seeding work has already completed.
 
 ---
 
@@ -74,7 +43,7 @@ Every incoming request receives the same Drizzle ORM instance attached to `event
 
 **File:** `server/plugins/validate-oauth2-jwt-secret.ts`
 
-Startup guard for `NUXT_OAUTH2_JWT_SECRET`. The secret is used by `jose` to sign and verify OAuth2 access tokens (HS256) and must be at least 32 bytes long.
+Startup guard for `NUXT_OAUTH2_JWT_SECRET`. The plugin calls `validateOAuth2JWTSecret()` from `server/utils/validate-oauth2-jwt-secret.ts`. The secret is used by `jose` to sign and verify OAuth2 access tokens (HS256) and must be at least 32 bytes long.
 
 #### Behavior
 
@@ -99,7 +68,7 @@ The function reads `process.env.NUXT_OAUTH2_JWT_SECRET`, measures its UTF-8 leng
 
 **File:** `server/plugins/microsoft.ts`
 
-Microsoft Graph API integration plugin. All Microsoft Graph API calls are centralized here for auditability.
+Microsoft Graph API integration plugin. The default export attempts to initialize the application access token at startup when `MICROSOFT_TENANT_ID` and `MICROSOFT_CLIENT_ID` are configured; otherwise it logs a warning and Microsoft Graph features remain unavailable. All Microsoft Graph API calls are centralized in this file for auditability.
 
 ::: warning Security Policy All Microsoft Graph API calls MUST be made through the wrappers in this file. Never call the Graph API directly from other modules. :::
 
@@ -108,7 +77,7 @@ Microsoft Graph API integration plugin. All Microsoft Graph API calls are centra
 | Function | Description |
 | --- | --- |
 | `initializeMSAccessToken()` | Obtains an app-level access token via client credentials flow |
-| `getMSAccessToken()` | Returns the cached app-level token (lazy-initializes) |
+| `getMSAccessToken()` | Returns the cached app-level token (lazy-initializes on first use) |
 | `initializeDummyUserAccessToken()` | Obtains a user-level token via ROPC flow for chat operations |
 | `getDummyUserAccessToken()` | Returns the cached user-level token |
 
@@ -154,7 +123,7 @@ export async function initializeChatbotWebhook(): Promise<void>;
 
 Creates a Microsoft Graph subscription for chat message notifications:
 
-- **Change type:** `created, updated`
+- **Change type:** `created,updated`
 - **Resource:** `/chats/getAllMessages`
 - **Notification URL:** `{CURRENT_URL_ORIGIN}/api/_webhooks/update`
 - **Lifecycle URL:** `{CURRENT_URL_ORIGIN}/api/_webhooks/lifecycle`
@@ -180,13 +149,13 @@ Returns the current webhook state and subscription ID.
 export async function pollChatbotMessages(): Promise<void>;
 ```
 
-Manually polls chat messages via delta endpoint (fallback for webhook failures).
+Manually polls chat messages via the delta endpoint (fallback for webhook failures).
 
 #### Internal Request Helpers
 
 | Function | Description |
 | --- | --- |
-| `requestMicrosoft(endpoint, method, body)` | Makes an authenticated request using the app-level token |
+| `requestMicrosoft(endpoint, method, body)` | Makes an authenticated request using the app-level token (refreshes once on 401) |
 | `requestUserMicrosoft(endpoint, method, body)` | Makes an authenticated request using the user-level token (auto-refreshes on 401) |
 
 ---
@@ -201,13 +170,14 @@ Validates and manages OAuth2 authorization sessions for requests to `/api/oauth2
 
 #### Flow
 
-1. **Route check** — Only processes URLs containing `/api/oauth2/authorize`
+1. **Route check** — Only processes URLs containing `/api/oauth2/authorize`.
 2. **Existing session check** — Reads the `bridge_id` cookie:
-    - If a valid session exists with matching parameters (client_id, scope, redirect_uri, state), extends the session expiry and skips re-validation
-    - If the session has an invalid login state or mismatched parameters, completes the old session and starts fresh
-3. **New session validation** — Calls `validateOAuth2AuthorizationRequest` to verify all parameters
-4. **Session creation** — Constructs an `AuthorizeSession`, adds it to the session store, and attaches a `bridge_id` cookie
-5. **Microsoft proxy** — If the application has `proxy_microsoft` enabled, immediately redirects to Microsoft login (skips basishacks login page)
+    - If a valid session exists with matching parameters (`client_id`, `scope`, `redirect_uri`, `state`) and its `login_state` is `identification` or `consent`, extends the session expiry and skips re-validation.
+    - If the parameters do not match, completes the old session and starts fresh.
+    - If the session has an invalid login state, completes the old session and starts fresh.
+3. **New session validation** — Calls `validateOAuth2AuthorizationRequest` to verify all parameters.
+4. **Session creation** — Constructs an `AuthorizeSession`, adds it to the in-memory session store, and attaches a `bridge_id` cookie.
+5. **Microsoft proxy** — If the application has `proxy_microsoft` enabled, immediately redirects to Microsoft login (skips the basishacks login page) and sets `login_state` to `requesting`.
 
 #### Error Handling
 
@@ -217,7 +187,7 @@ Instead of throwing HTTP errors, validation errors are encoded as base64url JSON
 
 The `bridge_id` cookie:
 
-- Contains the session identifier
-- Expires after 10 minutes
-- `Secure` and `SameSite=Lax` flags
-- Deleted after successful consent flow
+- Contains the session identifier.
+- Expires after 10 minutes.
+- Uses `Secure` and `SameSite=Lax` flags.
+- Deleted after a successful consent flow by the caller.

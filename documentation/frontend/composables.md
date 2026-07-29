@@ -16,14 +16,33 @@ The basishacks frontend organizes shared logic into composables (`app/composable
 Fetches the current authenticated user from the API and returns reactive state. Internally calls `useUserSession()` and guards against a missing user id so it never requests `/api/users/undefined`.
 
 ```ts
-export function useApiUser(options?: { lazy?: boolean }) {
+export async function useApiUser(options?: { lazy?: boolean }): Promise<UseApiUserResult> {
     const { user: sessionUser, clear: clearSession } = useUserSession();
     const userID = computed(() => sessionUser.value?.id);
 
-    const fetchResult = useFetch<GetUserResponse>(
-        () => (userID.value ? `/api/users/${userID.value}` : null),
-        { lazy: options?.lazy ?? false },
-    );
+    const fetchResult = await useFetch<ApiUser>(() => `/api/users/${userID.value}`, {
+        lazy: options?.lazy ?? false,
+        immediate: !!userID.value,
+        watch: [userID],
+        default: () => null,
+    });
+
+    if (!options?.lazy && userID.value && !fetchResult.data.value) {
+        if (fetchResult.status.value === "idle") {
+            await fetchResult.refresh();
+        }
+
+        if (fetchResult.status.value === "pending") {
+            await new Promise<void>((resolve) => {
+                const stop = watch(fetchResult.status, (status) => {
+                    if (status !== "pending") {
+                        stop();
+                        resolve();
+                    }
+                });
+            });
+        }
+    }
 
     return {
         ...fetchResult,
@@ -38,8 +57,9 @@ export function useApiUser(options?: { lazy?: boolean }) {
 
 | Property | Type | Description |
 | --- | --- | --- |
-| `user` | `Ref<APIUser \| null \| undefined>` | Reactive user data from `/api/users/{id}` (alias for `data`) |
+| `user` | `Ref<GetUserResponse \| null>` | Reactive user data from `/api/users/{id}` (alias for `data`) |
 | `sessionUser` | `Ref<SessionUser \| undefined>` | Session user from `useUserSession()` |
+| `status` | `Ref<AsyncDataRequestStatus>` | Request status (`idle`, `pending`, `success`, `error`) |
 | `error` | `Ref<FetchError \| null>` | Fetch error, if any |
 | `pending` | `Ref<boolean>` | Whether the request is in flight |
 | `refresh` | `() => Promise<void>` | Re-fetch the user data |
@@ -49,7 +69,7 @@ export function useApiUser(options?: { lazy?: boolean }) {
 
 ```vue
 <script setup lang="ts">
-const { user, sessionUser, refresh, clear } = useApiUser({ lazy: true });
+const { user, sessionUser, refresh, clear } = await useApiUser({ lazy: true });
 </script>
 
 <template>
@@ -65,14 +85,16 @@ const { user, sessionUser, refresh, clear } = useApiUser({ lazy: true });
 
 **File:** `app/middleware/auth.ts`
 
-Global route middleware that redirects unauthenticated users to the login endpoint.
+Global route middleware that redirects unauthenticated users to the login endpoint, preserving the originally requested URL.
 
 ```ts
-export default defineNuxtRouteMiddleware(() => {
+export default defineNuxtRouteMiddleware((to) => {
     const { loggedIn } = useUserSession();
 
     if (!loggedIn.value) {
-        return navigateTo("/api/login", { external: true });
+        return navigateTo(`/api/login?redirect=${encodeURIComponent(to.fullPath)}`, {
+            external: true,
+        });
     }
 });
 ```
@@ -80,10 +102,10 @@ export default defineNuxtRouteMiddleware(() => {
 **Behavior:**
 
 - Checks `loggedIn` from `useUserSession()`
-- If not logged in, redirects to `/api/login` (external navigation)
+- If not logged in, redirects to `/api/login` with a `redirect` query parameter (external navigation)
 - Applied per-page via `definePageMeta({ middleware: 'auth' })` or `middleware: ['auth']`
 
-**Pages using this middleware:** `/profile`, `/voting`, `/judging`, all `/dashboard/*` pages
+**Pages using this middleware:** `/profile`, `/voting`, `/judging`, `/judging/continue`, all `/dashboard/*` pages, `/debug`
 
 ## Utility Functions
 
@@ -95,15 +117,14 @@ Global constants used throughout the frontend.
 
 ```ts
 export const WEBSITE_NAME = "basishacks";
-export const THEME_NAME = "nostalgia";
+//export const THEME_NAME = "nostalgia"; used for testing
 ```
 
 | Constant       | Value          | Usage                                                   |
 | -------------- | -------------- | ------------------------------------------------------- |
 | `WEBSITE_NAME` | `'basishacks'` | Displayed in headers, page titles, and welcome messages |
-| `THEME_NAME`   | `'nostalgia'`  | Current season theme identifier                         |
 
-These are auto-imported by Nuxt and available in any component or page.
+`THEME_NAME` is currently commented out and not used. These constants are auto-imported by Nuxt and available in any component or page.
 
 ### errors.ts
 
@@ -117,9 +138,12 @@ import { FetchError } from "ofetch";
 export function getErrorMessage(e: unknown) {
     try {
         if (e instanceof FetchError) {
+            console.log(e.message, e.data, e.stack, e.statusMessage);
             try {
-                if (e.data && "message" in e.data && e.data.message) {
-                    return String(e.data.message);
+                if (e.data) {
+                    if ("message" in e.data && e.data.message) {
+                        return String(e.data.message);
+                    }
                 }
             } catch {
                 return e.message;
@@ -191,6 +215,50 @@ await withLoadingIndicator(async () => {
 });
 ```
 
+### oauth2.ts
+
+**File:** `app/utils/oauth2.ts`
+
+Helper for constructing the OAuth2 authorization session body.
+
+```ts
+export interface OAuth2SessionBody {
+    client_id: string;
+    response_type: string;
+    scope: string;
+    state: string;
+    code_challenge: string;
+    code_challenge_method: string;
+    redirect_uri: string;
+    post_login_redirect?: string | null;
+}
+
+export function buildOAuth2SessionBody(params: OAuth2SessionBody) {
+    return { ...params };
+}
+```
+
+Used by `app/pages/api/oauth2/authorize.vue` to submit OAuth2 session parameters to `/api/oauth2/session`.
+
+### sanitize.ts
+
+**File:** `app/utils/sanitize.ts`
+
+Escapes HTML special characters to prevent XSS when rendering untrusted text.
+
+```ts
+export function escapeHtml(text: string): string {
+    return text
+        .replace(/&/g, "&amp;")
+        .replace(/</g, "&lt;")
+        .replace(/>/g, "&gt;")
+        .replace(/"/g, "&quot;")
+        .replace(/'/g, "&#39;");
+}
+```
+
+Used by the home page to safely render the hackathon theme description and by the OAuth2 authorization page when formatting error messages.
+
 ## App Configuration
 
 ### app.config.ts
@@ -203,7 +271,7 @@ Customizes `@nuxt/ui` component defaults.
 export default defineAppConfig({
     ui: {
         container: {
-            base: "w-full 2xl:max-w-[calc(100vw-48rem)] xl:max-w-[calc(100vw-40rem)] lg:max-w-[calc(100vw-28rem)] mx-auto px-4 sm:px-6 lg:px-8",
+            base: "w-full max-w-none px-4 sm:px-6 lg:px-8",
         },
         formField: {
             slots: {
@@ -223,11 +291,11 @@ export default defineAppConfig({
 
 | Customization | Description |
 | --- | --- |
-| `container.base` | Responsive max-width that accounts for sidebar space on larger screens. Uses viewport-relative calculations: `calc(100vw - 48rem)` at 2xl, `calc(100vw - 40rem)` at xl, `calc(100vw - 28rem)` at lg. |
+| `container.base` | Full-width container with horizontal padding and no max-width constraint |
 | `formField.slots.label` | Makes all form field labels bold with default text color |
 | `link.variants.active.false` | Primary color for inactive links (overrides default muted style) |
 
-::: tip The container max-width calculations ensure content does not overlap with the fixed dashboard sidebar on larger screens. :::
+::: tip The container configuration removes the default max-width so the header, footer, and content span the viewport. :::
 
 ## Cross-Cutting Patterns
 

@@ -39,7 +39,7 @@ basishacks-r2/
 │   └── utils/              # Frontend utilities (consts, errors, loading)
 ├── server/                 # Nitro backend
 │   ├── api/                # API route handlers (file-based)
-│   ├── middleware/          # Server middleware (OAuth2 authorize)
+│   ├── middleware/         # Server middleware (OAuth2 authorize)
 │   ├── plugins/            # Nitro plugins (DB init, MS Graph token, JWT secret guard)
 │   ├── types/              # Type augmentations (H3EventContext)
 │   └── utils/              # Server utilities
@@ -47,20 +47,26 @@ basishacks-r2/
 │       ├── auth.ts         # requireUser / requireJudge / requireAdmin / requirePermission
 │       ├── convert.ts      # DB row -> public API object transformers
 │       ├── rateLimit.ts    # In-memory rate limiter
-│       ├── oauth2.ts       # Microsoft OAuth2 config
+│       ├── oauth2.ts       # Microsoft OAuth2 URL construction
 │       ├── oauth2-validate.ts  # OAuth2 authorization request validation
 │       ├── oauth2-jwt.ts   # JWT verification and withOAuth2JWT() wrapper
 │       ├── profile.ts      # Profile picture helpers
 │       ├── assets.ts       # Static and user asset helpers
+│       ├── scoring.ts      # Score aggregation and final ranking
+│       ├── url-validation.ts   # Redirect URI validation
+│       ├── validate-oauth2-jwt-secret.ts # JWT secret guard
 │       └── deepseek-store.ts   # DeepSeek AI chat session store
 ├── shared/                 # Code shared between client and server
 │   ├── schemas.ts          # Zod schemas for API input validation
-│   ├── database.d.ts       # TypeScript types matching DB schema exactly
+│   ├── database.d.ts       # TypeScript types inferred from the Drizzle schema
 │   ├── responses.d.ts      # API response interface definitions
 │   ├── auth.d.ts           # nuxt-auth-utils session type augmentation
 │   ├── permissions.ts      # Fine-grained permission constants and helpers
 │   ├── oauth2-scopes.ts    # OAuth2 scope definitions
-│   └── rubric.ts           # Judging rubric definitions
+│   ├── oauth2.ts           # Microsoft OAuth2 static configuration
+│   ├── rubric.ts           # Judging rubric definitions
+│   ├── awards.ts           # Award registry definitions
+│   └── seasons.ts          # Static season metadata
 ├── sql/archive/            # Archived legacy SQL schema and migrations
 │   ├── init.sql            # Historical base schema
 │   └── migration-*.sql     # Historical dated migrations

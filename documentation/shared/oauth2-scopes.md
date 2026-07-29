@@ -29,11 +29,11 @@ export interface OAuth2ScopeMeta {
 | `openid` | Access basic OpenID Connect identity information | No | No | — |
 | `profile` | Access user profile information (name, picture, etc.) | No | No | — |
 | `email` | Access user's email address | No | No | — |
-| `meetings.read.application` | Reads meetings that are bound to this application | No | No | This application can only access meetings created by the application itself. Other meetings are inaccessible by this application |
+| `meetings.read.application` | Reads meetings that are bound to this application. | No | No | This application can only access meetings created by the application itself. Other meetings are inaccessible by this application |
 | `meetings.read.all` | Reads all meetings of the user | **Yes** | **Yes** | — |
-| `meetings.readwrite.application` | Reads and writes meeting applications bound to this application | No | No | — |
+| `meetings.readwrite.application` | Reads and writes meeting applications bound to this application. | No | No | — |
 | `meetings.readwrite.all` | Reads and writes all meetings | **Yes** | **Yes** | — |
-| `chat.read` | Read Microsoft Teams chat | No | **Yes** | This application can read chats between you and other specified users. It cannot read or receive group chats or general chat messages from everyone. |
+| `chat.read` | Read Microsoft Teams chat | No | **Yes** | This application can read chats between you and other specified users. It cannot read or recieve group chats or general chat messages from everyone. |
 
 **Total: 8 scopes** (3 admin-only or sensitive, 5 standard)
 
