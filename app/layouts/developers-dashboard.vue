@@ -41,14 +41,12 @@ const items = computed<NavigationMenuItem[][]>(() => [
 
 const name = computed(() => user.value?.name || "Log In");
 
-// Ctrl+K keyboard shortcut — focuses the sidebar collapse toggle
+// Ctrl+K toggles sidebar collapse (matching the ⌘K hint on the Search button)
 onMounted(() => {
     const handler = (e: KeyboardEvent) => {
         if ((e.metaKey || e.ctrlKey) && e.key === "k") {
             e.preventDefault();
-            // Click the first sidebar collapse button
-            const btn = document.querySelector<HTMLButtonElement>('[aria-label="Toggle sidebar"]');
-            btn?.click();
+            document.querySelector<HTMLButtonElement>("[data-sidebar-collapse]")?.click();
         }
     };
     document.addEventListener("keydown", handler);
@@ -59,22 +57,31 @@ onMounted(() => {
 <template>
     <UDashboardGroup>
         <UDashboardSidebar collapsible resizable :ui="{ footer: 'border-t border-default' }">
-            <template #header="{ collapsed }">
-                <ULink v-if="!collapsed" class="bold glow text-primary mx-auto" to="/">
-                    {{ WEBSITE_NAME }}
-                    <span class="text-secondary bold">devs</span>
-                </ULink>
-                <UButton
-                    variant="ghost"
-                    v-else-if="collapsed"
-                    class="bold glow text-primary mx-auto"
-                    @click="navigateTo('/')"
-                >
-                    b
-                </UButton>
+            <template #header="{ collapsed, collapse }">
+                <div class="flex items-center gap-1">
+                    <UButton
+                        icon="i-lucide-panel-left-close"
+                        variant="ghost"
+                        color="neutral"
+                        @click="collapse?.()"
+                        data-sidebar-collapse
+                    />
+                    <ULink v-if="!collapsed" class="bold glow text-primary mx-auto" to="/">
+                        {{ WEBSITE_NAME }}
+                        <span class="text-secondary bold">devs</span>
+                    </ULink>
+                    <UButton
+                        variant="ghost"
+                        v-else-if="collapsed"
+                        class="bold glow text-primary mx-auto"
+                        @click="navigateTo('/')"
+                    >
+                        b
+                    </UButton>
+                </div>
             </template>
 
-            <template #default="{ collapsed }">
+            <template #default="{ collapsed, collapse }">
                 <UButton
                     :label="collapsed ? undefined : 'Search...'"
                     icon="i-lucide-search"
@@ -82,6 +89,7 @@ onMounted(() => {
                     variant="outline"
                     block
                     :square="collapsed"
+                    @click="collapse?.()"
                 >
                     <template v-if="!collapsed" #trailing>
                         <div class="flex items-center gap-0.5 ms-auto">

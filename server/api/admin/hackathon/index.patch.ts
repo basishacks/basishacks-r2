@@ -1,7 +1,7 @@
 import { AdminUpdateHackathonRequest } from "~~/shared/schemas";
 import { hackathon, seasons } from "~~/server/database/schema";
 import { eq } from "drizzle-orm";
-import { getActiveSeason } from "~~/server/utils/database/seasons";
+import { getActiveSeason, getSeasons } from "~~/server/utils/database/seasons";
 import { applyRateLimit, DEFAULT_RATE_LIMIT_CONFIG } from "~~/server/utils/rateLimit";
 
 export default defineEventHandler(
@@ -17,23 +17,46 @@ export default defineEventHandler(
             });
         }
 
-        // Extract season_id from body (not a hackathon field)
+        // Extract season_id from body — it's a routing hint, not a hackathon/season field
         const { season_id, ...configFields } = body as Record<string, any>;
 
-        // Update the global hackathon row (runtime config)
-        event.context.drizzle.update(hackathon).set(configFields).where(eq(hackathon.id, 1)).run();
+        if (Object.keys(configFields).length === 0) {
+            throw createError({
+                statusCode: 400,
+                message: "No fields to update",
+            });
+        }
 
-        // Persist to the specified season, or fall back to the active season
-        const targetSeasonId = season_id ?? (await getActiveSeason(event))?.id;
-        if (targetSeasonId) {
+        if (season_id !== undefined) {
+            // Per-season save: always write to the specified season.
+            // ALSO write to the global hackathon row IF the season is the active one
+            // (so the active season and global state stay in sync).
             event.context.drizzle
                 .update(seasons)
                 .set(configFields)
-                .where(eq(seasons.id, targetSeasonId))
+                .where(eq(seasons.id, season_id))
+                .run();
+
+            // If this is the active season, keep global state in sync
+            const active = await getActiveSeason(event);
+            if (active && active.id === season_id) {
+                event.context.drizzle
+                    .update(hackathon)
+                    .set(configFields)
+                    .where(eq(hackathon.id, 1))
+                    .run();
+            }
+        } else {
+            // Global-only save: update ONLY the global hackathon row
+            event.context.drizzle
+                .update(hackathon)
+                .set(configFields)
+                .where(eq(hackathon.id, 1))
                 .run();
         }
 
         const updated = await getHackathon(event);
-        return { hackathon: updated };
+        const allSeasons = await getSeasons(event);
+        return { hackathon: updated, seasons: allSeasons };
     }, DEFAULT_RATE_LIMIT_CONFIG),
 );

@@ -46,24 +46,76 @@ const tsKeys = [
     "results_open_timestamp",
 ] as const;
 
+const configKeys = [
+    "status",
+    "voting_enabled",
+    "judging_open",
+    "results_published",
+    "max_votes_per_user",
+    "theme_name",
+    "theme_description",
+    "schedule_start",
+    "schedule_end",
+    ...tsKeys,
+] as const;
+
 // ---------------------------------------------------------------------------
-// Hackathon config form
+// Form state
 // ---------------------------------------------------------------------------
 const hackathonForm = reactive<Record<string, any>>({});
 const hackathonSaving = ref(false);
 const hackathonMessage = ref("");
 
-watch(
-    hackathon,
-    (h) => {
-        if (h) {
-            const raw: Record<string, any> = { ...h };
-            for (const key of tsKeys) raw[key] = tsToDatetime(raw[key]);
-            Object.assign(hackathonForm, raw);
+/** True after the very first restore has been applied (avoids overwriting on initial load). */
+const formInitialized = ref(false);
+
+/** Populate the form from a season row, falling back to the global hackathon for default values. */
+function restoreSeasonConfig(season: any) {
+    if (!season) return;
+    for (const key of configKeys) {
+        const val = season[key];
+        if (val === undefined) continue;
+
+        // Null text fields → empty string
+        if (val === null) {
+            hackathonForm[key] = "";
+            continue;
         }
-    },
-    { immediate: true },
-);
+
+        // Use the season's non-default value; for defaults, leave the current form value
+        // (which was set from the global hackathon row).
+        if (isDefaultValue(key, val)) continue;
+
+        hackathonForm[key] = tsKeys.includes(key as any) ? tsToDatetime(val) : val;
+    }
+}
+
+function isDefaultValue(key: string, val: any): boolean {
+    if (key === "status") return val === "not_started";
+    if (key === "max_votes_per_user") return val === 0;
+    if (["voting_enabled", "judging_open", "results_published"].includes(key)) return val === 0;
+    if (tsKeys.includes(key as any)) return val === 0;
+    return false;
+}
+
+/** Initialize form from the global hackathon, then overlay the active season's overrides. */
+function applyConfig(seasonId: number | null) {
+    const h = hackathon.value;
+    if (!h) return; // data not loaded yet
+
+    // Always start from the global hackathon values
+    const raw: Record<string, any> = { ...h };
+    for (const key of tsKeys) raw[key] = tsToDatetime(raw[key]);
+    Object.assign(hackathonForm, raw);
+
+    // Overlay season-specific overrides if a season is selected
+    if (seasonId !== null) {
+        const s = seasons.value?.find((s: any) => s.id === seasonId);
+        if (s) restoreSeasonConfig(s);
+    }
+
+    formInitialized.value = true;
+}
 
 async function saveHackathon() {
     hackathonSaving.value = true;
@@ -80,7 +132,7 @@ async function saveHackathon() {
             hackathonMessage.value = "No changes to save.";
             return;
         }
-        // Tag the save with the selected season so the backend persists to it
+        // Tag with season_id so the backend knows which season to persist to
         if (activeSeasonId.value !== null) body.season_id = activeSeasonId.value;
         await $fetch("/api/admin/hackathon", { method: "PATCH", body });
         await refreshAdmin();
@@ -97,13 +149,22 @@ async function saveHackathon() {
 // ---------------------------------------------------------------------------
 const activeSeasonId = ref<number | null>(null);
 
+// One-time initialization: wait for both hackathon and seasons to load
+watchEffect(() => {
+    const h = hackathon.value;
+    const s = seasons.value;
+    if (!h || !s || s.length === 0 || formInitialized.value) return;
+    const active = s.find((s: any) => s.is_active);
+    activeSeasonId.value = active?.id ?? null;
+    applyConfig(activeSeasonId.value);
+});
+
 watch(
     () => seasons.value,
     (s) => {
-        const active = s?.find((s: any) => s.is_active);
-        activeSeasonId.value = active?.id ?? null;
+        const newId = s?.find((s: any) => s.is_active)?.id ?? null;
+        activeSeasonId.value = newId;
     },
-    { immediate: true },
 );
 
 const activeSeasonItems = computed(() => [
@@ -118,51 +179,11 @@ const activeSeasonItems = computed(() => [
 const seasonNameForm = ref("");
 
 watch(activeSeasonId, (id) => {
-    if (id === null) return;
-    const s = seasons.value?.find((s: any) => s.id === id);
-    seasonNameForm.value = s?.name ?? "";
-    if (!s) return;
-    // Restore the full per-season config into the form
-    const configKeys = [
-        "status",
-        "voting_enabled",
-        "judging_open",
-        "results_published",
-        "max_votes_per_user",
-        "theme_name",
-        "theme_description",
-        "schedule_start",
-        "schedule_end",
-        "start_timestamp",
-        "end_timestamp",
-        "voting_start_timestamp",
-        "voting_end_timestamp",
-        "results_open_timestamp",
-    ] as const;
-    for (const key of configKeys) {
-        const val = s[key];
-        // Skip undefined fields
-        if (val === undefined) continue;
-        // Skip default values so the global hackathon config shines through
-        if (val === null) {
-            if (
-                ["theme_name", "theme_description", "schedule_start", "schedule_end"].includes(key)
-            ) {
-                hackathonForm[key] = "";
-            }
-            continue;
-        }
-        if (key === "status" && val === "not_started") continue;
-        if (key === "max_votes_per_user" && val === 0) continue;
-        if (["voting_enabled", "judging_open", "results_published"].includes(key) && val === 0)
-            continue;
-        if (tsKeys.includes(key as any)) {
-            if (val === 0) continue; // default timestamp — keep global value
-            hackathonForm[key] = tsToDatetime(val);
-        } else {
-            hackathonForm[key] = val;
-        }
-    }
+    // Update season name
+    seasonNameForm.value = seasons.value?.find((s: any) => s.id === id)?.name ?? "";
+    // Re-apply the full config (global + season overrides). When id is null,
+    // applyConfig skips the overlay, showing only the global hackathon values.
+    applyConfig(id);
 });
 
 const seasonNameSaving = ref(false);
