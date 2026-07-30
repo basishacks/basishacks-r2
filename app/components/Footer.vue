@@ -12,6 +12,13 @@
                     Contribute to basishacks
                 </ULink>
                 <ULink class="text-xs" to="/developers">Developer Portal</ULink>
+                <ULink
+                    v-if="isAdmin"
+                    class="text-xs text-red-400 hover:text-red-300"
+                    to="/developers/admin"
+                >
+                    Admin Panel
+                </ULink>
             </div>
         </template>
 
@@ -241,6 +248,13 @@
 
 <script setup lang="ts">
 import type { NavigationMenuItem } from "@nuxt/ui";
+
+const { data: user, status } = await useApiUser({ lazy: true });
+
+const isAdmin = computed(() => {
+    if (status.value === "idle" || status.value === "pending") return false;
+    return user.value?.role === "admin";
+});
 
 const items: NavigationMenuItem[] = [
     {

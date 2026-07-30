@@ -1,8 +1,6 @@
 <script setup lang="ts">
-import { z } from "zod";
-
 definePageMeta({
-    layout: "dashboard",
+    layout: "developers-dashboard",
     middleware: ["auth"],
 });
 
@@ -10,9 +8,13 @@ useHead({
     title: `Admin | ${WEBSITE_NAME}`,
 });
 
-const { data: user } = await useApiUser();
-if (!user.value || user.value.role !== "admin") {
-    throw createError({ statusCode: 403, message: "Insufficient permissions" });
+const { data: user, status } = await useApiUser();
+
+// Hard 403 for non-admin users — even if they find the URL
+if (status.value !== "pending" && status.value !== "idle") {
+    if (!user.value || user.value.role !== "admin") {
+        throw createError({ statusCode: 403, statusMessage: "Access Denied" });
+    }
 }
 
 // ---------------------------------------------------------------------------

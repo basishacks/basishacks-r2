@@ -64,6 +64,14 @@ const items = computed<NavigationMenuItem[][]>(() => [
             disabled: lacksPermission(DevPermissions.PORTAL_SEASONS_VIEW),
         },
     ],
+    [
+        {
+            label: "Admin",
+            icon: "i-lucide-shield",
+            to: "/developers/admin",
+            disabled: !user.value || user.value.role !== "admin",
+        },
+    ],
 ]);
 
 const name = computed(() => user.value?.name || "Log In");
