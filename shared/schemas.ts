@@ -307,3 +307,53 @@ export const ElectionVoteRequest = z.object({
         .max(MAX_ELECTION_POSITIONS, "Too many positions"),
 });
 export type ElectionVoteRequest = z.infer<typeof ElectionVoteRequest>;
+
+// ---------------------------------------------------------------------------
+// Admin – hackathon configuration
+// ---------------------------------------------------------------------------
+
+export const HackathonStatusEnum = z.enum([
+    "not_started",
+    "in_progress",
+    "voting",
+    "finished",
+    "paused",
+]);
+
+export const AdminUpdateHackathonRequest = z.object({
+    status: HackathonStatusEnum.optional(),
+    voting_enabled: z.union([z.literal(0), z.literal(1)]).optional(),
+    results_published: z.union([z.literal(0), z.literal(1)]).optional(),
+    judging_open: z.union([z.literal(0), z.literal(1)]).optional(),
+    max_votes_per_user: z.number().int().min(0).max(100).optional(),
+    schedule_start: z.string().max(100).nullable().optional(),
+    schedule_end: z.string().max(100).nullable().optional(),
+    start_timestamp: z.number().int().optional(),
+    end_timestamp: z.number().int().optional(),
+    voting_start_timestamp: z.number().int().optional(),
+    voting_end_timestamp: z.number().int().optional(),
+    results_open_timestamp: z.number().int().optional(),
+    theme_name: z.string().max(200).nullable().optional(),
+    theme_description: z.string().max(2000).nullable().optional(),
+});
+export type AdminUpdateHackathonRequest = z.infer<typeof AdminUpdateHackathonRequest>;
+
+// ---------------------------------------------------------------------------
+// Admin – season management
+// ---------------------------------------------------------------------------
+
+export const CreateSeasonRequest = z.object({
+    name: z.string().min(1).max(200),
+    is_active: z
+        .union([z.literal(0), z.literal(1)])
+        .optional()
+        .default(0),
+});
+export type CreateSeasonRequest = z.infer<typeof CreateSeasonRequest>;
+
+export const UpdateSeasonRequest = z.object({
+    id: z.number().int().positive(),
+    name: z.string().min(1).max(200).optional(),
+    is_active: z.union([z.literal(0), z.literal(1)]).optional(),
+});
+export type UpdateSeasonRequest = z.infer<typeof UpdateSeasonRequest>;
