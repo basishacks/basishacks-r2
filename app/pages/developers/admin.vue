@@ -141,17 +141,8 @@ function hasChanged(key: string, normalized: any): boolean {
     return normalized !== baseline;
 }
 
-/** Auto-saves a single field to the season (and global if active).
- *  Rejects NaN for timestamps and number fields. */
-function fieldChanged(key: string, newVal: any) {
-    const val = normalize(key, newVal);
-
-    // Reject NaN for numeric fields — this prevents partial datetime-local
-    // strings (e.g. "2025-01-2") from corrupting the DB with NaN.
-    if (typeof val === "number" && Number.isNaN(val)) return;
-
-    if (!hasChanged(key, val)) return;
-
+/** Persist a single normalized value to the backend. */
+function persistChange(key: string, val: any) {
     saving.value = true;
     $fetch("/api/admin/hackathon", {
         method: "PATCH",
@@ -160,6 +151,31 @@ function fieldChanged(key: string, newVal: any) {
         .then(() => refreshAdmin())
         .catch(() => {})
         .finally(() => { saving.value = false; });
+}
+
+/** Called from @update:model-value on checkboxes/selects (reliable emit). */
+function fieldChanged(key: string, newVal: any) {
+    const val = normalize(key, newVal);
+    if (typeof val === "number" && Number.isNaN(val)) return;
+    if (!hasChanged(key, val)) return;
+    persistChange(key, val);
+}
+
+// Watch hackathonForm for changes to text/timestamp inputs. This is more reliable
+// than @update:model-value for UInput type="datetime-local" because it catches
+// ALL value changes regardless of how they happen (keyboard, browser picker, etc.).
+for (const key of [...tsKeys, "max_votes_per_user", "theme_name", "theme_description", "schedule_start", "schedule_end"]) {
+    watch(
+        () => hackathonForm[key],
+        (newVal, oldVal) => {
+            if (!formInitialized.value) return;
+            if (newVal === oldVal) return;
+            const val = normalize(key, newVal);
+            if (typeof val === "number" && Number.isNaN(val)) return;
+            if (!hasChanged(key, val)) return;
+            persistChange(key, val);
+        },
+    );
 }
 
 // ---------------------------------------------------------------------------
@@ -312,13 +328,7 @@ async function addSeason() {
 
                     <div>
                         <label class="block text-sm font-medium mb-1">Max Votes Per User</label>
-                        <UInput
-                            type="number"
-                            v-model="hackathonForm.max_votes_per_user"
-                            min="0"
-                            max="100"
-                            @update:model-value="fieldChanged('max_votes_per_user', $event)"
-                        />
+                        <UInput type="number" v-model="hackathonForm.max_votes_per_user" min="0" max="100" />
                     </div>
 
                     <div class="flex items-center gap-3">
@@ -338,47 +348,47 @@ async function addSeason() {
 
                     <div>
                         <label class="block text-sm font-medium mb-1">Theme Name</label>
-                        <UInput v-model="hackathonForm.theme_name" @update:model-value="fieldChanged('theme_name', $event)" />
+                        <UInput v-model="hackathonForm.theme_name" />
                     </div>
 
                     <div class="md:col-span-2">
                         <label class="block text-sm font-medium mb-1">Theme Description</label>
-                        <UTextarea v-model="hackathonForm.theme_description" :rows="2" @update:model-value="fieldChanged('theme_description', $event)" />
+                        <UTextarea v-model="hackathonForm.theme_description" :rows="2" />
                     </div>
 
                     <div>
                         <label class="block text-sm font-medium mb-1">Schedule Start</label>
-                        <UInput type="datetime-local" v-model="hackathonForm.schedule_start" @update:model-value="fieldChanged('schedule_start', $event)" />
+                        <UInput type="datetime-local" v-model="hackathonForm.schedule_start" />
                     </div>
 
                     <div>
                         <label class="block text-sm font-medium mb-1">Schedule End</label>
-                        <UInput type="datetime-local" v-model="hackathonForm.schedule_end" @update:model-value="fieldChanged('schedule_end', $event)" />
+                        <UInput type="datetime-local" v-model="hackathonForm.schedule_end" />
                     </div>
 
                     <div>
                         <label class="block text-sm font-medium mb-1">Start</label>
-                        <UInput type="datetime-local" v-model="hackathonForm.start_timestamp" @update:model-value="fieldChanged('start_timestamp', $event)" />
+                        <UInput type="datetime-local" v-model="hackathonForm.start_timestamp" />
                     </div>
 
                     <div>
                         <label class="block text-sm font-medium mb-1">End</label>
-                        <UInput type="datetime-local" v-model="hackathonForm.end_timestamp" @update:model-value="fieldChanged('end_timestamp', $event)" />
+                        <UInput type="datetime-local" v-model="hackathonForm.end_timestamp" />
                     </div>
 
                     <div>
                         <label class="block text-sm font-medium mb-1">Voting Start</label>
-                        <UInput type="datetime-local" v-model="hackathonForm.voting_start_timestamp" @update:model-value="fieldChanged('voting_start_timestamp', $event)" />
+                        <UInput type="datetime-local" v-model="hackathonForm.voting_start_timestamp" />
                     </div>
 
                     <div>
                         <label class="block text-sm font-medium mb-1">Voting End</label>
-                        <UInput type="datetime-local" v-model="hackathonForm.voting_end_timestamp" @update:model-value="fieldChanged('voting_end_timestamp', $event)" />
+                        <UInput type="datetime-local" v-model="hackathonForm.voting_end_timestamp" />
                     </div>
 
                     <div>
                         <label class="block text-sm font-medium mb-1">Results Open</label>
-                        <UInput type="datetime-local" v-model="hackathonForm.results_open_timestamp" @update:model-value="fieldChanged('results_open_timestamp', $event)" />
+                        <UInput type="datetime-local" v-model="hackathonForm.results_open_timestamp" />
                     </div>
                 </div>
             </section>
