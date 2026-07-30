@@ -80,6 +80,8 @@ async function saveHackathon() {
             hackathonMessage.value = "No changes to save.";
             return;
         }
+        // Tag the save with the selected season so the backend persists to it
+        if (activeSeasonId.value !== null) body.season_id = activeSeasonId.value;
         await $fetch("/api/admin/hackathon", { method: "PATCH", body });
         await refreshAdmin();
         hackathonMessage.value = "Hackathon config saved.";
@@ -138,12 +140,20 @@ watch(activeSeasonId, (id) => {
         "results_open_timestamp",
     ] as const;
     for (const key of configKeys) {
-        if (s[key] !== undefined && s[key] !== null) {
-            if (tsKeys.includes(key as any)) {
-                hackathonForm[key] = tsToDatetime(s[key]);
-            } else {
-                hackathonForm[key] = s[key];
+        if (s[key] === undefined) continue;
+        if (s[key] === null) {
+            // Text fields default to blank; numeric fields keep 0
+            if (
+                ["theme_name", "theme_description", "schedule_start", "schedule_end"].includes(key)
+            ) {
+                hackathonForm[key] = "";
             }
+            continue;
+        }
+        if (tsKeys.includes(key as any)) {
+            hackathonForm[key] = tsToDatetime(s[key]);
+        } else {
+            hackathonForm[key] = s[key];
         }
     }
 });

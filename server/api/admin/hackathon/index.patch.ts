@@ -17,20 +17,19 @@ export default defineEventHandler(
             });
         }
 
-        // Update the global hackathon row (runtime config)
-        event.context.drizzle
-            .update(hackathon)
-            .set(body as Record<string, any>)
-            .where(eq(hackathon.id, 1))
-            .run();
+        // Extract season_id from body (not a hackathon field)
+        const { season_id, ...configFields } = body as Record<string, any>;
 
-        // Also persist to the active season's per-season config
-        const activeSeason = await getActiveSeason(event);
-        if (activeSeason) {
+        // Update the global hackathon row (runtime config)
+        event.context.drizzle.update(hackathon).set(configFields).where(eq(hackathon.id, 1)).run();
+
+        // Persist to the specified season, or fall back to the active season
+        const targetSeasonId = season_id ?? (await getActiveSeason(event))?.id;
+        if (targetSeasonId) {
             event.context.drizzle
                 .update(seasons)
-                .set(body as Record<string, any>)
-                .where(eq(seasons.id, activeSeason.id))
+                .set(configFields)
+                .where(eq(seasons.id, targetSeasonId))
                 .run();
         }
 

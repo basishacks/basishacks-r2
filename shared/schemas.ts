@@ -321,6 +321,7 @@ export const HackathonStatusEnum = z.enum([
 ]);
 
 export const AdminUpdateHackathonRequest = z.object({
+    season_id: z.number().int().positive().optional(),
     status: HackathonStatusEnum.optional(),
     voting_enabled: z.union([z.literal(0), z.literal(1)]).optional(),
     results_published: z.union([z.literal(0), z.literal(1)]).optional(),
