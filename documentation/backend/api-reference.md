@@ -435,7 +435,7 @@ Read the current global hackathon configuration and all seasons.
 
 ### PATCH `/api/admin/hackathon`
 
-Update global hackathon state fields. Only provided fields are changed.
+Update global hackathon state fields. Only provided fields are changed. Changes are also persisted to the currently active season's per-season configuration row.
 
 | Field | Details |
 | --- | --- |
