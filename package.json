@@ -52,7 +52,8 @@
     },
     "overrides": {
         "vite": "^8.0.16",
-        "entities": "^7.0.1"
+        "entities": "^7.0.1",
+        "estree-walker": "2.0.2"
     },
     "devDependencies": {
         "@iconify-json/fluent": "^1.2.54",
