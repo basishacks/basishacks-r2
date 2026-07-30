@@ -192,6 +192,7 @@ Use the helpers in `server/utils/auth.ts` to enforce roles:
 - The `auth` route middleware (`app/middleware/auth.ts`) redirects unauthenticated users to `/login`.
 - Layouts are declared with `definePageMeta({ layout: '...' })`.
 - UI components come from `@nuxt/ui` (e.g., `UButton`, `UForm`, `UAlert`).
+- Run `bun run format` always before you commit
 
 ---
 
@@ -295,11 +296,11 @@ In production, these are configured in the server environment.
 
 ## Documentation Maintenance
 
-**This is a mandatory step.** Before ending every request or finalizing any plan, you MUST:
+**This is a mandatory step.** Before ending every request or finalizing any plan or whenever possible, you MUST:
 
 1. **Update `README.md`** — If your changes affect any feature, configuration, command, or behavior described in the README, update the relevant sections to reflect the current state of the project.
 
-2. **Update VitePress documentation** — If your changes affect any area documented in the `documentation/` directory, update the corresponding pages:
+2. **Update VitePress documentation whenever you apply a change (whenever possible)** — If your changes affect any area documented in the `documentation/` directory, update the corresponding pages:
     - `documentation/guide/` — Getting started, project overview, environment setup
     - `documentation/architecture/` — Overview, runtime, database, auth, OAuth2
     - `documentation/frontend/` — Components, pages, layouts, composables
