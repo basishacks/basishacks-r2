@@ -98,12 +98,7 @@
                         <ProjectCard :id="team.id" />
                     </template>
                 </UModal>
-                <ULink
-                    class="text-xs"
-                    :href="hackathonSeasons[team.season_id!]?.docs || '#'"
-                    target="_blank"
-                    external
-                >
+                <ULink class="text-xs" href="#" target="_blank" external>
                     <UIcon name="i-lucide-calendar" class="text-xs"></UIcon>
                     See Season Details
                     <UIcon name="i-lucide-arrow-right" class="text-xs"></UIcon>
@@ -114,21 +109,20 @@
 </template>
 
 <script setup lang="ts">
-import hackathonSeasons from "~~/shared/seasons";
-
 const props = defineProps<{
     team: GetTeamResponse;
 }>();
 
-const seasonDate = computed(() => {
-    if (!props.team.season_id) return "Unknown Date";
-    return hackathonSeasons[props.team.season_id]?.date || "Unknown Date";
+const { data: seasons } = await useFetch<Season[]>("/api/seasons", { lazy: true });
+
+const seasonMeta = computed(() => {
+    if (!props.team.season_id) return { name: "Unknown", date: null };
+    const s = seasons.value?.find((s: any) => s.id === props.team.season_id);
+    return { name: s?.name ?? `Season ${props.team.season_id}`, date: null };
 });
 
-const seasonName = computed(() => {
-    if (!props.team.season_id) return "Unknown Name";
-    return hackathonSeasons[props.team.season_id]?.theme_name || "Unknown Name";
-});
+const seasonDate = computed(() => seasonMeta.value.date);
+const seasonName = computed(() => seasonMeta.value.name);
 
 const { data: members } = await useFetch<GetTeamMembersResponse>(
     () => `/api/teams/${props.team.id}/users`,

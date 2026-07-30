@@ -74,16 +74,9 @@ const items = ref<NavigationMenuItem[][]>([
                         ongoing
                     </span>
                     <span v-else class="uppercase text-sm font-bold text-muted">completed</span>
-                    <h3 class="text-2xl bold glow">May 2026</h3>
-                    <span class="">Beneath the Surface</span>
+                    <h3 class="text-2xl bold glow">{{ hackathon?.theme_name || "Hackathon" }}</h3>
+                    <span class="">{{ hackathon?.theme_description || "" }}</span>
                     <USeparator class="my-4" size="sm" />
-                    <ULink
-                        class="text-xs"
-                        href="https://slack-files.com/T09V59WQY1E-F0A8LUTHZHQ-0eb4891888"
-                    >
-                        See event details
-                        <UIcon name="i-lucide-arrow-right" />
-                    </ULink>
                 </template>
             </UCard>
             <UNavigationMenu
