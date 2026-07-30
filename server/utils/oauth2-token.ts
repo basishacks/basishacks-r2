@@ -64,24 +64,15 @@ export async function issueOAuth2AccessToken(
     input: IssueOAuth2AccessTokenInput,
 ): Promise<OAuth2AccessTokenResponse> {
     const app = await getOAuth2Application(event, input.clientId);
-    if (!app) {
+    if (
+        !app ||
+        !(await validateOAuth2ApplicationSecret(event, input.clientId, input.clientSecret))
+    ) {
+        // Unified error message prevents client ID enumeration
         throw createError({
             statusCode: 400,
             statusMessage: "invalid_client",
-            message: "Invalid client_id",
-        });
-    }
-
-    const isSecretValid = await validateOAuth2ApplicationSecret(
-        event,
-        input.clientId,
-        input.clientSecret,
-    );
-    if (!isSecretValid) {
-        throw createError({
-            statusCode: 400,
-            statusMessage: "invalid_client",
-            message: "Invalid client_secret",
+            message: "Invalid client credentials",
         });
     }
 

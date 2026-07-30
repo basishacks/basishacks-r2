@@ -4,7 +4,7 @@
 
 This branch (`feature/security-hardening`) performs a comprehensive security audit, hardening of all attack surfaces, and a massive expansion of the test suite for the basishacks hackathon platform. The test suite has been **more than doubled** (see [testing guide](/guide/testing) for current count) across **87 test files** — every API endpoint, database helper, utility function, shared schema, Vue component, and page is now thoroughly tested.
 
-**186 files changed**: +21,670 insertions, −3,091 deletions across application code, server logic, middleware, shared schemas, documentation, and tests.
+**161 files changed**: +19,770 insertions, −1,965 deletions across application code, server logic, middleware, shared schemas, documentation, and tests.
 
 ## Code of Conduct Overhaul (rules.vue)
 
@@ -16,6 +16,18 @@ The `app/pages/rules.vue` page was completely rewritten (**506 lines added**, 53
 - **Legal Terms** — License requirements, copyright obligations, liability disclaimers, platform terms of service
 - **Phrase-level bolding** for improved readability and scanability
 - All user-facing text uses `{{ WEBSITE_NAME }}` constant for consistent branding
+
+### Second Pass — Simplified Explanation, Judging Process, Malware Section (+276 lines)
+
+A second major update to `app/pages/rules.vue` added **276 lines** with significant new content:
+
+- **Simplified Explanation (collapsible `<details>`)** — 12 plain-language rules covering source code, README, demo video, original work, AI disclosure, live presentation, malware, license, and liability. Includes a thematic closing poem.
+- **Judging Process and Live Presentation Phase** — Two-track judging: (1) AI usage verification for suspected overexcessive undeclared AI, (2) prize candidate confirmation for top placements. Refusal = disqualification/forfeiture.
+- **Malware, Deception, and Reporting** — Strictly prohibits harmful software, false source code, mismatched SHA256 checksums, and deceptive AI claims; incidents reported as bullying and academic dishonesty to school administration.
+- **Demo video requirements overhaul** — Stricter anonymity: no audio, no speech, no face/name/voice (immediate DQ). Video codec restrictions (H.264, AV1, VP9 only). Hosting limited to YouTube, Bilibili, or OneDrive/SharePoint. **Git-based hosting (GitHub, GitLab) explicitly forbidden** — treated as no video → DQ. SHA256 checksum display required for compiled executables.
+- **Intermediate build artifacts encouragement** — For compiled languages (C, C++, Rust, Go, Java, Kotlin, C#), human-verifiable intermediate files (`.asm`, `.ll`, `.class`) encouraged as transparency signal.
+- **Public showcase listing** — Participants agree to be listed in final public showcase; privacy concern opt-out requires contacting organizers 24h before deadline.
+- **AI disclosure refinement** — Distinguishes declared responsible use (acceptable) vs undeclared excessive reliance (scrutinized).
 
 ## Dependency Major Upgrades
 
@@ -748,7 +760,20 @@ The `overrides` in `package.json` were changed from exact pinned versions (`"8.0
 
 ---
 
-## Commits (last 32 on this branch, after initial 94 base commits)
+## Bug Fixes
+
+| Issue | File | Fix |
+| --- | --- | --- |
+| Footer missing from dashboard pages | `app/layouts/dashboard.vue` | Added `<Footer />` component before closing `</template>` |
+| `GET /api/teams?judging=1` returns 400 | `app/pages/judging/index.vue`, `app/pages/judging/continue.vue` | Changed `?judging=1` to `?judging=true` to match `BooleanString` schema |
+| `Permissions-Policy` unrecognized feature `ambient-light-sensor` | `server/middleware/security-headers.ts` | Removed unsupported `ambient-light-sensor` directive |
+| `[Icon] failed to load icon 'lucide:circle-help'` | `app/layouts/dashboard.vue` | Replaced `i-lucide-circle-help` with `i-lucide-circle-question-mark` (valid icon name) |
+| `console.log(award)` spamming devtools on award display | `app/components/AwardButton.vue` | Removed debug `console.log(award)` from `convertColor()` |
+| **Mobile optimization** | showcase, dashboard layouts | Already responsive (`max-lg:flex-col`, `hidden lg:block`, responsive text sizing); minor polish applied |
+
+---
+
+## Commits (last 18 on this branch, after initial 94 base commits)
 
 ```
 c8116e1 chore(deps): update lockfile
@@ -785,12 +810,27 @@ fd6e886 test(api): cover DELETE team member endpoint
 ba77f68 test(api): cover GET secrets management endpoint
 ```
 
-Total: 130 commits on this branch since the base.
+Total: 149 commits on this branch since the base.
 
 ## Latest Commits (since last PR.md update)
 
 ```
+d578388 feat(rules): add simplified explanation, judging process, malware section; update video requirements
+736db56 style(layouts): improve dashboard mobile navigation markup readability
+ad31bee docs(agents): add format-before-commit reminder, soften documentation mandate
+d69a1b7 test: remove ambient-light-sensor from permissions-policy test
+8a8fcd3 fix: use valid lucide icon name circle-question-mark
+540e4ee fix: footer in dashboard, judging query boolean, permissions policy, award log spam, restore easter egg
+7061e2c docs: add XSS audit results, maxlength enforcement, and dynamic test count details
+49468e2 docs(shared): update MAX constant values to 2^31-1 for description/reasoning, 50 for username
+77d8457 chore: remove PR.md from git tracking
+16bf4cb style: apply prettier formatting across docs, source, and test files
+7552674 test: update schema tests to use exported MAX constants instead of hardcoded limits
+45fdf69 fix: export MAX constants, add maxlength to form inputs for guided UX
+e81e40f fix(schemas): increase MAX_PROJECT_DESCRIPTION_LENGTH and MAX_REASONING_LENGTH to Integer.MAX_VALUE, MAX_USER_NAME_LENGTH to 50
+b6d97bf fix(scripts): pipe vitest json output to test-meta generator
 93f6d50 test: cover open-redirect guard branches in login and dccallback (100% coverage)
+12736f1 chore(docs): removed incorrect or absolute language in README.md
 0dcc96b docs: strip hardcoded versions from README, keep it general and current
 19ee4d4 docs: update README with current deps, security hardening, and dynamic test count
 fcf9000 docs: replace hardcoded test counts with dynamic TestCount component; add test meta generation
@@ -805,10 +845,29 @@ c8116e1 chore(deps): update lockfile
 
 ## Key Metrics
 
-| Metric                                    | Value                         |
-| ----------------------------------------- | ----------------------------- |
-| Test files                                | 87                            |
-| Test cases                                | 1,908                         |
-| Coverage (stmts / branch / funcs / lines) | **100% / 100% / 100% / 100%** |
-
-| Test pass rate | 100% | | Files changed | 159 | | Lines added | +19,486 | | Lines removed | −1,944 | | New API endpoint tests | 12 files | | Security headers applied | 6 | | CSP directives | 10 | | Rate limit configs | 4 | | Zod schemas hardened | 25+ (3 raised to Integer.MAX_VALUE) | | SQL injection patterns tested | 76+ | | XSS patterns tested | 8+ | | XSS audit result | Clean — 0 vectors found | | Frontend inputs with maxlength | All key forms updated | | Private IP ranges blocked | 12+ | | Open redirect vulnerabilities closed | 2 | | PKCE method 'plain' removed (S256 only) | 1 | | Audit logging endpoints added | 1 | | Startup validators added | 1 (NUXT_OAUTH2_JWT_SECRET) | | Documentation files updated | 16 | | Dependencies updated | 20+ (better-sqlite3, openai, vue-router, etc.) | | New commits | 32 (today) |
+| Metric                                    | Value                                          |
+| ----------------------------------------- | ---------------------------------------------- |
+| Test files                                | 87                                             |
+| Test cases                                | 1,909                                          |
+| Coverage (stmts / branch / funcs / lines) | **100% / 100% / 100% / 100%**                  |
+| Test pass rate                            | 100%                                           |
+| Files changed                             | 161                                            |
+| Lines added                               | +19,770                                        |
+| Lines removed                             | −1,965                                         |
+| New API endpoint tests                    | 12 files                                       |
+| Security headers applied                  | 6                                              |
+| CSP directives                            | 10                                             |
+| Rate limit configs                        | 4                                              |
+| Zod schemas hardened                      | 25+ (3 raised to Integer.MAX_VALUE)            |
+| SQL injection patterns tested             | 76+                                            |
+| XSS patterns tested                       | 8+                                             |
+| XSS audit result                          | Clean — 0 vectors found                        |
+| Frontend inputs with maxlength            | All key forms updated                          |
+| Private IP ranges blocked                 | 12+                                            |
+| Open redirect vulnerabilities closed      | 2                                              |
+| PKCE method 'plain' removed (S256 only)   | 1                                              |
+| Audit logging endpoints added             | 1                                              |
+| Startup validators added                  | 1 (NUXT_OAUTH2_JWT_SECRET)                     |
+| Documentation files updated               | 16                                             |
+| Dependencies updated                      | 20+ (better-sqlite3, openai, vue-router, etc.) |
+| New commits                               | 34 (today)                                     |

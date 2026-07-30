@@ -1,5 +1,6 @@
-import { jwtVerify } from "jose";
-import { exchangeAuthorizationCode, getAuthorizeSession } from "./session.post";
+import { getAuthorizeSession } from "./session.post";
+import { redeemAuthorizationCodeForToken } from "~~/server/utils/oauth2-token";
+import { resolveUserInfoFromAccessToken } from "~~/server/utils/oauth2-userinfo";
 import { applyRateLimit, AUTH_RATE_LIMIT_CONFIG } from "~~/server/utils/rateLimit";
 
 /*
@@ -66,39 +67,38 @@ export default defineEventHandler(
             });
         }
 
-        let result: string;
+        let accessToken: string;
         try {
-            result = await exchangeAuthorizationCode(
-                getQuery(event).code as string,
-                session.application.client_id,
-                session.redirect_uri,
-                session.scopes.join(" "),
-                pkceVerifier,
-            );
+            const tokenResponse = await redeemAuthorizationCodeForToken({
+                code: getQuery(event).code as string,
+                clientId: session.application.client_id,
+                redirectUri: session.redirect_uri,
+                appPermissions: session.scopes.join(" "),
+                codeVerifier: pkceVerifier,
+            });
+            accessToken = tokenResponse.access_token;
         } catch (e: any) {
             throw createError({
                 statusCode: 400,
                 message: "invalid_grant: " + e.message,
             });
         }
+
         // Clear the PKCE verifier cookie now that it's been used
         deleteCookie(event, "pkce_verifier");
-        // this function can be used externally like in another website
 
-        const secret = process.env.NUXT_OAUTH2_JWT_SECRET;
-        if (!secret) {
-            throw new Error("NUXT_OAUTH2_JWT_SECRET is not set");
+        // Same identity resolution as GET /api/oauth2/userinfo (in-process).
+        const claims = await resolveUserInfoFromAccessToken(event, accessToken);
+        const userId = Number(claims.sub);
+        if (!userId || Number.isNaN(userId)) {
+            throw createError({
+                statusCode: 400,
+                message: "UserInfo response missing subject",
+            });
         }
 
-        const { payload } = await jwtVerify(result, new TextEncoder().encode(secret));
-        const userId = Number(payload.user_id);
-
         await setUserSession(event, {
-            user: {
-                id: userId,
-                token: payload,
-                token_raw: result,
-            },
+            user: { id: userId },
         });
 
         // Authorization is complete; clear the session binding cookie
