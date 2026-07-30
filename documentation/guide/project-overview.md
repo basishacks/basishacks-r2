@@ -22,6 +22,8 @@ The platform manages the entire hackathon lifecycle:
 | **Developer Portal** | Administrative dashboard for managing OAuth2 applications, users, teams, seasons, and debug tools. |
 | **Microsoft Graph API** | Integration with Microsoft Entra ID for OAuth2 login, meeting scheduling, and Teams chat via the Graph API. |
 | **DeepSeek AI Chatbot** | In-memory chat session store powered by the OpenAI SDK for DeepSeek AI interactions in debug routes. |
+| **SafeLink / SafeComark Components** | Client-side components that sanitize user-provided links and markdown content, preventing XSS and open redirects in rendered project descriptions. |
+| **Security Middleware** | A middleware pipeline including HTTP security headers (6 headers, 10 CSP directives), debug route lockdown (`DISABLE_DEBUG_ROUTES`), and rate limiting (4 tiers). |
 
 ## Technology Stack
 
@@ -125,6 +127,8 @@ basishacks-r2/
 ├── app/                        # Nuxt app (Vue frontend)
 │   ├── assets/css/             # Global styles (Tailwind + custom utilities)
 │   ├── components/             # Vue components
+│   │   ├── SafeLink.vue        # URL-aware link renderer with open redirect protection
+│   │   ├── SafeComark.vue      # Safe markdown renderer using SafeLink for links
 │   ├── composables/            # Vue composables (useApiUser, etc.)
 │   ├── layouts/                # Nuxt layouts (default, dashboard, fullwidth, etc.)
 │   ├── middleware/             # Route middleware (auth.ts)
@@ -160,7 +164,10 @@ basishacks-r2/
 │   │   ├── teams/              # Team CRUD, member management, scoring, submission
 │   │   ├── users/              # User CRUD and profile pictures
 │   │   └── _webhooks/          # Lifecycle and update webhooks
-│   ├── middleware/             # Server middleware (OAuth2 authorize validation)
+│   ├── middleware/             # Server middleware
+│   │   ├── security-headers.ts # HTTP security headers (6 headers, CSP, HSTS, etc.)
+│   │   ├── debug-lockdown.ts   # Disables debug routes in production via DISABLE_DEBUG_ROUTES
+│   │   └── oauth2-authorize.ts # OAuth2 authorize session validation
 │   ├── database/               # Drizzle ORM schema, migration runner, and DB wrapper
 │   │   ├── schema.ts           # Drizzle table definitions
 │   │   ├── migrate.ts          # Custom migration runner, legacy schema repair, seeding
@@ -168,7 +175,8 @@ basishacks-r2/
 │   ├── plugins/                # Nitro plugins
 │   │   ├── init-database.ts    # Database initialization and attach Drizzle to event context
 │   │   ├── microsoft.ts        # MS Graph API token initialization and centralized API calls
-│   │   └── validate-oauth2-jwt-secret.ts # Startup guard for NUXT_OAUTH2_JWT_SECRET
+│   │   ├── validate-environment.ts     # Startup guard for NUXT_SESSION_PASSWORD and NUXT_OAUTH2_JWT_SECRET
+│   │   └── validate-oauth2-jwt-secret.ts # Startup guard for NUXT_OAUTH2_JWT_SECRET (also exposed as testable utility)
 │   ├── types/                  # Type augmentations (H3EventContext, OAuth2 JWT)
 │   └── utils/                  # Server utilities
 │       ├── database/           # Per-table DB helpers
@@ -184,12 +192,14 @@ basishacks-r2/
 │       │   └── users.ts
 │       ├── auth.ts             # requireUser, requireJudge, requireAdmin, requirePermission
 │       ├── convert.ts          # DB row to public API object transformers
-│       ├── rateLimit.ts        # In-memory rate limiter (6000 req/min default)
+│       ├── rateLimit.ts        # In-memory rate limiter (4 tiers: general/auth/vote/upload)
 │       ├── oauth2.ts           # Microsoft OAuth2 configuration and link generation
 │       ├── oauth2-jwt.ts       # JWT verification and withOAuth2JWT() wrapper for API routes
 │       ├── oauth2-validate.ts  # OAuth2 authorization request validation and consent flow
 │       ├── profile.ts          # Profile picture helpers
 │       ├── assets.ts           # Asset helpers
+│       ├── url-validation.ts   # SSRF protection — validates external URLs, blocks private IPs
+│       ├── validate-oauth2-jwt-secret.ts # Dev-only fallback for NUXT_OAUTH2_JWT_SECRET
 │       └── deepseek-store.ts   # DeepSeek AI chat session store (in-memory)
 │
 ├── shared/                     # Code shared between client and server
