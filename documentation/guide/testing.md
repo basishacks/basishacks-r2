@@ -25,7 +25,7 @@ The project maintains **100% line, branch, function, and statement coverage** on
 
 ### Current Coverage Status
 
-The test suite currently has **1903 passing tests** across **87 test files**. All server utility files (`server/utils/*.ts`) maintain 100% coverage. The full feature branch has approximately **159 files changed**, reflecting the comprehensive scope of the security, OAuth2, and performance enhancements.
+The test suite currently has **<TestCount /> passing tests** across **87 test files**. All server utility files (`server/utils/*.ts`) maintain 100% coverage.
 
 ### Coverage Exclusions
 

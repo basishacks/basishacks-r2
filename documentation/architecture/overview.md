@@ -25,7 +25,7 @@ basishacks is a **full-stack Nuxt 4 application** that combines a Vue 3 frontend
 | Icons | `@iconify-json/lucide`, `@iconify-json/material-symbols` |
 | Linting | `@nuxt/eslint` 1.10.0 + Prettier ^3.9.4 |
 | Deployment | Node.js server (VPS; Bun also supported) |
-| Test Suite | Vitest with **1,903 tests across 87 files** |
+| Test Suite | Vitest with **<TestCount /> tests across 87 files** |
 
 ## Directory Structure
 
@@ -205,7 +205,7 @@ The `oauth2-jwt.ts` utility provides JWT verification, Bearer token extraction, 
 
 ### Comprehensive test suite
 
-The project includes **1,903 tests across 87 files** covering API endpoints, server utilities, database helpers, shared schemas, Vue components, pages, and composables.
+The project includes **<TestCount /> tests across 87 files** covering API endpoints, server utilities, database helpers, shared schemas, Vue components, pages, and composables.
 
 ### Shared code boundary
 
