@@ -131,6 +131,53 @@ describe("PATCH /api/admin/hackathon", () => {
         expect(row.theme_name).toBe("AI Innovators");
         expect(row.max_votes_per_user).toBe(5);
     });
+
+    it("persists two sequential per-season timestamp saves without losing either", async () => {
+        gRequireAdmin().mockResolvedValue({ id: 1, role: "admin" });
+
+        // Create season 1 with per-season config columns
+        const s1 = ctx.drizzle
+            .insert(seasons)
+            .values({ name: "Season 1", is_active: 1 } as any)
+            .returning()
+            .get();
+
+        // First PATCH: save start_timestamp to season 1
+        mockBody.value = { start_timestamp: 1737367200000, season_id: s1.id };
+        await patchHandler(createEvent());
+
+        // Verify start_timestamp was saved
+        let row = ctx.drizzle.select().from(seasons).where(eq(seasons.id, s1.id)).get()!;
+        expect(row.start_timestamp).toBe(1737367200000);
+
+        // Second PATCH: save end_timestamp to season 1 (different field)
+        mockBody.value = { end_timestamp: 1740000000000, season_id: s1.id };
+        await patchHandler(createEvent());
+
+        // Verify BOTH fields are now set
+        row = ctx.drizzle.select().from(seasons).where(eq(seasons.id, s1.id)).get()!;
+        expect(row.start_timestamp).toBe(1737367200000);
+        expect(row.end_timestamp).toBe(1740000000000);
+    });
+
+    it("persists two sequential global saves without losing either", async () => {
+        gRequireAdmin().mockResolvedValue({ id: 1, role: "admin" });
+
+        // First PATCH: save start_timestamp globally
+        mockBody.value = { start_timestamp: 1737367200000 };
+        await patchHandler(createEvent());
+
+        let row = ctx.drizzle.select().from(hackathon).where(eq(hackathon.id, 1)).get()!;
+        expect(row.start_timestamp).toBe(1737367200000);
+
+        // Second PATCH: save end_timestamp globally
+        mockBody.value = { end_timestamp: 1740000000000 };
+        await patchHandler(createEvent());
+
+        row = ctx.drizzle.select().from(hackathon).where(eq(hackathon.id, 1)).get()!;
+        expect(row.start_timestamp).toBe(1737367200000);
+        expect(row.end_timestamp).toBe(1740000000000);
+    });
 });
 
 describe("POST /api/admin/seasons", () => {

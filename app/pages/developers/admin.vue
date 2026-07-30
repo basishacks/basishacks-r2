@@ -141,39 +141,48 @@ function hasChanged(key: string, normalized: any): boolean {
     return normalized !== baseline;
 }
 
-/** Persist a single normalized value to the backend. */
-function persistChange(key: string, val: any) {
+/** Build a body of ALL fields that have changed from the global baseline. */
+function buildChangedBody() {
+    const body: Record<string, any> = {};
+    for (const key of allFieldKeys) {
+        const raw = hackathonForm[key];
+        if (raw === undefined || raw === null) continue;
+        const val = normalize(key, raw);
+        if (typeof val === "number" && Number.isNaN(val)) continue;
+        if (hasChanged(key, val)) body[key] = val;
+    }
+    return body;
+}
+
+/** Persist ALL changed fields to the backend.
+ *  Saving all fields together in one request avoids races where individual
+ *  PATCH calls (one per field) could leave some fields unsaved. */
+function saveAll() {
+    const body = buildChangedBody();
+    if (Object.keys(body).length === 0) return;
+    if (activeSeasonId.value !== null) body.season_id = activeSeasonId.value;
+
     saving.value = true;
-    $fetch("/api/admin/hackathon", {
-        method: "PATCH",
-        body: { [key]: val, ...(activeSeasonId.value !== null ? { season_id: activeSeasonId.value } : {}) },
-    })
+    $fetch("/api/admin/hackathon", { method: "PATCH", body })
         .then(() => refreshAdmin())
         .catch(() => {})
         .finally(() => { saving.value = false; });
 }
 
 /** Called from @update:model-value on checkboxes/selects (reliable emit). */
-function fieldChanged(key: string, newVal: any) {
-    const val = normalize(key, newVal);
-    if (typeof val === "number" && Number.isNaN(val)) return;
-    if (!hasChanged(key, val)) return;
-    persistChange(key, val);
+function fieldChanged(_key: string, _newVal: any) {
+    saveAll();
 }
 
-// Watch hackathonForm for changes to text/timestamp inputs. This is more reliable
-// than @update:model-value for UInput type="datetime-local" because it catches
-// ALL value changes regardless of how they happen (keyboard, browser picker, etc.).
-for (const key of [...tsKeys, "max_votes_per_user", "theme_name", "theme_description", "schedule_start", "schedule_end"]) {
+// Watch ALL form fields — when any field changes, save ALL changed fields
+// in a single request so no field is left behind.
+for (const key of allFieldKeys) {
     watch(
         () => hackathonForm[key],
         (newVal, oldVal) => {
             if (!formInitialized.value) return;
             if (newVal === oldVal) return;
-            const val = normalize(key, newVal);
-            if (typeof val === "number" && Number.isNaN(val)) return;
-            if (!hasChanged(key, val)) return;
-            persistChange(key, val);
+            saveAll();
         },
     );
 }
