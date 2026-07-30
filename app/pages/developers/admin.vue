@@ -110,8 +110,35 @@ const activeSeasonItems = computed(() => [
         []),
 ]);
 
-// Theme name is independent from season name — no auto-copy on selection
-// Season name (shown in dropdown) is set at creation and read-only here
+// ---------------------------------------------------------------------------
+// Season name — separate editable field to rename the selected season
+// ---------------------------------------------------------------------------
+const seasonNameForm = ref("");
+
+watch(activeSeasonId, (id) => {
+    if (id === null) return;
+    const s = seasons.value?.find((s: any) => s.id === id);
+    seasonNameForm.value = s?.name ?? "";
+});
+
+const seasonNameSaving = ref(false);
+
+async function renameSeason() {
+    if (activeSeasonId.value === null || !seasonNameForm.value.trim()) return;
+    seasonNameSaving.value = true;
+    try {
+        await $fetch("/api/admin/seasons", {
+            method: "PATCH",
+            body: { id: activeSeasonId.value, name: seasonNameForm.value.trim() },
+        });
+        await refreshAdmin();
+        toast.add({ title: "Season renamed.", color: "success" });
+    } catch (e: any) {
+        toast.add({ title: "Error", description: getErrorMessage(e), color: "error" });
+    } finally {
+        seasonNameSaving.value = false;
+    }
+}
 
 async function setActiveSeason() {
     if (activeSeasonId.value === null) return;
@@ -165,6 +192,17 @@ async function addSeason() {
                     />
                     <UButton @click="setActiveSeason" color="primary">Set Active</UButton>
                     <UButton @click="addSeason" variant="outline">+ New Season</UButton>
+                </div>
+            </section>
+
+            <!-- Season Name (rename active season) -->
+            <section class="bg-ui-bg border-b border-ui-border p-6">
+                <h2 class="text-xl font-semibold mb-3">Season Name</h2>
+                <div class="flex items-center gap-3">
+                    <UInput v-model="seasonNameForm" class="flex-1 max-w-xs" />
+                    <UButton @click="renameSeason" :loading="seasonNameSaving" color="primary">
+                        Rename Season
+                    </UButton>
                 </div>
             </section>
 
