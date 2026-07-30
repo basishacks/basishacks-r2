@@ -154,40 +154,30 @@ function buildChangedBody() {
     return body;
 }
 
-/** Serialize saves so only one PATCH is in-flight at a time.
- *  Multiple rapid changes are coalesced: each waits for the previous
- *  to finish, preventing refreshAdmin() races between saves. */
-let saveChain = Promise.resolve();
+/** Save ALL changed fields in a single PATCH. Uses a debounce to coalesce
+ *  rapid edits, then fires one request with every field that has diverged
+ *  from the global baseline. */
+let saveTimer: ReturnType<typeof setTimeout> | null = null;
 
 function saveAll() {
-    const body = buildChangedBody();
-    if (Object.keys(body).length === 0) return;
-    if (activeSeasonId.value !== null) body.season_id = activeSeasonId.value;
+    if (saveTimer) clearTimeout(saveTimer);
+    saveTimer = setTimeout(() => {
+        saveTimer = null;
+        const body = buildChangedBody();
+        if (Object.keys(body).length === 0) return;
+        if (activeSeasonId.value !== null) body.season_id = activeSeasonId.value;
 
-    saving.value = true;
-    saveChain = saveChain
-        .then(() => $fetch("/api/admin/hackathon", { method: "PATCH", body }))
-        .then(() => refreshAdmin())
-        .catch(() => {})
-        .then(() => { saving.value = false; });
+        saving.value = true;
+        $fetch("/api/admin/hackathon", { method: "PATCH", body })
+            .then(() => refreshAdmin())
+            .catch(() => {})
+            .finally(() => { saving.value = false; });
+    }, 300);
 }
 
-/** Called from @update:model-value on checkboxes/selects (reliable emit). */
-function fieldChanged(_key: string, _newVal: any) {
+/** Called from @change on inputs, @update:model-value on checkboxes/selects. */
+function onFieldChange() {
     saveAll();
-}
-
-// Watch ALL form fields — when any field changes, save ALL changed fields
-// in a single request so no field is left behind.
-for (const key of allFieldKeys) {
-    watch(
-        () => hackathonForm[key],
-        (newVal, oldVal) => {
-            if (!formInitialized.value) return;
-            if (newVal === oldVal) return;
-            saveAll();
-        },
-    );
 }
 
 // ---------------------------------------------------------------------------
@@ -333,74 +323,74 @@ async function addSeason() {
                                 { label: 'Paused', value: 'paused' },
                             ]"
                             v-model="hackathonForm.status"
-                            @update:model-value="fieldChanged('status', $event)"
+                            @update:model-value="onFieldChange()"
                             class="w-full"
                         />
                     </div>
 
                     <div>
                         <label class="block text-sm font-medium mb-1">Max Votes Per User</label>
-                        <UInput type="number" v-model="hackathonForm.max_votes_per_user" min="0" max="100" />
+                        <UInput type="number" v-model="hackathonForm.max_votes_per_user" min="0" max="100" @change="onFieldChange()" />
                     </div>
 
                     <div class="flex items-center gap-3">
-                        <UCheckbox v-model="hackathonForm.voting_enabled" :true-value="1" :false-value="0" @update:model-value="fieldChanged('voting_enabled', $event)" />
+                        <UCheckbox v-model="hackathonForm.voting_enabled" :true-value="1" :false-value="0" @update:model-value="onFieldChange()" />
                         <span class="text-sm">Voting Enabled</span>
                     </div>
 
                     <div class="flex items-center gap-3">
-                        <UCheckbox v-model="hackathonForm.judging_open" :true-value="1" :false-value="0" @update:model-value="fieldChanged('judging_open', $event)" />
+                        <UCheckbox v-model="hackathonForm.judging_open" :true-value="1" :false-value="0" @update:model-value="onFieldChange()" />
                         <span class="text-sm">Judging Open</span>
                     </div>
 
                     <div class="flex items-center gap-3">
-                        <UCheckbox v-model="hackathonForm.results_published" :true-value="1" :false-value="0" @update:model-value="fieldChanged('results_published', $event)" />
+                        <UCheckbox v-model="hackathonForm.results_published" :true-value="1" :false-value="0" @update:model-value="onFieldChange()" />
                         <span class="text-sm">Results Published</span>
                     </div>
 
                     <div>
                         <label class="block text-sm font-medium mb-1">Theme Name</label>
-                        <UInput v-model="hackathonForm.theme_name" />
+                        <UInput v-model="hackathonForm.theme_name" @change="onFieldChange()" />
                     </div>
 
                     <div class="md:col-span-2">
                         <label class="block text-sm font-medium mb-1">Theme Description</label>
-                        <UTextarea v-model="hackathonForm.theme_description" :rows="2" />
+                        <UTextarea v-model="hackathonForm.theme_description" :rows="2" @change="onFieldChange()" />
                     </div>
 
                     <div>
                         <label class="block text-sm font-medium mb-1">Schedule Start</label>
-                        <UInput type="datetime-local" v-model="hackathonForm.schedule_start" />
+                        <UInput type="datetime-local" v-model="hackathonForm.schedule_start" @change="onFieldChange()" />
                     </div>
 
                     <div>
                         <label class="block text-sm font-medium mb-1">Schedule End</label>
-                        <UInput type="datetime-local" v-model="hackathonForm.schedule_end" />
+                        <UInput type="datetime-local" v-model="hackathonForm.schedule_end" @change="onFieldChange()" />
                     </div>
 
                     <div>
                         <label class="block text-sm font-medium mb-1">Start</label>
-                        <UInput type="datetime-local" v-model="hackathonForm.start_timestamp" />
+                        <UInput type="datetime-local" v-model="hackathonForm.start_timestamp" @change="onFieldChange()" />
                     </div>
 
                     <div>
                         <label class="block text-sm font-medium mb-1">End</label>
-                        <UInput type="datetime-local" v-model="hackathonForm.end_timestamp" />
+                        <UInput type="datetime-local" v-model="hackathonForm.end_timestamp" @change="onFieldChange()" />
                     </div>
 
                     <div>
                         <label class="block text-sm font-medium mb-1">Voting Start</label>
-                        <UInput type="datetime-local" v-model="hackathonForm.voting_start_timestamp" />
+                        <UInput type="datetime-local" v-model="hackathonForm.voting_start_timestamp" @change="onFieldChange()" />
                     </div>
 
                     <div>
                         <label class="block text-sm font-medium mb-1">Voting End</label>
-                        <UInput type="datetime-local" v-model="hackathonForm.voting_end_timestamp" />
+                        <UInput type="datetime-local" v-model="hackathonForm.voting_end_timestamp" @change="onFieldChange()" />
                     </div>
 
                     <div>
                         <label class="block text-sm font-medium mb-1">Results Open</label>
-                        <UInput type="datetime-local" v-model="hackathonForm.results_open_timestamp" />
+                        <UInput type="datetime-local" v-model="hackathonForm.results_open_timestamp" @change="onFieldChange()" />
                     </div>
                 </div>
             </section>
