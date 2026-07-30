@@ -40,6 +40,20 @@ const items = computed<NavigationMenuItem[][]>(() => [
 ]);
 
 const name = computed(() => user.value?.name || "Log In");
+
+// Ctrl+K keyboard shortcut — focuses the sidebar collapse toggle
+onMounted(() => {
+    const handler = (e: KeyboardEvent) => {
+        if ((e.metaKey || e.ctrlKey) && e.key === "k") {
+            e.preventDefault();
+            // Click the first sidebar collapse button
+            const btn = document.querySelector<HTMLButtonElement>('[aria-label="Toggle sidebar"]');
+            btn?.click();
+        }
+    };
+    document.addEventListener("keydown", handler);
+    onUnmounted(() => document.removeEventListener("keydown", handler));
+});
 </script>
 
 <template>

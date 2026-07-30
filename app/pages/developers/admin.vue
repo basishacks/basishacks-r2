@@ -140,9 +140,11 @@ watch(activeSeasonId, (id) => {
         "results_open_timestamp",
     ] as const;
     for (const key of configKeys) {
-        if (s[key] === undefined) continue;
-        if (s[key] === null) {
-            // Text fields default to blank; numeric fields keep 0
+        const val = s[key];
+        // Skip undefined fields
+        if (val === undefined) continue;
+        // Skip default values so the global hackathon config shines through
+        if (val === null) {
             if (
                 ["theme_name", "theme_description", "schedule_start", "schedule_end"].includes(key)
             ) {
@@ -150,10 +152,15 @@ watch(activeSeasonId, (id) => {
             }
             continue;
         }
+        if (key === "status" && val === "not_started") continue;
+        if (key === "max_votes_per_user" && val === 0) continue;
+        if (["voting_enabled", "judging_open", "results_published"].includes(key) && val === 0)
+            continue;
         if (tsKeys.includes(key as any)) {
-            hackathonForm[key] = tsToDatetime(s[key]);
+            if (val === 0) continue; // default timestamp — keep global value
+            hackathonForm[key] = tsToDatetime(val);
         } else {
-            hackathonForm[key] = s[key];
+            hackathonForm[key] = val;
         }
     }
 });
