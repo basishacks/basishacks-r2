@@ -26,7 +26,7 @@ export default defineEventHandler(async (event) => {
     setHeader(
         event,
         "Permissions-Policy",
-        "camera=(), microphone=(), geolocation=(), payment=(), usb=(), magnetometer=(), gyroscope=(), accelerometer=(), ambient-light-sensor=(), autoplay=(), encrypted-media=(), picture-in-picture=()",
+        "camera=(), microphone=(), geolocation=(), payment=(), usb=(), magnetometer=(), gyroscope=(), accelerometer=(), autoplay=(), encrypted-media=(), picture-in-picture=()",
     );
 
     // Content Security Policy

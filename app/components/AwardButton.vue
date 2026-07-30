@@ -21,8 +21,6 @@ const props = defineProps<{
 }>();
 
 const convertColor = (award: APIAward) => {
-    console.log(award);
-
     switch (award.color) {
         case "gold":
             return "warning";

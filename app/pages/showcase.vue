@@ -18,7 +18,7 @@
     >
         <div class="text-center lg:text-right lg:ml-auto lg:mr-48">
             <h3 class="text-2xl text-gray-200">Feburary 2026</h3>
-            <h1 class="text-6xl leading-16">
+            <h1 class="text-4xl sm:text-6xl leading-16">
                 When there is
                 <br />
                 <span class="bold glow text-primary neon">Signal</span>
@@ -58,7 +58,7 @@
                     <h3 class="text-2xl text-left text-neutral-400 uppercase leading-16">
                         Featuring 白鹿青崖间
                     </h3>
-                    <h1 class="text-6xl text-left leading-16 bold glow">Syl</h1>
+                    <h1 class="text-4xl sm:text-6xl text-left leading-16 bold glow">Syl</h1>
 
                     <p class="mt-16 text-neutral-400">
                         ... by 6 scenes, the player can experience the story of a fallen
@@ -94,7 +94,7 @@
         <!-- text -->
     </div>
 
-    <div id="team2" ref="team2Ref" class="bg-white text-black m-0 p-0 min-h-screen max-h-screen">
+    <div id="team2" ref="team2Ref" class="bg-white text-black m-0 p-0 min-h-screen lg:max-h-screen">
         <div class="flex flex-col xl:flex-row items-center justify-between w-full min-h-screen">
             <div class="xl:mt-auto max-xl:flex items-center justify-start max-xl:w-full">
                 <img
@@ -131,7 +131,7 @@
                     >
                         Super Cool But Creepy Visual Recognition Robotic Head
                     </h1>
-                    <p class="z-3 w-max-2 mx-50vw text-center px-8">
+                    <p class="z-3 w-full max-w-xl text-center px-4 sm:px-8">
                         A robotic head that looks cool and is able to recognize learned faces and
                         colors, and provide personalized reactions
                     </p>
@@ -188,7 +188,7 @@
         </Transition>
 
         <div
-            class="ml-24 max-sm:max-w-[90vw] sm:max-w-[50vw] mr-24 max-2xl:p-16 max-2xl:bg-[#8C1515] rounded-lg max-2xl:my-16"
+            class="mx-4 sm:ml-24 sm:mr-24 max-sm:max-w-none sm:max-w-[50vw] max-2xl:p-16 max-2xl:bg-[#8C1515] rounded-lg max-2xl:my-16"
         >
             <h3 class="text-3xl bold glow text-white">Dysarthria Speech Classifier</h3>
 
@@ -226,7 +226,7 @@
                 <UIcon name="i-material-symbols-circle" size="4em" class="text-green-500 h-4 w-4" />
             </div>
             <div
-                class="window-image w-lg h-72 lg:w-196 lg:h-108 rounded-lg mx-2 mb-2 select-none"
+                class="window-image w-[80vw] sm:w-lg h-72 lg:w-196 lg:h-108 rounded-lg mx-2 mb-2 select-none"
             />
         </div>
     </div>
@@ -545,6 +545,7 @@ onUnmounted(() => {
 .team3-background-number-max-lg {
     @media (width < 64rem) {
         right: 0;
+        font-size: 16rem;
     }
 }
 
