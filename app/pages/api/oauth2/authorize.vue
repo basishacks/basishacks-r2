@@ -480,7 +480,7 @@ const preloadImage = (url: string): Promise<void> => {
 };
 
 const matrixCharacters =
-    "01ABCDEFGHIJKLMNOPQRSTUVWXYZАБВГДЕЁЖЗИЙКЛМНОПРСТУФХЦЧШЩЪЫЬЭЮЯｱｲｳｴｵｶｷｸｹｺｻｼｽｾｿﾀﾁﾂﾃﾄﾅﾆﾇﾈﾉﾊﾋﾌﾍﾎﾏﾐﾑﾒﾓﾔﾕﾖﾗﾘﾙﾚﾛﾜｦﾝ";
+    "01ABCDEFGHIJKLMNOPQRSTUVWXYZАБВГДЕЁЖЗИЙКЛМНОПРСТУФХЦЧШЩЪЫЬЭЮЯｱｲｳｴｵｶｷｸｹｺｻｼｽｾｿﾀﾁﾂﾃﾄﾅﾆﾇﾈﾉﾊﾋﾌﾍﾎﾏﾐﾑﾒﾓﾔﾕﾖﾗﾘﾙﾚﾛﾜｦﾝ璐濆鎬濋粦瀹㈡澗����˼�ڿ���è´å¡žæ€é»‘å®¢æ¾±´ÈûË¼ºÚ¿ÍËÉ锟斤拷锟斤拷思锟节匡拷锟斤拷";
 
 function setupCanvas() {
     if (!canvas.value) return;
