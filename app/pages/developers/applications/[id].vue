@@ -1,5 +1,4 @@
 <script setup lang="ts">
-import { hasPermission, DevPermissions } from "~~/shared/permissions";
 import type { NavigationMenuItem } from "@nuxt/ui";
 import { ManageRedirectUriRequest } from "~~/shared/schemas";
 import { OAuth2Scopes } from "~~/shared/oauth2-scopes";

@@ -2,8 +2,6 @@
 import type { TableColumn } from "@nuxt/ui";
 import { upperFirst } from "scule";
 import { getPaginationRowModel } from "@tanstack/table-core";
-import { hasPermission, DevPermissions } from "~~/shared/permissions";
-
 definePageMeta({
     layout: "developers-dashboard",
 });
@@ -30,20 +28,6 @@ const { data, status, refresh } = await useFetch<OAuth2Application[]>("/api/appl
     lazy: true,
     default: () => [],
 });
-
-// Client-side permission guard
-const { user: me } = await useApiUser();
-if (
-    !hasPermission(me.value?.role, DevPermissions.PORTAL_APPLICATIONS_VIEW) &&
-    !hasPermission(me.value?.role, "admin")
-) {
-    useToast().add({
-        title: "Access denied",
-        description: "You do not have permission to view applications.",
-        color: "error",
-    });
-    throw await navigateTo("/developers");
-}
 
 const selectedRows = computed<any[]>(() => {
     if (!table.value?.tableApi) return [];

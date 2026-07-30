@@ -1,23 +1,7 @@
 <script setup lang="ts">
-import { hasPermission, DevPermissions } from "~~/shared/permissions";
-
 definePageMeta({
     layout: "developers-dashboard",
 });
-
-// Client-side permission guard
-const { user: me } = await useApiUser();
-if (
-    !hasPermission(me.value?.role, DevPermissions.PORTAL_DEEPSEEK_VIEW) &&
-    !hasPermission(me.value?.role, "admin")
-) {
-    useToast().add({
-        title: "Access denied",
-        description: "You do not have permission to view DeepSeek.",
-        color: "error",
-    });
-    throw await navigateTo("/developers");
-}
 
 const toast = useToast();
 

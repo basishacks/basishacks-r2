@@ -1,28 +1,10 @@
 <script setup lang="ts">
-import { hasPermission, DevPermissions } from "~~/shared/permissions";
-
 definePageMeta({
     layout: "developers-dashboard",
 });
 
-const { user: me } = await useApiUser();
-
-// Redirect admins to the full Hackathon Administration page
-if (hasPermission(me.value?.role, "admin")) {
-    await navigateTo("/developers/admin");
-}
-
-if (
-    !hasPermission(me.value?.role, DevPermissions.PORTAL_SEASONS_VIEW) &&
-    !hasPermission(me.value?.role, "admin")
-) {
-    useToast().add({
-        title: "Access denied",
-        description: "You do not have permission to view seasons.",
-        color: "error",
-    });
-    throw await navigateTo("/developers");
-}
+// This page is deprecated — redirect to the full Hackathon Administration page
+await navigateTo("/developers/admin");
 </script>
 
 <template>

@@ -1,24 +1,9 @@
 <script setup lang="ts">
 import { onMounted } from "vue";
-import { hasPermission, DevPermissions } from "~~/shared/permissions";
 
 definePageMeta({
     layout: "developers-dashboard",
 });
-
-// Client-side permission guard
-const { user: me } = await useApiUser();
-if (
-    !hasPermission(me.value?.role, DevPermissions.PORTAL_DEBUG_VIEW) &&
-    !hasPermission(me.value?.role, "admin")
-) {
-    useToast().add({
-        title: "Access denied",
-        description: "You do not have permission to view debug tools.",
-        color: "error",
-    });
-    throw await navigateTo("/developers");
-}
 
 // File upload state
 const file = ref<File | null>(null);

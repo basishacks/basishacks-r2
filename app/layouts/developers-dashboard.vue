@@ -1,75 +1,41 @@
 <script setup lang="ts">
 import type { NavigationMenuItem } from "@nuxt/ui";
-import { DevPermissions, hasPermission } from "~~/shared/permissions";
 
 const { user, status } = await useApiUser({ lazy: true });
 
-const lacksPermission = (permission: string) => {
-    if (status.value === "idle" || status.value === "pending") return false;
-
-    return (
-        !hasPermission(user.value?.role, permission) && !hasPermission(user.value?.role, "admin")
-    );
-};
+// Developer portal is admin-only — hard 403 for everyone else
+if (status.value !== "idle" && status.value !== "pending") {
+    if (!user.value || user.value.role !== "admin") {
+        throw createError({ statusCode: 403, statusMessage: "Access Denied" });
+    }
+}
 
 const items = computed<NavigationMenuItem[][]>(() => [
     [
-        {
-            label: "Home",
-            icon: "i-lucide-house",
-            to: "/developers",
-        },
-        {
-            label: "Users",
-            icon: "i-lucide-user",
-            to: "/developers/users",
-            disabled: lacksPermission(DevPermissions.PORTAL_USERS_VIEW),
-        },
-        {
-            label: "Teams",
-            icon: "i-lucide-users",
-            to: "/developers/teams",
-            disabled: lacksPermission(DevPermissions.PORTAL_TEAMS_VIEW),
-        },
+        { label: "Home", icon: "i-lucide-house", to: "/developers" },
+        { label: "Users", icon: "i-lucide-user", to: "/developers/users" },
+        { label: "Teams", icon: "i-lucide-users", to: "/developers/teams" },
         {
             label: "Applications",
             icon: "i-lucide-app-window",
             to: "/developers/applications/",
-            disabled: lacksPermission(DevPermissions.PORTAL_APPLICATIONS_VIEW),
             children: [
                 {
                     label: "Create New",
                     icon: "i-lucide-plus",
                     to: "/developers/applications/create",
-                    disabled: lacksPermission(DevPermissions.PORTAL_APPLICATIONS_CREATE),
                 },
             ],
         },
-        {
-            label: "DeepSeek",
-            icon: "i-lucide-message-square",
-            to: "/developers/deepseek",
-            disabled: lacksPermission(DevPermissions.PORTAL_DEEPSEEK_VIEW),
-        },
-        {
-            label: "Files",
-            icon: "i-lucide-files",
-            to: "/developers/debug",
-            disabled: lacksPermission(DevPermissions.PORTAL_DEBUG_VIEW),
-        },
-        {
-            label: "Seasons",
-            icon: "i-lucide-calendar",
-            to: "/developers/seasons",
-            disabled: lacksPermission(DevPermissions.PORTAL_SEASONS_VIEW),
-        },
+        { label: "DeepSeek", icon: "i-lucide-message-square", to: "/developers/deepseek" },
+        { label: "Files", icon: "i-lucide-files", to: "/developers/debug" },
+        { label: "Seasons", icon: "i-lucide-calendar", to: "/developers/seasons" },
     ],
     [
         {
             label: "Hackathon Administration",
             icon: "i-lucide-shield",
             to: "/developers/admin",
-            disabled: !user.value || user.value.role !== "admin",
         },
     ],
 ]);
