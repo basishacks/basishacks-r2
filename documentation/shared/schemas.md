@@ -11,22 +11,24 @@ All API input validation is performed using [Zod](https://zod.dev) schemas defin
 
 ## Length Constants
 
-All configurable length limits are defined as module-scoped constants at the top of `shared/schemas.ts`:
+All configurable length limits are defined as exported constants at the top of `shared/schemas.ts`, importable by both server and frontend code:
 
 | Constant | Value | Used By |
 | --- | --- | --- |
 | `MAX_EMAIL_LENGTH` | 254 | `BasisEmail` |
 | `MAX_PROJECT_NAME_LENGTH` | 100 | `ProjectName` |
-| `MAX_PROJECT_DESCRIPTION_LENGTH` | 2000 | `ProjectDescription`, `UpdateTeamRequest.project.description` |
-| `MAX_PROJECT_SOURCE_LENGTH` | 2000 | `UpdateTeamRequest.project.sourcing`, `SubmitTeamRequest.project.sourcing` |
+| `MAX_PROJECT_DESCRIPTION_LENGTH` | 2,147,483,647 | `ProjectDescription`, `UpdateTeamRequest.project.description` |
+| `MAX_PROJECT_SOURCE_LENGTH` | 2,147,483,647 | `UpdateTeamRequest.project.sourcing`, `SubmitTeamRequest.project.sourcing` |
 | `MAX_URL_LENGTH` | 2048 | `ProjectUrl`, `RequiredProjectUrl` |
-| `MAX_USER_NAME_LENGTH` | 30 | `UpdateUserRequest.name` |
+| `MAX_REASONING_LENGTH` | 2,147,483,647 | `CreateTeamScoresRequest.reasoning`, `SubmitVoteRequest.reasoning` |
+| `MAX_USER_NAME_LENGTH` | 50 | `UpdateUserRequest.name` |
 | `MAX_OAUTH2_CODE_LENGTH` | 1024 | `OAuth2TokenRequest.code` |
 | `MAX_CLIENT_ID_LENGTH` | 256 | `OAuth2TokenRequest.client_id`, `ApplicationIdParams` |
 | `MAX_CLIENT_SECRET_LENGTH` | 512 | `OAuth2TokenRequest.client_secret` |
 | `MAX_CODE_VERIFIER_LENGTH` | 128 | `OAuth2TokenRequest.code_verifier` |
 | `MAX_REDIRECT_URI_LENGTH` | 2048 | `OAuth2TokenRequest.redirect_uri` |
 | `MAX_SCOPE_LENGTH` | 128 | (scope string validation) |
+| `MAX_REASONING_LENGTH` | 2,147,483,647 | `CreateTeamScoresRequest.reasoning`, `SubmitVoteRequest.reasoning` |
 | `MAX_SECRET_ABBREVIATED_LENGTH` | 16 | Abbreviated client secret display |
 | `MAX_SESSION_TOKEN_LENGTH` | 2048 | `MicrosoftRedirectRequest.token` |
 | `MAX_REASONING_LENGTH` | 2000 | `CreateTeamScoresRequest.reasoning`, `SubmitVoteRequest.reasoning` |
