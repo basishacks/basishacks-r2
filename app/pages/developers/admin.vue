@@ -11,7 +11,6 @@ useHead({
 const toast = useToast();
 const { data: user, status } = await useApiUser();
 
-// Hard 403 for non-admin users
 if (status.value !== "pending" && status.value !== "idle") {
     if (!user.value || user.value.role !== "admin") {
         throw createError({ statusCode: 403, statusMessage: "Access Denied" });
@@ -19,15 +18,14 @@ if (status.value !== "pending" && status.value !== "idle") {
 }
 
 // ---------------------------------------------------------------------------
-// Load current hackathon state and seasons
+// Data
 // ---------------------------------------------------------------------------
 const { data: adminData, refresh: refreshAdmin } = await useFetch("/api/admin/hackathon");
 const hackathon = computed(() => adminData.value?.hackathon ?? null);
 const seasons = computed(() => adminData.value?.seasons ?? []);
 
 // ---------------------------------------------------------------------------
-// Helpers: convert ms epoch <-> datetime-local string
-// The hackathon table stores timestamps as JavaScript Date.now() epoch (ms).
+// Helpers: ms epoch <-> datetime-local
 // ---------------------------------------------------------------------------
 function tsToDatetime(ts: number | null | undefined): string {
     if (!ts) return "";
@@ -35,11 +33,18 @@ function tsToDatetime(ts: number | null | undefined): string {
     const pad = (n: number) => String(n).padStart(2, "0");
     return `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}T${pad(d.getHours())}:${pad(d.getMinutes())}`;
 }
-
 function datetimeToTs(s: string): number {
     if (!s) return 0;
     return new Date(s).getTime();
 }
+
+const tsKeys = [
+    "start_timestamp",
+    "end_timestamp",
+    "voting_start_timestamp",
+    "voting_end_timestamp",
+    "results_open_timestamp",
+] as const;
 
 // ---------------------------------------------------------------------------
 // Hackathon config form
@@ -52,30 +57,13 @@ watch(
     hackathon,
     (h) => {
         if (h) {
-            // Convert timestamps to datetime-local strings for display
             const raw: Record<string, any> = { ...h };
-            for (const key of [
-                "start_timestamp",
-                "end_timestamp",
-                "voting_start_timestamp",
-                "voting_end_timestamp",
-                "results_open_timestamp",
-            ]) {
-                raw[key] = tsToDatetime(raw[key]);
-            }
+            for (const key of tsKeys) raw[key] = tsToDatetime(raw[key]);
             Object.assign(hackathonForm, raw);
         }
     },
     { immediate: true },
 );
-
-const tsKeys = [
-    "start_timestamp",
-    "end_timestamp",
-    "voting_start_timestamp",
-    "voting_end_timestamp",
-    "results_open_timestamp",
-] as const;
 
 async function saveHackathon() {
     hackathonSaving.value = true;
@@ -84,9 +72,7 @@ async function saveHackathon() {
         const body: Record<string, any> = {};
         for (const [key, value] of Object.entries(hackathonForm)) {
             if (key === "id") continue;
-            // Convert datetime-local strings back to unix timestamps
             let val = tsKeys.includes(key as any) ? datetimeToTs(value as string) : value;
-            // UCheckbox with :binary emits booleans; API expects 0/1
             if (typeof val === "boolean") val = val ? 1 : 0;
             if (val !== (hackathon.value as any)?.[key]) body[key] = val;
         }
@@ -105,7 +91,7 @@ async function saveHackathon() {
 }
 
 // ---------------------------------------------------------------------------
-// Active season selector
+// Active season — picker at top, activates on "Set Active"
 // ---------------------------------------------------------------------------
 const activeSeasonId = ref<number | null>(null);
 
@@ -124,70 +110,8 @@ const activeSeasonItems = computed(() => [
         []),
 ]);
 
-const activeSeasonSaving = ref(false);
-
-// ---------------------------------------------------------------------------
-// Theme name dropdown: pick from existing season names or enter custom
-// ---------------------------------------------------------------------------
-const themeSelectMode = ref("__custom__");
-
-watch(
-    () => hackathon.value?.theme_name,
-    (name) => {
-        if (name) {
-            const match = seasons.value?.find((s: any) => s.name === name);
-            themeSelectMode.value = match ? name : "__custom__";
-        } else {
-            themeSelectMode.value = "__custom__";
-        }
-    },
-    { immediate: true },
-);
-
-const themeOptions = computed(() => {
-    const current = hackathonForm.theme_name;
-    const seasonNames = (seasons.value || []).map((s: any) => ({
-        label: s.name,
-        value: s.name,
-    }));
-    const items = [
-        ...(current && !seasonNames.find((o: any) => o.value === current)
-            ? [{ label: `Custom: "${current}"`, value: "__custom__" as const }]
-            : [{ label: "Custom...", value: "__custom__" as const }]),
-        ...(seasonNames.length
-            ? [{ label: "──────────", value: "__sep__" as const, disabled: true }]
-            : []),
-        ...seasonNames,
-        { label: "──────────", value: "__sep__", disabled: true },
-        { label: "Create new season...", value: "__create__" as const },
-    ];
-    return items;
-});
-
-watch(themeSelectMode, async (mode) => {
-    if (mode === "__create__") {
-        const name = prompt("New season name:");
-        if (name && name.trim()) {
-            try {
-                await $fetch("/api/admin/seasons", {
-                    method: "POST",
-                    body: { name: name.trim() },
-                });
-                await refreshAdmin();
-                toast.add({ title: `Season "${name}" created.`, color: "success" });
-                hackathonForm.theme_name = name.trim();
-            } catch (e: any) {
-                toast.add({ title: "Error", description: getErrorMessage(e), color: "error" });
-            }
-        }
-        themeSelectMode.value = hackathonForm.theme_name || "__custom__";
-    } else if (mode !== "__custom__") {
-        hackathonForm.theme_name = mode;
-    }
-});
-
 async function setActiveSeason() {
-    activeSeasonSaving.value = true;
+    if (activeSeasonId.value === null) return;
     try {
         await $fetch("/api/seasons/active", {
             method: "PATCH",
@@ -197,86 +121,21 @@ async function setActiveSeason() {
         toast.add({ title: "Active season updated.", color: "success" });
     } catch (e: any) {
         toast.add({ title: "Error", description: getErrorMessage(e), color: "error" });
-    } finally {
-        activeSeasonSaving.value = false;
     }
 }
 
 // ---------------------------------------------------------------------------
-// Season CRUD
+// New season — prompts then adds to the dropdown
 // ---------------------------------------------------------------------------
-const newSeasonName = ref("");
-const seasonMessage = ref("");
-
-async function createSeason() {
-    if (!newSeasonName.value.trim()) return;
-    seasonMessage.value = "";
+async function addSeason() {
+    const name = prompt("New season name:");
+    if (!name || !name.trim()) return;
     try {
-        await $fetch("/api/admin/seasons", {
-            method: "POST",
-            body: { name: newSeasonName.value.trim() },
-        });
-        newSeasonName.value = "";
+        await $fetch("/api/admin/seasons", { method: "POST", body: { name: name.trim() } });
         await refreshAdmin();
-        seasonMessage.value = "Season created.";
+        toast.add({ title: `Season "${name}" created.`, color: "success" });
     } catch (e: any) {
-        seasonMessage.value = e.data?.message || e.message || "Failed to create season.";
-    }
-}
-
-async function activateSeason(id: number) {
-    seasonMessage.value = "";
-    try {
-        await $fetch("/api/admin/seasons", {
-            method: "PATCH",
-            body: { id, is_active: 1 },
-        });
-        await refreshAdmin();
-        seasonMessage.value = "Season activated.";
-    } catch (e: any) {
-        seasonMessage.value = e.data?.message || e.message || "Failed to activate season.";
-    }
-}
-
-async function deactivateSeason(id: number) {
-    seasonMessage.value = "";
-    try {
-        await $fetch("/api/admin/seasons", {
-            method: "PATCH",
-            body: { id, is_active: 0 },
-        });
-        await refreshAdmin();
-        seasonMessage.value = "Season deactivated.";
-    } catch (e: any) {
-        seasonMessage.value = e.data?.message || e.message || "Failed.";
-    }
-}
-
-async function deleteSeason(id: number) {
-    if (!confirm("Delete this season? This cannot be undone.")) return;
-    seasonMessage.value = "";
-    try {
-        await $fetch(`/api/admin/seasons/${id}`, { method: "DELETE" });
-        await refreshAdmin();
-        seasonMessage.value = "Season deleted.";
-    } catch (e: any) {
-        seasonMessage.value = e.data?.message || e.message || "Failed to delete season.";
-    }
-}
-
-async function renameSeason(id: number, currentName: string) {
-    const name = prompt("New season name:", currentName);
-    if (!name || name === currentName) return;
-    seasonMessage.value = "";
-    try {
-        await $fetch("/api/admin/seasons", {
-            method: "PATCH",
-            body: { id, name },
-        });
-        await refreshAdmin();
-        seasonMessage.value = "Season renamed.";
-    } catch (e: any) {
-        seasonMessage.value = e.data?.message || e.message || "Failed.";
+        toast.add({ title: "Error", description: getErrorMessage(e), color: "error" });
     }
 }
 </script>
@@ -292,8 +151,22 @@ async function renameSeason(id: number, currentName: string) {
         </template>
 
         <template #body>
+            <!-- Season picker at the top -->
+            <section class="bg-ui-bg border-b border-ui-border p-6">
+                <h2 class="text-xl font-semibold mb-3">Season</h2>
+                <div class="flex items-center gap-3">
+                    <USelect
+                        v-model="activeSeasonId"
+                        :items="activeSeasonItems"
+                        class="w-full max-w-xs"
+                    />
+                    <UButton @click="setActiveSeason" color="primary">Set Active</UButton>
+                    <UButton @click="addSeason" variant="outline">+ New Season</UButton>
+                </div>
+            </section>
+
             <!-- Hackathon Configuration -->
-            <section v-if="hackathon" class="bg-ui-bg border-b border-ui-border p-6 space-y-4">
+            <section v-if="hackathon" class="bg-ui-bg p-6 space-y-4">
                 <h2 class="text-xl font-semibold">Hackathon Configuration</h2>
 
                 <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
@@ -339,19 +212,7 @@ async function renameSeason(id: number, currentName: string) {
 
                     <div>
                         <label class="block text-sm font-medium mb-1">Theme Name</label>
-                        <div class="flex items-center gap-2">
-                            <USelect
-                                v-model="themeSelectMode"
-                                :items="themeOptions"
-                                class="flex-1"
-                            />
-                            <UInput
-                                v-if="themeSelectMode === '__custom__'"
-                                v-model="hackathonForm.theme_name"
-                                placeholder="Custom theme name"
-                                class="flex-1"
-                            />
-                        </div>
+                        <UInput v-model="hackathonForm.theme_name" />
                     </div>
 
                     <div class="md:col-span-2">
@@ -418,95 +279,6 @@ async function renameSeason(id: number, currentName: string) {
                         {{ hackathonMessage }}
                     </span>
                 </div>
-            </section>
-
-            <!-- Active Season Selector -->
-            <section class="bg-ui-bg border-b border-ui-border p-6 space-y-4">
-                <h2 class="text-xl font-semibold">Active Season</h2>
-                <p class="text-sm text-ui-text-muted">
-                    Select the currently active season. Only one season can be active at a time.
-                </p>
-                <div class="flex items-center gap-3">
-                    <USelect
-                        v-model="activeSeasonId"
-                        :items="activeSeasonItems"
-                        class="w-full max-w-xs"
-                    />
-                    <UButton @click="setActiveSeason" :loading="activeSeasonSaving" color="primary">
-                        Set Active
-                    </UButton>
-                </div>
-            </section>
-
-            <!-- Season Management -->
-            <section class="bg-ui-bg p-6 space-y-4">
-                <h2 class="text-xl font-semibold">Season Management</h2>
-
-                <div class="flex items-center gap-3">
-                    <UInput v-model="newSeasonName" placeholder="New season name" class="flex-1" />
-                    <UButton @click="createSeason" color="primary">Add Season</UButton>
-                </div>
-                <span
-                    v-if="seasonMessage"
-                    class="text-sm"
-                    :class="seasonMessage.includes('Failed') ? 'text-red-500' : 'text-green-500'"
-                >
-                    {{ seasonMessage }}
-                </span>
-
-                <UTable :items="seasons" v-if="seasons.length > 0">
-                    <template #header>
-                        <tr>
-                            <th>Name</th>
-                            <th>Active</th>
-                            <th>Actions</th>
-                        </tr>
-                    </template>
-                    <template #body>
-                        <tr v-for="s in seasons" :key="s.id">
-                            <td>{{ s.name }}</td>
-                            <td>
-                                <UBadge v-if="s.is_active" color="success" variant="solid">
-                                    Active
-                                </UBadge>
-                                <UBadge v-else color="neutral" variant="outline">Inactive</UBadge>
-                            </td>
-                            <td class="flex gap-2">
-                                <UButton
-                                    v-if="!s.is_active"
-                                    size="sm"
-                                    @click="activateSeason(s.id)"
-                                >
-                                    Activate
-                                </UButton>
-                                <UButton
-                                    v-if="s.is_active"
-                                    size="sm"
-                                    variant="outline"
-                                    @click="deactivateSeason(s.id)"
-                                >
-                                    Deactivate
-                                </UButton>
-                                <UButton
-                                    size="sm"
-                                    variant="outline"
-                                    @click="renameSeason(s.id, s.name)"
-                                >
-                                    Rename
-                                </UButton>
-                                <UButton
-                                    size="sm"
-                                    color="error"
-                                    variant="outline"
-                                    @click="deleteSeason(s.id)"
-                                >
-                                    Delete
-                                </UButton>
-                            </td>
-                        </tr>
-                    </template>
-                </UTable>
-                <p v-else class="text-sm text-ui-text-muted">No seasons yet.</p>
             </section>
         </template>
     </UDashboardPanel>
