@@ -229,6 +229,8 @@ Placeholder page for the presentation event. States that top 10 teams will be in
 
 ## Developer Portal
 
+**Access:** The entire developer portal is admin-only. The `developers-dashboard` layout enforces this with a hard 403 at the layout level. There is no non-admin developer role.
+
 ### `/developers`
 
 **File:** `app/pages/developers/index.vue`
@@ -241,7 +243,7 @@ Developer portal landing page. Shows a welcome message.
 
 **File:** `app/pages/developers/users.vue`
 
-User management page. Permission-gated via the sidebar navigation.
+User management page.
 
 **Layout:** `developers-dashboard`
 
@@ -249,7 +251,7 @@ User management page. Permission-gated via the sidebar navigation.
 
 **File:** `app/pages/developers/teams.vue`
 
-Team management page. Permission-gated via the sidebar navigation.
+Team management page.
 
 **Layout:** `developers-dashboard`
 
@@ -266,6 +268,20 @@ OAuth2 application listing page.
 **File:** `app/pages/developers/applications/create.vue`
 
 OAuth2 application creation form.
+
+**Layout:** `developers-dashboard`
+
+### `/developers/admin`
+
+**File:** `app/pages/developers/admin.vue`
+
+Hackathon Administration panel. Only accessible to admin users; non-admins receive a hard 403 even if they know the URL. Provides:
+
+- **Hackathon Configuration**: Edit all global hackathon state fields (status, voting, judging, results, timestamps via datetime-local pickers, theme)
+- **Active Season**: Dropdown to select the currently active season
+- **Season Management**: Create, rename, activate, deactivate, and delete seasons
+
+All changes are persisted to the database immediately via dedicated admin API endpoints.
 
 **Layout:** `developers-dashboard`
 
@@ -291,15 +307,13 @@ OAuth2 application editor with two tabs: **General details** and **Authorization
 | Scope Permissions | Add scopes from `OAuth2Scopes` registry. Admin-only scopes require elevated permissions. Sensitive scopes show "User Consent" badge. |
 | OAuth2 URL Generator | Select scopes and redirect URI to generate an authorization URL. Includes PKCE requirement notice. |
 
-**Permission guard:** Client-side check using `useApiUser()` — admin or `PORTAL_APPLICATIONS_VIEW_ALL` permission required.
-
 **Layout:** `developers-dashboard`
 
 ### `/developers/deepseek`
 
 **File:** `app/pages/developers/deepseek.vue`
 
-DeepSeek AI chat interface. Permission-gated.
+DeepSeek AI chat interface.
 
 **Layout:** `developers-dashboard`
 

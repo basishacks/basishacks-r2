@@ -391,7 +391,7 @@ List all teams across all seasons (developer portal).
 
 | Field        | Details                                        |
 | ------------ | ---------------------------------------------- |
-| **Auth**     | User with `dev_teams` permission or admin      |
+| **Auth**     | Admin                                          |
 | **Response** | Array of team objects with `season_name` field |
 
 ### DELETE `/api/admin/teams`
@@ -400,7 +400,7 @@ Delete teams by ID.
 
 | Field | Details |
 | --- | --- |
-| **Auth** | User with `dev_teams` permission or admin |
+| **Auth** | Admin |
 | **Body** | `{ ids: number[] }` |
 | **Response** | `{ message: string }` |
 | **Side effects** | Removes ballot_scores, team_scores, team_awards, user_past_teams, and unassigns users |
@@ -423,6 +423,55 @@ Recalculate all judge scores and ranks for active season 1.
 | ------------ | -------------------------------- |
 | **Auth**     | None (internal utility endpoint) |
 | **Response** | `{ message: string }`            |
+
+### GET `/api/admin/hackathon`
+
+Read the current global hackathon configuration and all seasons.
+
+| Field        | Details                                       |
+| ------------ | --------------------------------------------- |
+| **Auth**     | Admin                                         |
+| **Response** | `{ hackathon: Hackathon, seasons: Season[] }` |
+
+### PATCH `/api/admin/hackathon`
+
+Update global hackathon state fields. Only provided fields are changed.
+
+| Field | Details |
+| --- | --- |
+| **Auth** | Admin |
+| **Body** | Partial `AdminUpdateHackathonRequest` (status, voting_enabled, judging_open, results_published, max_votes_per_user, timestamps, theme) |
+| **Response** | `{ hackathon: Hackathon }` |
+
+### POST `/api/admin/seasons`
+
+Create a new season.
+
+| Field        | Details                                |
+| ------------ | -------------------------------------- |
+| **Auth**     | Admin                                  |
+| **Body**     | `{ name: string, is_active?: 0 \| 1 }` |
+| **Response** | `{ seasons: Season[] }`                |
+
+### PATCH `/api/admin/seasons`
+
+Rename, activate, or deactivate a season.
+
+| Field        | Details                                             |
+| ------------ | --------------------------------------------------- |
+| **Auth**     | Admin                                               |
+| **Body**     | `{ id: number, name?: string, is_active?: 0 \| 1 }` |
+| **Response** | `{ seasons: Season[] }`                             |
+
+### DELETE `/api/admin/seasons/[id]`
+
+Delete a season by ID.
+
+| Field        | Details                 |
+| ------------ | ----------------------- |
+| **Auth**     | Admin                   |
+| **Params**   | `id` — positive integer |
+| **Response** | `{ seasons: Season[] }` |
 
 ---
 
