@@ -321,15 +321,7 @@ DeepSeek AI chat interface.
 
 **File:** `app/pages/developers/debug.vue`
 
-File upload and debug utilities. Permission-gated.
-
-**Layout:** `developers-dashboard`
-
-### `/developers/seasons`
-
-**File:** `app/pages/developers/seasons.vue`
-
-Season management page. Permission-gated.
+File upload and debug utilities.
 
 **Layout:** `developers-dashboard`
 
