@@ -14,6 +14,7 @@ import {
     OAuth2TokenRequest,
     OAuth2SessionActionRequest,
     SetActiveSeasonRequest,
+    UpdateSeasonTweaksRequest,
     ElectionVoteRequest,
 } from "~~/shared/schemas";
 
@@ -670,6 +671,55 @@ describe("SetActiveSeasonRequest", () => {
 
     it("rejects a non-integer season_id", () => {
         expect(() => SetActiveSeasonRequest.parse({ season_id: 1.5 })).toThrow();
+    });
+});
+
+describe("UpdateSeasonTweaksRequest", () => {
+    it("accepts a single toggle", () => {
+        expect(() => UpdateSeasonTweaksRequest.parse({ show_scores: true })).not.toThrow();
+    });
+
+    it("accepts all fields together", () => {
+        expect(() =>
+            UpdateSeasonTweaksRequest.parse({
+                status: "voting",
+                voting_enabled: true,
+                results_published: false,
+                judging_open: true,
+                show_scores: true,
+                show_ranking: true,
+                max_votes_per_user: 3,
+                schedule_start: "Day 1",
+                schedule_end: null,
+                start_timestamp: 1000,
+                end_timestamp: 2000,
+                voting_start_timestamp: 3000,
+                voting_end_timestamp: 4000,
+                results_open_timestamp: 5000,
+                theme_name: "Theme",
+                theme_description: null,
+            }),
+        ).not.toThrow();
+    });
+
+    it("rejects an empty object", () => {
+        expect(() => UpdateSeasonTweaksRequest.parse({})).toThrow();
+    });
+
+    it("rejects an invalid status", () => {
+        expect(() => UpdateSeasonTweaksRequest.parse({ status: "bogus" })).toThrow();
+    });
+
+    it("rejects a negative max_votes_per_user", () => {
+        expect(() => UpdateSeasonTweaksRequest.parse({ max_votes_per_user: -1 })).toThrow();
+    });
+
+    it("rejects a non-integer timestamp", () => {
+        expect(() => UpdateSeasonTweaksRequest.parse({ start_timestamp: 1.5 })).toThrow();
+    });
+
+    it("rejects a non-boolean toggle", () => {
+        expect(() => UpdateSeasonTweaksRequest.parse({ show_scores: 1 })).toThrow();
     });
 });
 

@@ -1,6 +1,6 @@
 import { DevPermissions } from "~~/shared/permissions";
-import { teams, seasons } from "~~/server/database/schema";
-import { eq, sql } from "drizzle-orm";
+import { teams, seasons, users } from "~~/server/database/schema";
+import { eq, isNotNull, sql } from "drizzle-orm";
 
 export default defineEventHandler(async (event) => {
     await requirePermission(event, DevPermissions.TEAMS);
@@ -26,5 +26,36 @@ export default defineEventHandler(async (event) => {
         .orderBy(teams.id)
         .all();
 
-    return results;
+    const memberRows = event.context.drizzle
+        .select({
+            id: users.id,
+            name: users.name,
+            email: users.email,
+            profile_picture: users.profile_picture,
+            team_id: users.team_id,
+        })
+        .from(users)
+        .where(isNotNull(users.team_id))
+        .orderBy(users.id)
+        .all();
+
+    const membersByTeam = new Map<
+        number,
+        { id: number; name: string | null; email: string; profile_picture: string | null }[]
+    >();
+    for (const row of memberRows) {
+        const list = membersByTeam.get(row.team_id!) ?? [];
+        list.push({
+            id: row.id,
+            name: row.name,
+            email: row.email,
+            profile_picture: row.profile_picture,
+        });
+        membersByTeam.set(row.team_id!, list);
+    }
+
+    return results.map((team) => ({
+        ...team,
+        members: membersByTeam.get(team.id) ?? [],
+    }));
 });

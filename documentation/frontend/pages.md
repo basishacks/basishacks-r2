@@ -249,6 +249,8 @@ User management page. Permission-gated via the sidebar navigation.
 
 Team management page. Permission-gated via the sidebar navigation.
 
+The table includes a **Members** column that renders a `UserAvatarGroup` (with `developer-mode` enabled, so hovering shows each member's id beside their name) fed by the `members` array returned from `GET /api/admin/teams`.
+
 **Layout:** `developers-dashboard`
 
 ### `/developers/applications`
@@ -313,7 +315,12 @@ File upload and debug utilities. Permission-gated.
 
 **File:** `app/pages/developers/seasons.vue`
 
-Season management page. Permission-gated.
+Season management page. Permission-gated (`portal.seasons.view`; editing requires `portal.seasons.edit` or admin).
+
+Contains two sections:
+
+- **Active Season** — select the current season (`PATCH /api/seasons/active`); activating a season copies its tweaks into the live `hackathon` row.
+- **Season Tweaks** — edit the tweakable settings of any selected season (`GET`/`PATCH /api/seasons/:id/tweaks`): show scores / show ranking for participants in results, voting and judging toggles, status, timestamps, schedule, and theme. A season selector chooses which season to edit; when editing the live (active) season, a warning alert is shown and changes also update the `hackathon` row immediately.
 
 **Layout:** `developers-dashboard`
 

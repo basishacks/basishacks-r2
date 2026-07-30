@@ -1,5 +1,6 @@
 import { getUserPastTeams } from "~~/server/utils/database/members";
 import { getTeamById } from "~~/server/utils/database/teams";
+import { DevPermissions, hasPermission } from "~~/shared/permissions";
 
 export default defineEventHandler(async (event) => {
     const currentUser = await getUserSession(event);
@@ -27,9 +28,21 @@ export default defineEventHandler(async (event) => {
     const allTeamIds = [...(team ? [team.id] : []), ...pastTeams.map((t) => t.id)];
     const awardsByTeam = await getAwardsForTeams(event, allTeamIds);
 
+    // Scores and ranks are only shown to participants when the hackathon
+    // toggles are enabled; dev-portal users always see them.
+    const hackathon = await getHackathon(event);
+    const privileged =
+        hasPermission(user.role, DevPermissions.PORTAL_TEAMS_VIEW) ||
+        hasPermission(user.role, "admin");
+    const withScore = privileged || !!hackathon?.show_scores;
+    const withRank = privileged || !!hackathon?.show_ranking;
+
     return {
         ...convertUserToPublic(user),
-        team: team && convertTeamToPublic(team, true, awardsByTeam[team.id] ?? []),
-        past_teams: pastTeams.map((t) => convertTeamToPublic(t, true, awardsByTeam[t.id] ?? [])),
+        team:
+            team && convertTeamToPublic(team, { withScore, withRank }, awardsByTeam[team.id] ?? []),
+        past_teams: pastTeams.map((t) =>
+            convertTeamToPublic(t, { withScore, withRank }, awardsByTeam[t.id] ?? []),
+        ),
     } satisfies GetUserResponse;
 });

@@ -57,5 +57,5 @@ export default defineEventHandler(async (event) => {
 
     return teams
         .toSorted((a, b) => a.pathway!.localeCompare(b.pathway!) || a.rank! - b.rank!)
-        .map((t) => convertTeamToPublic(t, true, awardsByTeam[t.id] ?? []));
+        .map((t) => convertTeamToPublic(t, { withScore: true }, awardsByTeam[t.id] ?? []));
 });

@@ -10,7 +10,9 @@ export default defineEventHandler(async (event) => {
             teams.map((t) => t.id),
         );
 
-        return teams.map((t) => convertTeamToPublic(t, false, awardsByTeam[t.id] ?? []));
+        return teams.map((t) =>
+            convertTeamToPublic(t, { withScore: false }, awardsByTeam[t.id] ?? []),
+        );
     } else {
         const seasonId = query.season_id ? Number(query.season_id) : -1;
         const teams =
@@ -20,6 +22,10 @@ export default defineEventHandler(async (event) => {
             teams.map((t) => t.id),
         );
 
-        return teams.map((t) => convertTeamToPublic(t, false, awardsByTeam[t.id] ?? []));
+        // Public listing: ranks are only exposed when the hackathon toggle is enabled
+        const hackathon = await getHackathon(event);
+        const withRank = !!hackathon?.show_ranking;
+
+        return teams.map((t) => convertTeamToPublic(t, { withRank }, awardsByTeam[t.id] ?? []));
     }
 });

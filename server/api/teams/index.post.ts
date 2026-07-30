@@ -41,5 +41,5 @@ export default defineEventHandler(async (event) => {
         }
     }
 
-    return convertTeamToPublic(team, false, []);
+    return convertTeamToPublic(team, {}, []);
 });

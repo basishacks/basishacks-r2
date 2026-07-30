@@ -128,11 +128,11 @@ export function seedHackathon(sqlite: PortableSqlite) {
         sqlite.exec(
             `
       INSERT INTO hackathon (
-        id, status, voting_enabled, results_published, submitted_count,
-        max_votes_per_user, judging_open, schedule_start, schedule_end,
+        id, status, voting_enabled, results_published, show_scores, show_ranking,
+        submitted_count, max_votes_per_user, judging_open, schedule_start, schedule_end,
         start_timestamp, end_timestamp, voting_start_timestamp,
         voting_end_timestamp, results_open_timestamp, theme_name, theme_description
-      ) VALUES (1, 'not_started', 0, 0, 0, 0, 0, NULL, NULL, 0, 0, 0, 0, 0, NULL, NULL)
+      ) VALUES (1, 'not_started', 0, 0, 0, 0, 0, 0, 0, NULL, NULL, 0, 0, 0, 0, 0, NULL, NULL)
     `,
         );
         console.log("[Nitro] Seeded default hackathon row");
@@ -247,6 +247,8 @@ function migrateLegacySchema(sqlite: PortableSqlite) {
     const hackathonColumns = [
         "voting_enabled",
         "results_published",
+        "show_scores",
+        "show_ranking",
         "submitted_count",
         "max_votes_per_user",
         "judging_open",
@@ -260,6 +262,32 @@ function migrateLegacySchema(sqlite: PortableSqlite) {
                 `ALTER TABLE hackathon ADD COLUMN ${column} INTEGER DEFAULT ${defaultValue}`,
             );
             console.log(`[Nitro] Added legacy-missing column: hackathon.${column}`);
+        }
+    }
+
+    // Missing tweak columns on the legacy seasons table
+    const seasonTweakColumns: Array<{ name: string; ddl: string }> = [
+        { name: "status", ddl: "TEXT NOT NULL DEFAULT 'not_started'" },
+        { name: "voting_enabled", ddl: "INTEGER NOT NULL DEFAULT 0" },
+        { name: "results_published", ddl: "INTEGER NOT NULL DEFAULT 0" },
+        { name: "judging_open", ddl: "INTEGER NOT NULL DEFAULT 0" },
+        { name: "show_scores", ddl: "INTEGER NOT NULL DEFAULT 0" },
+        { name: "show_ranking", ddl: "INTEGER NOT NULL DEFAULT 0" },
+        { name: "max_votes_per_user", ddl: "INTEGER NOT NULL DEFAULT 0" },
+        { name: "schedule_start", ddl: "TEXT" },
+        { name: "schedule_end", ddl: "TEXT" },
+        { name: "start_timestamp", ddl: "INTEGER NOT NULL DEFAULT 0" },
+        { name: "end_timestamp", ddl: "INTEGER NOT NULL DEFAULT 0" },
+        { name: "voting_start_timestamp", ddl: "INTEGER NOT NULL DEFAULT 0" },
+        { name: "voting_end_timestamp", ddl: "INTEGER NOT NULL DEFAULT 0" },
+        { name: "results_open_timestamp", ddl: "INTEGER NOT NULL DEFAULT 0" },
+        { name: "theme_name", ddl: "TEXT" },
+        { name: "theme_description", ddl: "TEXT" },
+    ];
+    for (const { name, ddl } of seasonTweakColumns) {
+        if (!columnExists(sqlite, "seasons", name)) {
+            sqlite.exec(`ALTER TABLE seasons ADD COLUMN ${name} ${ddl}`);
+            console.log(`[Nitro] Added legacy-missing column: seasons.${name}`);
         }
     }
 

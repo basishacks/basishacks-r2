@@ -19,6 +19,8 @@ The hackathon table always has exactly one row (`id = 1`) that controls the glob
 | `status` | `TEXT` | One of: `not_started`, `in_progress`, `voting`, `finished`, `paused` |
 | `voting_enabled` | `INTEGER` | Whether peer voting is enabled |
 | `results_published` | `INTEGER` | Whether results are visible |
+| `show_scores` | `INTEGER` | Whether participants can see scores in results |
+| `show_ranking` | `INTEGER` | Whether participants can see rankings in results |
 | `submitted_count` | `INTEGER` | Number of submitted projects |
 | `max_votes_per_user` | `INTEGER` | Maximum votes allowed per user |
 | `judging_open` | `INTEGER` | Whether judge scoring is open |
@@ -125,6 +127,8 @@ Individual project scores within a ballot. Scores must be 1–5 or null.
 | `id`        | `INTEGER PRIMARY KEY AUTOINCREMENT` | Season ID                                    |
 | `name`      | `TEXT NOT NULL UNIQUE`              | Season name                                  |
 | `is_active` | `INTEGER NOT NULL DEFAULT 0`        | Only one season can be active (CHECK 0 or 1) |
+
+Each season also stores its own copy of the tweakable settings (`status`, `voting_enabled`, `results_published`, `judging_open`, `show_scores`, `show_ranking`, `max_votes_per_user`, `schedule_start`, `schedule_end`, the five timestamps, `theme_name`, `theme_description`), mirroring the columns of the `hackathon` singleton. Editing the tweaks of the currently active season also updates the `hackathon` row so changes take effect immediately, and activating a season copies its tweaks into the `hackathon` row.
 
 A partial unique index ensures at most one active season:
 

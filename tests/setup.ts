@@ -162,11 +162,30 @@ export async function createTestDatabase(): Promise<SQLiteDatabase> {
 
     ALTER TABLE hackathon ADD COLUMN voting_enabled INTEGER NOT NULL DEFAULT 0;
     ALTER TABLE hackathon ADD COLUMN results_published INTEGER NOT NULL DEFAULT 0;
+    ALTER TABLE hackathon ADD COLUMN show_scores INTEGER NOT NULL DEFAULT 0;
+    ALTER TABLE hackathon ADD COLUMN show_ranking INTEGER NOT NULL DEFAULT 0;
     ALTER TABLE hackathon ADD COLUMN submitted_count INTEGER NOT NULL DEFAULT 0;
     ALTER TABLE hackathon ADD COLUMN max_votes_per_user INTEGER NOT NULL DEFAULT 0;
     ALTER TABLE hackathon ADD COLUMN judging_open INTEGER NOT NULL DEFAULT 0;
     ALTER TABLE hackathon ADD COLUMN schedule_start TEXT;
     ALTER TABLE hackathon ADD COLUMN schedule_end TEXT;
+
+    ALTER TABLE seasons ADD COLUMN status TEXT NOT NULL DEFAULT 'not_started';
+    ALTER TABLE seasons ADD COLUMN voting_enabled INTEGER NOT NULL DEFAULT 0;
+    ALTER TABLE seasons ADD COLUMN results_published INTEGER NOT NULL DEFAULT 0;
+    ALTER TABLE seasons ADD COLUMN judging_open INTEGER NOT NULL DEFAULT 0;
+    ALTER TABLE seasons ADD COLUMN show_scores INTEGER NOT NULL DEFAULT 0;
+    ALTER TABLE seasons ADD COLUMN show_ranking INTEGER NOT NULL DEFAULT 0;
+    ALTER TABLE seasons ADD COLUMN max_votes_per_user INTEGER NOT NULL DEFAULT 0;
+    ALTER TABLE seasons ADD COLUMN schedule_start TEXT;
+    ALTER TABLE seasons ADD COLUMN schedule_end TEXT;
+    ALTER TABLE seasons ADD COLUMN start_timestamp INTEGER NOT NULL DEFAULT 0;
+    ALTER TABLE seasons ADD COLUMN end_timestamp INTEGER NOT NULL DEFAULT 0;
+    ALTER TABLE seasons ADD COLUMN voting_start_timestamp INTEGER NOT NULL DEFAULT 0;
+    ALTER TABLE seasons ADD COLUMN voting_end_timestamp INTEGER NOT NULL DEFAULT 0;
+    ALTER TABLE seasons ADD COLUMN results_open_timestamp INTEGER NOT NULL DEFAULT 0;
+    ALTER TABLE seasons ADD COLUMN theme_name TEXT;
+    ALTER TABLE seasons ADD COLUMN theme_description TEXT;
   `);
 
     return new SQLiteDatabase(db);

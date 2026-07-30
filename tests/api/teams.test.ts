@@ -240,6 +240,83 @@ describe("GET /api/teams/:id", () => {
         expect(result).toHaveProperty("name", "My Team");
         expect(result).toHaveProperty("awards");
     });
+
+    it("hides score and rank for a member when hackathon toggles are off", async () => {
+        const team = seedTeam(ctx, { name: "My Team" });
+        ctx.drizzle.update(teams).set({ score: 95, rank: 1 }).where(eq(teams.id, team.id)).run();
+        (globalThis as any).requireUser.mockResolvedValue({
+            id: 1,
+            team_id: team.id,
+            role: "participant",
+        });
+
+        mockParams.values["id"] = String(team.id);
+
+        const result = await getHandler(createEvent());
+
+        expect(result.score).toBeNull();
+        expect(result.rank).toBeNull();
+    });
+
+    it("shows score and rank for a member when hackathon toggles are on", async () => {
+        resetTestContext(ctx);
+        seedHackathon(ctx, { show_scores: 1, show_ranking: 1 });
+        seedSeason(ctx);
+
+        const team = seedTeam(ctx, { name: "My Team" });
+        ctx.drizzle.update(teams).set({ score: 95, rank: 1 }).where(eq(teams.id, team.id)).run();
+        (globalThis as any).requireUser.mockResolvedValue({
+            id: 1,
+            team_id: team.id,
+            role: "participant",
+        });
+
+        mockParams.values["id"] = String(team.id);
+
+        const result = await getHandler(createEvent());
+
+        expect(result.score).toBe(95);
+        expect(result.rank).toBe(1);
+    });
+
+    it("shows score and rank for privileged roles regardless of toggles", async () => {
+        const team = seedTeam(ctx, { name: "My Team" });
+        ctx.drizzle.update(teams).set({ score: 95, rank: 1 }).where(eq(teams.id, team.id)).run();
+        (globalThis as any).requireUser.mockResolvedValue({
+            id: 1,
+            team_id: null,
+            role: "admin",
+        });
+
+        mockParams.values["id"] = String(team.id);
+
+        const result = await getHandler(createEvent());
+
+        expect(result.score).toBe(95);
+        expect(result.rank).toBe(1);
+    });
+
+    it("hides rank in the public team listing when the hackathon toggle is off", async () => {
+        const team = seedTeam(ctx, { name: "Team Alpha" });
+        ctx.drizzle.update(teams).set({ rank: 3 }).where(eq(teams.id, team.id)).run();
+
+        const result = await listHandler(createEvent());
+
+        expect(result[0].rank).toBeNull();
+    });
+
+    it("shows rank in the public team listing when the hackathon toggle is on", async () => {
+        resetTestContext(ctx);
+        seedHackathon(ctx, { show_ranking: 1 });
+        const season = seedSeason(ctx);
+
+        const team = seedTeam(ctx, { name: "Team Alpha", season_id: season.id });
+        ctx.drizzle.update(teams).set({ rank: 3 }).where(eq(teams.id, team.id)).run();
+
+        const result = await listHandler(createEvent());
+
+        expect(result[0].rank).toBe(3);
+    });
 });
 
 describe("PATCH /api/teams/:id", () => {

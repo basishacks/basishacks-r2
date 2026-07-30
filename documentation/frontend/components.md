@@ -248,7 +248,7 @@ Compact card showing judging progress for a single season: how many projects hav
 
 **File:** `app/components/ShowcaseMarqueeCard.vue`
 
-Horizontal scroll card used in the showcase marquee. Displays project rank, pathway badge, and awarded badges. Applies metallic gradient text for ranks 1–3, and renders "Unranked" otherwise.
+Horizontal scroll card used in the showcase marquee. Displays project rank, awarded badges, pathway badge, project name, project description, and member avatars via `UserAvatarGroup` (fetched from `/api/teams/[id]/users`; only visible to logged-in users, "(No members)" otherwise). Applies metallic gradient text for ranks 1–3, and renders "Unranked" otherwise.
 
 **Props:**
 
@@ -349,18 +349,20 @@ Renders multiple `UserAvatar` components in a `UAvatarGroup` with a hover popove
 
 **Props:**
 
-| Prop    | Type               | Default | Description                  |
-| ------- | ------------------ | ------- | ---------------------------- |
-| `users` | `Array`            | —       | Array of user objects        |
-| `size`  | `string`           | —       | Avatar size (passed through) |
-| `max`   | `number \| string` | —       | Maximum visible avatars      |
-| `class` | `any`              | —       | Classes passed to the group  |
-| `ui`    | `any`              | —       | UI overrides for the group   |
+| Prop            | Type               | Default | Description                                            |
+| --------------- | ------------------ | ------- | ------------------------------------------------------ |
+| `users`         | `Array`            | —       | Array of user objects (`id`, `name`, `email`, `profile_picture`) |
+| `size`          | `string`           | —       | Avatar size (passed through)                           |
+| `max`           | `number \| string` | —       | Maximum visible avatars                                |
+| `class`         | `any`              | —       | Classes passed to the group                            |
+| `ui`            | `any`              | —       | UI overrides for the group                             |
+| `developerMode` | `boolean`          | `false` | Shows each user's id in grayed `<id>` brackets beside their name in the popover |
 
-The popover contains a scrollable list of `UserItem` components.
+The popover contains a scrollable list of `UserItem` components. When `developerMode` is enabled, a grayed `<id>` badge is rendered next to each user entry.
 
 ```vue
 <UserAvatarGroup :users="members" :max="5" size="md" />
+<UserAvatarGroup :users="members" :max="4" size="xs" developer-mode />
 ```
 
 ### UserItem

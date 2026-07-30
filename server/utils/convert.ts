@@ -29,14 +29,16 @@ export function convertUserToPublic(user: User): APIUser {
 
 export function convertTeamToPublic(
     team: Team,
-    withScore: boolean = false,
+    options: { withScore?: boolean; withRank?: boolean } = {},
     awards: ResolvedAward[] = [],
 ): APITeam {
+    const { withScore = false, withRank = true } = options;
+
     return {
         id: team.id,
         name: team.name,
         pathway: team.pathway,
-        rank: team.rank,
+        rank: withRank ? team.rank : null,
         score: withScore ? team.score : null,
         season_id: team.season_id,
         project: {

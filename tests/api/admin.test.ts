@@ -133,6 +133,53 @@ describe("GET /api/admin/teams", () => {
         expect(result).toHaveLength(2);
         expect(result[0]).toHaveProperty("name", "Team A");
         expect(result[0]).toHaveProperty("season_name", "Season 1");
+        expect(result[0]).toHaveProperty("members", []);
         expect(result[1]).toHaveProperty("name", "Team B");
+        expect(result[1]).toHaveProperty("members", []);
+    });
+
+    it("returns members grouped by team", async () => {
+        gRequirePermission().mockResolvedValue({ id: 1, role: "admin" });
+
+        const teamA = seedTeam(ctx, { name: "Team A" });
+        const teamB = seedTeam(ctx, { name: "Team B" });
+
+        const alice = seedUser(ctx, {
+            email: "alice@basischina.com",
+            name: "Alice",
+            team_id: teamA.id,
+        });
+        const bob = seedUser(ctx, {
+            email: "bob@basischina.com",
+            name: "Bob",
+            team_id: teamA.id,
+        });
+        const carol = seedUser(ctx, {
+            email: "carol@basischina.com",
+            name: "Carol",
+            team_id: teamB.id,
+        });
+        seedUser(ctx, { email: "teamless@basischina.com", name: "Teamless" });
+
+        const result = await teamsHandler(createEvent());
+
+        expect(result[0].members).toHaveLength(2);
+        expect(result[0].members[0]).toMatchObject({
+            id: alice.id,
+            name: "Alice",
+            email: "alice@basischina.com",
+        });
+        expect(result[0].members[1]).toMatchObject({
+            id: bob.id,
+            name: "Bob",
+            email: "bob@basischina.com",
+        });
+
+        expect(result[1].members).toHaveLength(1);
+        expect(result[1].members[0]).toMatchObject({
+            id: carol.id,
+            name: "Carol",
+            email: "carol@basischina.com",
+        });
     });
 });

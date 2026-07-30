@@ -202,6 +202,30 @@ export const SetActiveSeasonRequest = z.object({
 });
 export type SetActiveSeasonRequest = z.infer<typeof SetActiveSeasonRequest>;
 
+export const UpdateSeasonTweaksRequest = z
+    .object({
+        status: z.enum(["not_started", "in_progress", "voting", "finished", "paused"]).optional(),
+        voting_enabled: z.boolean().optional(),
+        results_published: z.boolean().optional(),
+        judging_open: z.boolean().optional(),
+        show_scores: z.boolean().optional(),
+        show_ranking: z.boolean().optional(),
+        max_votes_per_user: z.number().int().nonnegative().optional(),
+        schedule_start: z.string().nullable().optional(),
+        schedule_end: z.string().nullable().optional(),
+        start_timestamp: z.number().int().optional(),
+        end_timestamp: z.number().int().optional(),
+        voting_start_timestamp: z.number().int().optional(),
+        voting_end_timestamp: z.number().int().optional(),
+        results_open_timestamp: z.number().int().optional(),
+        theme_name: z.string().nullable().optional(),
+        theme_description: z.string().nullable().optional(),
+    })
+    .refine((data) => Object.values(data).some((value) => value !== undefined), {
+        message: "At least one field must be provided",
+    });
+export type UpdateSeasonTweaksRequest = z.infer<typeof UpdateSeasonTweaksRequest>;
+
 export const ElectionVoteRequest = z.object({
     positions: z.array(
         z.object({

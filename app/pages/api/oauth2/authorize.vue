@@ -9,7 +9,7 @@
                         class="absolute left-0 w-6 h-6 cursor-pointer hover:opacity-80 transition-opacity"
                         @click="returnToApp({ result: 'cancel' })"
                     />
-                    <p class="text-xl bold glow text-primary">{{ WEBSITE_NAME }}</p>
+                    <!-- <p class="text-xl bold glow text-primary">{{ WEBSITE_NAME }}</p> -->
                 </div>
                 <USeparator></USeparator>
 

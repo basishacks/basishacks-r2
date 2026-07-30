@@ -14,9 +14,15 @@ export default defineEventHandler(async (event) => {
         });
     }
 
-    // Team members and dev-portal users see scores; everyone else gets public view
-    const showDetails = isMember || hasPermission(user.role, DevPermissions.PORTAL_TEAMS_VIEW);
+    // Dev-portal users always see scores and ranks; team members and other
+    // participants only see them when the hackathon toggles are enabled.
+    const hackathon = await getHackathon(event);
+    const privileged =
+        hasPermission(user.role, DevPermissions.PORTAL_TEAMS_VIEW) ||
+        hasPermission(user.role, "admin");
+    const withScore = privileged || (isMember && !!hackathon?.show_scores);
+    const withRank = privileged || !!hackathon?.show_ranking;
     const awards = await getAwards(event, id);
 
-    return convertTeamToPublic(team, showDetails, awards);
+    return convertTeamToPublic(team, { withScore, withRank }, awards);
 });
