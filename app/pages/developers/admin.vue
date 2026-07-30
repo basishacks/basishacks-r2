@@ -119,6 +119,8 @@ watch(activeSeasonId, (id) => {
     if (id === null) return;
     const s = seasons.value?.find((s: any) => s.id === id);
     seasonNameForm.value = s?.name ?? "";
+    // Sync theme_name with the selected season's name
+    if (s?.name) hackathonForm.theme_name = s.name;
 });
 
 const seasonNameSaving = ref(false);
