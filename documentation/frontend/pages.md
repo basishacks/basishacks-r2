@@ -122,7 +122,7 @@ Peer voting page. Protected by `auth` middleware. Only accessible during the `vo
 
 **File:** `app/pages/contributing.vue`
 
-Contributing guidelines and security disclosure policy. Contains commit guidelines, instructions for privately reporting security issues, a responsible disclosure policy, and a code of conduct. Linked from the site footer.
+Contributing guidelines and security disclosure policy. Contains commit guidelines, instructions for privately reporting security issues (with guidance on self-fixing via obfuscated pull requests), a responsible disclosure policy, and a code of conduct. Written in professional academic American English. Linked from the site footer.
 
 **Layout:** `default`
 
