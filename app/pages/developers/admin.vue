@@ -81,18 +81,6 @@ async function saveHackathon() {
             return;
         }
         await $fetch("/api/admin/hackathon", { method: "PATCH", body });
-
-        // If theme_name changed, also rename the active season to match
-        if (body.theme_name && activeSeasonId.value !== null) {
-            const season = seasons.value?.find((s: any) => s.id === activeSeasonId.value);
-            if (season && season.name !== body.theme_name) {
-                await $fetch("/api/admin/seasons", {
-                    method: "PATCH",
-                    body: { id: activeSeasonId.value, name: body.theme_name },
-                });
-            }
-        }
-
         await refreshAdmin();
         hackathonMessage.value = "Hackathon config saved.";
     } catch (e: any) {
@@ -122,12 +110,8 @@ const activeSeasonItems = computed(() => [
         []),
 ]);
 
-// When selecting a season, copy its name into the theme field
-watch(activeSeasonId, (id) => {
-    if (id === null) return;
-    const s = seasons.value?.find((s: any) => s.id === id);
-    if (s?.name) hackathonForm.theme_name = s.name;
-});
+// Theme name is independent from season name — no auto-copy on selection
+// Season name (shown in dropdown) is set at creation and read-only here
 
 async function setActiveSeason() {
     if (activeSeasonId.value === null) return;
