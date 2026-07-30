@@ -44,10 +44,14 @@
         "nuxt": "^4.5.1",
         "nuxt-auth-utils": "^0.5.29",
         "openai": "^6.49.0",
-        "typescript": "6.0.3",
+        "typescript": "^6.0.3",
         "vue": "^3.5.40",
         "vue-router": "^4.6.4",
         "zod": "^4.4.3"
+    },
+    "overrides": {
+        "vite": "^8.0.16",
+        "entities": "^7.0.1"
     },
     "devDependencies": {
         "@iconify-json/fluent": "^1.2.54",
@@ -64,9 +68,5 @@
         "drizzle-kit": "^0.31.10",
         "prettier": "^3.9.6",
         "vitest": "^4.1.10"
-    },
-    "overrides": {
-        "vite": "8.0.16",
-        "entities": "7.0.1"
     }
 }
