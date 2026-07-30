@@ -104,11 +104,21 @@ export default defineEventHandler(
         // Authorization is complete; clear the session binding cookie
         deleteCookie(event, "bridge_id");
 
-        // Use session-level redirect if set, else fall back to query param or default
-        const redirect =
+        // Determine the best redirect target
+        let redirect =
             session.post_login_redirect ||
             (getQuery(event).redirect as string | undefined) ||
             "/dashboard";
+
+        // Security: only allow relative redirects to prevent open redirect attacks
+        if (
+            redirect.startsWith("http://") ||
+            redirect.startsWith("https://") ||
+            redirect.startsWith("//")
+        ) {
+            redirect = "/dashboard";
+        }
+
         await sendRedirect(event, redirect, 302);
     }, AUTH_RATE_LIMIT_CONFIG),
 );

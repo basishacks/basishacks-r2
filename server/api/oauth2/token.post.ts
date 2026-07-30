@@ -72,20 +72,12 @@ export default defineEventHandler(
         } = body;
 
         const app = await getOAuth2Application(event, clientId);
-        if (!app) {
+        const isSecretValid = app && await validateOAuth2ApplicationSecret(event, clientId, clientSecret);
+        if (!app || !isSecretValid) {
             throw createError({
                 statusCode: 400,
                 statusMessage: "invalid_client",
-                message: "Invalid client_id",
-            });
-        }
-
-        const isSecretValid = await validateOAuth2ApplicationSecret(event, clientId, clientSecret);
-        if (!isSecretValid) {
-            throw createError({
-                statusCode: 400,
-                statusMessage: "invalid_client",
-                message: "Invalid client_secret",
+                message: "Invalid client credentials",
             });
         }
 
