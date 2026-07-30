@@ -110,6 +110,13 @@ const activeSeasonItems = computed(() => [
         []),
 ]);
 
+// When selecting a season, copy its name into the theme field
+watch(activeSeasonId, (id) => {
+    if (id === null) return;
+    const s = seasons.value?.find((s: any) => s.id === id);
+    if (s?.name) hackathonForm.theme_name = s.name;
+});
+
 async function setActiveSeason() {
     if (activeSeasonId.value === null) return;
     try {
