@@ -153,7 +153,8 @@ async function saveHackathon() {
 // ---------------------------------------------------------------------------
 const activeSeasonId = ref<number | null>(null);
 
-// One-time initialization: wait for both hackathon and seasons to load
+// One-time initialization: wait for both hackathon and seasons to load.
+// After this, activeSeasonId only changes via the dropdown v-model (user action).
 watchEffect(() => {
     const h = hackathon.value;
     const s = seasons.value;
@@ -162,14 +163,6 @@ watchEffect(() => {
     activeSeasonId.value = active?.id ?? null;
     applyConfig(activeSeasonId.value);
 });
-
-watch(
-    () => seasons.value,
-    (s) => {
-        const newId = s?.find((s: any) => s.is_active)?.id ?? null;
-        activeSeasonId.value = newId;
-    },
-);
 
 const activeSeasonItems = computed(() => [
     { label: "None", value: null },
