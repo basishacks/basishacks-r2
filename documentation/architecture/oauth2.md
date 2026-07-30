@@ -98,10 +98,18 @@ The client redirects the user to `/api/oauth2/authorize` with standard OAuth2 pa
 | `redirect_uri`          | Yes        | Must match a registered redirect URI     |
 | `state`                 | Yes        | Client-provided anti-CSRF token          |
 | `response_type`         | Yes        | Must be `code`                           |
-| `code_challenge`        | Yes (PKCE) | SHA-256 hash of the code verifier        |
-| `code_challenge_method` | Yes (PKCE) | Must be `S256` or `plain` (per RFC 7636) |
+| `code_challenge`        | Yes (PKCE) | SHA-256 hash of the code verifier            |
+| `code_challenge_method` | Yes (PKCE) | Must be `S256` only (see enforcement below) |
 
 The `oauth2-authorize.ts` middleware validates the request, creates an `AuthorizeSession`, and sets a `bridge_id` cookie.
+
+::: danger PKCE enforcement
+PKCE is **mandatory** with `code_challenge_method=S256` only. Per RFC 7636 §4.4.2, the `plain` method provides no additional security over the implicit flow and is therefore rejected at the validation layer. Requests with `plain` or missing PKCE receive:
+
+```
+invalid_request: code_challenge_method must be S256
+```
+:::
 
 ### Step 2: User authentication
 
@@ -145,11 +153,41 @@ The token endpoint validates:
 
 1. `client_id` exists in the database
 2. `client_secret` matches (SHA-256 hash comparison)
-3. `redirect_uri` is registered for the application
+3. `redirect_uri` is registered for the application (validated against stored redirect URIs)
 4. Authorization code is valid and not expired
-5. PKCE `code_verifier` matches the original `code_challenge` (if PKCE was used)
+5. PKCE `code_verifier` matches the original `code_challenge` (S256 only)
+
+#### Unified error responses
+
+All token endpoint failures return a generic `invalid_grant` error with a minimal message to prevent information disclosure about which specific validation failed:
+
+```json
+{ "error": "invalid_grant", "error_description": "Failed to exchange authorization code" }
+```
+
+Client authentication failures (`client_id` not found or `client_secret` mismatch) return `invalid_client`:
+
+```json
+{ "error": "invalid_client", "error_description": "Invalid client credentials" }
+```
+
+#### Redirect URI validation in token endpoint
+
+When `redirect_uri` is provided in the token request, it is validated against the application's registered redirect URIs. The validation uses an exact string match against the space-separated `redirect_uris` stored on the application. If the provided redirect URI is not in the allowed list, the endpoint returns `invalid_grant`.
 
 ### Step 5: JWT issuance
+
+#### Authorization code single-use guarantee
+
+Per RFC 6749 §4.1.2, authorization codes are invalidated **immediately** on use, before any asynchronous operation that could allow a race condition:
+
+```ts
+// Invalidate IMMEDIATELY before any await to prevent double exchange (RFC 6749 §4.1.2)
+session.code = null;
+completeAuthorizeSession(session.token);
+```
+
+The session store entry is deleted entirely after successful exchange. Any subsequent attempt to use the same authorization code will fail because `session.code` is already `null` and the session no longer exists in the store.
 
 On successful exchange, a JWT is issued using the `jose` library:
 
@@ -333,6 +371,16 @@ External clients still call the HTTP endpoints only:
 
 ::: warning Verifier selection The `pkce_verifier` cookie (basishacks flow) must not be confused with `session.ms_verifier`, which is the PKCE verifier for the Microsoft proxy flow (basishacks → Microsoft). The `dccallback` endpoint uses the cookie value, never `session.ms_verifier`. :::
 
+## JWT Validation at Startup
+
+The `NUXT_OAUTH2_JWT_SECRET` environment variable is validated at server startup by the `validate-environment.ts` Nitro plugin:
+
+- Must be at least **32 bytes** (UTF-8 encoded length).
+- If missing or too short in **production**, the process exits with a fatal error.
+- In **development/test**, a warning is logged but the server continues (using the `DEV_OAUTH2_JWT_SECRET_FALLBACK` from `validate-oauth2-jwt-secret.ts`).
+
+This ensures that all OAuth2 tokens are signed with a strong key before any requests are processed.
+
 ## JWT Verification Middleware
 
 The `withOAuth2JWT()` wrapper in `server/utils/oauth2-jwt.ts` protects API endpoints that require OAuth2 Bearer tokens:
@@ -382,6 +430,21 @@ export default withOAuth2JWT(
 
 ## Authorization Session Store
 
+### Session cookie hardening
+
+The `bridge_id` cookie that links the user's browser to their authorization session uses hardened security flags:
+
+| Property   | Value                     |
+| ---------- | ------------------------- |
+| `httpOnly` | `true`                    |
+| `secure`   | `true`                    |
+| `sameSite` | `lax`                     |
+| `maxAge`   | 10 minutes                |
+
+The `bridge_error` cookie (used to surface validation errors in the authorize page UI) uses the same hardened flags. Both cookies are deleted on flow completion.
+
+### Authorization Session Store
+
 Authorization sessions are stored in-memory using a plain object:
 
 ```ts
@@ -399,8 +462,8 @@ Each session has a 10-minute expiry and tracks the full authorization state:
 | `login_state`                  | `identification` → `requesting` → `consent` → `completed` |
 | `code`                         | Authorization code (generated at consent)                 |
 | `bh_state`                     | OAuth2 `state` parameter returned to the client           |
-| `bh_verifier_challenge`        | PKCE code challenge                                       |
-| `bh_verifier_challenge_method` | PKCE method (`S256` or `plain`)                           |
+| `bh_verifier_challenge`        | PKCE code challenge (S256)                                |
+| `bh_verifier_challenge_method` | PKCE method (always `S256`)                               |
 | `ms_state`                     | Microsoft OAuth2 `state` parameter (proxy flows only)     |
 | `ms_verifier`                  | Microsoft PKCE code verifier (proxy flows only)           |
 | `teams_code`                   | Teams join code (legacy field, currently unused)          |
