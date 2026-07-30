@@ -27,9 +27,11 @@ const seasons = computed(() => adminData.value?.seasons ?? []);
 // ---------------------------------------------------------------------------
 // Helpers: ms epoch <-> datetime-local
 // ---------------------------------------------------------------------------
-function tsToDatetime(ts: number | null | undefined): string {
-    if (!ts) return "";
-    const d = new Date(ts);
+function tsToDatetime(ts: unknown): string {
+    const num = typeof ts === "bigint" ? Number(ts) : Number(ts);
+    if (!Number.isFinite(num) || num <= 0) return "";
+    const d = new Date(num);
+    if (Number.isNaN(d.getTime())) return "";
     const pad = (n: number) => String(n).padStart(2, "0");
     return `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}T${pad(d.getHours())}:${pad(d.getMinutes())}`;
 }
@@ -64,6 +66,8 @@ const tsKeys: readonly string[] = [
     "results_open_timestamp",
 ];
 
+const boolKeys = new Set(["voting_enabled", "judging_open", "results_published"]);
+
 // ---------------------------------------------------------------------------
 // Form state
 // ---------------------------------------------------------------------------
@@ -90,7 +94,7 @@ function restoreSeasonConfig(season: any) {
 function isDefaultValue(key: string, val: any): boolean {
     if (key === "status") return val === "not_started";
     if (key === "max_votes_per_user") return val === 0;
-    if (["voting_enabled", "judging_open", "results_published"].includes(key)) return val === 0;
+    if (boolKeys.has(key)) return val === 0;
     if (tsKeys.includes(key)) return val === 0;
     return false;
 }
@@ -100,8 +104,15 @@ function applyConfig(seasonId: number | null) {
     const h = hackathon.value;
     if (!h) return;
 
-    const raw: Record<string, any> = { ...h };
-    for (const key of tsKeys) raw[key] = tsToDatetime(raw[key]);
+    const raw: Record<string, any> = {};
+    for (const key of allFieldKeys) {
+        const dbVal = (h as any)[key];
+        if (tsKeys.includes(key)) {
+            raw[key] = tsToDatetime(dbVal);
+        } else {
+            raw[key] = dbVal ?? "";
+        }
+    }
     Object.assign(hackathonForm, raw);
 
     if (seasonId !== null) {
@@ -120,6 +131,16 @@ function normalize(key: string, val: any): any {
     return val;
 }
 
+/** Compare à normalized value against the global baseline, with type coercion. */
+function hasChanged(key: string, normalized: any): boolean {
+    const baseline = (hackathon.value as any)?.[key];
+    // Coerce both sides to number for 0/1 bools and numeric fields
+    if (boolKeys.has(key) || key === "max_votes_per_user" || tsKeys.includes(key)) {
+        return Number(normalized) !== Number(baseline);
+    }
+    return normalized !== baseline;
+}
+
 /** Debounced auto-save: writes the changed field to the season (and global if active).
  *  Uses the emitted component value (not hackathonForm) because @change may fire
  *  before v-model syncs on components like UCheckbox. */
@@ -128,9 +149,10 @@ function fieldChanged(key: string, $event?: any) {
     const raw = $event !== undefined ? ($event?.target?.value ?? $event) : hackathonForm[key];
     const val = normalize(key, raw);
 
+    if (!hasChanged(key, val)) return;
+
     if (saveTimer) clearTimeout(saveTimer);
     saveTimer = setTimeout(async () => {
-        if (val === (hackathon.value as any)?.[key]) return; // no effective change
         saving.value = true;
         try {
             const body: Record<string, any> = { [key]: val };
