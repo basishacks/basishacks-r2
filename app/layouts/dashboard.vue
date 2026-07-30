@@ -93,7 +93,10 @@ const items = ref<NavigationMenuItem[][]>([
             />
         </aside>
 
-        <nav class="lg:hidden flex gap-1 overflow-x-auto pb-2 -mx-4 px-4" aria-label="Mobile navigation">
+        <nav
+            class="lg:hidden flex gap-1 overflow-x-auto pb-2 -mx-4 px-4"
+            aria-label="Mobile navigation"
+        >
             <template v-for="group in items" :key="group">
                 <template v-for="item in group" :key="item.label">
                     <UBadge
@@ -102,7 +105,10 @@ const items = ref<NavigationMenuItem[][]>([
                         color="neutral"
                         class="whitespace-nowrap shrink-0"
                     >
-                        <NuxtLink :to="item.to" class="flex items-center gap-1 px-2 py-1 no-underline">
+                        <NuxtLink
+                            :to="item.to"
+                            class="flex items-center gap-1 px-2 py-1 no-underline"
+                        >
                             <UIcon v-if="item.icon" :name="item.icon" class="w-4 h-4" />
                             {{ item.label }}
                         </NuxtLink>
