@@ -67,11 +67,11 @@ export async function validateOAuth2AuthorizationRequest(
         });
     }
 
-    // RFC 7636 §4.3: code_challenge_method MUST be 'S256' or 'plain'
-    if (code_challenge_type !== "S256" && code_challenge_type !== "plain") {
+    // RFC 7636 §4.4.2: 'plain' provides no additional security; require S256
+    if (code_challenge_type !== "S256") {
         throw createError({
             statusCode: 400,
-            statusMessage: "invalid_request: code_challenge_method must be S256 or plain",
+            statusMessage: "invalid_request: code_challenge_method must be S256",
         });
     }
 
