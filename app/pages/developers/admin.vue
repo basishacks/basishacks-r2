@@ -317,17 +317,17 @@ async function addSeason() {
                     </div>
 
                     <div class="flex items-center gap-3">
-                        <UCheckbox v-model="hackathonForm.voting_enabled" :binary="true" @update:model-value="fieldChanged('voting_enabled', $event)" />
+                        <UCheckbox v-model="hackathonForm.voting_enabled" :true-value="1" :false-value="0" @update:model-value="fieldChanged('voting_enabled', $event)" />
                         <span class="text-sm">Voting Enabled</span>
                     </div>
 
                     <div class="flex items-center gap-3">
-                        <UCheckbox v-model="hackathonForm.judging_open" :binary="true" @update:model-value="fieldChanged('judging_open', $event)" />
+                        <UCheckbox v-model="hackathonForm.judging_open" :true-value="1" :false-value="0" @update:model-value="fieldChanged('judging_open', $event)" />
                         <span class="text-sm">Judging Open</span>
                     </div>
 
                     <div class="flex items-center gap-3">
-                        <UCheckbox v-model="hackathonForm.results_published" :binary="true" @update:model-value="fieldChanged('results_published', $event)" />
+                        <UCheckbox v-model="hackathonForm.results_published" :true-value="1" :false-value="0" @update:model-value="fieldChanged('results_published', $event)" />
                         <span class="text-sm">Results Published</span>
                     </div>
 
