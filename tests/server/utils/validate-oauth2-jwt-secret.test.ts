@@ -107,6 +107,151 @@ describe("validateOAuth2JWTSecret", () => {
         }
     });
 
+    it("exits when the secret is exactly 31 bytes in production", () => {
+        const { env, exit, errors, warnings, run } = setup();
+        run("x".repeat(31), "production");
+        expect(exit).toHaveBeenCalledWith(1);
+        expect(errors.some((m) => m.includes("only 31 bytes"))).toBe(true);
+        expect(warnings).toHaveLength(0);
+    });
+
+    it("passes when the secret is exactly 32 bytes in production", () => {
+        const { env, exit, errors, warnings, run } = setup();
+        run("exactly-32-bytes-secret-for-testing!", "production");
+        expect(exit).not.toHaveBeenCalled();
+        expect(errors).toHaveLength(0);
+        expect(warnings).toHaveLength(0);
+    });
+
+    it("passes when the secret is 64 bytes in production", () => {
+        const { env, exit, errors, warnings, run } = setup();
+        run("a".repeat(64), "production");
+        expect(exit).not.toHaveBeenCalled();
+        expect(errors).toHaveLength(0);
+        expect(warnings).toHaveLength(0);
+    });
+
+    it("exits when the secret is 0 bytes in production", () => {
+        const { env, exit, errors, warnings, run } = setup();
+        run("", "production");
+        expect(exit).toHaveBeenCalledWith(1);
+        expect(errors.some((m) => m.includes("not set"))).toBe(true);
+        expect(errors.some((m) => m.includes("[FATAL]"))).toBe(true);
+    });
+
+    it("correctly counts unicode characters that are multi-byte", () => {
+        const { env, exit, errors, warnings, run } = setup();
+        // Each emoji is 4 bytes in UTF-8
+        run("\u{1F600}".repeat(8), "production");
+        // 8 emojis * 4 bytes = 32 bytes, should pass
+        expect(exit).not.toHaveBeenCalled();
+        expect(errors).toHaveLength(0);
+    });
+
+    it("correctly detects multi-byte unicode as too short", () => {
+        const { env, exit, errors, warnings, run } = setup();
+        // Each emoji is 4 bytes, 7 emojis = 28 bytes, too short
+        run("\u{1F600}".repeat(7), "production");
+        expect(exit).toHaveBeenCalledWith(1);
+        expect(errors.some((m) => m.includes("only 28 bytes"))).toBe(true);
+    });
+
+    it("handles CJK characters which are 3 bytes each", () => {
+        const { env, exit, errors, warnings, run } = setup();
+        // 11 CJK chars * 3 bytes = 33 bytes, should pass
+        run("你好世界这是一条测试密", "production");
+        expect(exit).not.toHaveBeenCalled();
+        expect(errors).toHaveLength(0);
+    });
+
+    it("handles CJK characters that are too short", () => {
+        const { env, exit, errors, warnings, run } = setup();
+        // 10 CJK chars * 3 bytes = 30 bytes, too short
+        run("你好世界这是一条测试", "production");
+        expect(exit).toHaveBeenCalledWith(1);
+        expect(errors.some((m) => m.includes("only 30 bytes"))).toBe(true);
+    });
+
+    it("handles special characters in the secret", () => {
+        const { env, exit, errors, warnings, run } = setup();
+        run("!@#$%^&*()_+-=[]{}|;':\",./<>?`~abcdefghij", "production");
+        expect(exit).not.toHaveBeenCalled();
+        expect(errors).toHaveLength(0);
+    });
+
+    it("handles hex-only secrets correctly", () => {
+        const { env, exit, errors, warnings, run } = setup();
+        run("0123456789abcdef0123456789abcdef", "production");
+        expect(exit).not.toHaveBeenCalled();
+        expect(errors).toHaveLength(0);
+    });
+
+    it("handles a 31-byte hex secret as fatal in production", () => {
+        const { env, exit, errors, warnings, run } = setup();
+        run("0123456789abcdef0123456789abcde", "production");
+        expect(exit).toHaveBeenCalledWith(1);
+        expect(errors.some((m) => m.includes("only 31 bytes"))).toBe(true);
+    });
+
+    it("does not modify NODE_ENV after validation", () => {
+        const { env, exit, errors, warnings, run } = setup();
+        env.NODE_ENV = "production";
+        run("a-secret-that-is-exactly-32-bytes!", "production");
+        expect(env.NODE_ENV).toBe("production");
+    });
+
+    it("allows overriding the env object explicitly", () => {
+        const customEnv: Record<string, string | undefined> = {
+            NUXT_OAUTH2_JWT_SECRET: "a-secret-that-is-exactly-32-bytes!",
+            NODE_ENV: "production",
+        };
+        const exit = vi.fn();
+        validateOAuth2JWTSecret({
+            env: customEnv,
+            exit: exit as unknown as (code: number) => never,
+            logError: () => {},
+            logWarn: () => {},
+        });
+        expect(exit).not.toHaveBeenCalled();
+    });
+
+    it("allows overriding logError and logWarn", () => {
+        const customEnv: Record<string, string | undefined> = {
+            NODE_ENV: "development",
+        };
+        const exit = vi.fn();
+        const logError = vi.fn();
+        const logWarn = vi.fn();
+        validateOAuth2JWTSecret({
+            env: customEnv,
+            exit: exit as unknown as (code: number) => never,
+            logError,
+            logWarn,
+        });
+        expect(logWarn).toHaveBeenCalled();
+        expect(logWarn.mock.calls[0].some((m: string) => m.includes("[WARNING]"))).toBe(true);
+        expect(logError).not.toHaveBeenCalled();
+    });
+
+    it("allows overriding logError and sees fatal messages in production", () => {
+        const customEnv: Record<string, string | undefined> = {
+            NODE_ENV: "production",
+        };
+        const exit = vi.fn();
+        const logError = vi.fn();
+        const logWarn = vi.fn();
+        validateOAuth2JWTSecret({
+            env: customEnv,
+            exit: exit as unknown as (code: number) => never,
+            logError,
+            logWarn,
+        });
+        expect(logError).toHaveBeenCalled();
+        expect(logError.mock.calls[0].some((m: string) => m.includes("[FATAL]"))).toBe(true);
+        expect(logWarn).not.toHaveBeenCalled();
+        expect(exit).toHaveBeenCalledWith(1);
+    });
+
     it("uses process.exit as the default exit handler in production", () => {
         const originalSecret = process.env.NUXT_OAUTH2_JWT_SECRET;
         const originalEnv = process.env.NODE_ENV;
