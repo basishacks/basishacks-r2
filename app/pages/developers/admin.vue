@@ -154,30 +154,19 @@ function buildChangedBody() {
     return body;
 }
 
-/** Save ALL changed fields in a single PATCH. Uses a debounce to coalesce
- *  rapid edits, then fires one request with every field that has diverged
- *  from the global baseline. */
-let saveTimer: ReturnType<typeof setTimeout> | null = null;
-
-function saveAll() {
-    if (saveTimer) clearTimeout(saveTimer);
-    saveTimer = setTimeout(() => {
-        saveTimer = null;
-        const body = buildChangedBody();
-        if (Object.keys(body).length === 0) return;
-        if (activeSeasonId.value !== null) body.season_id = activeSeasonId.value;
-
-        saving.value = true;
-        $fetch("/api/admin/hackathon", { method: "PATCH", body })
-            .then(() => refreshAdmin())
-            .catch(() => {})
-            .finally(() => { saving.value = false; });
-    }, 300);
-}
-
-/** Called from @change on inputs, @update:model-value on checkboxes/selects. */
+/** Save ALL fields that differ from the global baseline in a single PATCH.
+ *  Captures the form snapshot immediately (not after debounce) so Vue's
+ *  reactive flush timing cannot change what gets sent. */
 function onFieldChange() {
-    saveAll();
+    const body = buildChangedBody();
+    if (Object.keys(body).length === 0) return;
+    if (activeSeasonId.value !== null) body.season_id = activeSeasonId.value;
+
+    saving.value = true;
+    $fetch("/api/admin/hackathon", { method: "PATCH", body })
+        .then(() => refreshAdmin())
+        .catch(() => {})
+        .finally(() => { saving.value = false; });
 }
 
 // ---------------------------------------------------------------------------
