@@ -118,6 +118,14 @@ Peer voting page. Protected by `auth` middleware. Only accessible during the `vo
 
 **Layout:** `default`
 
+### `/contributing`
+
+**File:** `app/pages/contributing.vue`
+
+Contributing guidelines and security disclosure policy. Contains commit guidelines, instructions for privately reporting security issues, a responsible disclosure policy, and a code of conduct. Linked from the site footer.
+
+**Layout:** `default`
+
 ## Judging Pages
 
 ### `/judging`

@@ -33,7 +33,10 @@ useHead({
             </p>
             <ul class="list-disc list-inside space-y-2">
                 <li>
-                    <span class="font-semibold">Use conventional commits.</span>
+                    <span class="font-semibold">
+                        You are recommended (not required to, but we would greatly appreciate)
+                        conventional commits.
+                    </span>
                     Prefix your commit messages with a type such as
                     <code>feat</code>
                     ,
