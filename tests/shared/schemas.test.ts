@@ -32,6 +32,10 @@ import {
     PositiveIntParam,
     ZeroToFive,
     ScoreValues,
+    MAX_USER_NAME_LENGTH,
+    MAX_PROJECT_DESCRIPTION_LENGTH,
+    MAX_PROJECT_SOURCE_LENGTH,
+    MAX_REASONING_LENGTH,
 } from "~~/shared/schemas";
 
 describe("MicrosoftRedirectRequest", () => {
@@ -156,10 +160,10 @@ describe("UpdateTeamRequest", () => {
         expect(() => UpdateTeamRequest.parse({ project: { name: "A".repeat(101) } })).toThrow();
     });
 
-    it("rejects a project description longer than 2000 characters", () => {
+    it("accepts a long project description (MAX is now Integer.MAX_VALUE)", () => {
         expect(() =>
-            UpdateTeamRequest.parse({ project: { description: "A".repeat(2001) } }),
-        ).toThrow();
+            UpdateTeamRequest.parse({ project: { description: "A".repeat(5000) } }),
+        ).not.toThrow();
     });
 
     it("rejects an invalid demo URL", () => {
@@ -174,10 +178,10 @@ describe("UpdateTeamRequest", () => {
         ).toThrow();
     });
 
-    it("rejects sourcing notes longer than 2000 characters", () => {
+    it("accepts long sourcing notes (MAX is now Integer.MAX_VALUE)", () => {
         expect(() =>
-            UpdateTeamRequest.parse({ project: { sourcing: "A".repeat(2001) } }),
-        ).toThrow();
+            UpdateTeamRequest.parse({ project: { sourcing: "A".repeat(5000) } }),
+        ).not.toThrow();
     });
 });
 
@@ -279,18 +283,18 @@ describe("SubmitTeamRequest", () => {
         ).toThrow();
     });
 
-    it("rejects a project description longer than 2000 characters", () => {
+    it("accepts a long project description in submission (MAX now Integer.MAX_VALUE)", () => {
         expect(() =>
             SubmitTeamRequest.parse({
                 pathway: "junior",
                 project: {
                     name: "Cool Project",
-                    description: "A".repeat(2001),
+                    description: "A".repeat(5000),
                     demo_url: "https://example.com",
                     repo_url: "https://github.com/user/repo",
                 },
             }),
-        ).toThrow();
+        ).not.toThrow();
     });
 
     it("rejects a demo URL longer than 2048 characters", () => {
@@ -307,7 +311,7 @@ describe("SubmitTeamRequest", () => {
         ).toThrow();
     });
 
-    it("rejects sourcing notes longer than 2000 characters", () => {
+    it("accepts long sourcing notes in submission (MAX now Integer.MAX_VALUE)", () => {
         expect(() =>
             SubmitTeamRequest.parse({
                 pathway: "junior",
@@ -316,10 +320,10 @@ describe("SubmitTeamRequest", () => {
                     description: "A".repeat(30),
                     demo_url: "https://example.com",
                     repo_url: "https://github.com/user/repo",
-                    sourcing: "A".repeat(2001),
+                    sourcing: "A".repeat(5000),
                 },
             }),
-        ).toThrow();
+        ).not.toThrow();
     });
 });
 
@@ -415,8 +419,10 @@ describe("UpdateUserRequest", () => {
         expect(() => UpdateUserRequest.parse({ avatar: "not-data-or-file" })).toThrow();
     });
 
-    it("rejects a name longer than 30 characters", () => {
-        expect(() => UpdateUserRequest.parse({ name: "A".repeat(31) })).toThrow();
+    it("rejects a name longer than MAX_USER_NAME_LENGTH characters", () => {
+        expect(() =>
+            UpdateUserRequest.parse({ name: "A".repeat(MAX_USER_NAME_LENGTH + 1) }),
+        ).toThrow();
     });
 
     it("rejects a profile_theme_image that is not a data string, null, or File", () => {
@@ -453,13 +459,13 @@ describe("CreateTeamScoresRequest", () => {
         ).toThrow();
     });
 
-    it("rejects reasoning longer than 2000 characters", () => {
+    it("accepts long reasoning (MAX now Integer.MAX_VALUE)", () => {
         expect(() =>
             CreateTeamScoresRequest.parse({
-                reasoning: "A".repeat(2001),
+                reasoning: "A".repeat(5000),
                 scores: validScores,
             }),
-        ).toThrow();
+        ).not.toThrow();
     });
 
     it("rejects a score below 0", () => {
@@ -525,13 +531,13 @@ describe("SubmitVoteRequest", () => {
         ).toThrow();
     });
 
-    it("rejects reasoning longer than 2000 characters", () => {
+    it("accepts long reasoning (MAX now Integer.MAX_VALUE)", () => {
         expect(() =>
             SubmitVoteRequest.parse({
                 scores: [5, 5],
-                reasoning: "A".repeat(2001),
+                reasoning: "A".repeat(5000),
             }),
-        ).toThrow();
+        ).not.toThrow();
     });
 
     it("rejects a score below 0", () => {
@@ -1219,6 +1225,10 @@ describe("TeamName", () => {
     it("rejects a name longer than 30 characters", () => {
         expect(() => TeamName.parse("A".repeat(31))).toThrow();
     });
+
+    it("rejects a name longer than MAX_USER_NAME_LENGTH characters", () => {
+        expect(() => TeamName.parse("A".repeat(MAX_USER_NAME_LENGTH + 1))).toThrow();
+    });
 });
 
 describe("ProjectName", () => {
@@ -1268,12 +1278,12 @@ describe("ProjectDescription", () => {
         expect(() => ProjectDescription.parse("A".repeat(30))).not.toThrow();
     });
 
-    it("accepts exactly 2000 characters", () => {
+    it("accepts 2000 characters", () => {
         expect(() => ProjectDescription.parse("A".repeat(2000))).not.toThrow();
     });
 
-    it("rejects 2001 characters", () => {
-        expect(() => ProjectDescription.parse("A".repeat(2001))).toThrow();
+    it("accepts 5000 characters (MAX now Integer.MAX_VALUE)", () => {
+        expect(() => ProjectDescription.parse("A".repeat(5000))).not.toThrow();
     });
 
     it("rejects 29 characters", () => {
@@ -1304,7 +1314,9 @@ describe("ProjectDescription", () => {
     });
 
     it("accepts content with special symbols", () => {
-        expect(() => ProjectDescription.parse("Special: @#$%^&*()_+-=[]{}|;':\",./<>?~`".repeat(2))).not.toThrow();
+        expect(() =>
+            ProjectDescription.parse("Special: @#$%^&*()_+-=[]{}|;':\",./<>?~`".repeat(2)),
+        ).not.toThrow();
     });
 });
 
@@ -1516,9 +1528,7 @@ describe("ScoreValues", () => {
     });
 
     it("rejects a string value", () => {
-        expect(() =>
-            ScoreValues.parse({ ...allThree, originality: "bad" }),
-        ).toThrow();
+        expect(() => ScoreValues.parse({ ...allThree, originality: "bad" })).toThrow();
     });
 
     it("rejects an empty object", () => {
@@ -1592,13 +1602,13 @@ describe("SubmitVoteRequest - additional", () => {
         ).not.toThrow();
     });
 
-    it("rejects reasoning longer than 2000 characters", () => {
+    it("accepts long reasoning (MAX now Integer.MAX_VALUE)", () => {
         expect(() =>
             SubmitVoteRequest.parse({
                 scores: [5, 5],
-                reasoning: "A".repeat(2001),
+                reasoning: "A".repeat(5000),
             }),
-        ).toThrow();
+        ).not.toThrow();
     });
 });
 
@@ -1726,7 +1736,9 @@ describe("ManageRedirectUriRequest - additional", () => {
 
     it("accepts https with query parameters", () => {
         expect(() =>
-            ManageRedirectUriRequest.parse({ uri: "https://example.com/callback?state=abc&code=123" }),
+            ManageRedirectUriRequest.parse({
+                uri: "https://example.com/callback?state=abc&code=123",
+            }),
         ).not.toThrow();
     });
 
@@ -1767,15 +1779,11 @@ describe("ManageRedirectUriRequest - additional", () => {
     });
 
     it("rejects ws:// protocol", () => {
-        expect(() =>
-            ManageRedirectUriRequest.parse({ uri: "ws://localhost/callback" }),
-        ).toThrow();
+        expect(() => ManageRedirectUriRequest.parse({ uri: "ws://localhost/callback" })).toThrow();
     });
 
     it("rejects ftp:// protocol", () => {
-        expect(() =>
-            ManageRedirectUriRequest.parse({ uri: "ftp://localhost/file" }),
-        ).toThrow();
+        expect(() => ManageRedirectUriRequest.parse({ uri: "ftp://localhost/file" })).toThrow();
     });
 });
 
@@ -1873,21 +1881,15 @@ describe("CreateApplicationRequest - additional", () => {
 
 describe("UpdateUserRequest - additional", () => {
     it("accepts a name of exactly 30 characters", () => {
-        expect(() =>
-            UpdateUserRequest.parse({ name: "A".repeat(30) }),
-        ).not.toThrow();
+        expect(() => UpdateUserRequest.parse({ name: "A".repeat(30) })).not.toThrow();
     });
 
     it("accepts a name with unicode", () => {
-        expect(() =>
-            UpdateUserRequest.parse({ name: "用户名称" }),
-        ).not.toThrow();
+        expect(() => UpdateUserRequest.parse({ name: "用户名称" })).not.toThrow();
     });
 
     it("accepts a name with special characters", () => {
-        expect(() =>
-            UpdateUserRequest.parse({ name: "John O'Brien-Smith" }),
-        ).not.toThrow();
+        expect(() => UpdateUserRequest.parse({ name: "John O'Brien-Smith" })).not.toThrow();
     });
 
     it("accepts both profile_theme_image and avatar set to null", () => {
@@ -1897,9 +1899,7 @@ describe("UpdateUserRequest - additional", () => {
     });
 
     it("accepts a name as an empty string", () => {
-        expect(() =>
-            UpdateUserRequest.parse({ name: "" }),
-        ).not.toThrow();
+        expect(() => UpdateUserRequest.parse({ name: "" })).not.toThrow();
     });
 
     it("accepts a profile_theme_image as a data JPEG URL", () => {
@@ -1923,29 +1923,23 @@ describe("UpdateUserRequest - additional", () => {
     });
 
     it("accepts a name with numbers", () => {
-        expect(() =>
-            UpdateUserRequest.parse({ name: "User 123" }),
-        ).not.toThrow();
+        expect(() => UpdateUserRequest.parse({ name: "User 123" })).not.toThrow();
     });
 
-    it("rejects a name longer than 30 characters", () => {
+    it("rejects a name longer than MAX_USER_NAME_LENGTH characters", () => {
         expect(() =>
-            UpdateUserRequest.parse({ name: "A".repeat(31) }),
+            UpdateUserRequest.parse({ name: "A".repeat(MAX_USER_NAME_LENGTH + 1) }),
         ).toThrow();
     });
 });
 
 describe("UpdateTeamRequest - additional", () => {
     it("accepts a name with unicode", () => {
-        expect(() =>
-            UpdateTeamRequest.parse({ name: "新团队" }),
-        ).not.toThrow();
+        expect(() => UpdateTeamRequest.parse({ name: "新团队" })).not.toThrow();
     });
 
     it("accepts a name with special characters", () => {
-        expect(() =>
-            UpdateTeamRequest.parse({ name: "Team #42 & Friends" }),
-        ).not.toThrow();
+        expect(() => UpdateTeamRequest.parse({ name: "Team #42 & Friends" })).not.toThrow();
     });
 
     it("accepts a partial project with only name", () => {
@@ -2171,9 +2165,7 @@ describe("ElectionVoteRequest - additional", () => {
 
 describe("DeleteApplicationsRequest", () => {
     it("accepts a single ID", () => {
-        expect(() =>
-            DeleteApplicationsRequest.parse({ ids: ["app-1"] }),
-        ).not.toThrow();
+        expect(() => DeleteApplicationsRequest.parse({ ids: ["app-1"] })).not.toThrow();
     });
 
     it("accepts multiple IDs", () => {
@@ -2184,28 +2176,20 @@ describe("DeleteApplicationsRequest", () => {
 
     it("accepts exactly 100 IDs", () => {
         const ids = Array(100).fill("a");
-        expect(() =>
-            DeleteApplicationsRequest.parse({ ids }),
-        ).not.toThrow();
+        expect(() => DeleteApplicationsRequest.parse({ ids })).not.toThrow();
     });
 
     it("rejects more than 100 IDs", () => {
         const ids = Array(101).fill("a");
-        expect(() =>
-            DeleteApplicationsRequest.parse({ ids }),
-        ).toThrow();
+        expect(() => DeleteApplicationsRequest.parse({ ids })).toThrow();
     });
 
     it("accepts an empty array", () => {
-        expect(() =>
-            DeleteApplicationsRequest.parse({ ids: [] }),
-        ).not.toThrow();
+        expect(() => DeleteApplicationsRequest.parse({ ids: [] })).not.toThrow();
     });
 
     it("rejects an array with an empty string ID", () => {
-        expect(() =>
-            DeleteApplicationsRequest.parse({ ids: [""] }),
-        ).toThrow();
+        expect(() => DeleteApplicationsRequest.parse({ ids: [""] })).toThrow();
     });
 });
 
