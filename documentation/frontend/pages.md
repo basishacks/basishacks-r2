@@ -277,11 +277,12 @@ OAuth2 application creation form.
 
 Hackathon Administration panel. Only accessible to admin users; non-admins receive a hard 403 even if they know the URL. Provides:
 
-- **Hackathon Configuration**: Edit all global hackathon state fields (status, voting, judging, results, timestamps via datetime-local pickers, theme)
-- **Active Season**: Dropdown to select the currently active season
-- **Season Management**: Create, rename, activate, deactivate, and delete seasons
+- **Season Picker**: Dropdown to select the active season, with "Set Active" and "+ New Season" buttons
+- **Season Name**: Editable text input to rename the selected season
+- **Hackathon Configuration**: Edit all global hackathon state fields (status, voting, judging, results, timestamps via datetime-local pickers, theme name, theme description)
+- **Database Export**: Download the full database as SQLite or CSV (admin-only)
 
-All changes are persisted to the database immediately via dedicated admin API endpoints.
+All changes are persisted to the database immediately via dedicated admin API endpoints. Season name and theme name are fully independent; changing one does not affect the other.
 
 **Layout:** `developers-dashboard`
 

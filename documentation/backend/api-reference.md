@@ -473,6 +473,16 @@ Delete a season by ID.
 | **Params**   | `id` — positive integer |
 | **Response** | `{ seasons: Season[] }` |
 
+### GET `/api/admin/database/export`
+
+Download a full snapshot of the database in SQLite or CSV format.
+
+| Field | Details |
+| --- | --- |
+| **Auth** | Admin |
+| **Query** | `format` — `sqlite` (default) or `csv` |
+| **Response** | SQLite: `application/x-sqlite3` binary file. CSV: `text/csv` with per-table sections |
+
 ---
 
 ## Applications
