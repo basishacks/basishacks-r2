@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import type { FormSubmitEvent } from "@nuxt/ui";
-import { SubmitTeamRequest, UpdateTeamRequest } from "~~/shared/schemas";
+import { SubmitTeamRequest, UpdateTeamRequest, MAX_PROJECT_NAME_LENGTH, MAX_PROJECT_DESCRIPTION_LENGTH, MAX_URL_LENGTH } from "~~/shared/schemas";
 
 const { team: defaultTeam, disabled = false } = defineProps<{
     team: APITeam | null | undefined;
@@ -171,11 +171,11 @@ async function confirmSubmit() {
         @submit="onSubmit"
     >
         <UFormField name="project.name" label="Project name" help="Make it sound even cooler!">
-            <UInput v-model="state.project.name" class="w-full" />
+            <UInput v-model="state.project.name" class="w-full" :maxlength="MAX_PROJECT_NAME_LENGTH" />
         </UFormField>
 
         <UFormField name="project.description" label="Project description">
-            <UTextarea v-model="state.project.description" :rows="10" class="w-full" />
+            <UTextarea v-model="state.project.description" :rows="10" class="w-full" :maxlength="MAX_PROJECT_DESCRIPTION_LENGTH" />
 
             <template #help>
                 <p>Please include:</p>
@@ -187,7 +187,7 @@ async function confirmSubmit() {
         </UFormField>
 
         <UFormField name="project.demo_url" label="Demo URL">
-            <UInput v-model="state.project.demo_url" class="w-full" />
+            <UInput v-model="state.project.demo_url" class="w-full" :maxlength="MAX_URL_LENGTH" />
 
             <template #help>
                 This should allow anyone can experience your project. For more information, please
@@ -196,7 +196,7 @@ async function confirmSubmit() {
         </UFormField>
 
         <UFormField name="project.repo_url" label="Repository URL">
-            <UInput v-model="state.project.repo_url" class="w-full" />
+            <UInput v-model="state.project.repo_url" class="w-full" :maxlength="MAX_URL_LENGTH" />
 
             <template #help>
                 Your project must be open source on

@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import type { FormSubmitEvent } from "@nuxt/ui";
 import rubrics from "~~/shared/rubric";
-import { CreateTeamScoresRequest } from "~~/shared/schemas";
+import { CreateTeamScoresRequest, MAX_REASONING_LENGTH } from "~~/shared/schemas";
 
 const { team } = defineProps<{
     team: APITeam;
@@ -139,6 +139,7 @@ async function onSubmit(event: FormSubmitEvent<CreateTeamScoresRequest>) {
                     class="w-full"
                     placeholder="Please briefly share your reasoning on this score."
                     :rows="5"
+                    :maxlength="MAX_REASONING_LENGTH"
                 />
             </UFormField>
 

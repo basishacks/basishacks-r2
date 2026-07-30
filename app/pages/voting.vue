@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import type { FormSubmitEvent } from "@nuxt/ui";
-import { SubmitVoteRequest } from "~~/shared/schemas";
+import { SubmitVoteRequest, MAX_REASONING_LENGTH } from "~~/shared/schemas";
 
 definePageMeta({
     middleware: ["auth"],
@@ -139,6 +139,7 @@ async function onSubmit(event: FormSubmitEvent<SubmitVoteRequest>) {
                         class="w-full"
                         :rows="5"
                         :disabled="submitted"
+                        :maxlength="MAX_REASONING_LENGTH"
                     />
                 </UFormField>
 
