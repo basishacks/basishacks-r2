@@ -156,13 +156,13 @@ const PositiveIntParam = z.coerce.number().int().positive().finite();
 
 Coerces string route params to positive integers. Used by:
 
-| Schema | Params |
-| --- | --- |
-| `TeamIdParams` | `{ id: PositiveIntParam }` |
-| `TeamUserParams` | `{ id: PositiveIntParam, user: PositiveIntParam }` |
-| `UserIdParams` | `{ id: PositiveIntParam }` |
-| `DeepSeekSessionIdParams` | `{ id: PositiveIntParam }` |
-| `ApplicationIdParams` | `{ id: z.string().min(1).max(256) }` |
+| Schema                    | Params                                             |
+| ------------------------- | -------------------------------------------------- |
+| `TeamIdParams`            | `{ id: PositiveIntParam }`                         |
+| `TeamUserParams`          | `{ id: PositiveIntParam, user: PositiveIntParam }` |
+| `UserIdParams`            | `{ id: PositiveIntParam }`                         |
+| `DeepSeekSessionIdParams` | `{ id: PositiveIntParam }`                         |
+| `ApplicationIdParams`     | `{ id: z.string().min(1).max(256) }`               |
 
 ---
 
@@ -218,10 +218,10 @@ Coerces string route params to positive integers. Used by:
 
 ### `GetTeamsQuery`
 
-| Field        | Type            | Constraints                                        |
-| ------------ | --------------- | -------------------------------------------------- |
-| `judging`    | `BooleanString` | Optional. Filters teams for judging view           |
-| `season_id`  | `number`        | Optional. Positive integer, filters by season      |
+| Field       | Type            | Constraints                                   |
+| ----------- | --------------- | --------------------------------------------- |
+| `judging`   | `BooleanString` | Optional. Filters teams for judging view      |
+| `season_id` | `number`        | Optional. Positive integer, filters by season |
 
 **API endpoint:** `GET /api/teams` (query parameters)
 
@@ -234,13 +234,13 @@ Coerces string route params to positive integers. Used by:
 
 **Project sub-schema:**
 
-| Field                 | Type                  | Constraints                     |
-| --------------------- | --------------------- | ------------------------------- |
-| `project.name`        | `ProjectName`         | Required, 1–100 characters      |
-| `project.description` | `ProjectDescription`  | Required, 30–2000 characters    |
-| `project.demo_url`    | `RequiredProjectUrl`  | Required, valid URL, max 2048   |
-| `project.repo_url`    | `RequiredProjectUrl`  | Required, valid URL, max 2048   |
-| `project.sourcing`    | `string`              | Optional, max 2000 characters   |
+| Field                 | Type                 | Constraints                   |
+| --------------------- | -------------------- | ----------------------------- |
+| `project.name`        | `ProjectName`        | Required, 1–100 characters    |
+| `project.description` | `ProjectDescription` | Required, 30–2000 characters  |
+| `project.demo_url`    | `RequiredProjectUrl` | Required, valid URL, max 2048 |
+| `project.repo_url`    | `RequiredProjectUrl` | Required, valid URL, max 2048 |
+| `project.sourcing`    | `string`             | Optional, max 2000 characters |
 
 **API endpoint:** `POST /api/teams/:id/submit`
 
@@ -270,9 +270,9 @@ Coerces string route params to positive integers. Used by:
 - Accepted MIME types: `image/jpeg`, `image/jpg`, `image/png`, `image/webp`
 - Data URIs are accepted (string starting with `'data'`)
 - Error messages use the `formatBytes()` helper exported from `shared/schemas.ts`:
-  ```ts
-  formatBytes(10 * 1024 * 1024); // → "10 MB"
-  ```
+    ```ts
+    formatBytes(10 * 1024 * 1024); // → "10 MB"
+    ```
 
 **`formatBytes(bytes, decimals = 2)`:** Converts byte counts to human-readable strings (Bytes, KB, MB, GB, etc.).
 
@@ -293,10 +293,10 @@ Coerces string route params to positive integers. Used by:
 
 ### `SubmitVoteRequest`
 
-| Field       | Type       | Constraints                                     |
-| ----------- | ---------- | ----------------------------------------------- |
-| `scores`    | `number[]` | Array of integers, each 0–5, max 50 entries     |
-| `reasoning` | `string`   | Max 2000 characters                             |
+| Field       | Type       | Constraints                                 |
+| ----------- | ---------- | ------------------------------------------- |
+| `scores`    | `number[]` | Array of integers, each 0–5, max 50 entries |
+| `reasoning` | `string`   | Max 2000 characters                         |
 
 **Refinement:** `.refine(({ scores }) => scores.reduce((a, b) => a + b, 0) === 10)` — the scores **must sum to exactly 10**. This is enforced by a Zod `.refine()` on the object, not individually on the array.
 
@@ -308,28 +308,28 @@ Coerces string route params to positive integers. Used by:
 
 ### `CreateApplicationRequest`
 
-| Field             | Type                 | Constraints                               |
-| ----------------- | -------------------- | ----------------------------------------- |
-| `name`            | `string`             | Required, 1–64 characters                 |
-| `description`     | `string`             | Optional, max 1024 characters             |
-| `proxy_microsoft` | `boolean`            | Required, enables Microsoft Graph proxy   |
-| `type`            | `'first' \| 'third'` | Optional, defaults to third-party         |
+| Field             | Type                 | Constraints                             |
+| ----------------- | -------------------- | --------------------------------------- |
+| `name`            | `string`             | Required, 1–64 characters               |
+| `description`     | `string`             | Optional, max 1024 characters           |
+| `proxy_microsoft` | `boolean`            | Required, enables Microsoft Graph proxy |
+| `type`            | `'first' \| 'third'` | Optional, defaults to third-party       |
 
 **API endpoint:** `POST /api/applications`
 
 ### `DeleteApplicationsRequest`
 
-| Field | Type       | Constraints                                                                 |
-| ----- | ---------- | --------------------------------------------------------------------------- |
-| `ids` | `string[]` | Required, 1–100 non-empty client IDs to delete at once                      |
+| Field | Type       | Constraints                                            |
+| ----- | ---------- | ------------------------------------------------------ |
+| `ids` | `string[]` | Required, 1–100 non-empty client IDs to delete at once |
 
 **API endpoint:** `DELETE /api/applications`
 
 ### `ManageRedirectUriRequest`
 
-| Field | Type     | Constraints                                                                                   |
-| ----- | -------- | --------------------------------------------------------------------------------------------- |
-| `uri` | `string` | Required. Must start with `https://` or match `http://localhost(/:\|$)` pattern               |
+| Field | Type | Constraints |
+| --- | --- | --- |
+| `uri` | `string` | Required. Must start with `https://` or match `http://localhost(/:\|$)` pattern |
 
 The refinement uses a custom function: `(u) => u.startsWith("https://") || /^http:\/\/localhost(\/|:|$)/.test(u)`. This allows any `https://` URL or `http://localhost` with any port or path.
 
@@ -341,14 +341,14 @@ The refinement uses a custom function: `(u) => u.startsWith("https://") || /^htt
 
 ### `OAuth2TokenRequest`
 
-| Field           | Type                   | Constraints                                              |
-| --------------- | ---------------------- | -------------------------------------------------------- |
-| `grant_type`    | `'authorization_code'` | Literal `authorization_code`, only grant type supported  |
-| `code`          | `string`               | Required, 1–1024 characters                              |
-| `client_id`     | `string`               | Required, 1–256 characters                               |
-| `client_secret` | `string`               | Required, 1–512 characters                               |
-| `redirect_uri`  | `string`               | Optional, max 2048 characters, or empty string           |
-| `code_verifier` | `string`               | Optional, max 128 characters, used for PKCE              |
+| Field | Type | Constraints |
+| --- | --- | --- |
+| `grant_type` | `'authorization_code'` | Literal `authorization_code`, only grant type supported |
+| `code` | `string` | Required, 1–1024 characters |
+| `client_id` | `string` | Required, 1–256 characters |
+| `client_secret` | `string` | Required, 1–512 characters |
+| `redirect_uri` | `string` | Optional, max 2048 characters, or empty string |
+| `code_verifier` | `string` | Optional, max 128 characters, used for PKCE |
 
 **API endpoint:** `POST /api/oauth2/token`
 

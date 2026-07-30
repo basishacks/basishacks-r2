@@ -234,13 +234,10 @@ describe("POST /api/teams/:id/submit", () => {
 
     it("validates request body through SubmitTeamRequest schema", async () => {
         const originalReadValidatedBody = globalThis.readValidatedBody;
-        vi.stubGlobal(
-            "readValidatedBody",
-            async (_event: any, schema: any) => {
-                const validate = typeof schema === "function" ? schema : schema.parse;
-                return validate(mockBody.value);
-            },
-        );
+        vi.stubGlobal("readValidatedBody", async (_event: any, schema: any) => {
+            const validate = typeof schema === "function" ? schema : schema.parse;
+            return validate(mockBody.value);
+        });
 
         const team = seedTeam(ctx, { name: "Validation Team" });
         seedUser(ctx, { email: "user@basischina.com", team_id: team.id });

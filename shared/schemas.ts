@@ -132,9 +132,7 @@ export const SubmitTeamRequest = z.object({
         demo_url: RequiredProjectUrl,
         repo_url: RequiredProjectUrl,
         sourcing: z.optional(
-            z
-                .string()
-                .max(MAX_PROJECT_SOURCE_LENGTH, "Sourcing notes are too long"),
+            z.string().max(MAX_PROJECT_SOURCE_LENGTH, "Sourcing notes are too long"),
         ),
     }),
 });
@@ -158,9 +156,7 @@ export const formatBytes = (bytes: number, decimals = 2) => {
 };
 
 export const UpdateUserRequest = z.object({
-    name: z.optional(
-        z.string().max(MAX_USER_NAME_LENGTH, "Name is too long"),
-    ),
+    name: z.optional(z.string().max(MAX_USER_NAME_LENGTH, "Name is too long")),
     profile_theme_image: z
         .union([
             z

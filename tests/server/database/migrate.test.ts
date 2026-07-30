@@ -193,9 +193,9 @@ describe("migrateDatabase — CREATE TABLE scenarios", () => {
             migrateDatabase(rawDb, migrationsDir);
             expect(columnExists(rawDb, "migrate_test_table", "id")).toBe(true);
 
-            const recorded = rawDb
-                .prepare("SELECT hash FROM _drizzle_migrations")
-                .all() as { hash: string }[];
+            const recorded = rawDb.prepare("SELECT hash FROM _drizzle_migrations").all() as {
+                hash: string;
+            }[];
             expect(recorded.some((r) => r.hash.includes("0001_create_test"))).toBe(true);
         } finally {
             rmSync(migrationsDir, { recursive: true, force: true });
@@ -380,8 +380,8 @@ describe("migrateDatabase — ALTER-only migrations", () => {
             writeFileSync(
                 join(migrationsDir, "0001_multi_stmt.sql"),
                 "ALTER TABLE users ADD COLUMN bp_col1 INTEGER;" +
-                "\n--> statement-breakpoint\n" +
-                "ALTER TABLE teams ADD COLUMN bp_col2 TEXT;",
+                    "\n--> statement-breakpoint\n" +
+                    "ALTER TABLE teams ADD COLUMN bp_col2 TEXT;",
             );
 
             migrateDatabase(rawDb, migrationsDir);
@@ -449,9 +449,9 @@ describe("seedHackathon", () => {
 
         seedHackathon(rawDb);
 
-        const row = rawDb
-            .prepare("SELECT status FROM hackathon WHERE id = 1")
-            .get() as { status: string };
+        const row = rawDb.prepare("SELECT status FROM hackathon WHERE id = 1").get() as {
+            status: string;
+        };
         expect(row).toBeDefined();
         expect(row.status).toBe("not_started");
         wrapper.close();
@@ -465,17 +465,17 @@ describe("seedHackathon", () => {
         // First seed to insert the row
         seedHackathon(rawDb);
 
-        const before = rawDb
-            .prepare("SELECT COUNT(*) AS count FROM hackathon")
-            .get() as { count: number };
+        const before = rawDb.prepare("SELECT COUNT(*) AS count FROM hackathon").get() as {
+            count: number;
+        };
         expect(before.count).toBe(1);
 
         // Second call should not insert another row
         seedHackathon(rawDb);
 
-        const after = rawDb
-            .prepare("SELECT COUNT(*) AS count FROM hackathon")
-            .get() as { count: number };
+        const after = rawDb.prepare("SELECT COUNT(*) AS count FROM hackathon").get() as {
+            count: number;
+        };
         expect(after.count).toBe(before.count);
         wrapper.close();
     });
@@ -535,9 +535,9 @@ describe("createAndMigrateDatabase", () => {
         expect(() => createAndMigrateDatabase(rawDb)).not.toThrow();
 
         // Verify hackathon was seeded
-        const row = rawDb
-            .prepare("SELECT status FROM hackathon WHERE id = 1")
-            .get() as { status: string };
+        const row = rawDb.prepare("SELECT status FROM hackathon WHERE id = 1").get() as {
+            status: string;
+        };
         expect(row).toBeDefined();
         expect(row.status).toBe("not_started");
 

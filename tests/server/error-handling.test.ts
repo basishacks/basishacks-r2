@@ -231,15 +231,7 @@ describe("Failed request error responses", () => {
 
     it("debug/upload.post.ts validates all file upload scenarios with 400/413", () => {
         const source = readFileSync(
-            resolve(
-                import.meta.dirname,
-                "..",
-                "..",
-                "server",
-                "api",
-                "debug",
-                "upload.post.ts",
-            ),
+            resolve(import.meta.dirname, "..", "..", "server", "api", "debug", "upload.post.ts"),
             "utf-8",
         );
         expect(source).toContain("400");
@@ -337,15 +329,7 @@ describe("OAuth2 error responses do not leak internals", () => {
 
     it("session.post.ts handles errors with throw createError", () => {
         const source = readFileSync(
-            resolve(
-                import.meta.dirname,
-                "..",
-                "..",
-                "server",
-                "api",
-                "oauth2",
-                "session.post.ts",
-            ),
+            resolve(import.meta.dirname, "..", "..", "server", "api", "oauth2", "session.post.ts"),
             "utf-8",
         );
         expect(source).toMatch(/throw createError/);

@@ -494,9 +494,7 @@ describe("server/utils/auth", () => {
 
         it("returns user for requirePermission with admin checking admin permission", async () => {
             event.context.drizzle
-                .prepare(
-                    "INSERT INTO users(id, email, role) VALUES(1, 'adm@example.com', 'admin')",
-                )
+                .prepare("INSERT INTO users(id, email, role) VALUES(1, 'adm@example.com', 'admin')")
                 .run();
             vi.stubGlobal("getUserSession", async () => ({ user: { id: 1 } }));
 

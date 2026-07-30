@@ -141,7 +141,7 @@ if (!app || !isSecretValid) {
     throw createError({
         statusCode: 400,
         statusMessage: "invalid_client",
-        message: "Invalid client credentials",  // Same message for every failure
+        message: "Invalid client credentials", // Same message for every failure
     });
 }
 ```

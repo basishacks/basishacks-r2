@@ -498,13 +498,13 @@ function resolveAssetPath(assetsDir: string, name: string) {
 
 ### Asset Functions
 
-| Function                      | Description                                                      |
-| ----------------------------- | ---------------------------------------------------------------- |
-| `createAsset(name, data)`     | Writes a Buffer to `public/assets/{name}`; returns basename      |
-| `createUserAsset(name, data)` | Writes a Buffer to `public/userassets/{name}`; returns basename  |
-| `removeAsset(name)`           | Deletes a file from `public/assets/`                             |
-| `removeUserAsset(name)`       | Deletes a file from `public/userassets/`                         |
-| `getUserAsset(name)`          | Reads a file from `public/userassets/` as a Buffer               |
+| Function                      | Description                                                     |
+| ----------------------------- | --------------------------------------------------------------- |
+| `createAsset(name, data)`     | Writes a Buffer to `public/assets/{name}`; returns basename     |
+| `createUserAsset(name, data)` | Writes a Buffer to `public/userassets/{name}`; returns basename |
+| `removeAsset(name)`           | Deletes a file from `public/assets/`                            |
+| `removeUserAsset(name)`       | Deletes a file from `public/userassets/`                        |
+| `getUserAsset(name)`          | Reads a file from `public/userassets/` as a Buffer              |
 
 All functions validate the asset name to prevent path traversal, create parent directories recursively, and remove functions silently catch missing-file errors. Invalid names throw a 400 error.
 
@@ -559,6 +559,7 @@ export function validateExternalUrl(urlString: string): URL;
 ```
 
 Parses the URL and throws if:
+
 - Protocol is not `http:` or `https:`.
 - Host is **private or loopback** (localhost, private IP ranges, etc.) — prevents SSRF attacks by ensuring external requests cannot target internal infrastructure.
 
@@ -582,15 +583,15 @@ Returns `true` if the host is `localhost`, a loopback address, or a private IPv4
 
 The function blocks the following address ranges:
 
-| Range | Type |
-| --- | --- |
-| `127.0.0.0/8` | Loopback |
-| `10.0.0.0/8` | Private (Class A) |
-| `172.16.0.0/12` | Private (Class B) |
+| Range            | Type              |
+| ---------------- | ----------------- |
+| `127.0.0.0/8`    | Loopback          |
+| `10.0.0.0/8`     | Private (Class A) |
+| `172.16.0.0/12`  | Private (Class B) |
 | `192.168.0.0/16` | Private (Class C) |
-| `::1/128` | IPv6 loopback |
-| `fc00::/7` | IPv6 unique local |
-| `localhost` | Hostname |
+| `::1/128`        | IPv6 loopback     |
+| `fc00::/7`       | IPv6 unique local |
+| `localhost`      | Hostname          |
 
 ---
 

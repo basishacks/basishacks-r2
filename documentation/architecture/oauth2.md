@@ -91,24 +91,24 @@ The document is built by `buildOpenIdConfiguration()` in `server/utils/openid-co
 
 The client redirects the user to `/api/oauth2/authorize` with standard OAuth2 parameters:
 
-| Parameter               | Required   | Description                              |
-| ----------------------- | ---------- | ---------------------------------------- |
-| `client_id`             | Yes        | Application client ID                    |
-| `scope`                 | Yes        | Space-separated requested scopes         |
-| `redirect_uri`          | Yes        | Must match a registered redirect URI     |
-| `state`                 | Yes        | Client-provided anti-CSRF token          |
-| `response_type`         | Yes        | Must be `code`                           |
-| `code_challenge`        | Yes (PKCE) | SHA-256 hash of the code verifier            |
+| Parameter               | Required   | Description                                 |
+| ----------------------- | ---------- | ------------------------------------------- |
+| `client_id`             | Yes        | Application client ID                       |
+| `scope`                 | Yes        | Space-separated requested scopes            |
+| `redirect_uri`          | Yes        | Must match a registered redirect URI        |
+| `state`                 | Yes        | Client-provided anti-CSRF token             |
+| `response_type`         | Yes        | Must be `code`                              |
+| `code_challenge`        | Yes (PKCE) | SHA-256 hash of the code verifier           |
 | `code_challenge_method` | Yes (PKCE) | Must be `S256` only (see enforcement below) |
 
 The `oauth2-authorize.ts` middleware validates the request, creates an `AuthorizeSession`, and sets a `bridge_id` cookie.
 
-::: danger PKCE enforcement
-PKCE is **mandatory** with `code_challenge_method=S256` only. Per RFC 7636 §4.4.2, the `plain` method provides no additional security over the implicit flow and is therefore rejected at the validation layer. Requests with `plain` or missing PKCE receive:
+::: danger PKCE enforcement PKCE is **mandatory** with `code_challenge_method=S256` only. Per RFC 7636 §4.4.2, the `plain` method provides no additional security over the implicit flow and is therefore rejected at the validation layer. Requests with `plain` or missing PKCE receive:
 
 ```
 invalid_request: code_challenge_method must be S256
 ```
+
 :::
 
 ### Step 2: User authentication
@@ -434,12 +434,12 @@ export default withOAuth2JWT(
 
 The `bridge_id` cookie that links the user's browser to their authorization session uses hardened security flags:
 
-| Property   | Value                     |
-| ---------- | ------------------------- |
-| `httpOnly` | `true`                    |
-| `secure`   | `true`                    |
-| `sameSite` | `lax`                     |
-| `maxAge`   | 10 minutes                |
+| Property   | Value      |
+| ---------- | ---------- |
+| `httpOnly` | `true`     |
+| `secure`   | `true`     |
+| `sameSite` | `lax`      |
+| `maxAge`   | 10 minutes |
 
 The `bridge_error` cookie (used to surface validation errors in the authorize page UI) uses the same hardened flags. Both cookies are deleted on flow completion.
 

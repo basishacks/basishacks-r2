@@ -22,7 +22,8 @@ beforeAll(async () => {
     vi.stubGlobal("getOAuth2Application", oauthDb.getOAuth2Application);
     vi.stubGlobal("removeOAuth2ApplicationRedirectUri", oauthDb.removeOAuth2ApplicationRedirectUri);
 
-    deleteHandler = (await import("~~/server/api/applications/[id]/redirect_uris/index.delete")).default;
+    deleteHandler = (await import("~~/server/api/applications/[id]/redirect_uris/index.delete"))
+        .default;
 });
 
 beforeEach(async () => {

@@ -15,7 +15,16 @@ import {
     type TestContext,
 } from "./helpers";
 import { eq, and } from "drizzle-orm";
-import { teams, users, oauth2Applications, teamScores, peerVotingScores, teamAwards, userPastTeams, hackathon } from "~~/server/database/schema";
+import {
+    teams,
+    users,
+    oauth2Applications,
+    teamScores,
+    peerVotingScores,
+    teamAwards,
+    userPastTeams,
+    hackathon,
+} from "~~/server/database/schema";
 
 vi.mock("~~/server/utils/auth", () => ({
     requireUser: vi.fn(),
@@ -45,7 +54,6 @@ let createApplicationHandler: any;
 let submitTeamHandler: any;
 let getTeamHandler: any;
 let listTeamsHandler: any;
-
 
 beforeAll(async () => {
     setupNitroGlobals();
@@ -370,7 +378,12 @@ describe("SQL injection in team project fields (POST submit)", () => {
         "stores submitted project description %j as literal",
         async (description) => {
             seedUser(ctx, { email: "creator@basischina.com" });
-            const team = seedTeam(ctx, { name: "SubmitTeam", pathway: "junior", project_submitted: 0, season_id: 1 });
+            const team = seedTeam(ctx, {
+                name: "SubmitTeam",
+                pathway: "junior",
+                project_submitted: 0,
+                season_id: 1,
+            });
             seedUser(ctx, { email: "member@basischina.com", team_id: team.id });
 
             mockSession.value = { user: { id: 2 } };
@@ -396,7 +409,12 @@ describe("SQL injection in team project fields (POST submit)", () => {
 
     it("stores project name with SQL content as literal via submit", async () => {
         seedUser(ctx, { email: "creator@basischina.com" });
-        const team = seedTeam(ctx, { name: "SubmitTeam2", pathway: "junior", project_submitted: 0, season_id: 1 });
+        const team = seedTeam(ctx, {
+            name: "SubmitTeam2",
+            pathway: "junior",
+            project_submitted: 0,
+            season_id: 1,
+        });
         seedUser(ctx, { email: "member2@basischina.com", team_id: team.id });
 
         const sqlName = "' DROP TABLE teams; --";
@@ -407,7 +425,8 @@ describe("SQL injection in team project fields (POST submit)", () => {
             pathway: "junior",
             project: {
                 name: sqlName,
-                description: "This is a completely valid description that is at least 30 characters long.",
+                description:
+                    "This is a completely valid description that is at least 30 characters long.",
                 demo_url: "https://example.com/demo",
                 repo_url: "https://github.com/example/repo",
             },
@@ -421,30 +440,29 @@ describe("SQL injection in team project fields (POST submit)", () => {
 });
 
 describe("advanced SQL injection in application fields", () => {
-    it.each([
-        "' UNION SELECT * FROM users --",
-        "' oR 1=1 --",
-        "'/**/OR/**/1=1/**/--",
-    ])("stores application name %j as literal string", async (name) => {
-        seedUser(ctx, { email: "dev2@basischina.com" });
-        vi.mocked(globalThis.requirePermission).mockResolvedValue({
-            id: 1,
-            role: "participant",
-        });
-        mockBody.value = { name, proxy_microsoft: false };
+    it.each(["' UNION SELECT * FROM users --", "' oR 1=1 --", "'/**/OR/**/1=1/**/--"])(
+        "stores application name %j as literal string",
+        async (name) => {
+            seedUser(ctx, { email: "dev2@basischina.com" });
+            vi.mocked(globalThis.requirePermission).mockResolvedValue({
+                id: 1,
+                role: "participant",
+            });
+            mockBody.value = { name, proxy_microsoft: false };
 
-        const result = await createApplicationHandler(createEvent());
+            const result = await createApplicationHandler(createEvent());
 
-        expect(result).toHaveProperty("name", name);
+            expect(result).toHaveProperty("name", name);
 
-        const row = ctx.drizzle
-            .select()
-            .from(oauth2Applications)
-            .where(eq(oauth2Applications.name, name))
-            .get();
-        expect(row).toBeDefined();
-        expect(row!.name).toBe(name);
-    });
+            const row = ctx.drizzle
+                .select()
+                .from(oauth2Applications)
+                .where(eq(oauth2Applications.name, name))
+                .get();
+            expect(row).toBeDefined();
+            expect(row!.name).toBe(name);
+        },
+    );
 
     it.each(["' OR 1=1 --", "' OR 'a'='a", "' UNION SELECT * FROM users --"])(
         "stores application description %j as literal",
@@ -518,11 +536,7 @@ describe("SQL injection in judge scores reasoning (direct DB helper)", () => {
         expect(score!.reasoning).toBe(sqlReasoning);
 
         // Verify team name was NOT updated (second-order protection)
-        const unaffectedTeam = ctx.drizzle
-            .select()
-            .from(teams)
-            .where(eq(teams.id, team.id))
-            .get();
+        const unaffectedTeam = ctx.drizzle.select().from(teams).where(eq(teams.id, team.id)).get();
         expect(unaffectedTeam!.name).toBe("ScoredTeam");
     });
 });
@@ -721,32 +735,31 @@ describe("XSS patterns in team name", () => {
 });
 
 describe("XSS patterns in team description", () => {
-    it.each([
-        "<script>alert('xss')</script>",
-        '"><script>alert(1)</script>',
-        "onerror=alert(1)",
-    ])("stores description XSS %j as literal string", async (desc) => {
-        const team = seedTeam(ctx, { name: "XSSDescTeam" });
-        seedUser(ctx, { email: "xss_desc@basischina.com", team_id: team.id });
+    it.each(["<script>alert('xss')</script>", '"><script>alert(1)</script>', "onerror=alert(1)"])(
+        "stores description XSS %j as literal string",
+        async (desc) => {
+            const team = seedTeam(ctx, { name: "XSSDescTeam" });
+            seedUser(ctx, { email: "xss_desc@basischina.com", team_id: team.id });
 
-        mockSession.value = { user: { id: 1 } };
-        mockParams.values["id"] = String(team.id);
-        mockBody.value = { project: { description: desc } };
+            mockSession.value = { user: { id: 1 } };
+            mockParams.values["id"] = String(team.id);
+            mockBody.value = { project: { description: desc } };
 
-        await updateTeamHandler(createEvent());
+            await updateTeamHandler(createEvent());
 
-        const row = ctx.drizzle.select().from(teams).where(eq(teams.id, team.id)).get();
-        expect(row!.project_description).toBe(desc);
-    });
+            const row = ctx.drizzle.select().from(teams).where(eq(teams.id, team.id)).get();
+            expect(row!.project_description).toBe(desc);
+        },
+    );
 });
 
 describe("multi-byte character injection", () => {
     const MULTI_BYTE_NAMES = [
-        "Ā",                              // Unicode character beyond ASCII
-        "' OR 1=1 --Ā",                   // SQL injection with trailing Unicode
-        "团队名称",                        // Chinese characters
-        "日本語チーム名",                   // Japanese characters
-        "' UNION SELECT Ā FROM users --",  // Unicode in injection
+        "Ā", // Unicode character beyond ASCII
+        "' OR 1=1 --Ā", // SQL injection with trailing Unicode
+        "团队名称", // Chinese characters
+        "日本語チーム名", // Japanese characters
+        "' UNION SELECT Ā FROM users --", // Unicode in injection
     ];
 
     it.each(MULTI_BYTE_NAMES)("stores multi-byte name %j as literal", async (name) => {
@@ -1004,10 +1017,7 @@ describe("past teams edge cases", () => {
         const user = seedUser(ctx, { email: "past@basischina.com", team_id: null });
 
         // Insert into user_past_teams
-        ctx.drizzle
-            .insert(userPastTeams)
-            .values({ user_id: user.id, team_id: team.id })
-            .run();
+        ctx.drizzle.insert(userPastTeams).values({ user_id: user.id, team_id: team.id }).run();
 
         const row = ctx.drizzle
             .select()

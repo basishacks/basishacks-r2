@@ -43,11 +43,7 @@ async function addScopes(
     scopes: string[],
 ): Promise<void> {
     const mod = await import("~~/server/utils/database/oauth2_applications");
-    await mod.addOAuth2ApplicationScopes(
-        { context: { drizzle } } as any,
-        clientId,
-        scopes,
-    );
+    await mod.addOAuth2ApplicationScopes({ context: { drizzle } } as any, clientId, scopes);
 }
 
 beforeAll(async () => {

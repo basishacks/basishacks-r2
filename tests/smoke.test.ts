@@ -149,7 +149,9 @@ describe("in-memory SQLite database", () => {
         resetTestDatabase(db);
         // Insert a team
         db.prepare("INSERT INTO teams (name, pathway) VALUES ('reset-test-team', 'junior')").run();
-        let count = db.prepare("SELECT COUNT(*) as cnt FROM teams WHERE name = 'reset-test-team'").first<{ cnt: number }>();
+        let count = db
+            .prepare("SELECT COUNT(*) as cnt FROM teams WHERE name = 'reset-test-team'")
+            .first<{ cnt: number }>();
         expect(count!.cnt).toBe(1);
 
         resetTestDatabase(db);

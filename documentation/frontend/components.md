@@ -460,8 +460,8 @@ An `<a>` tag that validates its `href` attribute through `isSafeUrl()` before re
 
 **Props:**
 
-| Prop   | Type     | Description                 |
-| ------ | -------- | --------------------------- |
+| Prop   | Type     | Description                     |
+| ------ | -------- | ------------------------------- |
 | `href` | `string` | The URL to validate and link to |
 
 **Behavior:**
@@ -498,9 +498,9 @@ Utility functions for safe URL validation used by `SafeLink` and other component
 
 ```ts
 isSafeUrl("https://example.com"); // → true
-isSafeUrl("/relative/path");      // → true
+isSafeUrl("/relative/path"); // → true
 isSafeUrl("javascript:alert(1)"); // → false
-safeUrl(null);                     // → undefined
+safeUrl(null); // → undefined
 ```
 
 ---

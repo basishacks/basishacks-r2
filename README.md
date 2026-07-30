@@ -4,20 +4,20 @@ The official website for the **BIBS-C Network Hackathon** (season 2, 2025–26).
 
 ## Technology Stack
 
-| Layer | Technology |
-| --- | --- |
-| Framework | Nuxt 4 |
-| UI | @nuxt/ui (Tailwind CSS v4) |
-| Language | TypeScript |
-| Runtime | Node.js >= v24 or Bun |
-| Package Manager | Bun (preferred); npm works |
-| Database | SQLite via Drizzle ORM (bun:sqlite / better-sqlite3) |
-| Auth | nuxt-auth-utils (session-based) |
-| JWT | jose (OAuth2 access tokens) |
-| Validation | Zod 4.x |
-| Fonts | @nuxt/fonts (local provider) |
-| Icons | @iconify-json (lucide, material-symbols, simple-icons) |
-| Linting | @nuxt/eslint + Prettier |
+| Layer           | Technology                                             |
+| --------------- | ------------------------------------------------------ |
+| Framework       | Nuxt 4                                                 |
+| UI              | @nuxt/ui (Tailwind CSS v4)                             |
+| Language        | TypeScript                                             |
+| Runtime         | Node.js >= v24 or Bun                                  |
+| Package Manager | Bun (preferred); npm works                             |
+| Database        | SQLite via Drizzle ORM (bun:sqlite / better-sqlite3)   |
+| Auth            | nuxt-auth-utils (session-based)                        |
+| JWT             | jose (OAuth2 access tokens)                            |
+| Validation      | Zod 4.x                                                |
+| Fonts           | @nuxt/fonts (local provider)                           |
+| Icons           | @iconify-json (lucide, material-symbols, simple-icons) |
+| Linting         | @nuxt/eslint + Prettier                                |
 
 ## Prerequisites
 
@@ -114,6 +114,7 @@ bun run test            # full suite (also generates tests/.test-meta.json)
 bun run test:watch      # watch mode
 bun run test:coverage   # with coverage
 ```
+
 The canonical test count is stored in `tests/.test-meta.json` and displayed dynamically in the VitePress documentation.
 
 Do **not** use `bun test` — it cannot resolve Nuxt path aliases. `bunfig.toml` redirects it to a guidance shim.

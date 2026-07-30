@@ -234,7 +234,9 @@ describe("members database helpers", () => {
 
         it("throws a 404 error when the user is in a different team", async () => {
             event.context.drizzle
-                .prepare("INSERT INTO users(email, name, team_id) VALUES('dave@example.com', 'Dave', 2)")
+                .prepare(
+                    "INSERT INTO users(email, name, team_id) VALUES('dave@example.com', 'Dave', 2)",
+                )
                 .run();
 
             await expect(removeTeamMember(event, 1, 4)).rejects.toThrow(
@@ -245,9 +247,7 @@ describe("members database helpers", () => {
         it("does not record a past team entry on failure", async () => {
             await expect(removeTeamMember(event, 1, 3)).rejects.toThrow();
 
-            const pastTeams = event.context.drizzle
-                .prepare("SELECT * FROM user_past_teams")
-                .all();
+            const pastTeams = event.context.drizzle.prepare("SELECT * FROM user_past_teams").all();
             expect(pastTeams.results).toHaveLength(0);
         });
     });

@@ -243,18 +243,18 @@ describe("asset helpers", () => {
             expect(result).toBe("second.txt");
         });
 
-		it("rejects names with null bytes", async () => {
-			await expect(createAsset("safe.txt\0evil", Buffer.from("x"))).rejects.toThrow();
-		});
+        it("rejects names with null bytes", async () => {
+            await expect(createAsset("safe.txt\0evil", Buffer.from("x"))).rejects.toThrow();
+        });
 
-		it("rejects names that are just a slash", async () => {
-			await expect(createAsset("/", Buffer.from("x"))).rejects.toThrow("Invalid asset name");
-		});
+        it("rejects names that are just a slash", async () => {
+            await expect(createAsset("/", Buffer.from("x"))).rejects.toThrow("Invalid asset name");
+        });
 
-		it("allows names starting with double dots (..name is a valid filename)", async () => {
-			const result = await createAsset("..name", Buffer.from("x"));
-			expect(result).toBe("..name");
-		});
+        it("allows names starting with double dots (..name is a valid filename)", async () => {
+            const result = await createAsset("..name", Buffer.from("x"));
+            expect(result).toBe("..name");
+        });
 
         it("writes and reads back the correct binary content", async () => {
             const content = Buffer.from([0xde, 0xad, 0xbe, 0xef]);
@@ -317,10 +317,10 @@ describe("asset helpers", () => {
             await expect(removeUserAsset("ghost-file.png")).resolves.toBeUndefined();
         });
 
-		it("handles null byte in name for removal (does not throw)", async () => {
-			// Node.js path.join on this version does not throw on null bytes
-			await expect(removeUserAsset("file.txt\0evil")).resolves.toBeUndefined();
-		});
+        it("handles null byte in name for removal (does not throw)", async () => {
+            // Node.js path.join on this version does not throw on null bytes
+            await expect(removeUserAsset("file.txt\0evil")).resolves.toBeUndefined();
+        });
     });
 
     describe("concurrent operations", () => {

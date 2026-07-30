@@ -85,10 +85,7 @@ describe("generateIdenticonPNG", () => {
     it("handles name with unicode characters", async () => {
         await generateIdenticonPNG("名前テスト", 100);
 
-        expect(createAssetMock).toHaveBeenCalledWith(
-            "users/_____.png",
-            expect.any(Buffer),
-        );
+        expect(createAssetMock).toHaveBeenCalledWith("users/_____.png", expect.any(Buffer));
     });
 
     it("handles size = 0", async () => {
@@ -116,7 +113,9 @@ describe("generateIdenticonPNG", () => {
     it("propagates error when createAsset throws", async () => {
         createAssetMock.mockRejectedValueOnce(new Error("asset storage failed"));
 
-        await expect(generateIdenticonPNG("storefail", 100)).rejects.toThrow("asset storage failed");
+        await expect(generateIdenticonPNG("storefail", 100)).rejects.toThrow(
+            "asset storage failed",
+        );
     });
 
     it("handles multiple sequential calls with same name", async () => {

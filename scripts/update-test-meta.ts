@@ -7,7 +7,9 @@ const metaPath = resolve(repoRoot, "tests", ".test-meta.json");
 // Read stdin which receives the JSON report from vitest
 let input = "";
 process.stdin.setEncoding("utf-8");
-process.stdin.on("data", (chunk) => { input += chunk; });
+process.stdin.on("data", (chunk) => {
+    input += chunk;
+});
 process.stdin.on("end", () => {
     try {
         const lines = input.trim().split("\n");

@@ -89,11 +89,7 @@ describe("POST /api/teams/:id/users", () => {
 
         expect(result).toEqual({ message: "Added user to the team" });
 
-        const updated = ctx.drizzle
-            .select()
-            .from(users)
-            .where(eq(users.id, newMember.id))
-            .get();
+        const updated = ctx.drizzle.select().from(users).where(eq(users.id, newMember.id)).get();
         expect(updated!.team_id).toBe(team.id);
     });
 
@@ -178,13 +174,10 @@ describe("POST /api/teams/:id/users", () => {
 
     it("validates request body through AddTeamMemberRequest schema", async () => {
         const originalReadValidatedBody = globalThis.readValidatedBody;
-        vi.stubGlobal(
-            "readValidatedBody",
-            async (_event: any, schema: any) => {
-                const validate = typeof schema === "function" ? schema : schema.parse;
-                return validate(mockBody.value);
-            },
-        );
+        vi.stubGlobal("readValidatedBody", async (_event: any, schema: any) => {
+            const validate = typeof schema === "function" ? schema : schema.parse;
+            return validate(mockBody.value);
+        });
 
         const team = seedTeam(ctx, { name: "Team" });
         seedUser(ctx, { email: "owner@basischina.com", team_id: team.id });
@@ -239,11 +232,7 @@ describe("POST /api/teams/:id/users", () => {
 
         expect(result).toEqual({ message: "Added user to the team" });
 
-        const updated = ctx.drizzle
-            .select()
-            .from(users)
-            .where(eq(users.id, newMember.id))
-            .get();
+        const updated = ctx.drizzle.select().from(users).where(eq(users.id, newMember.id)).get();
         expect(updated!.team_id).toBe(team.id);
     });
 });

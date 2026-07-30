@@ -47,29 +47,34 @@ Comprehensive environment variable validation plugin that runs at server startup
 
 #### `NUXT_SESSION_PASSWORD`
 
-| Condition | Production | Development/Test |
-| --- | --- | --- |
-| Missing or < 32 bytes | Fatal error, `process.exit(1)` | Warning logged |
-| >= 32 bytes | OK | OK |
+| Condition             | Production                     | Development/Test |
+| --------------------- | ------------------------------ | ---------------- |
+| Missing or < 32 bytes | Fatal error, `process.exit(1)` | Warning logged   |
+| >= 32 bytes           | OK                             | OK               |
 
 #### `NUXT_OAUTH2_JWT_SECRET`
 
-| Condition | Action |
-| --- | --- |
+| Condition             | Action                                             |
+| --------------------- | -------------------------------------------------- |
 | Missing or < 32 bytes | Fatal error, `process.exit(1)` in all environments |
-| >= 32 bytes | OK |
+| >= 32 bytes           | OK                                                 |
 
 #### Microsoft OAuth2 configuration
 
 Checks `MICROSOFT_TENANT_ID`, `MICROSOFT_CLIENT_ID`, and `MICROSOFT_CLIENT_SECRET`:
+
 - If any are set but not all three, logs a warning that Microsoft features will be unavailable.
 - If none are set, silently skips (Microsoft features gracefully disabled).
 
 ```ts
 // server/plugins/validate-environment.ts — core pattern
 if (!sessionPassword || sessionPasswordLength < 32) {
-    if (isProduction) { console.error("[FATAL] ..."); process.exit(1); }
-    else { console.warn("[WARNING] ..."); }
+    if (isProduction) {
+        console.error("[FATAL] ...");
+        process.exit(1);
+    } else {
+        console.warn("[WARNING] ...");
+    }
 }
 ```
 

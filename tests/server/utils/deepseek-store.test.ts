@@ -408,7 +408,9 @@ describe("addMessage additional edge cases", () => {
         const updated = addMessage(session.id, {
             role: "assistant" as const,
             content: null,
-            tool_calls: [{ id: "tc1", type: "function" as const, function: { name: "f", arguments: "{}" } }],
+            tool_calls: [
+                { id: "tc1", type: "function" as const, function: { name: "f", arguments: "{}" } },
+            ],
         });
         expect(updated).toBeDefined();
         expect(updated!.messages[0]!.content).toBeNull();

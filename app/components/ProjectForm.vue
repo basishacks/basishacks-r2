@@ -1,6 +1,12 @@
 <script setup lang="ts">
 import type { FormSubmitEvent } from "@nuxt/ui";
-import { SubmitTeamRequest, UpdateTeamRequest, MAX_PROJECT_NAME_LENGTH, MAX_PROJECT_DESCRIPTION_LENGTH, MAX_URL_LENGTH } from "~~/shared/schemas";
+import {
+    SubmitTeamRequest,
+    UpdateTeamRequest,
+    MAX_PROJECT_NAME_LENGTH,
+    MAX_PROJECT_DESCRIPTION_LENGTH,
+    MAX_URL_LENGTH,
+} from "~~/shared/schemas";
 
 const { team: defaultTeam, disabled = false } = defineProps<{
     team: APITeam | null | undefined;
@@ -171,11 +177,20 @@ async function confirmSubmit() {
         @submit="onSubmit"
     >
         <UFormField name="project.name" label="Project name" help="Make it sound even cooler!">
-            <UInput v-model="state.project.name" class="w-full" :maxlength="MAX_PROJECT_NAME_LENGTH" />
+            <UInput
+                v-model="state.project.name"
+                class="w-full"
+                :maxlength="MAX_PROJECT_NAME_LENGTH"
+            />
         </UFormField>
 
         <UFormField name="project.description" label="Project description">
-            <UTextarea v-model="state.project.description" :rows="10" class="w-full" :maxlength="MAX_PROJECT_DESCRIPTION_LENGTH" />
+            <UTextarea
+                v-model="state.project.description"
+                :rows="10"
+                class="w-full"
+                :maxlength="MAX_PROJECT_DESCRIPTION_LENGTH"
+            />
 
             <template #help>
                 <p>Please include:</p>

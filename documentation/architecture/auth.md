@@ -29,9 +29,7 @@ The hardened flow works as follows:
 5. The user's profile is extracted from the Microsoft ID token, and `createUserFromMicrosoftProfile` creates or updates the local user record.
 6. The basishacks session cookie is established with `httpOnly`, `secure`, `sameSite: "lax"` flags and the user is redirected to the post-login destination.
 
-::: danger PKCE enforcement
-PKCE is **mandatory** with `code_challenge_method=S256` only. The `plain` method is rejected at the validation layer per RFC 7636 §4.4.2. All authorization requests without PKCE or with `plain` method receive a `invalid_request: code_challenge_method must be S256` error.
-:::
+::: danger PKCE enforcement PKCE is **mandatory** with `code_challenge_method=S256` only. The `plain` method is rejected at the validation layer per RFC 7636 §4.4.2. All authorization requests without PKCE or with `plain` method receive a `invalid_request: code_challenge_method must be S256` error. :::
 
 ### 2. basishacks connect (onsite OAuth2 application)
 
@@ -52,6 +50,7 @@ The `/api/login` endpoint is rate-limited using `AUTH_RATE_LIMIT_CONFIG` (defaul
 ### Open redirect prevention
 
 The `redirect` query parameter in `/api/login` is validated to prevent open redirect attacks:
+
 - Only relative paths are accepted (no `http://`, `https://`, or protocol-relative `//` prefixes).
 - The same check applies to the `redirect` parameter in `/api/oauth2/dccallback`.
 
@@ -69,13 +68,13 @@ The `redirect` query parameter in `/api/login` is validated to prevent open redi
 
 Sessions are handled by `nuxt-auth-utils`:
 
-| Property  | Value                                    |
-| --------- | ---------------------------------------- |
-| Storage   | Encrypted cookie                          |
-| Content   | `{ user: { id: number } }`               |
-| Max age   | 30 days (`30 * 24 * 60 * 60` seconds)    |
-| Password  | `NUXT_SESSION_PASSWORD` (>= 32 bytes)     |
-| Cookie    | `httpOnly`, `secure`, `sameSite: "lax"`   |
+| Property | Value                                   |
+| -------- | --------------------------------------- |
+| Storage  | Encrypted cookie                        |
+| Content  | `{ user: { id: number } }`              |
+| Max age  | 30 days (`30 * 24 * 60 * 60` seconds)   |
+| Password | `NUXT_SESSION_PASSWORD` (>= 32 bytes)   |
+| Cookie   | `httpOnly`, `secure`, `sameSite: "lax"` |
 
 The session stores only the user ID. The full user record is fetched from the database on every authenticated request via `requireUser()`.
 
@@ -83,14 +82,15 @@ The session stores only the user ID. The full user record is fetched from the da
 
 The OAuth2 authorization flow uses a state machine with four states, stored in the in-memory `AuthorizeSession`:
 
-| State            | Meaning                                                      |
-| ---------------- | ------------------------------------------------------------ |
-| `identification` | Application identified; user needs to authenticate           |
-| `requesting`     | External authentication in progress (e.g., Microsoft OAuth2)  |
+| State            | Meaning                                                          |
+| ---------------- | ---------------------------------------------------------------- |
+| `identification` | Application identified; user needs to authenticate               |
+| `requesting`     | External authentication in progress (e.g., Microsoft OAuth2)     |
 | `consent`        | User authenticated; awaiting explicit consent (sensitive scopes) |
-| `completed`      | Authorization code generated; awaiting token exchange        |
+| `completed`      | Authorization code generated; awaiting token exchange            |
 
 Transitions:
+
 1. `identification` → `requesting` — user is redirected to Microsoft login
 2. `requesting` → `consent` — Microsoft callback received, user authenticated
 3. `consent` → `completed` — user grants consent, authorization code generated

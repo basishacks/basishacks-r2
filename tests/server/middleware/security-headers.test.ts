@@ -131,9 +131,7 @@ describe("security headers middleware", () => {
         const event = createMockEvent("/api/test");
         await middleware(event);
 
-        expect(event.node.res.getHeader("referrer-policy")).toBe(
-            "strict-origin-when-cross-origin",
-        );
+        expect(event.node.res.getHeader("referrer-policy")).toBe("strict-origin-when-cross-origin");
     });
 
     it("Permissions-Policy is a non-empty string", async () => {
@@ -257,7 +255,10 @@ describe("security headers middleware", () => {
         await middleware(event);
 
         const csp = event.node.res.getHeader("content-security-policy") as string;
-        const directives = csp.split(";").map((d) => d.trim()).filter(Boolean);
+        const directives = csp
+            .split(";")
+            .map((d) => d.trim())
+            .filter(Boolean);
         expect(directives.length).toBeGreaterThanOrEqual(10);
         // Each directive should start with a known directive name
         for (const directive of directives) {
@@ -270,7 +271,10 @@ describe("security headers middleware", () => {
         await middleware(event);
 
         const csp = event.node.res.getHeader("content-security-policy") as string;
-        const directives = csp.split(";").map((d) => d.trim()).filter(Boolean);
+        const directives = csp
+            .split(";")
+            .map((d) => d.trim())
+            .filter(Boolean);
         expect(directives).toHaveLength(10);
     });
 
@@ -301,9 +305,7 @@ describe("security headers middleware", () => {
 
         expect(event.node.res.getHeader("x-frame-options")).toBe("DENY");
         expect(event.node.res.getHeader("x-content-type-options")).toBe("nosniff");
-        expect(event.node.res.getHeader("referrer-policy")).toBe(
-            "strict-origin-when-cross-origin",
-        );
+        expect(event.node.res.getHeader("referrer-policy")).toBe("strict-origin-when-cross-origin");
     });
 
     it("applies headers on a route with query string", async () => {
@@ -311,7 +313,9 @@ describe("security headers middleware", () => {
         await middleware(event);
 
         expect(event.node.res.getHeader("x-frame-options")).toBe("DENY");
-        expect(event.node.res.getHeader("content-security-policy")).toContain("frame-ancestors 'none'");
+        expect(event.node.res.getHeader("content-security-policy")).toContain(
+            "frame-ancestors 'none'",
+        );
     });
 
     // -----------------------------------------------------------------------

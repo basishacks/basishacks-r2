@@ -33,7 +33,8 @@ export function constructOnSiteLoginURL(event: any, postLoginRedirect?: string) 
     url.searchParams.set("code_challenge_method", "S256");
     if (postLoginRedirect) {
         // Only allow relative paths to prevent open redirect
-        const safe = !postLoginRedirect.startsWith("http://") &&
+        const safe =
+            !postLoginRedirect.startsWith("http://") &&
             !postLoginRedirect.startsWith("https://") &&
             !postLoginRedirect.startsWith("//");
         if (safe) {

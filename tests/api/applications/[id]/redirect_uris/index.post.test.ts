@@ -26,7 +26,8 @@ beforeAll(async () => {
     vi.stubGlobal("getOAuth2Application", oauthDb.getOAuth2Application);
     vi.stubGlobal("addOAuth2ApplicationRedirectUri", oauthDb.addOAuth2ApplicationRedirectUri);
 
-    postHandler = (await import("~~/server/api/applications/[id]/redirect_uris/index.post")).default;
+    postHandler = (await import("~~/server/api/applications/[id]/redirect_uris/index.post"))
+        .default;
 });
 
 beforeEach(async () => {

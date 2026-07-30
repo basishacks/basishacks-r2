@@ -878,16 +878,7 @@ describe("validateOAuth2AuthorizationRequest", () => {
     describe("validateOAuth2AuthorizationRequest parameter edge cases", () => {
         it("rejects when all required parameters are missing", async () => {
             await expect(
-                validateOAuth2AuthorizationRequest(
-                    {} as any,
-                    "",
-                    "",
-                    "",
-                    "",
-                    "",
-                    "",
-                    "",
-                ),
+                validateOAuth2AuthorizationRequest({} as any, "", "", "", "", "", "", ""),
             ).rejects.toMatchObject({
                 statusCode: 400,
                 message: "Parameter 'client_id' is required",

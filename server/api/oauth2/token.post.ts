@@ -72,7 +72,8 @@ export default defineEventHandler(
         } = body;
 
         const app = await getOAuth2Application(event, clientId);
-        const isSecretValid = app && await validateOAuth2ApplicationSecret(event, clientId, clientSecret);
+        const isSecretValid =
+            app && (await validateOAuth2ApplicationSecret(event, clientId, clientSecret));
         if (!app || !isSecretValid) {
             throw createError({
                 statusCode: 400,
