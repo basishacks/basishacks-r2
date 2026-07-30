@@ -5,7 +5,20 @@ description: Complete reference for all API endpoints in the basishacks backend
 
 # API Reference
 
-All API routes live in `server/api/` and use Nitro's file-based routing. Input validation is performed with Zod schemas from `shared/schemas.ts`. Auth helpers from `server/utils/auth.ts` enforce role-based and permission-based access.
+All API routes live in `server/api/` and use Nitro's file-based routing.
+
+### Security measures applied to all endpoints
+
+Every API endpoint in the system enforces the following security measures:
+
+| Measure | Implementation |
+| --- | --- |
+| **Rate limiting** | All endpoints are wrapped with `applyRateLimit()` using one of four tier configs (`DEFAULT`, `AUTH`, `VOTE`, `UPLOAD`). Returns 429 with `Retry-After` header when exceeded. |
+| **Input validation** | `readValidatedBody(event, Schema.parse)` or `getValidatedQuery(event, Schema.parse)` with shared Zod schemas from `shared/schemas.ts`. |
+| **Length-bounded inputs** | All string fields in Zod schemas have explicit `min()`/`max()` bounds to prevent resource exhaustion. Example: `name: z.string().min(1).max(50)`. |
+| **Authentication** | `requireUser()`, `requireAdmin()`, `requirePermission()` from `server/utils/auth.ts` provide RBAC enforcement. |
+| **OAuth2 JWT** | `withOAuth2JWT()` wrapper for Bearer token endpoints with scope verification. |
+| **HTTP headers** | Security headers (CSP, HSTS, X-Frame-Options, etc.) applied by `security-headers.ts` middleware on every response. |
 
 <AnimatedCounter :target="54" suffix="endpoints" />
 

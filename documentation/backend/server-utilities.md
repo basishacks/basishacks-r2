@@ -11,7 +11,7 @@ All server utilities live in `server/utils/`. They provide shared functionality 
 
 ## auth.ts
 
-Authentication and authorization helpers for enforcing role-based and permission-based access control.
+Authentication and authorization helpers for enforcing role-based and permission-based access control. All functions are async and return the full DB user row on success.
 
 ### `requireUser`
 
@@ -33,7 +33,7 @@ Ensures the request is from an authenticated user. Returns the full DB user row 
 export async function requireJudge(event: H3Event): Promise<User>;
 ```
 
-Ensures the user has the `admin` or `judge` role. Throws 403 if permissions are insufficient.
+Ensures the user has the `admin` or `judge` permission. Throws 403 if permissions are insufficient. Uses `hasPermission` from `shared/permissions`.
 
 ### `requireAdmin`
 
@@ -41,7 +41,7 @@ Ensures the user has the `admin` or `judge` role. Throws 403 if permissions are 
 export async function requireAdmin(event: H3Event): Promise<User>;
 ```
 
-Ensures the user has the `admin` role. Throws 403 if permissions are insufficient.
+Ensures the user has the `admin` permission. Throws 403 if permissions are insufficient. Uses `hasPermission` from `shared/permissions`.
 
 ### `requirePermission`
 
@@ -49,9 +49,9 @@ Ensures the user has the `admin` role. Throws 403 if permissions are insufficien
 export async function requirePermission(event: H3Event, permission: string): Promise<User>;
 ```
 
-Ensures the user has a specific permission (or the `admin` role). Uses `hasPermission` from `shared/permissions`.
+Ensures the user has a specific permission (or the `admin` role always passes). Uses `hasPermission` from `shared/permissions`.
 
-**Note:** The `admin` role always passes all permission checks.
+**Note:** The `admin` role always passes all permission checks. Throws 403 with `"Insufficient permissions"` on failure.
 
 ---
 
@@ -143,16 +143,25 @@ The `project` object also includes `submitted` (boolean) and `sourcing`.
 
 ## rateLimit.ts
 
-In-memory rate limiting middleware.
+In-memory rate limiting middleware with four pre-configured tiers.
 
-### Configuration
+### Built-in tier configurations
+
+| Config Constant | Default Limit | Environment Variable | Prefix | Used By |
+| --- | --- | --- | --- | --- |
+| `DEFAULT_RATE_LIMIT_CONFIG` | 6,000 req/min | `RATE_LIMIT_GENERAL_MAX` | (none) | General API handlers |
+| `AUTH_RATE_LIMIT_CONFIG` | 600 req/min | `RATE_LIMIT_AUTH_MAX` | `auth` | `/api/login`, `/api/oauth2/token` |
+| `VOTE_RATE_LIMIT_CONFIG` | 600 req/min | `RATE_LIMIT_VOTE_MAX` | `vote` | `/api/ballot`, `/api/teams/:id/scores` |
+| `UPLOAD_RATE_LIMIT_CONFIG` | 600 req/min | `RATE_LIMIT_UPLOAD_MAX` | `upload` | `/api/debug/upload` |
+
+### Configuration interface
 
 ```ts
 interface RateLimitConfig {
-    maxRequests: number; // Default: 6000
-    windowMs: number; // Default: 60000 (1 minute)
+    maxRequests: number; // Default: 6000 (from RATE_LIMIT_GENERAL_MAX)
+    windowMs: number; // Default: 60000 (1 minute, from RATE_LIMIT_WINDOW_MS)
     keyPrefix?: string; // Optional prefix for the client identifier
-    keyGenerator?: (event: H3Event) => Promise<string | null> | string | null; // Optional custom identifier generator
+    keyGenerator?: (event: H3Event) => Promise<string | null> | string | null;
 }
 ```
 
@@ -162,10 +171,12 @@ interface RateLimitConfig {
 export async function getClientIdentifier(event: H3Event): Promise<string>;
 ```
 
-Returns a unique identifier for the client:
+Returns a unique identifier for the client using a two-tier strategy:
 
-1. If authenticated: `user:{id}`.
-2. Otherwise: `ip:{socket remote address}`, falling back to `x-real-ip` or `unknown`. When `TRUST_PROXY` is set, the rightmost untrusted hop from `x-forwarded-for` is used.
+1. **Authenticated requests**: `user:{id}` — extracted from the session cookie via `getUserSession(event)`.
+2. **Unauthenticated requests**: `ip:{address}` — prefers the direct socket peer address (`event.node.req.socket.remoteAddress`), falling back to `x-real-ip` header, or `unknown`. When `TRUST_PROXY` is set, the rightmost untrusted hop from `x-forwarded-for` is used.
+
+This ensures authenticated users are not rate-limited by other users' activity behind a shared NAT, while unauthenticated users are still protected at the IP level.
 
 ### `applyRateLimit`
 
@@ -461,17 +472,39 @@ Generates a deterministic identicon PNG from a name string and saves it as a use
 
 ## assets.ts
 
-File system helpers for managing static and user assets.
+File system helpers for managing static and user assets with path traversal prevention.
+
+### Path traversal protection
+
+All asset functions implement two layers of path traversal prevention:
+
+1. **Name sanitization** (`sanitizeAssetName`): Extracts `basename()` from the input and rejects names containing `/` or `\\`, `.`, or `..`.
+2. **Resolve validation** (`resolveAssetPath`): Resolves the full path and verifies it still starts with the expected `assets/` or `userassets/` directory prefix.
+
+```ts
+function sanitizeAssetName(name: string) {
+    const safeName = basename(name);
+    if (!safeName || safeName === "." || safeName === "..") throw ...;
+    if (safeName.includes("/") || safeName.includes("\\")) throw ...;
+}
+
+function resolveAssetPath(assetsDir: string, name: string) {
+    const filePath = join(assetsDir, name);
+    const prefix = assetsDir + sep;
+    if (!filePath.startsWith(prefix)) throw ...;
+    return filePath;
+}
+```
 
 ### Asset Functions
 
-| Function                      | Description                                                     |
-| ----------------------------- | --------------------------------------------------------------- |
-| `createAsset(name, data)`     | Writes a Buffer to `public/assets/{name}`; returns basename     |
-| `createUserAsset(name, data)` | Writes a Buffer to `public/userassets/{name}`; returns basename |
-| `removeAsset(name)`           | Deletes a file from `public/assets/`                            |
-| `removeUserAsset(name)`       | Deletes a file from `public/userassets/`                        |
-| `getUserAsset(name)`          | Reads a file from `public/userassets/` as a Buffer              |
+| Function                      | Description                                                      |
+| ----------------------------- | ---------------------------------------------------------------- |
+| `createAsset(name, data)`     | Writes a Buffer to `public/assets/{name}`; returns basename      |
+| `createUserAsset(name, data)` | Writes a Buffer to `public/userassets/{name}`; returns basename  |
+| `removeAsset(name)`           | Deletes a file from `public/assets/`                             |
+| `removeUserAsset(name)`       | Deletes a file from `public/userassets/`                         |
+| `getUserAsset(name)`          | Reads a file from `public/userassets/` as a Buffer               |
 
 All functions validate the asset name to prevent path traversal, create parent directories recursively, and remove functions silently catch missing-file errors. Invalid names throw a 400 error.
 
@@ -517,7 +550,7 @@ interface ChatSession {
 
 **File:** `server/utils/url-validation.ts`
 
-Centralized helpers for validating redirect URIs and other URLs used in OAuth2 flows and external web fetches.
+Centralized helpers for validating redirect URIs and other URLs used in OAuth2 flows and external web fetches. Provides **SSRF protection** by blocking requests to internal/private networks.
 
 ### `validateExternalUrl`
 
@@ -525,7 +558,9 @@ Centralized helpers for validating redirect URIs and other URLs used in OAuth2 f
 export function validateExternalUrl(urlString: string): URL;
 ```
 
-Parses the URL and throws if the protocol is not `http:` or `https:`, or if the host is private or loopback (localhost, private IP ranges, etc.).
+Parses the URL and throws if:
+- Protocol is not `http:` or `https:`.
+- Host is **private or loopback** (localhost, private IP ranges, etc.) — prevents SSRF attacks by ensuring external requests cannot target internal infrastructure.
 
 ### `fetchExternalHtml`
 
@@ -533,7 +568,7 @@ Parses the URL and throws if the protocol is not `http:` or `https:`, or if the 
 export async function fetchExternalHtml(urlString: string, init?: RequestInit): Promise<string>;
 ```
 
-Fetches raw HTML from an external URL with manual redirect handling (max 5 redirects). Returns up to 15,000 characters of the response body, or an error string on failure.
+Fetches raw HTML from an external URL with manual redirect handling (max 5 redirects). Returns up to 15,000 characters of the response body, or an error string on failure. Each redirect target is re-validated through `validateExternalUrl` to prevent redirect-based SSRF.
 
 ### `isPrivateHost`
 
@@ -541,7 +576,21 @@ Fetches raw HTML from an external URL with manual redirect handling (max 5 redir
 function isPrivateHost(host: string): boolean;
 ```
 
-Returns `true` if the host is `localhost`, a loopback address, or a private IPv4/IPv6 range.
+Returns `true` if the host is `localhost`, a loopback address, or a private IPv4/IPv6 range. Used internally by `validateExternalUrl` and can be reused for other validation contexts.
+
+### Private IP blocklist
+
+The function blocks the following address ranges:
+
+| Range | Type |
+| --- | --- |
+| `127.0.0.0/8` | Loopback |
+| `10.0.0.0/8` | Private (Class A) |
+| `172.16.0.0/12` | Private (Class B) |
+| `192.168.0.0/16` | Private (Class C) |
+| `::1/128` | IPv6 loopback |
+| `fc00::/7` | IPv6 unique local |
+| `localhost` | Hostname |
 
 ---
 
