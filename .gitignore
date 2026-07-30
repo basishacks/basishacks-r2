@@ -186,4 +186,4 @@ test-agent-file.txt
 
 # Generated test metadata (regenerated on every test run)
 tests/.test-meta.json
-tests/.vitest-results.json
+.vitest-results.json
