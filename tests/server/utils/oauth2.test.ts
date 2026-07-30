@@ -306,3 +306,173 @@ describe("generateMicrosoftOAuth2Link", () => {
         expect(session1.ms_verifier).not.toBe(session2.ms_verifier);
     });
 });
+
+// ---------------------------------------------------------------------------
+// Additional structureLink edge cases
+// ---------------------------------------------------------------------------
+
+describe("structureLink additional edge cases", () => {
+    beforeEach(() => {
+        process.env.CURRENT_URL_ORIGIN = "http://localhost:3000";
+    });
+
+    it("includes response_type=code always", () => {
+        const link = structureLink("s1", "c1");
+        expect(getParam(link, "response_type")).toBe("code");
+    });
+
+    it("includes code_challenge_method=S256 always", () => {
+        const link = structureLink("s1", "c1");
+        expect(getParam(link, "code_challenge_method")).toBe("S256");
+    });
+
+    it("handles extremely long state values", () => {
+        const longState = "a".repeat(500);
+        const link = structureLink(longState, "challenge");
+        expect(getParam(link, "state")).toBe(longState);
+    });
+
+    it("handles extremely long code_challenge values", () => {
+        const longChallenge = "b".repeat(500);
+        const link = structureLink("state", longChallenge);
+        expect(getParam(link, "code_challenge")).toBe(longChallenge);
+    });
+
+    it("handles state with special URL characters", () => {
+        const link = structureLink("state+with&special=chars%20here", "c1");
+        expect(getParam(link, "state")).toBe("state+with&special=chars%20here");
+    });
+
+    it("handles scope with special characters", () => {
+        const link = structureLink("s1", "c1", "openid profile api://custom/scope");
+        expect(getParam(link, "scope")).toBe("openid profile api://custom/scope");
+    });
+
+    it("handles redirect_uri with query parameters", () => {
+        const link = structureLink("s1", "c1", "openid", "/callback?flow=signup");
+        expect(getParam(link, "redirect_uri")).toBe("http://localhost:3000/callback?flow=signup");
+    });
+
+    it("handles empty scope string", () => {
+        const link = structureLink("s1", "c1", "");
+        expect(getParam(link, "scope")).toBe("");
+    });
+
+    it("handles scope with only spaces", () => {
+        const link = structureLink("s1", "c1", "   ");
+        expect(getParam(link, "scope")).toBe("   ");
+    });
+
+    it("handles state with unicode characters", () => {
+        const link = structureLink("état-测试-状態", "c1");
+        expect(getParam(link, "state")).toBe("état-测试-状態");
+    });
+});
+
+// ---------------------------------------------------------------------------
+// Additional redirect URI helper edge cases
+// ---------------------------------------------------------------------------
+
+describe("redirect URI helpers additional edge cases", () => {
+    const originalEnv = { ...process.env };
+
+    beforeEach(() => {
+        vi.resetModules();
+        delete process.env.MICROSOFT_REDIRECT_URI;
+        delete process.env.REDIRECT_URI;
+        delete process.env.CURRENT_URL_ORIGIN;
+    });
+
+    afterEach(() => {
+        if (originalEnv.MICROSOFT_REDIRECT_URI === undefined) {
+            delete process.env.MICROSOFT_REDIRECT_URI;
+        } else {
+            process.env.MICROSOFT_REDIRECT_URI = originalEnv.MICROSOFT_REDIRECT_URI;
+        }
+        if (originalEnv.REDIRECT_URI === undefined) {
+            delete process.env.REDIRECT_URI;
+        } else {
+            process.env.REDIRECT_URI = originalEnv.REDIRECT_URI;
+        }
+        if (originalEnv.CURRENT_URL_ORIGIN === undefined) {
+            delete process.env.CURRENT_URL_ORIGIN;
+        } else {
+            process.env.CURRENT_URL_ORIGIN = originalEnv.CURRENT_URL_ORIGIN;
+        }
+    });
+
+    it("getMicrosoftRedirectUri returns env MICROSOFT_REDIRECT_URI when set to custom value", () => {
+        process.env.MICROSOFT_REDIRECT_URI = "/api/custom-ms-callback";
+        expect(getMicrosoftRedirectUri()).toBe("/api/custom-ms-callback");
+    });
+
+    it("getMicrosoftRedirectUri falls back to default when env is empty string", () => {
+        process.env.MICROSOFT_REDIRECT_URI = "";
+        expect(getMicrosoftRedirectUri()).toBe("/api/oauth2/mscallback");
+    });
+
+    it("getOnsiteRedirectPath returns env REDIRECT_URI when set to custom value", () => {
+        process.env.REDIRECT_URI = "/api/custom-dc-callback";
+        expect(getOnsiteRedirectPath()).toBe("/api/custom-dc-callback");
+    });
+
+    it("getOnsiteRedirectPath falls back to default when env is empty string", () => {
+        process.env.REDIRECT_URI = "";
+        expect(getOnsiteRedirectPath()).toBe("/api/oauth2/dccallback");
+    });
+
+    it("buildMicrosoftRedirectUri uses MICROSOFT_REDIRECT_URI env when set", () => {
+        process.env.MICROSOFT_REDIRECT_URI = "/env/ms";
+        process.env.CURRENT_URL_ORIGIN = "https://env.example.com";
+        expect(buildMicrosoftRedirectUri()).toBe("https://env.example.com/env/ms");
+    });
+
+    it("buildMicrosoftRedirectUri uses provided redirectPath over env", () => {
+        process.env.MICROSOFT_REDIRECT_URI = "/env/ms";
+        const result = buildMicrosoftRedirectUri("https://ex.com", "/override/ms");
+        expect(result).toBe("https://ex.com/override/ms");
+    });
+
+    it("buildOnsiteRedirectUri uses provided origin over env", () => {
+        process.env.CURRENT_URL_ORIGIN = "https://env-origin.com";
+        const result = buildOnsiteRedirectUri("https://override-origin.com");
+        expect(result).toBe("https://override-origin.com/api/oauth2/dccallback");
+    });
+
+    it("buildMicrosoftRedirectUri handles trailing slash in origin", () => {
+        const result = buildMicrosoftRedirectUri("https://app.com/", "/cb");
+        expect(result).toBe("https://app.com/cb");
+    });
+
+    it("buildOnsiteRedirectUri handles trailing slash in origin", () => {
+        const result = buildOnsiteRedirectUri("https://app.com/");
+        expect(result).toBe("https://app.com/api/oauth2/dccallback");
+    });
+
+    it("oAuth2Config has correct base URL", () => {
+        expect(oAuth2Config.base).toBe("https://login.microsoftonline.com/");
+    });
+
+    it("oAuth2Config has correct responseType", () => {
+        expect(oAuth2Config.responseType).toBe("code");
+    });
+
+    it("oAuth2Config has default scope", () => {
+        expect(oAuth2Config.scope).toBe("openid profile email");
+    });
+
+    it("oAuth2Config redirectUri getter returns builtMicrosoftRedirectUri default path", () => {
+        expect(oAuth2Config.redirectUri).toBe("/api/oauth2/mscallback");
+    });
+
+    it("buildMicrosoftRedirectUri handles non-standard redirect path", () => {
+        const result = buildMicrosoftRedirectUri("https://app.example.com", "/oauth/callback");
+        expect(result).toBe("https://app.example.com/oauth/callback");
+    });
+
+    it("buildOnsiteRedirectUri handles non-standard redirect path", () => {
+        process.env.REDIRECT_URI = "/oauth/dc";
+        process.env.CURRENT_URL_ORIGIN = "https://custom.app.com";
+        expect(buildOnsiteRedirectUri()).toBe("https://custom.app.com/oauth/dc");
+    });
+});
