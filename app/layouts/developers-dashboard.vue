@@ -10,7 +10,7 @@ if (status.value !== "idle" && status.value !== "pending") {
     }
 }
 
-const items = computed<NavigationMenuItem[][]>(() => [
+const sidebarItems = computed<NavigationMenuItem[][]>(() => [
     [
         { label: "Home", icon: "i-lucide-house", to: "/developers" },
         { label: "Users", icon: "i-lucide-user", to: "/developers/users" },
@@ -39,23 +39,28 @@ const items = computed<NavigationMenuItem[][]>(() => [
     ],
 ]);
 
-const name = computed(() => user.value?.name || "Log In");
+const searchGroups = computed(() => [
+    {
+        key: "pages",
+        label: "Pages",
+        items: sidebarItems.value.flat().flatMap((item: any) => [
+            { label: item.label, icon: item.icon, to: item.to },
+            ...(item.children?.map((child: any) => ({
+                label: `${item.label} / ${child.label}`,
+                icon: child.icon,
+                to: child.to,
+            })) ?? []),
+        ]),
+    },
+]);
 
-// Ctrl+K toggles sidebar collapse (matching the ⌘K hint on the Search button)
-onMounted(() => {
-    const handler = (e: KeyboardEvent) => {
-        if ((e.metaKey || e.ctrlKey) && e.key === "k") {
-            e.preventDefault();
-            document.querySelector<HTMLButtonElement>("[data-sidebar-collapse]")?.click();
-        }
-    };
-    document.addEventListener("keydown", handler);
-    onUnmounted(() => document.removeEventListener("keydown", handler));
-});
+const name = computed(() => user.value?.name || "Log In");
 </script>
 
 <template>
     <UDashboardGroup>
+        <UDashboardSearch :groups="searchGroups" />
+
         <UDashboardSidebar collapsible resizable :ui="{ footer: 'border-t border-default' }">
             <template #header="{ collapsed, collapse }">
                 <div class="flex items-center gap-1">
@@ -64,7 +69,6 @@ onMounted(() => {
                         variant="ghost"
                         color="neutral"
                         @click="collapse?.()"
-                        data-sidebar-collapse
                     />
                     <ULink v-if="!collapsed" class="bold glow text-primary mx-auto" to="/">
                         {{ WEBSITE_NAME }}
@@ -81,30 +85,18 @@ onMounted(() => {
                 </div>
             </template>
 
-            <template #default="{ collapsed, collapse }">
-                <UButton
-                    :label="collapsed ? undefined : 'Search...'"
-                    icon="i-lucide-search"
-                    color="neutral"
-                    variant="outline"
-                    block
-                    :square="collapsed"
-                    @click="collapse?.()"
-                >
-                    <template v-if="!collapsed" #trailing>
-                        <div class="flex items-center gap-0.5 ms-auto">
-                            <UKbd value="meta" variant="subtle" />
-                            <UKbd value="K" variant="subtle" />
-                        </div>
-                    </template>
-                </UButton>
+            <template #default="{ collapsed }">
+                <UDashboardSearchButton
+                    :collapsed="collapsed"
+                    class="mb-1"
+                />
 
-                <UNavigationMenu :collapsed="collapsed" :items="items[0]" orientation="vertical" />
+                <UNavigationMenu :collapsed="collapsed" :items="sidebarItems[0]" orientation="vertical" />
 
                 <UNavigationMenu
-                    v-if="items[1]?.length"
+                    v-if="sidebarItems[1]?.length"
                     :collapsed="collapsed"
-                    :items="items[1]"
+                    :items="sidebarItems[1]"
                     orientation="vertical"
                     class="mt-auto"
                 />

@@ -18,7 +18,13 @@ export default defineEventHandler(
         }
 
         // Extract season_id from body — it's a routing hint, not a hackathon/season field
-        const { season_id, ...configFields } = body as Record<string, any>;
+        const { season_id, ...rawConfig } = body as Record<string, any>;
+
+        // Strip null/undefined values — they would violate NOT NULL constraints in both tables
+        const configFields: Record<string, any> = {};
+        for (const [k, v] of Object.entries(rawConfig)) {
+            if (v !== null && v !== undefined) configFields[k] = v;
+        }
 
         if (Object.keys(configFields).length === 0) {
             throw createError({

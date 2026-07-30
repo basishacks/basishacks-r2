@@ -121,12 +121,16 @@ async function saveHackathon() {
     hackathonSaving.value = true;
     hackathonMessage.value = "";
     try {
+        const baseline = hackathon.value;
         const body: Record<string, any> = {};
         for (const [key, value] of Object.entries(hackathonForm)) {
-            if (key === "id") continue;
+            if (key === "id" || key === "season_id") continue;
+            // Convert timestamps: string → number, null/undefined → 0
             let val = tsKeys.includes(key as any) ? datetimeToTs(value as string) : value;
             if (typeof val === "boolean") val = val ? 1 : 0;
-            if (val !== (hackathon.value as any)?.[key]) body[key] = val;
+            // Never send null/undefined for any field
+            if (val === null || val === undefined) val = 0;
+            if (val !== (baseline as any)?.[key]) body[key] = val;
         }
         if (Object.keys(body).length === 0) {
             hackathonMessage.value = "No changes to save.";
