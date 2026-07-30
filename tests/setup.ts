@@ -128,6 +128,21 @@ export async function createTestDatabase(): Promise<SQLiteDatabase> {
     );
     CREATE UNIQUE INDEX IF NOT EXISTS idx_seasons_active ON seasons(is_active) WHERE is_active = 1;
 
+    ALTER TABLE seasons ADD COLUMN status TEXT NOT NULL DEFAULT 'not_started';
+    ALTER TABLE seasons ADD COLUMN voting_enabled INTEGER NOT NULL DEFAULT 0;
+    ALTER TABLE seasons ADD COLUMN results_published INTEGER NOT NULL DEFAULT 0;
+    ALTER TABLE seasons ADD COLUMN max_votes_per_user INTEGER NOT NULL DEFAULT 0;
+    ALTER TABLE seasons ADD COLUMN judging_open INTEGER NOT NULL DEFAULT 0;
+    ALTER TABLE seasons ADD COLUMN schedule_start TEXT;
+    ALTER TABLE seasons ADD COLUMN schedule_end TEXT;
+    ALTER TABLE seasons ADD COLUMN start_timestamp INTEGER NOT NULL DEFAULT 0;
+    ALTER TABLE seasons ADD COLUMN end_timestamp INTEGER NOT NULL DEFAULT 0;
+    ALTER TABLE seasons ADD COLUMN voting_start_timestamp INTEGER NOT NULL DEFAULT 0;
+    ALTER TABLE seasons ADD COLUMN voting_end_timestamp INTEGER NOT NULL DEFAULT 0;
+    ALTER TABLE seasons ADD COLUMN results_open_timestamp INTEGER NOT NULL DEFAULT 0;
+    ALTER TABLE seasons ADD COLUMN theme_name TEXT;
+    ALTER TABLE seasons ADD COLUMN theme_description TEXT;
+
     ALTER TABLE teams ADD COLUMN season_id INTEGER NOT NULL DEFAULT 1;
     CREATE INDEX IF NOT EXISTS teams_season ON teams (season_id);
 

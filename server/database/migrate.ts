@@ -243,6 +243,47 @@ function migrateLegacySchema(sqlite: PortableSqlite) {
         console.log("[Nitro] Created legacy-missing table: user_past_teams");
     }
 
+    // Missing columns on the seasons table (per-season hackathon config)
+    const seasonColumns = [
+        "status",
+        "voting_enabled",
+        "results_published",
+        "max_votes_per_user",
+        "judging_open",
+        "schedule_start",
+        "schedule_end",
+        "start_timestamp",
+        "end_timestamp",
+        "voting_start_timestamp",
+        "voting_end_timestamp",
+        "results_open_timestamp",
+        "theme_name",
+        "theme_description",
+    ];
+    for (const column of seasonColumns) {
+        if (!columnExists(sqlite, "seasons", column)) {
+            const type =
+                column.endsWith("_timestamp") ||
+                [
+                    "voting_enabled",
+                    "results_published",
+                    "max_votes_per_user",
+                    "judging_open",
+                ].includes(column)
+                    ? "INTEGER NOT NULL DEFAULT 0"
+                    : column.endsWith("_name") ||
+                        column.endsWith("_description") ||
+                        column.startsWith("schedule_") ||
+                        column === "status"
+                      ? column === "status"
+                          ? "TEXT NOT NULL DEFAULT 'not_started'"
+                          : "TEXT"
+                      : "INTEGER NOT NULL DEFAULT 0";
+            sqlite.exec(`ALTER TABLE seasons ADD COLUMN ${column} ${type}`);
+            console.log(`[Nitro] Added missing column: seasons.${column}`);
+        }
+    }
+
     // Missing columns on the legacy hackathon table
     const hackathonColumns = [
         "voting_enabled",

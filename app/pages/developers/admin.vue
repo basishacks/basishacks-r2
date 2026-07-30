@@ -119,8 +119,33 @@ watch(activeSeasonId, (id) => {
     if (id === null) return;
     const s = seasons.value?.find((s: any) => s.id === id);
     seasonNameForm.value = s?.name ?? "";
-    // Sync theme_name with the selected season's name
-    if (s?.name) hackathonForm.theme_name = s.name;
+    if (!s) return;
+    // Restore the full per-season config into the form
+    const configKeys = [
+        "status",
+        "voting_enabled",
+        "judging_open",
+        "results_published",
+        "max_votes_per_user",
+        "theme_name",
+        "theme_description",
+        "schedule_start",
+        "schedule_end",
+        "start_timestamp",
+        "end_timestamp",
+        "voting_start_timestamp",
+        "voting_end_timestamp",
+        "results_open_timestamp",
+    ] as const;
+    for (const key of configKeys) {
+        if (s[key] !== undefined && s[key] !== null) {
+            if (tsKeys.includes(key as any)) {
+                hackathonForm[key] = tsToDatetime(s[key]);
+            } else {
+                hackathonForm[key] = s[key];
+            }
+        }
+    }
 });
 
 const seasonNameSaving = ref(false);
