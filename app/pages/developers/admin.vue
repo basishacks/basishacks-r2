@@ -85,7 +85,9 @@ async function saveHackathon() {
         for (const [key, value] of Object.entries(hackathonForm)) {
             if (key === "id") continue;
             // Convert datetime-local strings back to unix timestamps
-            const val = tsKeys.includes(key as any) ? datetimeToTs(value as string) : value;
+            let val = tsKeys.includes(key as any) ? datetimeToTs(value as string) : value;
+            // UCheckbox with :binary emits booleans; API expects 0/1
+            if (typeof val === "boolean") val = val ? 1 : 0;
             if (val !== (hackathon.value as any)?.[key]) body[key] = val;
         }
         if (Object.keys(body).length === 0) {

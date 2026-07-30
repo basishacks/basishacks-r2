@@ -322,18 +322,9 @@ export const HackathonStatusEnum = z.enum([
 
 export const AdminUpdateHackathonRequest = z.object({
     status: HackathonStatusEnum.optional(),
-    voting_enabled: z
-        .union([z.literal(0), z.literal(1), z.boolean()])
-        .transform((v) => Number(v))
-        .optional(),
-    results_published: z
-        .union([z.literal(0), z.literal(1), z.boolean()])
-        .transform((v) => Number(v))
-        .optional(),
-    judging_open: z
-        .union([z.literal(0), z.literal(1), z.boolean()])
-        .transform((v) => Number(v))
-        .optional(),
+    voting_enabled: z.union([z.literal(0), z.literal(1)]).optional(),
+    results_published: z.union([z.literal(0), z.literal(1)]).optional(),
+    judging_open: z.union([z.literal(0), z.literal(1)]).optional(),
     max_votes_per_user: z.number().int().min(0).max(100).optional(),
     schedule_start: z.string().max(100).nullable().optional(),
     schedule_end: z.string().max(100).nullable().optional(),
@@ -354,8 +345,7 @@ export type AdminUpdateHackathonRequest = z.infer<typeof AdminUpdateHackathonReq
 export const CreateSeasonRequest = z.object({
     name: z.string().min(1).max(200),
     is_active: z
-        .union([z.literal(0), z.literal(1), z.boolean()])
-        .transform((v) => Number(v))
+        .union([z.literal(0), z.literal(1)])
         .optional()
         .default(0),
 });
@@ -364,9 +354,6 @@ export type CreateSeasonRequest = z.infer<typeof CreateSeasonRequest>;
 export const UpdateSeasonRequest = z.object({
     id: z.number().int().positive(),
     name: z.string().min(1).max(200).optional(),
-    is_active: z
-        .union([z.literal(0), z.literal(1), z.boolean()])
-        .transform((v) => Number(v))
-        .optional(),
+    is_active: z.union([z.literal(0), z.literal(1)]).optional(),
 });
 export type UpdateSeasonRequest = z.infer<typeof UpdateSeasonRequest>;
