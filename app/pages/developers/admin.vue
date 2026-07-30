@@ -81,6 +81,18 @@ async function saveHackathon() {
             return;
         }
         await $fetch("/api/admin/hackathon", { method: "PATCH", body });
+
+        // If theme_name changed, also rename the active season to match
+        if (body.theme_name && activeSeasonId.value !== null) {
+            const season = seasons.value?.find((s: any) => s.id === activeSeasonId.value);
+            if (season && season.name !== body.theme_name) {
+                await $fetch("/api/admin/seasons", {
+                    method: "PATCH",
+                    body: { id: activeSeasonId.value, name: body.theme_name },
+                });
+            }
+        }
+
         await refreshAdmin();
         hackathonMessage.value = "Hackathon config saved.";
     } catch (e: any) {
@@ -285,6 +297,32 @@ async function addSeason() {
                     >
                         {{ hackathonMessage }}
                     </span>
+                </div>
+            </section>
+
+            <!-- Database Export -->
+            <section class="bg-ui-bg border-t border-ui-border p-6 space-y-3">
+                <h2 class="text-xl font-semibold">Database Export</h2>
+                <p class="text-sm text-ui-text-muted">Download a full snapshot of the database.</p>
+                <div class="flex items-center gap-3">
+                    <UButton
+                        tag="a"
+                        :to="`/api/admin/database/export?format=sqlite`"
+                        target="_blank"
+                        color="primary"
+                        variant="solid"
+                    >
+                        Download SQLite
+                    </UButton>
+                    <UButton
+                        tag="a"
+                        :to="`/api/admin/database/export?format=csv`"
+                        target="_blank"
+                        color="neutral"
+                        variant="outline"
+                    >
+                        Download CSV
+                    </UButton>
                 </div>
             </section>
         </template>

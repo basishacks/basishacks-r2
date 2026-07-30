@@ -19,7 +19,9 @@ const user = computed(() => data.value as APIUser);
 onMounted(() => {
     const e: any = backgroundRef.value;
     if (e && user.value?.profile_theme?.value) {
-        e.style = `background-image: url(/userast/${user.value.profile_theme.value})`;
+        const v = user.value.profile_theme.value;
+        const url = v.startsWith("http") ? v : `/api/users/${userID}/profile_picture`;
+        if (url) e.style = `background-image: url(${url})`;
     }
 });
 </script>

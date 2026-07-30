@@ -91,7 +91,7 @@ const name = computed(() => user.value?.name || "Log In");
             <template #footer="{ collapsed }">
                 <UButton
                     :avatar="{
-                        src: user?.profile_picture ? `/userast/${user.profile_picture}` : undefined,
+                        src: user?.id ? `/api/users/${user.id}/profile_picture` : undefined,
                         alt: name,
                         loading: 'lazy' as const,
                     }"

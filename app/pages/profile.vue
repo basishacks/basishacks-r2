@@ -166,7 +166,14 @@ onMounted(() => {
     if (profileThemeValue.value == undefined) return;
 
     if (fileUploadRef.value) {
-        fileUploadRef.value.style = `background-image:url("/userast/${profileThemeValue.value.value}");`;
+        const v = profileThemeValue.value;
+        const url =
+            v.mode === "url" && v.value?.startsWith("http")
+                ? v.value
+                : v.value
+                  ? `/api/users/${userID.value}/profile_picture`
+                  : undefined;
+        if (url) fileUploadRef.value.style = `background-image:url("${url}");`;
     }
 });
 </script>
