@@ -154,19 +154,22 @@ function buildChangedBody() {
     return body;
 }
 
-/** Persist ALL changed fields to the backend.
- *  Saving all fields together in one request avoids races where individual
- *  PATCH calls (one per field) could leave some fields unsaved. */
+/** Serialize saves so only one PATCH is in-flight at a time.
+ *  Multiple rapid changes are coalesced: each waits for the previous
+ *  to finish, preventing refreshAdmin() races between saves. */
+let saveChain = Promise.resolve();
+
 function saveAll() {
     const body = buildChangedBody();
     if (Object.keys(body).length === 0) return;
     if (activeSeasonId.value !== null) body.season_id = activeSeasonId.value;
 
     saving.value = true;
-    $fetch("/api/admin/hackathon", { method: "PATCH", body })
+    saveChain = saveChain
+        .then(() => $fetch("/api/admin/hackathon", { method: "PATCH", body }))
         .then(() => refreshAdmin())
         .catch(() => {})
-        .finally(() => { saving.value = false; });
+        .then(() => { saving.value = false; });
 }
 
 /** Called from @update:model-value on checkboxes/selects (reliable emit). */
