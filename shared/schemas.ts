@@ -23,7 +23,7 @@ const MAX_ELECTION_TITLE_LENGTH = 128;
 const MAX_ELECTION_CANDIDATE_ID_LENGTH = 64;
 const MAX_APPLICATION_IDS_DELETE = 100;
 
-const BasisEmail = z
+export const BasisEmail = z
     .email()
     .max(MAX_EMAIL_LENGTH, "Email must be 254 characters or less")
     .refine(
@@ -31,22 +31,22 @@ const BasisEmail = z
         "Please use a @basischina.com email",
     );
 
-const TeamName = z
+export const TeamName = z
     .string()
     .min(2, "Team name must be at least 2 characters")
     .max(30, "Team name cannot be longer than 30 characters");
 
-const ProjectName = z
+export const ProjectName = z
     .string()
     .min(1, "Project name is required")
     .max(MAX_PROJECT_NAME_LENGTH, "Project name cannot be longer than 100 characters");
 
-const ProjectDescription = z
+export const ProjectDescription = z
     .string()
     .min(30, "Please provide more details in the description")
     .max(MAX_PROJECT_DESCRIPTION_LENGTH, "Project description cannot exceed 2000 characters");
 
-const ProjectUrl = z
+export const ProjectUrl = z
     .union([z.url(), z.literal("")])
     .refine(
         (v) => v === "" || v.length <= MAX_URL_LENGTH,
@@ -59,10 +59,10 @@ const RequiredProjectUrl = z
 
 const TeamPathway = z.enum(["junior", "senior"]);
 
-const BooleanString = z.enum(["true", "false"]).transform((s) => s === "true");
+export const BooleanString = z.enum(["true", "false"]).transform((s) => s === "true");
 
-const ZeroToFive = z.number().int().min(0).max(5);
-const ScoreValues = z.object(
+export const ZeroToFive = z.number().int().min(0).max(5);
+export const ScoreValues = z.object(
     Object.keys(rubrics["junior"]).reduce(
         (obj, key) => ({
             ...obj,
