@@ -5,9 +5,10 @@ definePageMeta({
 });
 
 useHead({
-    title: `Admin | ${WEBSITE_NAME}`,
+    title: `Hackathon Administration | ${WEBSITE_NAME}`,
 });
 
+const toast = useToast();
 const { data: user, status } = await useApiUser();
 
 // Hard 403 for non-admin users — even if they find the URL
@@ -63,7 +64,45 @@ async function saveHackathon() {
 }
 
 // ---------------------------------------------------------------------------
-// Season management
+// Active season selector
+// ---------------------------------------------------------------------------
+const activeSeasonId = ref<number | null>(null);
+
+watch(
+    () => seasons.value,
+    (s) => {
+        const active = s?.find((s: any) => s.is_active);
+        activeSeasonId.value = active?.id ?? null;
+    },
+    { immediate: true },
+);
+
+const activeSeasonItems = computed(() => [
+    { label: "None", value: null },
+    ...(seasons.value?.map((s: { id: number; name: string }) => ({ label: s.name, value: s.id })) ||
+        []),
+]);
+
+const activeSeasonSaving = ref(false);
+
+async function setActiveSeason() {
+    activeSeasonSaving.value = true;
+    try {
+        await $fetch("/api/seasons/active", {
+            method: "PATCH",
+            body: { season_id: activeSeasonId.value },
+        });
+        await refreshAdmin();
+        toast.add({ title: "Active season updated.", color: "success" });
+    } catch (e: any) {
+        toast.add({ title: "Error", description: getErrorMessage(e), color: "error" });
+    } finally {
+        activeSeasonSaving.value = false;
+    }
+}
+
+// ---------------------------------------------------------------------------
+// Season CRUD
 // ---------------------------------------------------------------------------
 const newSeasonName = ref("");
 const seasonMessage = ref("");
@@ -143,7 +182,7 @@ async function renameSeason(id: number, currentName: string) {
 
 <template>
     <div class="max-w-4xl mx-auto space-y-8">
-        <h1 class="text-3xl bold">Admin Panel</h1>
+        <h1 class="text-3xl bold">Hackathon Administration</h1>
 
         <!-- Hackathon Configuration -->
         <section v-if="hackathon" class="bg-ui-bg border border-ui-border rounded-lg p-6 space-y-4">
@@ -249,9 +288,27 @@ async function renameSeason(id: number, currentName: string) {
             </div>
         </section>
 
+        <!-- Active Season Selector -->
+        <section class="bg-ui-bg border border-ui-border rounded-lg p-6 space-y-4">
+            <h2 class="text-xl bold">Active Season</h2>
+            <p class="text-sm text-ui-text-muted">
+                Select the currently active season. Only one season can be active at a time.
+            </p>
+            <div class="flex items-center gap-3">
+                <USelect
+                    v-model="activeSeasonId"
+                    :items="activeSeasonItems"
+                    class="w-full max-w-xs"
+                />
+                <UButton @click="setActiveSeason" :loading="activeSeasonSaving" color="primary">
+                    Set Active
+                </UButton>
+            </div>
+        </section>
+
         <!-- Season Management -->
         <section class="bg-ui-bg border border-ui-border rounded-lg p-6 space-y-4">
-            <h2 class="text-xl bold">Seasons</h2>
+            <h2 class="text-xl bold">Season Management</h2>
 
             <div class="flex items-center gap-3">
                 <UInput v-model="newSeasonName" placeholder="New season name" class="flex-1" />

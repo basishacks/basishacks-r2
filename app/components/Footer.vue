@@ -17,7 +17,7 @@
                     class="text-xs text-red-400 hover:text-red-300"
                     to="/developers/admin"
                 >
-                    Admin Panel
+                    Hackathon Administration
                 </ULink>
             </div>
         </template>

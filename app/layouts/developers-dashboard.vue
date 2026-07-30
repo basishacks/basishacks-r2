@@ -66,7 +66,7 @@ const items = computed<NavigationMenuItem[][]>(() => [
     ],
     [
         {
-            label: "Admin",
+            label: "Hackathon Administration",
             icon: "i-lucide-shield",
             to: "/developers/admin",
             disabled: !user.value || user.value.role !== "admin",
