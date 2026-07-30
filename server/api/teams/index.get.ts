@@ -6,6 +6,14 @@ export default defineEventHandler(async (event) => {
     if (query.judging) {
         const { id: userID } = await requireJudge(event);
 
+        const hackathon = await getHackathon(event);
+        if (!hackathon || !hackathon.judging_open) {
+            throw createError({
+                statusCode: 403,
+                message: "Judging is not open",
+            });
+        }
+
         const teams = await getSubmittedUnjudgedTeams(event, userID);
         const awardsByTeam = await getAwardsForTeams(
             event,

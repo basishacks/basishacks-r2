@@ -699,6 +699,7 @@ describe("query parameter injection - GET /api/teams", () => {
     });
 
     it("handles SQL injection in judging query param gracefully", async () => {
+        ctx.drizzle.update(hackathon).set({ judging_open: 1 }).where(eq(hackathon.id, 1)).run();
         mockQueryState.value = { judging: "1 OR 1=1 --" };
 
         const result = await listTeamsHandler(createEvent());

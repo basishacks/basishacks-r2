@@ -11,7 +11,7 @@
                 <ULink class="text-xs" to="/contributing" target="_blank">
                     Contribute to basishacks
                 </ULink>
-                <ULink class="text-xs" to="/developers">Developer Portal</ULink>
+                <ULink v-if="isAdmin" class="text-xs" to="/developers">Developer Portal</ULink>
                 <ULink
                     v-if="isAdmin"
                     class="text-xs text-red-400 hover:text-red-300"

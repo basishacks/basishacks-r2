@@ -15,7 +15,7 @@ import {
     type TestContext,
 } from "./helpers";
 import { eq } from "drizzle-orm";
-import { teams, users, userPastTeams, seasons } from "~~/server/database/schema";
+import { teams, users, hackathon, userPastTeams, seasons } from "~~/server/database/schema";
 
 vi.mock("~~/server/utils/auth", () => ({
     requireUser: vi.fn(),
@@ -139,6 +139,9 @@ describe("GET /api/teams", () => {
         (requireJudge as any).mockResolvedValue({ id: 1, role: "judge" });
 
         seedTeam(ctx, { name: "Submitted Team", project_submitted: 1, pathway: "junior" });
+
+        // Enable judging for this test
+        ctx.drizzle.update(hackathon).set({ judging_open: 1 }).where(eq(hackathon.id, 1)).run();
 
         mockQueryState.value = { judging: "true" };
 

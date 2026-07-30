@@ -26,18 +26,19 @@ const hackathon = computed(() => adminData.value?.hackathon ?? null);
 const seasons = computed(() => adminData.value?.seasons ?? []);
 
 // ---------------------------------------------------------------------------
-// Helpers: convert unix ts <-> datetime-local string
+// Helpers: convert ms epoch <-> datetime-local string
+// The hackathon table stores timestamps as JavaScript Date.now() epoch (ms).
 // ---------------------------------------------------------------------------
 function tsToDatetime(ts: number | null | undefined): string {
     if (!ts) return "";
-    const d = new Date(ts * 1000);
+    const d = new Date(ts);
     const pad = (n: number) => String(n).padStart(2, "0");
     return `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}T${pad(d.getHours())}:${pad(d.getMinutes())}`;
 }
 
 function datetimeToTs(s: string): number {
     if (!s) return 0;
-    return Math.floor(new Date(s).getTime() / 1000);
+    return new Date(s).getTime();
 }
 
 // ---------------------------------------------------------------------------
@@ -122,6 +123,66 @@ const activeSeasonItems = computed(() => [
 ]);
 
 const activeSeasonSaving = ref(false);
+
+// ---------------------------------------------------------------------------
+// Theme name dropdown: pick from existing season names or enter custom
+// ---------------------------------------------------------------------------
+const themeSelectMode = ref("__custom__");
+
+watch(
+    () => hackathon.value?.theme_name,
+    (name) => {
+        if (name) {
+            const match = seasons.value?.find((s: any) => s.name === name);
+            themeSelectMode.value = match ? name : "__custom__";
+        } else {
+            themeSelectMode.value = "__custom__";
+        }
+    },
+    { immediate: true },
+);
+
+const themeOptions = computed(() => {
+    const current = hackathonForm.theme_name;
+    const seasonNames = (seasons.value || []).map((s: any) => ({
+        label: s.name,
+        value: s.name,
+    }));
+    const items = [
+        ...(current && !seasonNames.find((o: any) => o.value === current)
+            ? [{ label: `Custom: "${current}"`, value: "__custom__" as const }]
+            : [{ label: "Custom...", value: "__custom__" as const }]),
+        ...(seasonNames.length
+            ? [{ label: "──────────", value: "__sep__" as const, disabled: true }]
+            : []),
+        ...seasonNames,
+        { label: "──────────", value: "__sep__", disabled: true },
+        { label: "Create new season...", value: "__create__" as const },
+    ];
+    return items;
+});
+
+watch(themeSelectMode, async (mode) => {
+    if (mode === "__create__") {
+        const name = prompt("New season name:");
+        if (name && name.trim()) {
+            try {
+                await $fetch("/api/admin/seasons", {
+                    method: "POST",
+                    body: { name: name.trim() },
+                });
+                await refreshAdmin();
+                toast.add({ title: `Season "${name}" created.`, color: "success" });
+                hackathonForm.theme_name = name.trim();
+            } catch (e: any) {
+                toast.add({ title: "Error", description: getErrorMessage(e), color: "error" });
+            }
+        }
+        themeSelectMode.value = hackathonForm.theme_name || "__custom__";
+    } else if (mode !== "__custom__") {
+        hackathonForm.theme_name = mode;
+    }
+});
 
 async function setActiveSeason() {
     activeSeasonSaving.value = true;
@@ -276,7 +337,19 @@ async function renameSeason(id: number, currentName: string) {
 
                     <div>
                         <label class="block text-sm font-medium mb-1">Theme Name</label>
-                        <UInput v-model="hackathonForm.theme_name" />
+                        <div class="flex items-center gap-2">
+                            <USelect
+                                v-model="themeSelectMode"
+                                :items="themeOptions"
+                                class="flex-1"
+                            />
+                            <UInput
+                                v-if="themeSelectMode === '__custom__'"
+                                v-model="hackathonForm.theme_name"
+                                placeholder="Custom theme name"
+                                class="flex-1"
+                            />
+                        </div>
                     </div>
 
                     <div class="md:col-span-2">
@@ -286,12 +359,12 @@ async function renameSeason(id: number, currentName: string) {
 
                     <div>
                         <label class="block text-sm font-medium mb-1">Schedule Start</label>
-                        <UInput v-model="hackathonForm.schedule_start" />
+                        <UInput type="datetime-local" v-model="hackathonForm.schedule_start" />
                     </div>
 
                     <div>
                         <label class="block text-sm font-medium mb-1">Schedule End</label>
-                        <UInput v-model="hackathonForm.schedule_end" />
+                        <UInput type="datetime-local" v-model="hackathonForm.schedule_end" />
                     </div>
 
                     <div>
