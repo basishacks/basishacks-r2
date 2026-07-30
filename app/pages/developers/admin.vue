@@ -154,13 +154,14 @@ async function saveHackathon() {
 const activeSeasonId = ref<number | null>(null);
 
 // One-time initialization: wait for both hackathon and seasons to load.
-// After this, activeSeasonId only changes via the dropdown v-model (user action).
+// Selects the last (newest) season by default. After this, activeSeasonId
+// only changes via the dropdown v-model (user action).
 watchEffect(() => {
     const h = hackathon.value;
     const s = seasons.value;
     if (!h || !s || s.length === 0 || formInitialized.value) return;
-    const active = s.find((s: any) => s.is_active);
-    activeSeasonId.value = active?.id ?? null;
+    const last = s[s.length - 1];
+    activeSeasonId.value = last?.id ?? null;
     applyConfig(activeSeasonId.value);
 });
 
