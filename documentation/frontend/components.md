@@ -491,6 +491,8 @@ Wraps the `Comark` component (inline Markdown renderer) with XSS-safe configurat
 
 Utility functions for safe URL validation used by `SafeLink` and other components.
 
+Form input components (`ProjectForm.vue`, `JudgingCard.vue`, `voting.vue`) bind `:maxlength` to the exported `MAX_*` constants from `shared/schemas.ts` (e.g. `MAX_PROJECT_DESCRIPTION_LENGTH`, `MAX_REASONING_LENGTH`, `MAX_URL_LENGTH`), preventing users from exceeding validation limits before form submission.
+
 | Function | Signature | Description |
 | --- | --- | --- |
 | `isSafeUrl` | `(url: string) => boolean` | Returns `true` for relative paths rooted at `/` (but not protocol-relative `//`) or for absolute `http://` / `https://` URLs. Returns `false` for empty strings. |

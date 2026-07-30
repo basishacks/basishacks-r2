@@ -17,7 +17,7 @@ bun run test:watch
 bun run test:coverage
 ```
 
-The canonical command is `bun run test`, which executes `vitest run --pool=forks`. This resolves Nuxt's `~~/` and `~/` path aliases through `vitest.config.ts` and loads `tests/setup.ts` before each test file to set up an in-memory SQLite database and Microsoft OAuth2 environment variables.
+The canonical command is `bun run test`, which executes `vitest run --pool=forks --reporter=json | bun run test:meta`. This resolves Nuxt's `~~/` and `~/` path aliases through `vitest.config.ts`, loads `tests/setup.ts` before each test file, and automatically generates `tests/.test-meta.json` with the current test count. The `test:meta` script reads the vitest JSON output from stdin and writes a summary file used by the VitePress documentation's `<TestCount />` component for dynamic test count display.
 
 ## Coverage Policy
 

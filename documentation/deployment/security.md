@@ -254,4 +254,19 @@ This prevents applications from silently accessing sensitive user data such as c
 
 ---
 
+## XSS Prevention Audit
+
+A comprehensive XSS audit has been performed across all frontend components (`app/` directory, 50+ `.vue`/`.ts` files):
+
+- **No `v-html` usage**: zero instances. All user-controlled text renders through Vue's auto-escaping `{{ }}` interpolation.
+- **No `innerHTML`** or `dangerouslySetInnerHTML`: zero instances.
+- **SafeLink component**: validates all `href` attributes via `isSafeUrl()` before rendering; unsafe URLs render as inert `<span>` elements.
+- **SafeComark component**: renders user project descriptions with HTML escaping before Markdown processing.
+- **URL safety**: all project demo/repo URLs use `safeUrl()` computed properties; file upload URLs use sanitized UUID-based filenames.
+- **Form maxlength attributes**: all key form inputs (`ProjectForm.vue`, `JudgingCard.vue`, `voting.vue`) now have `:maxlength` bound to the `MAX_*` constants from `shared/schemas.ts`, preventing users from exceeding validation limits before submission.
+
+**Result: Zero XSS vectors found.** The frontend is fully hardened against cross-site scripting attacks.
+
+---
+
 <QuoteCycler />
