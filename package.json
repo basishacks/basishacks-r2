@@ -31,7 +31,7 @@
         "@vue/shared": "^3.5.40",
         "@vueuse/core": "^14.4.0",
         "@vueuse/shared": "^14.4.0",
-        "better-sqlite3": "^12.11.1",
+        "better-sqlite3": "^13.0.2",
         "canvas-confetti": "^1.9.4",
         "comark": "^0.5.1",
         "drizzle-orm": "^0.45.2",
