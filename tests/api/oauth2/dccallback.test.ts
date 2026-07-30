@@ -309,4 +309,52 @@ describe("GET /api/oauth2/dccallback - error and validation paths", () => {
 
         process.env.NUXT_OAUTH2_JWT_SECRET = originalSecret;
     });
+
+    it("redirects to /dashboard when given an absolute URL (blocks open redirect)", async () => {
+        getAuthorizeSession.mockReturnValue(createMockSession());
+        mockCookies.values["bridge_id"] = "test-bridge-id";
+        mockCookies.values["pkce_verifier"] = VERIFIER;
+        mockQueryState.value = {
+            code: "test-code",
+            state: "test-state",
+            redirect: "https://evil.com/phish",
+        };
+        exchangeAuthorizationCode.mockResolvedValue("fake-jwt-token");
+
+        await handler(createEvent());
+
+        expect(sendRedirectSpy).toHaveBeenCalledWith(expect.anything(), "/dashboard", 302);
+    });
+
+    it("redirects to /dashboard when given a protocol-relative URL (blocks open redirect)", async () => {
+        getAuthorizeSession.mockReturnValue(createMockSession());
+        mockCookies.values["bridge_id"] = "test-bridge-id";
+        mockCookies.values["pkce_verifier"] = VERIFIER;
+        mockQueryState.value = {
+            code: "test-code",
+            state: "test-state",
+            redirect: "//evil.com/phish",
+        };
+        exchangeAuthorizationCode.mockResolvedValue("fake-jwt-token");
+
+        await handler(createEvent());
+
+        expect(sendRedirectSpy).toHaveBeenCalledWith(expect.anything(), "/dashboard", 302);
+    });
+
+    it("redirects to the given relative path when redirect is safe", async () => {
+        getAuthorizeSession.mockReturnValue(createMockSession());
+        mockCookies.values["bridge_id"] = "test-bridge-id";
+        mockCookies.values["pkce_verifier"] = VERIFIER;
+        mockQueryState.value = {
+            code: "test-code",
+            state: "test-state",
+            redirect: "/results",
+        };
+        exchangeAuthorizationCode.mockResolvedValue("fake-jwt-token");
+
+        await handler(createEvent());
+
+        expect(sendRedirectSpy).toHaveBeenCalledWith(expect.anything(), "/results", 302);
+    });
 });

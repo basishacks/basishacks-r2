@@ -128,4 +128,24 @@ describe("GET /api/login", () => {
         const [, redirectUrl] = sendRedirectSpy.mock.calls[0];
         expect(redirectUrl).not.toContain("post_login_redirect");
     });
+
+    it("ignores an absolute URL redirect (blocks open redirect)", async () => {
+        mockQueryState.value = { redirect: "https://evil.com/phish" };
+
+        await handler(createEvent());
+
+        expect(sendRedirectSpy).toHaveBeenCalledTimes(1);
+        const [, redirectUrl] = sendRedirectSpy.mock.calls[0];
+        expect(redirectUrl).not.toContain("post_login_redirect");
+    });
+
+    it("ignores a protocol-relative URL redirect (blocks open redirect)", async () => {
+        mockQueryState.value = { redirect: "//evil.com/phish" };
+
+        await handler(createEvent());
+
+        expect(sendRedirectSpy).toHaveBeenCalledTimes(1);
+        const [, redirectUrl] = sendRedirectSpy.mock.calls[0];
+        expect(redirectUrl).not.toContain("post_login_redirect");
+    });
 });
