@@ -96,10 +96,10 @@ useHead({
                 If you discover a security vulnerability or any other issue that could affect the
                 integrity of the platform or its users, please disclose it privately. Do
                 <span class="font-semibold">not</span>
-                file a public GitHub issue or discuss it in public forums.
+                file a public GitHub issue or discuss it in public forums. If you have disclosed the issue publically, you are considered complicit in using the exploit if there is someone else who used this exploit later on. We encourage you, if you have the ability and willingness to, to attempt to fix the issue yourself by forking the repository, implementing your fix and commiting, and creating a pull request (we will review it and decide whether to merge it as soon as possible) to be merged into main. We encourage you to obfuscate the fix (and hence the issue) by adding in other boilerplate code and not mentioning it explicitely in the pull request, as pull requests are publically visible.
             </p>
             <p>
-                To report a security concern, send an email to the BIBS-C Developers' Club at
+                To report a security concern, send an email or a Teams message to the BIBS-C Developers' Club at
                 <span class="font-mono text-primary">devclub-bisz@basischina.com</span>
                 . Include a detailed description of the issue, steps to reproduce it, and any
                 relevant supporting material.
@@ -107,7 +107,7 @@ useHead({
             <p>
                 We will acknowledge receipt within 48 hours and work to address the issue as quickly
                 as possible. Depending on the severity and impact of the report, we may offer a
-                discretionary reward, though no guarantee of compensation is made in advance.
+                discretionary reward, though no guarantee of compensation is made in advance. If you consent or refuse in your letter that you want to be publically mentioned or thanked after the hackathon season is over for your report, we will respect your choice.
             </p>
         </section>
 
@@ -122,7 +122,7 @@ useHead({
                 We maintain full logging and audit trails across the platform. In the event that an
                 individual is found to have exploited a vulnerability rather than reporting it, we
                 will pursue all available remedies, which may include reporting the incident to
-                school administration, law enforcement, and seeking legal recourse. We have the
+                school administration or further on if the issue is severe. We have the
                 capability to identify and trace such activity, and we will hold accountable anyone
                 who chooses to abuse rather than assist.
             </p>
@@ -141,7 +141,7 @@ useHead({
         <USeparator />
 
         <p class="text-sm text-ui-text-muted">
-            basishacks is maintained by the BISZ Developers' Club as part of the BIBS-C Network
+            basishacks is maintained by the BISZ Developers' Club et al. as part of the BIBS-C Network
             Hackathon.
         </p>
     </div>

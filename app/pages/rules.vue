@@ -783,7 +783,7 @@
         <p class="mb-4">
             <span class="bold text-blue-400">Contact for clarification.</span>
             Should you require clarification on any of these rules, please direct your inquiries via
-            electronic mail to
+            electronic mail or a Teams message to
             <span class="bold text-blue-400">devclub-bisz@basischina.com</span>
             . This address will be answered by members of the BISZ Developers' Club leadership.
         </p>
