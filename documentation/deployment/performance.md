@@ -17,7 +17,19 @@ nitro: {
 }
 ```
 
-This generates gzip and brotli versions of eligible static files so the Node/Bun server can serve compressed responses without runtime overhead.
+This generates **gzip and brotli** versions of eligible static files so the Node/Bun server can serve compressed responses without runtime overhead. Brotli typically achieves 15–25% better compression ratios than gzip for text-based assets.
+
+## Request body size limit
+
+To prevent memory exhaustion from large payloads, the `maxRequestSize` option in `nuxt.config.ts` rejects request bodies larger than **10 MiB** before buffering them into memory:
+
+```ts
+nitro: {
+    maxRequestSize: 10 * 1024 * 1024, // 10 MiB
+}
+```
+
+Requests with bodies exceeding this limit receive an immediate `413 Payload Too Large` response. The limit applies to all API route handlers, including file uploads.
 
 ## Long-lived cache headers
 
@@ -89,6 +101,10 @@ vite: {
 ```
 
 Node.js >= v24 and Bun both support `es2020` without issue. The target can be re-evaluated to `es2022` or later once the project is confirmed to build cleanly with a newer target.
+
+## Pin to Vite 8.0.16
+
+`vite` is pinned at version `8.0.16` in `package.json` to avoid regressions from newer Vite releases that may introduce breaking changes in the Nitro/Rolldown integration used by Nuxt 4. This pin is a safety lock — Vite 8 is under active development, and unpinning without verification could silently break the production build or dev server behavior.
 
 ## Verification
 
