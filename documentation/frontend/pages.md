@@ -289,7 +289,15 @@ Hackathon Administration panel. Only accessible to admin users; non-admins recei
 
 **Season Name** — Editable text input to rename the selected season, with a "Rename Season" button.
 
-**Hackathon Configuration** — All fields are per-season (status, voting_enabled, judging_open, results_published, max_votes_per_user, theme_name, theme_description, schedule_start, schedule_end, all 5 timestamps). Changes auto-save to the selected season via a 300ms debounced PATCH with the current `season_id`. When editing the active season, values are also synced to the global hackathon row. No "Save" button needed — every field change is automatically persisted and re-fetched from the database.
+**Hackathon Configuration** — All 14 fields are per-season. Changes auto-save via `@change` / `@update:model-value` handlers that fire a serialized PATCH chain carrying ALL form fields. Each PATCH writes to the selected season (with `season_id`); when editing the active season, values are also synced to the global hackathon row. No "Save" button — every field change is instantly persisted via a single in-flight PATCH with no race conditions.
+
+**Save mechanism details:**
+- All fields (`status`, `voting_enabled`, `judging_open`, `results_published`, `max_votes_per_user`, `theme_name`, `theme_description`, `schedule_start`, `schedule_end`, `start_timestamp`, `end_timestamp`, `voting_start_timestamp`, `voting_end_timestamp`, `results_open_timestamp`) are sent in every PATCH body
+- Saves are serialized via a Promise chain (`patchChain`) — only one PATCH in-flight at a time
+- `refreshAdmin()` runs after each PATCH in strict order
+- The form snapshot is captured synchronously in the event handler (no debounce)
+- Timestamps use `datetimeToTs()` ↔ `tsToDatetime()` for epoch ↔ datetime-local conversion
+- Booleans are stored as `0`/`1` via `:true-value="1" :false-value="0"` on UCheckbox
 
 **Database Export** — Download the full database as SQLite or CSV (admin-only).
 

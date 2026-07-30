@@ -268,11 +268,11 @@ async function addSeason() {
             <!-- Season picker at the top -->
             <section class="bg-ui-bg border-b border-ui-border p-6">
                 <h2 class="text-xl font-semibold mb-3">Season</h2>
-                <div class="flex items-center gap-3">
+                <div class="flex flex-wrap items-center gap-3">
                     <USelect
                         v-model="activeSeasonId"
                         :items="activeSeasonItems"
-                        class="w-full max-w-xs"
+                        class="w-full sm:w-auto sm:max-w-xs"
                     />
                     <UButton @click="setActiveSeason" color="primary">Set Active</UButton>
                     <UButton @click="addSeason" variant="outline">+ New Season</UButton>
@@ -282,8 +282,8 @@ async function addSeason() {
             <!-- Season Name (rename active season) -->
             <section class="bg-ui-bg border-b border-ui-border p-6">
                 <h2 class="text-xl font-semibold mb-3">Season Name</h2>
-                <div class="flex items-center gap-3">
-                    <UInput v-model="seasonNameForm" class="flex-1 max-w-xs" />
+                <div class="flex flex-wrap items-center gap-3">
+                    <UInput v-model="seasonNameForm" class="flex-1 min-w-0" />
                     <UButton @click="renameSeason" :loading="seasonNameSaving" color="primary">
                         Rename Season
                     </UButton>
@@ -319,7 +319,7 @@ async function addSeason() {
 
                     <div>
                         <label class="block text-sm font-medium mb-1">Max Votes Per User</label>
-                        <UInput type="number" v-model="hackathonForm.max_votes_per_user" min="0" max="100" @change="onFieldChange()" />
+                        <UInput type="number" v-model="hackathonForm.max_votes_per_user" min="0" max="100" @change="onFieldChange()" class="w-full" />
                     </div>
 
                     <div class="flex items-center gap-3">
@@ -339,7 +339,7 @@ async function addSeason() {
 
                     <div>
                         <label class="block text-sm font-medium mb-1">Theme Name</label>
-                        <UInput v-model="hackathonForm.theme_name" @change="onFieldChange()" />
+                        <UInput v-model="hackathonForm.theme_name" @change="onFieldChange()" class="w-full" />
                     </div>
 
                     <div class="md:col-span-2">
@@ -349,37 +349,37 @@ async function addSeason() {
 
                     <div>
                         <label class="block text-sm font-medium mb-1">Schedule Start</label>
-                        <UInput type="datetime-local" v-model="hackathonForm.schedule_start" @change="onFieldChange()" />
+                        <UInput type="datetime-local" v-model="hackathonForm.schedule_start" @change="onFieldChange()" class="w-full" />
                     </div>
 
                     <div>
                         <label class="block text-sm font-medium mb-1">Schedule End</label>
-                        <UInput type="datetime-local" v-model="hackathonForm.schedule_end" @change="onFieldChange()" />
+                        <UInput type="datetime-local" v-model="hackathonForm.schedule_end" @change="onFieldChange()" class="w-full" />
                     </div>
 
                     <div>
                         <label class="block text-sm font-medium mb-1">Start</label>
-                        <UInput type="datetime-local" v-model="hackathonForm.start_timestamp" @change="onFieldChange()" />
+                        <UInput type="datetime-local" v-model="hackathonForm.start_timestamp" @change="onFieldChange()" class="w-full" />
                     </div>
 
                     <div>
                         <label class="block text-sm font-medium mb-1">End</label>
-                        <UInput type="datetime-local" v-model="hackathonForm.end_timestamp" @change="onFieldChange()" />
+                        <UInput type="datetime-local" v-model="hackathonForm.end_timestamp" @change="onFieldChange()" class="w-full" />
                     </div>
 
                     <div>
                         <label class="block text-sm font-medium mb-1">Voting Start</label>
-                        <UInput type="datetime-local" v-model="hackathonForm.voting_start_timestamp" @change="onFieldChange()" />
+                        <UInput type="datetime-local" v-model="hackathonForm.voting_start_timestamp" @change="onFieldChange()" class="w-full" />
                     </div>
 
                     <div>
                         <label class="block text-sm font-medium mb-1">Voting End</label>
-                        <UInput type="datetime-local" v-model="hackathonForm.voting_end_timestamp" @change="onFieldChange()" />
+                        <UInput type="datetime-local" v-model="hackathonForm.voting_end_timestamp" @change="onFieldChange()" class="w-full" />
                     </div>
 
                     <div>
                         <label class="block text-sm font-medium mb-1">Results Open</label>
-                        <UInput type="datetime-local" v-model="hackathonForm.results_open_timestamp" @change="onFieldChange()" />
+                        <UInput type="datetime-local" v-model="hackathonForm.results_open_timestamp" @change="onFieldChange()" class="w-full" />
                     </div>
                 </div>
             </section>
@@ -388,7 +388,7 @@ async function addSeason() {
             <section class="bg-ui-bg border-t border-ui-border p-6 space-y-3">
                 <h2 class="text-xl font-semibold">Database Export</h2>
                 <p class="text-sm text-ui-text-muted">Download a full snapshot of the database.</p>
-                <div class="flex items-center gap-3">
+                <div class="flex flex-wrap items-center gap-3">
                     <UButton
                         tag="a"
                         :to="`/api/admin/database/export?format=sqlite`"
