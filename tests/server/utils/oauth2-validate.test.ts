@@ -309,7 +309,7 @@ describe("validateOAuth2AuthorizationRequest", () => {
             ),
         ).rejects.toMatchObject({
             statusCode: 400,
-            statusMessage: "invalid_request: code_challenge_method must be S256 or plain",
+            statusMessage: "invalid_request: code_challenge_method must be S256",
         });
     });
 
@@ -327,11 +327,11 @@ describe("validateOAuth2AuthorizationRequest", () => {
             ),
         ).rejects.toMatchObject({
             statusCode: 400,
-            statusMessage: "invalid_request: code_challenge_method must be S256 or plain",
+            statusMessage: "invalid_request: code_challenge_method must be S256",
         });
     });
 
-    it("allows plain code_challenge_method (does not throw PKCE method error)", async () => {
+    it("rejects plain code_challenge_method as insecure", async () => {
         await expect(
             validateOAuth2AuthorizationRequest(
                 {} as any,
@@ -343,8 +343,9 @@ describe("validateOAuth2AuthorizationRequest", () => {
                 "challenge",
                 "plain",
             ),
-        ).rejects.not.toMatchObject({
-            statusMessage: "invalid_request: code_challenge_method must be S256 or plain",
+        ).rejects.toMatchObject({
+            statusCode: 400,
+            statusMessage: "invalid_request: code_challenge_method must be S256",
         });
     });
 
@@ -637,7 +638,7 @@ describe("validateOAuth2AuthorizationRequest", () => {
             ),
         ).rejects.toMatchObject({
             statusCode: 400,
-            statusMessage: "invalid_request: code_challenge_method must be S256 or plain",
+            statusMessage: "invalid_request: code_challenge_method must be S256",
         });
     });
 
@@ -677,7 +678,7 @@ describe("validateOAuth2AuthorizationRequest", () => {
         });
     });
 
-    it("allows plain code_challenge_method with valid challenge", async () => {
+    it("rejects plain code_challenge_method with valid challenge", async () => {
         (getOAuth2Application as any).mockResolvedValue({
             client_id: "test-client",
             name: "Test App",
@@ -685,20 +686,20 @@ describe("validateOAuth2AuthorizationRequest", () => {
             redirect_uris: "https://example.com/callback",
         });
 
-        const result = await validateOAuth2AuthorizationRequest(
-            { context: {} } as any,
-            "test-client",
-            "openid",
-            "https://example.com/callback",
-            "state",
-            "code",
-            "plain-challenge",
-            "plain",
-        );
-
-        expect(result).toMatchObject({
-            client_id: "test-client",
-            requested_scopes: ["openid"],
+        await expect(
+            validateOAuth2AuthorizationRequest(
+                { context: {} } as any,
+                "test-client",
+                "openid",
+                "https://example.com/callback",
+                "state",
+                "code",
+                "plain-challenge",
+                "plain",
+            ),
+        ).rejects.toMatchObject({
+            statusCode: 400,
+            statusMessage: "invalid_request: code_challenge_method must be S256",
         });
     });
 
