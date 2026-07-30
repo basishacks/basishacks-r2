@@ -285,25 +285,12 @@ A `null` rank records an abstention for that candidate. The schema does not enfo
 
 ### `UpdateSeasonTweaksRequest`
 
-All fields are optional, but at least one must be provided.
+All fields are optional, but at least one must be provided. Only these three settings are tweakable; any other fields in the request body are stripped.
 
 | Field | Type | Constraints |
 | --- | --- | --- |
 | `status` | `string` | One of `not_started`, `in_progress`, `voting`, `finished`, `paused` |
-| `voting_enabled` | `boolean` |  |
-| `results_published` | `boolean` |  |
-| `judging_open` | `boolean` |  |
 | `show_scores` | `boolean` | Show scores to participants in results |
 | `show_ranking` | `boolean` | Show rankings to participants in results |
-| `max_votes_per_user` | `number` | Integer, non-negative |
-| `schedule_start` | `string \| null` |  |
-| `schedule_end` | `string \| null` |  |
-| `start_timestamp` | `number` | Integer |
-| `end_timestamp` | `number` | Integer |
-| `voting_start_timestamp` | `number` | Integer |
-| `voting_end_timestamp` | `number` | Integer |
-| `results_open_timestamp` | `number` | Integer |
-| `theme_name` | `string \| null` |  |
-| `theme_description` | `string \| null` |  |
 
 **API endpoint:** `PATCH /api/seasons/:id/tweaks`

@@ -3,6 +3,7 @@ import { eq, asc } from "drizzle-orm";
 import type { ExtractTablesWithRelations } from "drizzle-orm";
 import type { SQLiteTransaction } from "drizzle-orm/sqlite-core";
 import { hackathon, seasons } from "~~/server/database/schema";
+import { getHackathon } from "./hackathon";
 
 type Schema = typeof import("~~/server/database/schema");
 
@@ -13,24 +14,7 @@ type DbTransaction = SQLiteTransaction<"sync", unknown, Schema, ExtractTablesWit
  * table (per-season storage) and the `hackathon` singleton (live state for
  * the currently active season).
  */
-export const SEASON_TWEAK_FIELDS = [
-    "status",
-    "voting_enabled",
-    "results_published",
-    "judging_open",
-    "show_scores",
-    "show_ranking",
-    "max_votes_per_user",
-    "schedule_start",
-    "schedule_end",
-    "start_timestamp",
-    "end_timestamp",
-    "voting_start_timestamp",
-    "voting_end_timestamp",
-    "results_open_timestamp",
-    "theme_name",
-    "theme_description",
-] as const;
+export const SEASON_TWEAK_FIELDS = ["status", "show_scores", "show_ranking"] as const;
 
 export type SeasonTweaks = Partial<Pick<Season, (typeof SEASON_TWEAK_FIELDS)[number]>>;
 
@@ -58,6 +42,39 @@ export async function getActiveSeason(event: H3Event): Promise<Season | null> {
     const row = event.context.drizzle.select().from(seasons).where(eq(seasons.is_active, 1)).get();
 
     return row ?? null;
+}
+
+export interface ScoreRankVisibility {
+    showScores: boolean;
+    showRanking: boolean;
+}
+
+/**
+ * Builds a resolver that maps a season ID to its score/rank visibility
+ * settings. Each season's own tweaks are authoritative for its teams;
+ * teams whose season no longer exists fall back to the live hackathon
+ * singleton row.
+ */
+export async function getScoreRankVisibilityResolver(
+    event: H3Event,
+): Promise<(seasonId: number | null | undefined) => ScoreRankVisibility> {
+    const allSeasons = await getSeasons(event);
+    const hackathonRow = await getHackathon(event);
+
+    const bySeason = new Map<number, ScoreRankVisibility>();
+    for (const season of allSeasons) {
+        bySeason.set(season.id, {
+            showScores: !!season.show_scores,
+            showRanking: !!season.show_ranking,
+        });
+    }
+
+    const fallback: ScoreRankVisibility = {
+        showScores: !!hackathonRow?.show_scores,
+        showRanking: !!hackathonRow?.show_ranking,
+    };
+
+    return (seasonId) => (seasonId != null ? bySeason.get(seasonId) : undefined) ?? fallback;
 }
 
 /**

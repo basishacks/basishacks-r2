@@ -320,7 +320,7 @@ Season management page. Permission-gated (`portal.seasons.view`; editing require
 Contains two sections:
 
 - **Active Season** — select the current season (`PATCH /api/seasons/active`); activating a season copies its tweaks into the live `hackathon` row.
-- **Season Tweaks** — edit the tweakable settings of any selected season (`GET`/`PATCH /api/seasons/:id/tweaks`): show scores / show ranking for participants in results, voting and judging toggles, status, timestamps, schedule, and theme. A season selector chooses which season to edit; when editing the live (active) season, a warning alert is shown and changes also update the `hackathon` row immediately.
+- **Season Tweaks** — edit the tweakable settings of any selected season (`GET`/`PATCH /api/seasons/:id/tweaks`): status and the show scores / show ranking toggles for participants in results. A season selector chooses which season to edit; when editing the live (active) season, a warning alert is shown and changes also update the `hackathon` row immediately.
 
 **Layout:** `developers-dashboard`
 

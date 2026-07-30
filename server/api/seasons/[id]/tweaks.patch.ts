@@ -1,13 +1,7 @@
 import { UpdateSeasonTweaksRequest } from "~~/shared/schemas";
 import { DevPermissions } from "~~/shared/permissions";
 
-const booleanFields = [
-    "voting_enabled",
-    "results_published",
-    "judging_open",
-    "show_scores",
-    "show_ranking",
-] as const;
+const booleanFields = ["show_scores", "show_ranking"] as const;
 
 export default defineEventHandler(
     applyRateLimit(async (event) => {

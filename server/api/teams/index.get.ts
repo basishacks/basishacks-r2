@@ -22,10 +22,16 @@ export default defineEventHandler(async (event) => {
             teams.map((t) => t.id),
         );
 
-        // Public listing: ranks are only exposed when the hackathon toggle is enabled
-        const hackathon = await getHackathon(event);
-        const withRank = !!hackathon?.show_ranking;
+        // Public listing: ranks are only exposed when the team's own season
+        // has the ranking toggle enabled
+        const resolveVisibility = await getScoreRankVisibilityResolver(event);
 
-        return teams.map((t) => convertTeamToPublic(t, { withRank }, awardsByTeam[t.id] ?? []));
+        return teams.map((t) =>
+            convertTeamToPublic(
+                t,
+                { withRank: resolveVisibility(t.season_id).showRanking },
+                awardsByTeam[t.id] ?? [],
+            ),
+        );
     }
 });

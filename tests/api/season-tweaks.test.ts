@@ -149,76 +149,49 @@ describe("PATCH /api/seasons/:id/tweaks", () => {
         mockParams.values["id"] = String(season.id);
         mockBody.value = {
             show_scores: true,
-            show_ranking: true,
-            voting_enabled: true,
-            results_published: false,
-            judging_open: true,
+            show_ranking: false,
         };
 
         await patchTweaksHandler(createEvent());
 
         const row = ctx.drizzle.select().from(seasons).where(eq(seasons.id, season.id)).get();
         expect(row!.show_scores).toBe(1);
-        expect(row!.show_ranking).toBe(1);
-        expect(row!.voting_enabled).toBe(1);
-        expect(row!.results_published).toBe(0);
-        expect(row!.judging_open).toBe(1);
+        expect(row!.show_ranking).toBe(0);
     });
 
-    it("updates status, timestamps, and theme fields", async () => {
+    it("updates the season status", async () => {
         vi.mocked(globalThis.requirePermission).mockResolvedValue({ id: 1, role: "admin" });
 
         const season = seedSeason(ctx, { is_active: 0 });
 
         mockParams.values["id"] = String(season.id);
-        mockBody.value = {
-            status: "voting",
-            max_votes_per_user: 5,
-            start_timestamp: 1000,
-            end_timestamp: 2000,
-            voting_start_timestamp: 3000,
-            voting_end_timestamp: 4000,
-            results_open_timestamp: 5000,
-            schedule_start: "Day 1",
-            schedule_end: "Day 2",
-            theme_name: "New Theme",
-            theme_description: "New description",
-        };
+        mockBody.value = { status: "voting" };
 
         await patchTweaksHandler(createEvent());
 
         const row = ctx.drizzle.select().from(seasons).where(eq(seasons.id, season.id)).get();
         expect(row!.status).toBe("voting");
-        expect(row!.max_votes_per_user).toBe(5);
-        expect(row!.start_timestamp).toBe(1000);
-        expect(row!.end_timestamp).toBe(2000);
-        expect(row!.voting_start_timestamp).toBe(3000);
-        expect(row!.voting_end_timestamp).toBe(4000);
-        expect(row!.results_open_timestamp).toBe(5000);
-        expect(row!.schedule_start).toBe("Day 1");
-        expect(row!.schedule_end).toBe("Day 2");
-        expect(row!.theme_name).toBe("New Theme");
-        expect(row!.theme_description).toBe("New description");
     });
 
-    it("allows clearing nullable fields", async () => {
+    it("ignores non-tweakable fields", async () => {
         vi.mocked(globalThis.requirePermission).mockResolvedValue({ id: 1, role: "admin" });
 
         const season = seedSeason(ctx, { is_active: 0 });
         ctx.drizzle
             .update(seasons)
-            .set({ theme_name: "Theme", theme_description: "Desc" })
+            .set({ theme_name: "Theme", voting_enabled: 0 })
             .where(eq(seasons.id, season.id))
             .run();
 
         mockParams.values["id"] = String(season.id);
-        mockBody.value = { theme_name: null, theme_description: null };
+        mockBody.value = { show_scores: true, theme_name: "Hacked", voting_enabled: true };
 
         await patchTweaksHandler(createEvent());
 
         const row = ctx.drizzle.select().from(seasons).where(eq(seasons.id, season.id)).get();
-        expect(row!.theme_name).toBeNull();
-        expect(row!.theme_description).toBeNull();
+        expect(row!.show_scores).toBe(1);
+        expect(row!.theme_name).toBe("Theme");
+        expect(row!.voting_enabled).toBe(0);
     });
 
     it("also updates the hackathon row when editing the live season", async () => {
@@ -227,7 +200,7 @@ describe("PATCH /api/seasons/:id/tweaks", () => {
         const season = seedSeason(ctx, { is_active: 1 });
 
         mockParams.values["id"] = String(season.id);
-        mockBody.value = { show_scores: true, show_ranking: true, theme_name: "Live Theme" };
+        mockBody.value = { show_scores: true, show_ranking: true };
 
         await patchTweaksHandler(createEvent());
 
@@ -237,7 +210,6 @@ describe("PATCH /api/seasons/:id/tweaks", () => {
         const live = ctx.drizzle.select().from(hackathon).get();
         expect(live!.show_scores).toBe(1);
         expect(live!.show_ranking).toBe(1);
-        expect(live!.theme_name).toBe("Live Theme");
     });
 
     it("does not touch the hackathon row when editing a non-live season", async () => {
@@ -246,7 +218,7 @@ describe("PATCH /api/seasons/:id/tweaks", () => {
         const season = seedSeason(ctx, { is_active: 0 });
 
         mockParams.values["id"] = String(season.id);
-        mockBody.value = { show_scores: true, theme_name: "Future Theme" };
+        mockBody.value = { show_scores: true };
 
         await patchTweaksHandler(createEvent());
 

@@ -149,11 +149,12 @@ export function seedHackathon(ctx: TestContext, overrides: Record<string, unknow
 
 export function seedSeason(
     ctx: TestContext,
-    overrides: { name?: string; is_active?: number } = {},
+    overrides: { name?: string; is_active?: number } & Record<string, unknown> = {},
 ) {
+    const { name, is_active, ...rest } = overrides;
     return ctx.drizzle
         .insert(schema.seasons)
-        .values({ name: overrides.name ?? "Season 1", is_active: overrides.is_active ?? 1 })
+        .values({ name: name ?? "Season 1", is_active: is_active ?? 1, ...rest } as any)
         .returning()
         .get();
 }

@@ -176,7 +176,7 @@ Get a single user's profile.
 | Field | Details |
 | --- | --- |
 | **Auth** | Any authenticated user |
-| **Response** | Self: `GetUserResponse` — full user with team and past teams; Others: `APIUser` — public profile only. For participants, team `score`/`rank` are only included when the hackathon `show_scores`/`show_ranking` toggles are enabled; users with `portal.teams.view` or admin always see them |
+| **Response** | Self: `GetUserResponse` — full user with team and past teams; Others: `APIUser` — public profile only. For participants, each team's `score`/`rank` (current and past teams alike) are only included when the `show_scores`/`show_ranking` toggles of that team's own season are enabled; users with `portal.teams.view` or admin always see them |
 
 ### PATCH `/api/users/:id`
 
@@ -211,7 +211,7 @@ List all teams for the active season, or filter by season.
 | --- | --- |
 | **Auth** | Any authenticated user |
 | **Query** | `judging` (if `1`, returns only submitted unjudged teams for the current judge); `season_id` (optional season filter) |
-| **Response** | `APITeam[]`; in the public listing, `rank` is only included when the hackathon `show_ranking` toggle is enabled |
+| **Response** | `APITeam[]`; in the public listing, each team's `rank` is only included when the `show_ranking` toggle of that team's own season is enabled |
 
 ### POST `/api/teams`
 
@@ -232,7 +232,7 @@ Get a single team's details.
 | Field | Details |
 | --- | --- |
 | **Auth** | Any authenticated user |
-| **Response** | `APITeam`; score is included only for team members (when the hackathon `show_scores` toggle is enabled) or users with the `portal.teams.view` permission/admin. `rank` is only included when the `show_ranking` toggle is enabled, or for privileged users |
+| **Response** | `APITeam`; score is included only for team members (when the `show_scores` toggle of the team's own season is enabled) or users with the `portal.teams.view` permission/admin. `rank` is only included when the team's season `show_ranking` toggle is enabled, or for privileged users |
 
 ### PATCH `/api/teams/:id`
 
@@ -378,7 +378,7 @@ Get the tweakable settings of a single season.
 
 ### PATCH `/api/seasons/:id/tweaks`
 
-Update the tweakable settings of a single season. Accepts a partial body with any of: `status`, `voting_enabled`, `results_published`, `judging_open`, `show_scores`, `show_ranking` (booleans), `max_votes_per_user`, `schedule_start`, `schedule_end`, `start_timestamp`, `end_timestamp`, `voting_start_timestamp`, `voting_end_timestamp`, `results_open_timestamp`, `theme_name`, `theme_description`.
+Update the tweakable settings of a single season. Accepts a partial body with any of: `status`, `show_scores`, `show_ranking` (booleans). Only these three settings are tweakable; any other fields in the request body are stripped.
 
 When the season is the currently active (live) season, the `hackathon` singleton row is updated as well so changes take effect immediately.
 

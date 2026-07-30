@@ -137,7 +137,8 @@ describe("seasons database helpers", () => {
             expect(hackathon.status).toBe("in_progress");
             expect(hackathon.show_scores).toBe(1);
             expect(hackathon.show_ranking).toBe(1);
-            expect(hackathon.theme_name).toBe("Synced Theme");
+            // theme_name is not a tweakable field and is not synced
+            expect(hackathon.theme_name).toBeNull();
         });
     });
 
@@ -150,13 +151,11 @@ describe("seasons database helpers", () => {
             const updated = await updateSeasonTweaks(event, 1, {
                 status: "voting",
                 show_scores: 1,
-                theme_name: "Theme",
             });
 
             expect(updated).not.toBeNull();
             expect(updated!.status).toBe("voting");
             expect(updated!.show_scores).toBe(1);
-            expect(updated!.theme_name).toBe("Theme");
         });
 
         it("leaves other fields untouched", async () => {
@@ -188,13 +187,13 @@ describe("seasons database helpers", () => {
                 .prepare("INSERT INTO seasons(name, is_active) VALUES('Live', 1)")
                 .run();
 
-            await updateSeasonTweaks(event, 1, { show_scores: 1, theme_name: "Live Theme" });
+            await updateSeasonTweaks(event, 1, { show_scores: 1, show_ranking: 1 });
 
             const hackathon = event.context.drizzle
                 .prepare("SELECT * FROM hackathon WHERE id = 1")
                 .first() as any;
             expect(hackathon.show_scores).toBe(1);
-            expect(hackathon.theme_name).toBe("Live Theme");
+            expect(hackathon.show_ranking).toBe(1);
         });
 
         it("does not touch the hackathon row when the season is not live", async () => {

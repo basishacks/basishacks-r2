@@ -286,7 +286,7 @@ In production, these are configured in the server environment.
 ## Useful Notes
 
 - The `hackathon` table has a single row (`id = 1`) that controls the global event state (`not_started`, `in_progress`, `voting`, `finished`, `paused`).
-- Each `seasons` row stores its own copy of the tweakable settings (status, toggles, timestamps, theme — see `SEASON_TWEAK_FIELDS` in `server/utils/database/seasons.ts`). Editing tweaks via `PATCH /api/seasons/:id/tweaks` also updates the `hackathon` row when the season is live; `setActiveSeason` copies the newly active season's tweaks into the `hackathon` row.
+- Each `seasons` row stores its own copy of the tweakable settings (`status`, `show_scores`, `show_ranking` — see `SEASON_TWEAK_FIELDS` in `server/utils/database/seasons.ts`). Editing tweaks via `PATCH /api/seasons/:id/tweaks` also updates the `hackathon` row when the season is live; `setActiveSeason` copies the newly active season's tweaks into the `hackathon` row.
 - Team project submissions are only accepted while the hackathon status is `not_started` or `in_progress`.
 - Peer voting scores must sum to exactly 10.
 - Judge scoring uses rubric criteria defined in `shared/rubric.ts` with scores 0–5 per criterion.

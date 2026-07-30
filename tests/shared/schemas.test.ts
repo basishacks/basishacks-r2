@@ -683,21 +683,8 @@ describe("UpdateSeasonTweaksRequest", () => {
         expect(() =>
             UpdateSeasonTweaksRequest.parse({
                 status: "voting",
-                voting_enabled: true,
-                results_published: false,
-                judging_open: true,
                 show_scores: true,
                 show_ranking: true,
-                max_votes_per_user: 3,
-                schedule_start: "Day 1",
-                schedule_end: null,
-                start_timestamp: 1000,
-                end_timestamp: 2000,
-                voting_start_timestamp: 3000,
-                voting_end_timestamp: 4000,
-                results_open_timestamp: 5000,
-                theme_name: "Theme",
-                theme_description: null,
             }),
         ).not.toThrow();
     });
@@ -710,12 +697,14 @@ describe("UpdateSeasonTweaksRequest", () => {
         expect(() => UpdateSeasonTweaksRequest.parse({ status: "bogus" })).toThrow();
     });
 
-    it("rejects a negative max_votes_per_user", () => {
-        expect(() => UpdateSeasonTweaksRequest.parse({ max_votes_per_user: -1 })).toThrow();
-    });
+    it("strips non-tweakable fields", () => {
+        const parsed = UpdateSeasonTweaksRequest.parse({
+            show_scores: true,
+            theme_name: "Hacked",
+            voting_enabled: true,
+        } as any);
 
-    it("rejects a non-integer timestamp", () => {
-        expect(() => UpdateSeasonTweaksRequest.parse({ start_timestamp: 1.5 })).toThrow();
+        expect(parsed).toEqual({ show_scores: true });
     });
 
     it("rejects a non-boolean toggle", () => {

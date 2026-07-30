@@ -128,7 +128,9 @@ Individual project scores within a ballot. Scores must be 1–5 or null.
 | `name`      | `TEXT NOT NULL UNIQUE`              | Season name                                  |
 | `is_active` | `INTEGER NOT NULL DEFAULT 0`        | Only one season can be active (CHECK 0 or 1) |
 
-Each season also stores its own copy of the tweakable settings (`status`, `voting_enabled`, `results_published`, `judging_open`, `show_scores`, `show_ranking`, `max_votes_per_user`, `schedule_start`, `schedule_end`, the five timestamps, `theme_name`, `theme_description`), mirroring the columns of the `hackathon` singleton. Editing the tweaks of the currently active season also updates the `hackathon` row so changes take effect immediately, and activating a season copies its tweaks into the `hackathon` row.
+Each season also stores its own copy of the tweakable settings (`status`, `show_scores`, `show_ranking`), which also exist on the `hackathon` singleton. Editing the tweaks of the currently active season also updates the `hackathon` row so changes take effect immediately, and activating a season copies its tweaks into the `hackathon` row. The remaining hackathon-state columns (`voting_enabled`, `results_published`, `judging_open`, timestamps, theme, etc.) still exist on both tables but are not part of the season tweaks system.
+
+When the API decides whether to expose a team's `score`/`rank`, it resolves the `show_scores`/`show_ranking` toggles from the team's **own** season (via `getScoreRankVisibilityResolver` in `server/utils/database/seasons.ts`), falling back to the `hackathon` singleton only when the season no longer exists. This keeps past-season results governed by their own season's settings rather than the live season's.
 
 A partial unique index ensures at most one active season:
 
@@ -201,7 +203,7 @@ Each table has a dedicated helper module in `server/utils/database/`:
 | `ballots.ts` | Ballot and ballot score management |
 | `hackathon.ts` | Hackathon state queries and updates |
 | `oauth2_applications.ts` | Application CRUD, secret management, redirect URI management |
-| `seasons.ts` | `getSeasons`, `getSeasonById`, `getActiveSeason`, `setActiveSeason` |
+| `seasons.ts` | `getSeasons`, `getSeasonById`, `getActiveSeason`, `setActiveSeason`, `getScoreRankVisibilityResolver` |
 | `awards.ts` | `getAwards`, `getAwardsForTeams`, `createAward`, `deleteTeamAwards`, `deleteAward` |
 
 ## Type Conventions

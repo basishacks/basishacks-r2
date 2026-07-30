@@ -77,34 +77,10 @@ const statusItems = [
     { label: "Paused", value: "paused" },
 ];
 
-function tsToInput(ts: number | null | undefined): string {
-    if (!ts) return "";
-    const d = new Date(ts);
-    const pad = (n: number) => String(n).padStart(2, "0");
-    return `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}T${pad(d.getHours())}:${pad(d.getMinutes())}`;
-}
-
-function inputToTs(value: string): number | undefined {
-    return value ? new Date(value).getTime() : undefined;
-}
-
 const settingsState = reactive({
     status: undefined as HackathonStatus | undefined,
     show_scores: false,
     show_ranking: false,
-    voting_enabled: false,
-    results_published: false,
-    judging_open: false,
-    max_votes_per_user: undefined as number | undefined,
-    schedule_start: undefined as string | undefined,
-    schedule_end: undefined as string | undefined,
-    start_timestamp: "",
-    end_timestamp: "",
-    voting_start_timestamp: "",
-    voting_end_timestamp: "",
-    results_open_timestamp: "",
-    theme_name: undefined as string | undefined,
-    theme_description: undefined as string | undefined,
 });
 
 const editingSeasonId = ref<number | undefined>(undefined);
@@ -149,19 +125,6 @@ watch(tweaksData, (newVal) => {
     settingsState.status = newVal.status as HackathonStatus;
     settingsState.show_scores = !!newVal.show_scores;
     settingsState.show_ranking = !!newVal.show_ranking;
-    settingsState.voting_enabled = !!newVal.voting_enabled;
-    settingsState.results_published = !!newVal.results_published;
-    settingsState.judging_open = !!newVal.judging_open;
-    settingsState.max_votes_per_user = newVal.max_votes_per_user;
-    settingsState.schedule_start = newVal.schedule_start ?? undefined;
-    settingsState.schedule_end = newVal.schedule_end ?? undefined;
-    settingsState.start_timestamp = tsToInput(newVal.start_timestamp);
-    settingsState.end_timestamp = tsToInput(newVal.end_timestamp);
-    settingsState.voting_start_timestamp = tsToInput(newVal.voting_start_timestamp);
-    settingsState.voting_end_timestamp = tsToInput(newVal.voting_end_timestamp);
-    settingsState.results_open_timestamp = tsToInput(newVal.results_open_timestamp);
-    settingsState.theme_name = newVal.theme_name ?? undefined;
-    settingsState.theme_description = newVal.theme_description ?? undefined;
 });
 
 const savingSettings = ref(false);
@@ -176,19 +139,6 @@ async function onSettingsSubmit() {
                 status: settingsState.status,
                 show_scores: settingsState.show_scores,
                 show_ranking: settingsState.show_ranking,
-                voting_enabled: settingsState.voting_enabled,
-                results_published: settingsState.results_published,
-                judging_open: settingsState.judging_open,
-                max_votes_per_user: settingsState.max_votes_per_user,
-                schedule_start: settingsState.schedule_start || null,
-                schedule_end: settingsState.schedule_end || null,
-                start_timestamp: inputToTs(settingsState.start_timestamp),
-                end_timestamp: inputToTs(settingsState.end_timestamp),
-                voting_start_timestamp: inputToTs(settingsState.voting_start_timestamp),
-                voting_end_timestamp: inputToTs(settingsState.voting_end_timestamp),
-                results_open_timestamp: inputToTs(settingsState.results_open_timestamp),
-                theme_name: settingsState.theme_name || null,
-                theme_description: settingsState.theme_description || null,
             },
         });
         toast.add({
@@ -271,18 +221,6 @@ async function onSettingsSubmit() {
                                 <USwitch v-model="settingsState.show_ranking" />
                             </UFormField>
 
-                            <UFormField name="voting_enabled" label="Voting enabled">
-                                <USwitch v-model="settingsState.voting_enabled" />
-                            </UFormField>
-
-                            <UFormField name="results_published" label="Results published">
-                                <USwitch v-model="settingsState.results_published" />
-                            </UFormField>
-
-                            <UFormField name="judging_open" label="Judging open">
-                                <USwitch v-model="settingsState.judging_open" />
-                            </UFormField>
-
                             <UFormField name="status" label="Status">
                                 <USelect
                                     v-model="settingsState.status"
@@ -290,76 +228,7 @@ async function onSettingsSubmit() {
                                     class="w-full"
                                 />
                             </UFormField>
-
-                            <UFormField name="max_votes_per_user" label="Max votes per user">
-                                <UInput
-                                    v-model.number="settingsState.max_votes_per_user"
-                                    type="number"
-                                    min="0"
-                                    class="w-full"
-                                />
-                            </UFormField>
-
-                            <UFormField name="schedule_start" label="Schedule start">
-                                <UInput v-model="settingsState.schedule_start" class="w-full" />
-                            </UFormField>
-
-                            <UFormField name="schedule_end" label="Schedule end">
-                                <UInput v-model="settingsState.schedule_end" class="w-full" />
-                            </UFormField>
-
-                            <UFormField name="start_timestamp" label="Start time">
-                                <UInput
-                                    v-model="settingsState.start_timestamp"
-                                    type="datetime-local"
-                                    class="w-full"
-                                />
-                            </UFormField>
-
-                            <UFormField name="end_timestamp" label="End time">
-                                <UInput
-                                    v-model="settingsState.end_timestamp"
-                                    type="datetime-local"
-                                    class="w-full"
-                                />
-                            </UFormField>
-
-                            <UFormField name="voting_start_timestamp" label="Voting start time">
-                                <UInput
-                                    v-model="settingsState.voting_start_timestamp"
-                                    type="datetime-local"
-                                    class="w-full"
-                                />
-                            </UFormField>
-
-                            <UFormField name="voting_end_timestamp" label="Voting end time">
-                                <UInput
-                                    v-model="settingsState.voting_end_timestamp"
-                                    type="datetime-local"
-                                    class="w-full"
-                                />
-                            </UFormField>
-
-                            <UFormField name="results_open_timestamp" label="Results open time">
-                                <UInput
-                                    v-model="settingsState.results_open_timestamp"
-                                    type="datetime-local"
-                                    class="w-full"
-                                />
-                            </UFormField>
-
-                            <UFormField name="theme_name" label="Theme name">
-                                <UInput v-model="settingsState.theme_name" class="w-full" />
-                            </UFormField>
                         </div>
-
-                        <UFormField name="theme_description" label="Theme description">
-                            <UTextarea
-                                v-model="settingsState.theme_description"
-                                :rows="4"
-                                class="w-full"
-                            />
-                        </UFormField>
 
                         <UButton
                             type="submit"
