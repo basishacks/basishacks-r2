@@ -11,7 +11,7 @@ useHead({
 const toast = useToast();
 const { data: user, status } = await useApiUser();
 
-// Hard 403 for non-admin users — even if they find the URL
+// Hard 403 for non-admin users
 if (status.value !== "pending" && status.value !== "idle") {
     if (!user.value || user.value.role !== "admin") {
         throw createError({ statusCode: 403, statusMessage: "Access Denied" });
@@ -26,6 +26,21 @@ const hackathon = computed(() => adminData.value?.hackathon ?? null);
 const seasons = computed(() => adminData.value?.seasons ?? []);
 
 // ---------------------------------------------------------------------------
+// Helpers: convert unix ts <-> datetime-local string
+// ---------------------------------------------------------------------------
+function tsToDatetime(ts: number | null | undefined): string {
+    if (!ts) return "";
+    const d = new Date(ts * 1000);
+    const pad = (n: number) => String(n).padStart(2, "0");
+    return `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}T${pad(d.getHours())}:${pad(d.getMinutes())}`;
+}
+
+function datetimeToTs(s: string): number {
+    if (!s) return 0;
+    return Math.floor(new Date(s).getTime() / 1000);
+}
+
+// ---------------------------------------------------------------------------
 // Hackathon config form
 // ---------------------------------------------------------------------------
 const hackathonForm = reactive<Record<string, any>>({});
@@ -35,10 +50,31 @@ const hackathonMessage = ref("");
 watch(
     hackathon,
     (h) => {
-        if (h) Object.assign(hackathonForm, h);
+        if (h) {
+            // Convert timestamps to datetime-local strings for display
+            const raw: Record<string, any> = { ...h };
+            for (const key of [
+                "start_timestamp",
+                "end_timestamp",
+                "voting_start_timestamp",
+                "voting_end_timestamp",
+                "results_open_timestamp",
+            ]) {
+                raw[key] = tsToDatetime(raw[key]);
+            }
+            Object.assign(hackathonForm, raw);
+        }
     },
     { immediate: true },
 );
+
+const tsKeys = [
+    "start_timestamp",
+    "end_timestamp",
+    "voting_start_timestamp",
+    "voting_end_timestamp",
+    "results_open_timestamp",
+] as const;
 
 async function saveHackathon() {
     hackathonSaving.value = true;
@@ -47,7 +83,9 @@ async function saveHackathon() {
         const body: Record<string, any> = {};
         for (const [key, value] of Object.entries(hackathonForm)) {
             if (key === "id") continue;
-            if (value !== (hackathon.value as any)?.[key]) body[key] = value;
+            // Convert datetime-local strings back to unix timestamps
+            const val = tsKeys.includes(key as any) ? datetimeToTs(value as string) : value;
+            if (val !== (hackathon.value as any)?.[key]) body[key] = val;
         }
         if (Object.keys(body).length === 0) {
             hackathonMessage.value = "No changes to save.";
@@ -181,196 +219,220 @@ async function renameSeason(id: number, currentName: string) {
 </script>
 
 <template>
-    <div class="max-w-4xl mx-auto space-y-8">
-        <h1 class="text-3xl bold">Hackathon Administration</h1>
+    <UDashboardPanel id="hackathon-admin">
+        <template #header>
+            <UDashboardNavbar title="Hackathon Administration">
+                <template #leading>
+                    <UDashboardSidebarCollapse />
+                </template>
+            </UDashboardNavbar>
+        </template>
 
-        <!-- Hackathon Configuration -->
-        <section v-if="hackathon" class="bg-ui-bg border border-ui-border rounded-lg p-6 space-y-4">
-            <h2 class="text-xl bold">Hackathon Configuration</h2>
+        <template #body>
+            <!-- Hackathon Configuration -->
+            <section v-if="hackathon" class="bg-ui-bg border-b border-ui-border p-6 space-y-4">
+                <h2 class="text-xl font-semibold">Hackathon Configuration</h2>
 
-            <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-                <div>
-                    <label class="block text-sm font-medium mb-1">Status</label>
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <div>
+                        <label class="block text-sm font-medium mb-1">Status</label>
+                        <USelect
+                            :items="[
+                                { label: 'Not Started', value: 'not_started' },
+                                { label: 'In Progress', value: 'in_progress' },
+                                { label: 'Voting', value: 'voting' },
+                                { label: 'Finished', value: 'finished' },
+                                { label: 'Paused', value: 'paused' },
+                            ]"
+                            v-model="hackathonForm.status"
+                            class="w-full"
+                        />
+                    </div>
+
+                    <div>
+                        <label class="block text-sm font-medium mb-1">Max Votes Per User</label>
+                        <UInput
+                            type="number"
+                            v-model="hackathonForm.max_votes_per_user"
+                            min="0"
+                            max="100"
+                        />
+                    </div>
+
+                    <div class="flex items-center gap-3">
+                        <UCheckbox v-model="hackathonForm.voting_enabled" :binary="true" />
+                        <span class="text-sm">Voting Enabled</span>
+                    </div>
+
+                    <div class="flex items-center gap-3">
+                        <UCheckbox v-model="hackathonForm.judging_open" :binary="true" />
+                        <span class="text-sm">Judging Open</span>
+                    </div>
+
+                    <div class="flex items-center gap-3">
+                        <UCheckbox v-model="hackathonForm.results_published" :binary="true" />
+                        <span class="text-sm">Results Published</span>
+                    </div>
+
+                    <div>
+                        <label class="block text-sm font-medium mb-1">Theme Name</label>
+                        <UInput v-model="hackathonForm.theme_name" />
+                    </div>
+
+                    <div class="md:col-span-2">
+                        <label class="block text-sm font-medium mb-1">Theme Description</label>
+                        <UTextarea v-model="hackathonForm.theme_description" rows="2" />
+                    </div>
+
+                    <div>
+                        <label class="block text-sm font-medium mb-1">Schedule Start</label>
+                        <UInput v-model="hackathonForm.schedule_start" />
+                    </div>
+
+                    <div>
+                        <label class="block text-sm font-medium mb-1">Schedule End</label>
+                        <UInput v-model="hackathonForm.schedule_end" />
+                    </div>
+
+                    <div>
+                        <label class="block text-sm font-medium mb-1">Start</label>
+                        <UInput type="datetime-local" v-model="hackathonForm.start_timestamp" />
+                    </div>
+
+                    <div>
+                        <label class="block text-sm font-medium mb-1">End</label>
+                        <UInput type="datetime-local" v-model="hackathonForm.end_timestamp" />
+                    </div>
+
+                    <div>
+                        <label class="block text-sm font-medium mb-1">Voting Start</label>
+                        <UInput
+                            type="datetime-local"
+                            v-model="hackathonForm.voting_start_timestamp"
+                        />
+                    </div>
+
+                    <div>
+                        <label class="block text-sm font-medium mb-1">Voting End</label>
+                        <UInput
+                            type="datetime-local"
+                            v-model="hackathonForm.voting_end_timestamp"
+                        />
+                    </div>
+
+                    <div>
+                        <label class="block text-sm font-medium mb-1">Results Open</label>
+                        <UInput
+                            type="datetime-local"
+                            v-model="hackathonForm.results_open_timestamp"
+                        />
+                    </div>
+                </div>
+
+                <div class="flex items-center gap-3 pt-2">
+                    <UButton @click="saveHackathon" :loading="hackathonSaving" color="primary">
+                        Save Changes
+                    </UButton>
+                    <span
+                        v-if="hackathonMessage"
+                        class="text-sm"
+                        :class="
+                            hackathonMessage.includes('Failed') ? 'text-red-500' : 'text-green-500'
+                        "
+                    >
+                        {{ hackathonMessage }}
+                    </span>
+                </div>
+            </section>
+
+            <!-- Active Season Selector -->
+            <section class="bg-ui-bg border-b border-ui-border p-6 space-y-4">
+                <h2 class="text-xl font-semibold">Active Season</h2>
+                <p class="text-sm text-ui-text-muted">
+                    Select the currently active season. Only one season can be active at a time.
+                </p>
+                <div class="flex items-center gap-3">
                     <USelect
-                        :items="[
-                            { label: 'Not Started', value: 'not_started' },
-                            { label: 'In Progress', value: 'in_progress' },
-                            { label: 'Voting', value: 'voting' },
-                            { label: 'Finished', value: 'finished' },
-                            { label: 'Paused', value: 'paused' },
-                        ]"
-                        v-model="hackathonForm.status"
+                        v-model="activeSeasonId"
+                        :items="activeSeasonItems"
+                        class="w-full max-w-xs"
                     />
+                    <UButton @click="setActiveSeason" :loading="activeSeasonSaving" color="primary">
+                        Set Active
+                    </UButton>
                 </div>
+            </section>
 
-                <div>
-                    <label class="block text-sm font-medium mb-1">Max Votes Per User</label>
-                    <UInput
-                        type="number"
-                        v-model="hackathonForm.max_votes_per_user"
-                        min="0"
-                        max="100"
-                    />
-                </div>
+            <!-- Season Management -->
+            <section class="bg-ui-bg p-6 space-y-4">
+                <h2 class="text-xl font-semibold">Season Management</h2>
 
                 <div class="flex items-center gap-3">
-                    <UCheckbox v-model="hackathonForm.voting_enabled" :binary="true" />
-                    <span class="text-sm">Voting Enabled</span>
+                    <UInput v-model="newSeasonName" placeholder="New season name" class="flex-1" />
+                    <UButton @click="createSeason" color="primary">Add Season</UButton>
                 </div>
-
-                <div class="flex items-center gap-3">
-                    <UCheckbox v-model="hackathonForm.judging_open" :binary="true" />
-                    <span class="text-sm">Judging Open</span>
-                </div>
-
-                <div class="flex items-center gap-3">
-                    <UCheckbox v-model="hackathonForm.results_published" :binary="true" />
-                    <span class="text-sm">Results Published</span>
-                </div>
-
-                <div>
-                    <label class="block text-sm font-medium mb-1">Theme Name</label>
-                    <UInput v-model="hackathonForm.theme_name" />
-                </div>
-
-                <div class="md:col-span-2">
-                    <label class="block text-sm font-medium mb-1">Theme Description</label>
-                    <UTextarea v-model="hackathonForm.theme_description" rows="2" />
-                </div>
-
-                <div>
-                    <label class="block text-sm font-medium mb-1">Schedule Start</label>
-                    <UInput v-model="hackathonForm.schedule_start" />
-                </div>
-
-                <div>
-                    <label class="block text-sm font-medium mb-1">Schedule End</label>
-                    <UInput v-model="hackathonForm.schedule_end" />
-                </div>
-
-                <div>
-                    <label class="block text-sm font-medium mb-1">Start Timestamp</label>
-                    <UInput type="number" v-model="hackathonForm.start_timestamp" />
-                </div>
-
-                <div>
-                    <label class="block text-sm font-medium mb-1">End Timestamp</label>
-                    <UInput type="number" v-model="hackathonForm.end_timestamp" />
-                </div>
-
-                <div>
-                    <label class="block text-sm font-medium mb-1">Voting Start</label>
-                    <UInput type="number" v-model="hackathonForm.voting_start_timestamp" />
-                </div>
-
-                <div>
-                    <label class="block text-sm font-medium mb-1">Voting End</label>
-                    <UInput type="number" v-model="hackathonForm.voting_end_timestamp" />
-                </div>
-
-                <div>
-                    <label class="block text-sm font-medium mb-1">Results Open Timestamp</label>
-                    <UInput type="number" v-model="hackathonForm.results_open_timestamp" />
-                </div>
-            </div>
-
-            <div class="flex items-center gap-3">
-                <UButton @click="saveHackathon" :loading="hackathonSaving" color="primary">
-                    Save Changes
-                </UButton>
                 <span
-                    v-if="hackathonMessage"
+                    v-if="seasonMessage"
                     class="text-sm"
-                    :class="hackathonMessage.includes('Failed') ? 'text-red-500' : 'text-green-500'"
+                    :class="seasonMessage.includes('Failed') ? 'text-red-500' : 'text-green-500'"
                 >
-                    {{ hackathonMessage }}
+                    {{ seasonMessage }}
                 </span>
-            </div>
-        </section>
 
-        <!-- Active Season Selector -->
-        <section class="bg-ui-bg border border-ui-border rounded-lg p-6 space-y-4">
-            <h2 class="text-xl bold">Active Season</h2>
-            <p class="text-sm text-ui-text-muted">
-                Select the currently active season. Only one season can be active at a time.
-            </p>
-            <div class="flex items-center gap-3">
-                <USelect
-                    v-model="activeSeasonId"
-                    :items="activeSeasonItems"
-                    class="w-full max-w-xs"
-                />
-                <UButton @click="setActiveSeason" :loading="activeSeasonSaving" color="primary">
-                    Set Active
-                </UButton>
-            </div>
-        </section>
-
-        <!-- Season Management -->
-        <section class="bg-ui-bg border border-ui-border rounded-lg p-6 space-y-4">
-            <h2 class="text-xl bold">Season Management</h2>
-
-            <div class="flex items-center gap-3">
-                <UInput v-model="newSeasonName" placeholder="New season name" class="flex-1" />
-                <UButton @click="createSeason" color="primary">Add Season</UButton>
-            </div>
-            <span
-                v-if="seasonMessage"
-                class="text-sm"
-                :class="seasonMessage.includes('Failed') ? 'text-red-500' : 'text-green-500'"
-            >
-                {{ seasonMessage }}
-            </span>
-
-            <UTable :items="seasons" v-if="seasons.length > 0">
-                <template #header>
-                    <tr>
-                        <th>Name</th>
-                        <th>Active</th>
-                        <th>Actions</th>
-                    </tr>
-                </template>
-                <template #body>
-                    <tr v-for="s in seasons" :key="s.id">
-                        <td>{{ s.name }}</td>
-                        <td>
-                            <UBadge v-if="s.is_active" color="success" variant="solid">
-                                Active
-                            </UBadge>
-                            <UBadge v-else color="neutral" variant="outline">Inactive</UBadge>
-                        </td>
-                        <td class="flex gap-2">
-                            <UButton v-if="!s.is_active" size="sm" @click="activateSeason(s.id)">
-                                Activate
-                            </UButton>
-                            <UButton
-                                v-if="s.is_active"
-                                size="sm"
-                                variant="outline"
-                                @click="deactivateSeason(s.id)"
-                            >
-                                Deactivate
-                            </UButton>
-                            <UButton
-                                size="sm"
-                                variant="outline"
-                                @click="renameSeason(s.id, s.name)"
-                            >
-                                Rename
-                            </UButton>
-                            <UButton
-                                size="sm"
-                                color="error"
-                                variant="outline"
-                                @click="deleteSeason(s.id)"
-                            >
-                                Delete
-                            </UButton>
-                        </td>
-                    </tr>
-                </template>
-            </UTable>
-            <p v-else class="text-sm text-ui-text-muted">No seasons yet.</p>
-        </section>
-    </div>
+                <UTable :items="seasons" v-if="seasons.length > 0">
+                    <template #header>
+                        <tr>
+                            <th>Name</th>
+                            <th>Active</th>
+                            <th>Actions</th>
+                        </tr>
+                    </template>
+                    <template #body>
+                        <tr v-for="s in seasons" :key="s.id">
+                            <td>{{ s.name }}</td>
+                            <td>
+                                <UBadge v-if="s.is_active" color="success" variant="solid">
+                                    Active
+                                </UBadge>
+                                <UBadge v-else color="neutral" variant="outline">Inactive</UBadge>
+                            </td>
+                            <td class="flex gap-2">
+                                <UButton
+                                    v-if="!s.is_active"
+                                    size="sm"
+                                    @click="activateSeason(s.id)"
+                                >
+                                    Activate
+                                </UButton>
+                                <UButton
+                                    v-if="s.is_active"
+                                    size="sm"
+                                    variant="outline"
+                                    @click="deactivateSeason(s.id)"
+                                >
+                                    Deactivate
+                                </UButton>
+                                <UButton
+                                    size="sm"
+                                    variant="outline"
+                                    @click="renameSeason(s.id, s.name)"
+                                >
+                                    Rename
+                                </UButton>
+                                <UButton
+                                    size="sm"
+                                    color="error"
+                                    variant="outline"
+                                    @click="deleteSeason(s.id)"
+                                >
+                                    Delete
+                                </UButton>
+                            </td>
+                        </tr>
+                    </template>
+                </UTable>
+                <p v-else class="text-sm text-ui-text-muted">No seasons yet.</p>
+            </section>
+        </template>
+    </UDashboardPanel>
 </template>
