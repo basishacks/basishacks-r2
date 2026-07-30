@@ -450,6 +450,61 @@ Inline version of the infinity SVG loader (same animation, no overlay). Used ins
 <LoaderAnimationInline />
 ```
 
+## Security & Validation
+
+### SafeLink
+
+**File:** `app/components/SafeLink.vue`
+
+An `<a>` tag that validates its `href` attribute through `isSafeUrl()` before rendering. Unsafe URLs (javascript:, data:, etc.) render as a `<span>` with muted strikethrough styling instead.
+
+**Props:**
+
+| Prop   | Type     | Description                 |
+| ------ | -------- | --------------------------- |
+| `href` | `string` | The URL to validate and link to |
+
+**Behavior:**
+
+- **Safe external URL** (`http://` / `https://`) → renders `<a target="_blank" rel="noopener noreferrer">`
+- **Safe same-origin URL** (starts with `/` but not `//`) → renders `<a>` without target/rel
+- **Unsafe URL** (javascript:, data:, etc.) → renders `<span class="text-muted line-through">`
+
+```vue
+<SafeLink href="https://example.com">Visit</SafeLink>
+<SafeLink href="javascript:alert(1)">This renders as span</SafeLink>
+```
+
+### SafeComark
+
+**File:** `app/components/SafeComark.vue`
+
+Wraps the `Comark` component (inline Markdown renderer) with XSS-safe configuration. Disables raw HTML (`html: false`) and replaces `<a>` tags with `SafeLink` to prevent unsafe links. Used wherever user-provided content is rendered (project descriptions, sourcing notes, etc.).
+
+```vue
+<SafeComark>{{ team.project.description }}</SafeComark>
+```
+
+### url-validation.ts
+
+**File:** `app/utils/url-validation.ts`
+
+Utility functions for safe URL validation used by `SafeLink` and other components.
+
+| Function | Signature | Description |
+| --- | --- | --- |
+| `isSafeUrl` | `(url: string) => boolean` | Returns `true` for relative paths rooted at `/` (but not protocol-relative `//`) or for absolute `http://` / `https://` URLs. Returns `false` for empty strings. |
+| `safeUrl` | `(url: string \| null \| undefined) => string \| undefined` | Returns the URL unchanged if safe, or `undefined` if null/unsafe. |
+
+```ts
+isSafeUrl("https://example.com"); // → true
+isSafeUrl("/relative/path");      // → true
+isSafeUrl("javascript:alert(1)"); // → false
+safeUrl(null);                     // → undefined
+```
+
+---
+
 ## Utility Components
 
 ### ModalConfirm

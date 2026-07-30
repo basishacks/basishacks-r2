@@ -149,7 +149,7 @@ Active judging interface. Protected by `auth` middleware. Accessible only by jud
 **Flow:**
 
 1. Fetches teams for judging from `/api/teams?judging=1`
-2. Renders a `JudgingCard` for each team
+2. Renders a `JudgingCard` for each team (project descriptions rendered via `SafeComark`)
 3. After scoring, refreshes the list
 
 **Layout:** `default`
@@ -186,6 +186,8 @@ Project editing page. Protected by `auth` middleware.
 - No team and hackathon started → "You don't have a team yet!" CTA
 - Has team → `ProjectForm` (disabled when submission is closed or already submitted)
 - Project already submitted → congratulations message with disabled form
+
+**XSS-safe content:** All user-provided project content (descriptions, sourcing notes) is rendered using `SafeComark` throughout the page, which sanitizes inline Markdown and replaces `<a>` tags with `SafeLink` to prevent unsafe URLs.
 
 **Unsaved changes protection:** Same pattern as dashboard index — `onBeforeRouteLeave` + `beforeunload`.
 
