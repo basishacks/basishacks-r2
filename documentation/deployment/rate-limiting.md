@@ -11,16 +11,21 @@ All API endpoints are protected by an in-memory rate limiter that prevents abuse
 
 ## Default Configuration
 
-| Setting      | Value                    |
-| ------------ | ------------------------ |
-| Max requests | 6000                     |
-| Window       | 60,000 ms (1 minute)     |
-| Rate         | 6000 requests per minute |
+The rate limiter defines **4 independent tiers**, each with its own request counter per client:
+
+| Tier | Env Variable | Default Limit | Routes Protected |
+| --- | --- | :-: | --- |
+| **General** | `RATE_LIMIT_GENERAL_MAX` | 6000/min | All non-sensitive API routes |
+| **Authentication** | `RATE_LIMIT_AUTH_MAX` | 600/min | `/api/login`, `/api/oauth2/*` |
+| **Vote / Score** | `RATE_LIMIT_VOTE_MAX` | 600/min | `/api/ballot`, `/api/teams/:id/scores` |
+| **File Upload** | `RATE_LIMIT_UPLOAD_MAX` | 600/min | `/api/debug/upload` |
+
+All tiers share the same window duration, configurable via `RATE_LIMIT_WINDOW_MS` (default: `60000` ms / 1 minute).
 
 ```ts
 export const DEFAULT_RATE_LIMIT_CONFIG: RateLimitConfig = {
-    maxRequests: 6000,
-    windowMs: 60 * 1000,
+    maxRequests: 6000, // overridden by RATE_LIMIT_GENERAL_MAX
+    windowMs: 60 * 1000, // overridden by RATE_LIMIT_WINDOW_MS
 };
 ```
 
@@ -37,7 +42,9 @@ The following environment variables override the default limits:
 | `RATE_LIMIT_WINDOW_MS` | `60000` | Rate limit window in milliseconds |
 | `TRUST_PROXY` | unset | Set to any truthy value when behind a trusted reverse proxy so `x-forwarded-for` is used for client IP resolution |
 
-These values are read at process startup in `server/utils/rateLimit.ts`.
+These values are read at process startup via `parseEnvInt()` in `server/utils/rateLimit.ts`. If an environment variable is unset or contains a non-numeric value, the default is used instead.
+
+::: tip `TRUST_PROXY` must be explicitly set. Without it, the rate limiter uses only the direct socket peer address and the `x-real-ip` header, ignoring `x-forwarded-for` entirely. Set it to any truthy value (e.g. `1` or `true`) when the app is behind a trusted reverse proxy like nginx or Cloudflare. :::
 
 ## Configuration Interface
 

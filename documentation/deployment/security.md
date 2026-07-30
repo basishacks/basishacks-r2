@@ -9,7 +9,7 @@ The basishacks platform implements multiple layers of security to protect user d
 
 ## HTTP Security Headers
 
-Every response from the Nitro server includes a baseline set of security headers, set by `server/middleware/security-headers.ts`:
+Every response from the Nitro server includes a baseline set of **6 security headers**, set by `server/middleware/security-headers.ts`:
 
 | Header | Value |
 | --- | --- |
@@ -19,6 +19,8 @@ Every response from the Nitro server includes a baseline set of security headers
 | `Referrer-Policy` | `strict-origin-when-cross-origin` |
 | `Permissions-Policy` | `camera=(), microphone=(), geolocation=(), payment=(), usb=(), magnetometer=(), gyroscope=(), accelerometer=(), ambient-light-sensor=(), autoplay=(), encrypted-media=(), picture-in-picture=()` |
 | `Content-Security-Policy` | `default-src 'self'; script-src 'self' 'unsafe-inline'; style-src 'self' 'unsafe-inline'; font-src 'self'; img-src 'self' blob: data:; connect-src 'self' https://login.microsoftonline.com; object-src 'none'; base-uri 'self'; form-action 'self'; frame-ancestors 'none'` |
+
+The `Content-Security-Policy` header includes **10 directives** that restrict resource loading to same-origin sources by default, with allowances for Nuxt SSR hydration scripts, Vue inline styles, font files, image blobs and data URIs, and Microsoft login connectivity.
 
 The middleware runs for API routes, rendered HTML pages, and static assets. The `'unsafe-inline'` source expression is required for `script-src` because Nuxt SSR hydration injects `window.__NUXT__` as an inline script, and for `style-src` because Vue and Nuxt UI components apply inline style bindings. The `'unsafe-eval'` source expression is intentionally omitted.
 
@@ -70,9 +72,22 @@ When this variable is truthy, requests to `/api/debug/*` or `/debug*` return `40
 - **Session password** (`NUXT_SESSION_PASSWORD`) must be at least 32 bytes.
 - Sessions are managed by `nuxt-auth-utils` with encrypted cookies.
 - Session cookies are issued with `httpOnly: true`, `sameSite: "lax"`, and `secure: true` in production.
-- The OAuth2 `bridge_id` and `bridge_error` cookies use `httpOnly: true`, `secure: true`, and `sameSite: "lax"`.
+- The OAuth2 `bridge_id` cookie and `bridge_error` cookie use `httpOnly: true`, `secure: true`, `sameSite: "lax"`, and a short TTL of **10 minutes** (`maxAge: 10 * 60`).
+- The `pkce_verifier` cookie is also hardened with `httpOnly: true`, `secure: true`, `sameSite: "lax"`, and a **10-minute TTL**.
 - The session cookie stores only `{ user: { id: number } }`; no sensitive data is stored client-side.
 - The full user record is fetched from the database on every authenticated request.
+
+### Startup Validation
+
+Two critical secrets are validated at server startup in `server/plugins/validate-environment.ts`:
+
+| Variable | Validation | Production Behavior | Non-Production Behavior |
+| --- | --- | --- | --- |
+| `NUXT_SESSION_PASSWORD` | Must be set and at least 32 bytes (UTF-8 encoded) | `process.exit(1)` with fatal error message | Stderr warning, continues |
+| `NUXT_OAUTH2_JWT_SECRET` | Must be set and at least 32 bytes (UTF-8 encoded) | `process.exit(1)` with fatal error message | Uses dev-only fallback with prominent warning; NEVER used in production |
+| `MICROSOFT_*` env vars | All three must be set for Graph features | Warning if partially configured | Warning if partially configured |
+
+The JWT secret validation is also exposed as a testable utility in `server/utils/validate-oauth2-jwt-secret.ts` with injectable exit and logging functions.
 
 ## Database Security
 
@@ -88,6 +103,58 @@ When this variable is truthy, requests to `/api/debug/*` or `/debug*` return `40
 - **Zod validation** is performed on every API endpoint using `readValidatedBody(event, Schema.parse)` or `getValidatedQuery(event, Schema.parse)`
 - Shared schemas in `shared/schemas.ts` are the single source of truth for input constraints
 - Validation errors return structured 400 responses
+
+## Server-Side URL Validation (SSRF Protection)
+
+External URLs fetched by the server are validated through `server/utils/url-validation.ts` to prevent Server-Side Request Forgery (SSRF) attacks:
+
+- Only `http:` and `https:` protocols are allowed; other protocols (`file:`, `ftp:`, etc.) are rejected
+- Private and loopback IP ranges are blocked: `10.x.x.x`, `172.16-31.x.x`, `192.168.x.x`, `127.x.x.x`, `169.254.x.x`, `0.x.x.x`, multicast (`224-239.x.x.x`), IPv6 link-local (`fe8:`/`fe9:`/`fea:`/`feb:`), unique-local (`fc:`/`fd:`), IPv6 loopback (`::1`), and `localhost`
+- DNS rebinding protection is applied at fetch time — every redirect hop is re-validated through `validateExternalUrl()`
+- A maximum of **5 redirects** is enforced with `redirect: "manual"` to prevent open-redirect chains
+- Response body is capped at **15 KB**
+
+```ts
+export function validateExternalUrl(urlString: string): URL {
+    const url = new URL(urlString);
+    if (url.protocol !== "http:" && url.protocol !== "https:") throw ...;
+    if (isPrivateHost(url.hostname)) throw ...;
+    return url;
+}
+```
+
+## Open Redirect Prevention
+
+All redirect parameters in the login flow are validated to prevent open redirect attacks:
+
+- **`login.get.ts`** — The `postLoginRedirect` parameter is allowed only when it does not start with `http://`, `https://`, or `//` (protocol-relative). Only relative paths are accepted.
+- **`dccallback.get.ts`** — The OAuth2 onsite login callback validates redirects before following them, ensuring they point to relative paths only.
+- **`SafeLink.vue`** — User-provided links in rendered content (e.g. project descriptions) are rendered through the `SafeLink` component, which validates URLs with `isSafeUrl()` — only relative paths rooted at `/` and `http:`/`https:` URLs are rendered as clickable links; unsafe URLs are shown as plain strikethrough text.
+- **`SafeComark.vue`** — Markdown content rendered from user input uses the `SafeLink` component as its link renderer via `Comark`, and HTML rendering is disabled.
+
+## Unified Client Credential Errors
+
+The OAuth2 token endpoint (`token.post.ts`) returns a single, generic `"Invalid client credentials"` error for all token exchange failures — whether the client ID is unknown, the secret is wrong, or both. This prevents **user enumeration** through error message differences:
+
+```ts
+if (!app || !isSecretValid) {
+    throw createError({
+        statusCode: 400,
+        statusMessage: "invalid_client",
+        message: "Invalid client credentials",  // Same message for every failure
+    });
+}
+```
+
+## Audit Logging for Admin Impersonation
+
+Admin impersonation events (`api/auth/impersonate.post.ts`) are logged with a structured `[AUDIT]` prefix for monitoring and forensic analysis:
+
+```
+[AUDIT] Admin 42 (admin@example.com) impersonated user 17 (target@basischina.com)
+```
+
+The log line includes both the admin's ID/email and the target user's ID/email. The log output can be captured by standard server logging infrastructure (journald, systemd, log files) for SIEM integration.
 
 ## Role-Based Access Control (RBAC)
 
@@ -164,16 +231,13 @@ Token verification uses `jose.jwtVerify()` with the same secret in `server/utils
 The OAuth2 authorization flow requires **Proof Key for Code Exchange (PKCE)**. Authorization requests that omit `code_challenge` or `code_challenge_method` are rejected with a 400 `invalid_request: PKCE required` response.
 
 - Clients must provide `code_challenge` and `code_challenge_method` parameters during authorization
-- Supported methods: `S256` (SHA-256 hash of the code verifier, base64url-encoded) and `plain`
+- **Only `S256`** (SHA-256 hash of the code verifier, base64url-encoded) is accepted. The `plain` method has been removed because it provides no additional security over omitting PKCE entirely (RFC 7636 §4.4.2)
+- Requests using any method other than `S256` are rejected with `invalid_request: code_challenge_method must be S256`
 - During token exchange, the `code_verifier` is verified against the stored challenge:
 
 ```ts
-if (session.bh_verifier_challenge_method === "S256") {
-    const hash = createHash("sha256").update(codeVerifier).digest("base64url");
-    verified = hash === session.bh_verifier_challenge;
-} else {
-    verified = codeVerifier === session.bh_verifier_challenge;
-}
+const hash = createHash("sha256").update(codeVerifier).digest("base64url");
+verified = hash === session.bh_verifier_challenge;
 ```
 
 - PKCE is mandatory for all clients, including confidential clients
