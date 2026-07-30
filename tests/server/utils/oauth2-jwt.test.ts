@@ -699,7 +699,7 @@ describe("verifyAccessToken additional edge cases", () => {
         expect(jwtVerify).toHaveBeenCalledWith(
             "check-params",
             expect.any(Uint8Array),
-            expect.objectContaining({ issuer: "basishacks" }),
+            expect.objectContaining({ issuer: "http://localhost:3000" }),
         );
     });
 

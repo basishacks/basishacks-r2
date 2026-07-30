@@ -291,14 +291,19 @@ describe("_webhooks error patterns", () => {
 });
 
 describe("OAuth2 error responses do not leak internals", () => {
-    it("token.post.ts uses invalid_request and invalid_client statusMessage", () => {
-        const source = readFileSync(
+    it("token.post.ts uses invalid_request; oauth2-token.ts uses invalid_client and invalid_grant", () => {
+        const tokenSource = readFileSync(
             resolve(import.meta.dirname, "..", "..", "server", "api", "oauth2", "token.post.ts"),
             "utf-8",
         );
-        expect(source).toContain("invalid_request");
-        expect(source).toContain("invalid_client");
-        expect(source).toContain("invalid_grant");
+        expect(tokenSource).toContain("invalid_request");
+
+        const tokenUtilSource = readFileSync(
+            resolve(import.meta.dirname, "..", "..", "server", "utils", "oauth2-token.ts"),
+            "utf-8",
+        );
+        expect(tokenUtilSource).toContain("invalid_client");
+        expect(tokenUtilSource).toContain("invalid_grant");
     });
 
     it("token.post.ts does not leak error.message into createError", () => {

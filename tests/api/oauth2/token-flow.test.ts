@@ -55,7 +55,7 @@ function s256(verifier: string): string {
 }
 
 function createEvent() {
-    return { context: { drizzle: ctx.drizzle } } as any;
+    return { context: { drizzle: ctx.drizzle }, node: { req: {} } } as any;
 }
 
 beforeAll(async () => {

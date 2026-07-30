@@ -3,10 +3,11 @@ import { resetMockState, setupNitroGlobals, mockCookies, mockQueryState } from "
 
 vi.mock("~~/server/api/oauth2/session.post", () => ({
     getAuthorizeSession: vi.fn(),
+    exchangeAuthorizationCode: vi.fn(),
 }));
 
-vi.mock("~~/server/utils/oauth2-token", () => ({
-    redeemAuthorizationCodeForToken: vi.fn(),
+vi.mock("jose", () => ({
+    jwtVerify: vi.fn(),
 }));
 
 vi.mock("~~/server/utils/oauth2-userinfo", () => ({
@@ -19,8 +20,9 @@ let setUserSessionSpy: ReturnType<typeof vi.fn>;
 
 let handler: any;
 let getAuthorizeSession: ReturnType<typeof vi.fn>;
-let redeemAuthorizationCodeForToken: ReturnType<typeof vi.fn>;
+let exchangeAuthorizationCode: ReturnType<typeof vi.fn>;
 let resolveUserInfoFromAccessToken: ReturnType<typeof vi.fn>;
+let jwtVerifyMock: ReturnType<typeof vi.fn>;
 
 beforeAll(async () => {
     setupNitroGlobals();
@@ -37,10 +39,11 @@ beforeAll(async () => {
     handler = (await import("~~/server/api/oauth2/dccallback.get")).default;
     const sessionMod = await import("~~/server/api/oauth2/session.post");
     getAuthorizeSession = sessionMod.getAuthorizeSession as any;
-    const tokenMod = await import("~~/server/utils/oauth2-token");
-    redeemAuthorizationCodeForToken = tokenMod.redeemAuthorizationCodeForToken as any;
+    exchangeAuthorizationCode = sessionMod.exchangeAuthorizationCode as any;
     const userinfoMod = await import("~~/server/utils/oauth2-userinfo");
     resolveUserInfoFromAccessToken = userinfoMod.resolveUserInfoFromAccessToken as any;
+    const joseMod = await import("jose");
+    jwtVerifyMock = joseMod.jwtVerify as any;
 });
 
 beforeEach(() => {
@@ -49,8 +52,10 @@ beforeEach(() => {
     sendRedirectSpy.mockClear();
     setUserSessionSpy.mockClear();
     getAuthorizeSession.mockReset();
-    redeemAuthorizationCodeForToken.mockReset();
+    exchangeAuthorizationCode.mockReset();
     resolveUserInfoFromAccessToken.mockReset();
+    jwtVerifyMock.mockReset();
+    jwtVerifyMock.mockResolvedValue({ payload: { user_id: 42 } });
 });
 
 const VERIFIER = "verifier-from-cookie";
@@ -94,7 +99,7 @@ describe("GET /api/oauth2/dccallback - PKCE verifier handling", () => {
             message: expect.stringContaining("Missing PKCE verifier cookie"),
         });
 
-        expect(redeemAuthorizationCodeForToken).not.toHaveBeenCalled();
+        expect(exchangeAuthorizationCode).not.toHaveBeenCalled();
         expect(deleteCookieSpy).not.toHaveBeenCalled();
     });
 
@@ -104,51 +109,40 @@ describe("GET /api/oauth2/dccallback - PKCE verifier handling", () => {
         mockCookies.values["pkce_verifier"] = VERIFIER;
         mockQueryState.value = { code: "test-code", state: "test-state" };
 
-        redeemAuthorizationCodeForToken.mockResolvedValue({
-            access_token: "fake-jwt-token",
-            token_type: "Bearer",
-            expires_in: 3600,
-        });
+        exchangeAuthorizationCode.mockResolvedValue("fake-jwt-token");
         resolveUserInfoFromAccessToken.mockResolvedValue({ sub: "42" });
 
         await handler(createEvent());
 
-        expect(redeemAuthorizationCodeForToken).toHaveBeenCalledTimes(1);
-        const call = redeemAuthorizationCodeForToken.mock.calls[0]![0];
-        expect(call.code).toBe("test-code");
-        expect(call.clientId).toBe("test-client-id");
-        expect(call.redirectUri).toBe("https://example.com/callback");
-        // CRITICAL regression check: the cookie value is used, not session.ms_verifier
-        expect(call.codeVerifier).toBe(VERIFIER);
-        expect(call.codeVerifier).not.toBe(MS_VERIFIER);
+        expect(exchangeAuthorizationCode).toHaveBeenCalledTimes(1);
+        expect(exchangeAuthorizationCode).toHaveBeenCalledWith(
+            "test-code",
+            "test-client-id",
+            "https://example.com/callback",
+            expect.any(String),
+            VERIFIER,
+        );
     });
 
-    it("resolves identity via UserInfo helper and sets session from sub", async () => {
+    it("resolves identity via jwtVerify and sets session from payload.user_id", async () => {
         getAuthorizeSession.mockReturnValue(createMockSession());
         mockCookies.values["bridge_id"] = "test-bridge-id";
         mockCookies.values["pkce_verifier"] = VERIFIER;
         mockQueryState.value = { code: "test-code", state: "test-state" };
 
-        redeemAuthorizationCodeForToken.mockResolvedValue({
-            access_token: "fake-jwt-token",
-            token_type: "Bearer",
-            expires_in: 3600,
-        });
-        resolveUserInfoFromAccessToken.mockResolvedValue({
-            sub: "42",
-            name: "Test",
-            email: "t@example.com",
-        });
+        exchangeAuthorizationCode.mockResolvedValue("fake-jwt-token");
+        jwtVerifyMock.mockResolvedValue({ payload: { user_id: 42, sub: "42" } });
 
         await handler(createEvent());
 
-        expect(resolveUserInfoFromAccessToken).toHaveBeenCalledWith(
-            expect.anything(),
+        expect(jwtVerifyMock).toHaveBeenCalledWith(
             "fake-jwt-token",
+            expect.any(Uint8Array),
         );
-        expect(setUserSessionSpy).toHaveBeenCalledWith(expect.anything(), {
-            user: { id: 42 },
-        });
+        expect(setUserSessionSpy).toHaveBeenCalledWith(
+            expect.anything(),
+            expect.objectContaining({ user: expect.objectContaining({ id: 42 }) }),
+        );
     });
 
     it("clears the pkce_verifier cookie after a successful exchange", async () => {
@@ -157,11 +151,7 @@ describe("GET /api/oauth2/dccallback - PKCE verifier handling", () => {
         mockCookies.values["pkce_verifier"] = VERIFIER;
         mockQueryState.value = { code: "test-code", state: "test-state" };
 
-        redeemAuthorizationCodeForToken.mockResolvedValue({
-            access_token: "fake-jwt-token",
-            token_type: "Bearer",
-            expires_in: 3600,
-        });
+        exchangeAuthorizationCode.mockResolvedValue("fake-jwt-token");
         resolveUserInfoFromAccessToken.mockResolvedValue({ sub: "42" });
 
         await handler(createEvent());
@@ -175,11 +165,7 @@ describe("GET /api/oauth2/dccallback - PKCE verifier handling", () => {
         mockCookies.values["pkce_verifier"] = VERIFIER;
         mockQueryState.value = { code: "test-code", state: "test-state" };
 
-        redeemAuthorizationCodeForToken.mockResolvedValue({
-            access_token: "fake-jwt-token",
-            token_type: "Bearer",
-            expires_in: 3600,
-        });
+        exchangeAuthorizationCode.mockResolvedValue("fake-jwt-token");
         resolveUserInfoFromAccessToken.mockResolvedValue({ sub: "42" });
 
         await handler(createEvent());
@@ -193,7 +179,7 @@ describe("GET /api/oauth2/dccallback - PKCE verifier handling", () => {
         mockCookies.values["pkce_verifier"] = VERIFIER;
         mockQueryState.value = { code: "test-code", state: "test-state" };
 
-        redeemAuthorizationCodeForToken.mockRejectedValue(new Error("Invalid code_verifier"));
+        exchangeAuthorizationCode.mockRejectedValue(new Error("Invalid code_verifier"));
 
         await expect(handler(createEvent())).rejects.toBeDefined();
 
@@ -210,11 +196,7 @@ describe("GET /api/oauth2/dccallback - PKCE verifier handling", () => {
         mockCookies.values["pkce_verifier"] = VERIFIER;
         mockQueryState.value = { code: "test-code", state: "test-state" };
 
-        redeemAuthorizationCodeForToken.mockResolvedValue({
-            access_token: "fake-jwt-token",
-            token_type: "Bearer",
-            expires_in: 3600,
-        });
+        exchangeAuthorizationCode.mockResolvedValue("fake-jwt-token");
         resolveUserInfoFromAccessToken.mockResolvedValue({ sub: "42" });
 
         await handler(createEvent());
