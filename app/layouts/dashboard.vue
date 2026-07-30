@@ -47,7 +47,7 @@ const items = ref<NavigationMenuItem[][]>([
     [
         {
             label: "Help",
-            icon: "i-lucide-circle-help",
+            icon: "i-lucide-circle-question-mark",
             to: "https://teams.microsoft.com/l/channel/19%3Ae352153b90524d81b9f9b50c7dd84d12%40thread.tacv2/QnA?groupId=b207a655-d801-4200-8345-5dcc50d6d957&tenantId=cbc6e1e2-a6bb-4002-bbdc-6da892a051a7",
             target: "_blank",
         },
