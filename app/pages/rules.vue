@@ -12,6 +12,138 @@
             prior to the commencement of the hackathon. All participants bear the responsibility of
             reviewing the final version before they submit their work.
         </p>
+        <details class="mb-6">
+            <summary class="cursor-pointer text-lg bold">
+                Simplified Explanation (Click to Expand)
+            </summary>
+            <div
+                class="bg-gray-50 border border-gray-200 rounded-lg p-4 mt-2 space-y-3 text-sm bg-yellow-50 text-gray-800"
+            >
+                <p class="bold text-blue-400">1. Your Code Must Be Public</p>
+                <p>
+                    You must place all the source code for your project on a public website like
+                    GitHub, GitLab, Codeberg, or Gitee.
+                    <span class="bold text-red-500">You may not send only an executable file.</span>
+                    The code must be complete and easy for anyone to read.
+                </p>
+                <p class="bold text-blue-400">2. You Need a README File</p>
+                <p>
+                    Your project must have a file called README.md written in clear American
+                    English. It must explain what your project does, how to use it, what
+                    technologies you used, and include a link to your demo video.
+                </p>
+                <p class="bold text-blue-400">3. You Must Provide a Working Demo</p>
+                <p>
+                    Your project must be usable by anyone without creating an account. This means:
+                </p>
+                <ul class="list-disc list-inside ml-4">
+                    <li>Websites must be live on the internet.</li>
+                    <li>Desktop apps must have a download link (for Windows, macOS, or Linux).</li>
+                    <li>Games must be playable in a browser or downloadable.</li>
+                    <li>Mobile apps must be in an app store or available as an APK or IPA.</li>
+                </ul>
+                <p class="bold text-blue-400">4. The Demo Video Rules Are Very Strict</p>
+                <p>
+                    You must create a video that is
+                    <span class="bold text-red-500">2 to 3 minutes long</span>
+                    . The video must have
+                    <span class="bold text-red-500">no sound at all</span>
+                    and must
+                    <span class="bold text-red-500">
+                        not show your face, your name, or your voice
+                    </span>
+                    . If any of those appear, you will be disqualified. The video file must use one
+                    of these codecs: H.264, AV1, or VP9.
+                </p>
+                <p>
+                    Upload the video to
+                    <span class="bold text-red-500">YouTube, Bilibili, or OneDrive/SharePoint</span>
+                    with a link that anyone can open (test it in incognito mode).
+                    <span class="bold text-red-500">
+                        Do not upload the video to GitHub or any git platform.
+                    </span>
+                    If you do, we will treat your entry as having no video and you will be
+                    disqualified. This rule helps us all be considerate of other developers who
+                    share those services.
+                </p>
+                <p>
+                    If your project is a program that people download, you must
+                    <span class="bold text-red-500">
+                        show the SHA256 checksum of the executable file
+                    </span>
+                    in the video. This lets us check that the file you submitted is the same as the
+                    one you recorded. If the checksum does not match and you do not give a good
+                    reason, we will assume the file may be malicious.
+                </p>
+                <p class="bold text-blue-400">5. No Barriers for Judges</p>
+                <p>
+                    Your project must not require a judge to create a new account on another website
+                    just to see it. If it does require a login, you must say so in your README, and
+                    you should expect a penalty. Also, do not ask judges to install rare software or
+                    buy hardware.
+                </p>
+                <p class="bold text-blue-400">6. Your Work Must Be Original</p>
+                <p>
+                    You may use existing libraries and assets if you have permission and give
+                    credit.
+                    <span class="bold text-red-500">
+                        Copying someone else's whole project without making meaningful changes is
+                        plagiarism
+                    </span>
+                    and will result in immediate disqualification.
+                </p>
+                <p class="bold text-blue-400">7. Using AI Is Allowed, but You Must Be Honest</p>
+                <p>
+                    If you use any AI tools (like ChatGPT or Copilot), you must
+                    <span class="bold text-red-500">describe exactly which parts</span>
+                    were AI-generated or AI-assisted, what tools you used, and how you used them. A
+                    vague statement is not enough. Declared and responsible AI use is fine. If we
+                    discover that you hid heavy AI use, we may treat your entry as plagiarism.
+                </p>
+                <p class="bold text-blue-400">8. You Must Present if Asked</p>
+                <p>
+                    If the judges suspect undeclared AI use, you will be asked to present your
+                    project live and answer questions. Also, all winners of First Prize, Second
+                    Prize, Third Prize, or Honorable Mention must do a live presentation. If you
+                    refuse, you will respectively be disqualified or lose your prize.
+                </p>
+                <p class="bold text-blue-400">9. Malware and Deception Are Bullying</p>
+                <p>
+                    Submitting harmful software or trying to trick the judges is considered bullying
+                    and academic dishonesty. We will report such incidents to the school
+                    administration.
+                </p>
+                <p class="bold text-blue-400">10. License and Showcase Agreement</p>
+                <p>
+                    By entering, you agree that your project can be shown publicly by the
+                    organizers. You also agree that if you did not put a license file in your
+                    repository, your code automatically becomes available under the MIT License (a
+                    very permissive open-source license). You will be listed in the final showcase
+                    unless you are disqualified. If you have a serious privacy concern, you must
+                    contact us before the deadline, but your entry will then be disqualified.
+                </p>
+                <p class="bold text-blue-400">11. Costs and Liability</p>
+                <p>
+                    You are responsible for any money you spend while participating. The organizers
+                    are not liable for any damages or losses. The exact value of prizes may change,
+                    but they will be meaningful. The organizers can change the rules if needed.
+                </p>
+                <p class="bold text-blue-400">12. Contact</p>
+                <p>
+                    If you have questions, email
+                    <span class="bold text-red-500">devclub-bisz@basischina.com</span>
+                    . Members of the BISZ Developers' Club will answer.
+                </p>
+                <div class="my-4 text-center">
+                    <blockquote class="italic border-l-4 border-gray-300 pl-4 inline-block text-left">
+                        <p class="mb-1">May thy labor bring a harvest sweet,</p>
+                        <p class="mb-1">And wisdom's light thy eager mind shall greet;</p>
+                        <p class="mb-1">In open fellowship thy craft shall shine,</p>
+                        <p>A lasting gift to all—thy work divine.</p>
+                    </blockquote>
+                </div>
+            </div>
+        </details>
         <div class="bg-yellow-50 border border-gray-300 rounded-lg p-4 mb-6">
             <h2 class="text-xl bold mb-2 text-gray-800">Essential Requirements at a Glance</h2>
             <ul class="list-disc list-inside space-y-1 text-sm text-gray-800">
@@ -34,8 +166,10 @@
                     <span class="bold text-blue-400">publicly accessible demo URL</span>
                     and a
                     <span class="bold text-blue-400">demo video hosted on a video platform</span>
-                    (e.g., YouTube, Bilibili, OneDrive) are required.
-                    <span class="bold text-blue-400">Local file uploads are not supported</span>
+                    (YouTube, Bilibili, or OneDrive/SharePoint) are required.
+                    <span class="bold text-blue-400">
+                        Local file uploads and git-based video hosting are not supported
+                    </span>
                     .
                 </li>
                 <li>
@@ -51,7 +185,8 @@
                 </li>
                 <li>
                     <span class="bold text-blue-400">Comprehensive AI usage disclosure</span>
-                    is required. Generic statements are insufficient.
+                    is required. Declared, responsible use of AI is acceptable; undeclared,
+                    excessive reliance will be scrutinized.
                 </li>
                 <li>
                     <span class="bold text-blue-400">
@@ -62,13 +197,23 @@
                 <li>
                     By entering, you
                     <span class="bold text-blue-400">grant a showcase license</span>
-                    while retaining the freedom to choose any OSI-approved license for your code.
+                    and agree to be listed in the final public showcase, provided you are not
+                    disqualified.
                 </li>
                 <li>
                     If you do not include a license file, your source code is
                     <span class="bold text-blue-400">
                         automatically licensed under the MIT License
                     </span>
+                    .
+                </li>
+                <li>
+                    The demo video
+                    <span class="bold text-blue-400">
+                        must have no audio, no speech, and must not reveal your identity
+                    </span>
+                    . Uploading it to GitHub or any git platform means
+                    <span class="bold text-blue-400">immediate disqualification</span>
                     .
                 </li>
             </ul>
@@ -149,7 +294,7 @@
                         at least two platforms is
                         <span class="bold text-blue-400">strongly encouraged</span>
                         . If you support only one platform, you must supplement the demo video with
-                        a thorough, narrated walkthrough (see Video requirement below). The demo URL
+                        a thorough visual walkthrough (see Video requirement below). The demo URL
                         must point to a page where the executables can be downloaded (e.g., a
                         release on your repository platform).
                     </li>
@@ -171,26 +316,72 @@
             <li class="mb-2">
                 <span class="bold text-blue-400">* Demo video.</span>
                 You must submit a video
-                <span class="bold text-blue-400">between one and three minutes</span>
+                <span class="bold text-blue-400">between two and three minutes</span>
                 that demonstrates the primary features of your project. The video
                 <span class="bold text-blue-400">
-                    must be hosted on a platform that does not require the viewer to log in or
-                    create an account
+                    must not contain any audio, speech, or any form of personal identification
+                    (including your face, name, or voice)
                 </span>
-                . Acceptable platforms include YouTube, Bilibili, OneDrive/SharePoint (with shared
-                view-only links), or similar non-restrictive services.
-                <span class="bold text-blue-400">
-                    Local file uploads are not supported and will not be accepted
-                </span>
+                . Any violation of this anonymity requirement will result in
+                <span class="bold text-blue-400">immediate disqualification</span>
                 .
                 <br />
-                For desktop applications that do not meet the two-platform recommendation, this
-                video
+                The video file must be encoded with a
+                <span class="bold text-blue-400">freely playable codec: H.264, AV1, or VP9</span>
+                . No other codecs (e.g., HEVC, ProRes) are permitted.
+                <br />
+                Hosting must be on
+                <span class="bold text-blue-400">YouTube, Bilibili, or OneDrive/SharePoint</span>
+                with a shared view-only link that is
+                <span class="bold text-blue-400">fully public</span>
+                . You must verify that the video is accessible from an incognito browser window
+                before you submit the link.
                 <span class="bold text-blue-400">
-                    must include narration and a detailed walkthrough of the application's
-                    functionality
+                    If the link is private or access-restricted, your submission will be treated as
+                    having no video and will be disqualified.
                 </span>
-                .
+                <br />
+                <span class="bold text-blue-400">
+                    Uploading the video to GitHub or any other git-based platform is strictly
+                    forbidden; such a submission will be treated as having no video and will be
+                    disqualified.
+                </span>
+                This rule helps us all be responsible stewards of shared infrastructure: large video
+                files on Git can disrupt other developers' work and waste storage for people you may
+                never meet. We want to foster that awareness in our community.
+                <br />
+                For desktop applications that do not meet the two-platform recommendation, the video
+                <span class="bold text-blue-400">
+                    must include a thorough visual walkthrough of the application's functionality
+                </span>
+                (still without audio, speech, or personal identification).
+                <br />
+                If your project involves a compiled executable, you must
+                <span class="bold text-blue-400">
+                    display the SHA256 checksum of that executable
+                </span>
+                in the video. This allows us to verify that the file we download matches what you
+                demonstrated. If the checksum does not match, we will treat the submission as
+                potentially malicious unless you contact us with a valid explanation. Confirmed
+                malware will be reported as bullying and academic dishonesty (see the Malware
+                section below).
+            </li>
+            <li class="mb-2">
+                <span class="bold text-blue-400">
+                    * Encouraged: intermediate build artifacts for compiled languages.
+                </span>
+                If your project is written in a language that compiles to native code (C, C++, Rust,
+                Go, etc.) or bytecode (Java, Kotlin, C#, etc.), we
+                <span class="bold text-blue-400">encourage</span>
+                you to include human-verifiable intermediate files in your repository—for example,
+                <code>.asm</code>
+                ,
+                <code>.ll</code>
+                (LLVM IR),
+                <code>.class</code>
+                files, or similar. This helps judges confirm that your source code corresponds to
+                the demonstrated behavior. It is not mandatory, but it is a sign of transparency
+                that will be viewed positively.
             </li>
             <li class="mb-2">
                 <span class="bold text-blue-400">* Thematic relevance.</span>
@@ -230,9 +421,44 @@
                 tasks that are unreasonable for a standard evaluation. If your project depends on
                 specific peripherals or environments, you must provide a
                 <span class="bold text-blue-400">
-                    fully narrated video demonstration that captures the complete experience
+                    fully visual video demonstration that captures the complete experience
                 </span>
+                (without audio or speech).
+            </li>
+        </ul>
+
+        <h2 class="text-3xl bold mb-2">Judging Process and Live Presentation Phase</h2>
+        <p class="mb-4">
+            All submissions will undergo
+            <span class="bold text-blue-400">preliminary judging</span>
+            based on the rubric. Additionally, to maintain the integrity and quality of the
+            competition, we will invite certain participants to a
+            <span class="bold text-blue-400">
+                live presentation and question-and-answer session
+            </span>
+            . This second phase serves two purposes:
+        </p>
+        <ul class="mb-4">
+            <li class="mb-2">
+                <span class="bold text-blue-400">* Verification of declared AI usage.</span>
+                If a majority of judges believe a submission exhibits
+                <span class="bold text-blue-400">overexcessive, undeclared AI usage</span>
+                , the team will be asked to present their project and explain their implementation.
+                Declared, responsible use of AI is entirely acceptable and will not trigger such an
+                invitation. Refusal to participate in this verification
+                <span class="bold text-blue-400">will result in automatic disqualification</span>
                 .
+            </li>
+            <li class="mb-2">
+                <span class="bold text-blue-400">* Prize candidate confirmation.</span>
+                Any project that is selected for
+                <span class="bold text-blue-400">
+                    First Prize, Second Prize, Third Prize, or an Honorable Mention
+                </span>
+                must also complete this live presentation. If a prize candidate declines or cannot
+                adequately demonstrate ownership and understanding of the work, they
+                <span class="bold text-blue-400">will forfeit their prize eligibility</span>
+                and will be treated as a regular non-prize submission.
             </li>
         </ul>
 
@@ -404,7 +630,7 @@
             </li>
         </ul>
 
-        <h2 class="text-3xl bold mb-2">License and Showcase Permission</h2>
+        <h2 class="text-3xl bold mb-2">License, Showcase, and Public Listing</h2>
         <p class="mb-4">
             By submitting a project to {{ WEBSITE_NAME }}, you confirm that you have read and agree
             to the following terms:
@@ -454,6 +680,21 @@
                 license.
             </li>
             <li class="mb-2">
+                <span class="bold text-blue-400">
+                    * Public listing of participants and projects.
+                </span>
+                By entering the competition, you
+                <span class="bold text-blue-400">
+                    agree to be listed in the final public showcase
+                </span>
+                of {{ WEBSITE_NAME }} (for example, on our website, in promotional materials, or in
+                press releases) along with your project name and a brief description, unless you are
+                disqualified before the showcase is published. If you have legitimate privacy
+                concerns, you must contact the organizers at least 24 hours before the submission
+                deadline, and your submission may be disqualified as described in the Withdrawal of
+                Showcase Consent clause below.
+            </li>
+            <li class="mb-2">
                 <span class="bold text-blue-400">* Representations and warranties.</span>
                 You represent and warrant that you are the sole owner of all rights in the submitted
                 project or that you have obtained all necessary permissions and licenses to grant
@@ -489,6 +730,22 @@
                 in connection with the use of your project as described above.
             </li>
         </ul>
+
+        <h2 class="text-3xl bold mb-2">Malware, Deception, and Reporting</h2>
+        <p class="mb-4">
+            The submission of software intended to harm, disrupt, or gain unauthorized access to any
+            system is
+            <span class="bold text-blue-400">strictly prohibited</span>
+            . If we determine that a project contains malware or that a participant has deliberately
+            attempted to mislead judges (including but not limited to providing false source code,
+            mismatched SHA256 checksums without valid explanation, or deceptive AI usage claims),
+            the incident will be treated as
+            <span class="bold text-blue-400">bullying and academic dishonesty</span>
+            and will be
+            <span class="bold text-blue-400">reported to the upper school administration</span>
+            . This is not simply a competition violation; it represents a breach of the trust and
+            safety our community expects.
+        </p>
 
         <h2 class="text-3xl bold mb-2">Disclaimer of Liability and General Provisions</h2>
         <p class="mb-4">
