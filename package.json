@@ -43,7 +43,7 @@
         "node-html-markdown": "^2.0.0",
         "nuxt": "^4.5.1",
         "nuxt-auth-utils": "^0.5.29",
-        "openai": "^6.46.0",
+        "openai": "^6.49.0",
         "typescript": "6.0.3",
         "vue": "^3.5.40",
         "vue-router": "^4.6.4",
