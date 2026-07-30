@@ -28,7 +28,7 @@ const seasons = computed(() => adminData.value?.seasons ?? []);
 // Helpers: ms epoch <-> datetime-local
 // ---------------------------------------------------------------------------
 function tsToDatetime(ts: unknown): string {
-    const num = typeof ts === "bigint" ? Number(ts) : Number(ts);
+    const num = Number(ts);
     if (!Number.isFinite(num) || num <= 0) return "";
     const d = new Date(num);
     if (Number.isNaN(d.getTime())) return "";
@@ -130,10 +130,11 @@ function normalize(key: string, val: any): any {
     return val;
 }
 
-/** Compare à normalized value against the global baseline, with type coercion. */
+/** Compare a normalized value against the global baseline, with type coercion.
+ *  Returns false when baseline is undefined (field hasn't been loaded yet). */
 function hasChanged(key: string, normalized: any): boolean {
     const baseline = (hackathon.value as any)?.[key];
-    // Coerce both sides to number for 0/1 bools and numeric fields
+    if (baseline === undefined || baseline === null) return false;
     if (boolKeys.has(key) || key === "max_votes_per_user" || tsKeys.includes(key)) {
         return Number(normalized) !== Number(baseline);
     }
@@ -141,10 +142,14 @@ function hasChanged(key: string, normalized: any): boolean {
 }
 
 /** Auto-saves a single field to the season (and global if active).
- *  Uses @update:model-value which emits the real new value (unlike @change which
- *  emits a broken synthetic Event with null target). */
+ *  Rejects NaN for timestamps and number fields. */
 function fieldChanged(key: string, newVal: any) {
     const val = normalize(key, newVal);
+
+    // Reject NaN for numeric fields — this prevents partial datetime-local
+    // strings (e.g. "2025-01-2") from corrupting the DB with NaN.
+    if (typeof val === "number" && Number.isNaN(val)) return;
+
     if (!hasChanged(key, val)) return;
 
     saving.value = true;
@@ -279,7 +284,7 @@ async function addSeason() {
             </section>
 
             <!-- Hackathon Configuration (all fields per-season, auto-save on change) -->
-            <section v-if="hackathon" class="bg-ui-bg p-6 space-y-4">
+            <section v-if="hackathon && formInitialized" class="bg-ui-bg p-6 space-y-4">
                 <h2 class="text-xl font-semibold">
                     Hackathon Configuration
                     <span v-if="saving" class="text-sm text-primary font-normal ms-2">Saving...</span>
