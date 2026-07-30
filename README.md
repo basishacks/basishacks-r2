@@ -114,8 +114,7 @@ bun run test            # full suite (also generates tests/.test-meta.json)
 bun run test:watch      # watch mode
 bun run test:coverage   # with coverage
 ```
-
-The suite achieves **100% line, branch, function, and statement coverage** on all tracked source files. The canonical test count is stored in `tests/.test-meta.json` and displayed dynamically in the VitePress documentation.
+The canonical test count is stored in `tests/.test-meta.json` and displayed dynamically in the VitePress documentation.
 
 Do **not** use `bun test` — it cannot resolve Nuxt path aliases. `bunfig.toml` redirects it to a guidance shim.
 
@@ -149,7 +148,7 @@ server/                 # Nitro backend
   database/             # Drizzle ORM schema + dual-runtime init
   utils/                # Auth, rate limiting, OAuth2 JWT, URL validation, etc.
 shared/                 # Zod schemas, types, permissions, OAuth2 scopes, rubric
-tests/                  # Vitest suite (100% coverage on tracked files)
+tests/                  # Vitest suite
 documentation/          # VitePress site
 ```
 
