@@ -1,5 +1,5 @@
 <template>
-    <h3 class="text-4xl bold text-primary glow w-[600px]">Results</h3>
+    <h3 class="text-3xl sm:text-4xl bold text-primary glow">Results</h3>
 
     <USeparator class="my-6" />
 
