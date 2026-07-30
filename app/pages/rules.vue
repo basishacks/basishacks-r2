@@ -135,7 +135,9 @@
                     . Members of the BISZ Developers' Club will answer.
                 </p>
                 <div class="my-4 text-center">
-                    <blockquote class="italic border-l-4 border-gray-300 pl-4 inline-block text-left">
+                    <blockquote
+                        class="italic border-l-4 border-gray-300 pl-4 inline-block text-left"
+                    >
                         <p class="mb-1">May thy labor bring a harvest sweet,</p>
                         <p class="mb-1">And wisdom's light thy eager mind shall greet;</p>
                         <p class="mb-1">In open fellowship thy craft shall shine,</p>

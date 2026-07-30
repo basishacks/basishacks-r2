@@ -135,10 +135,7 @@ describe("GET /api/oauth2/dccallback - PKCE verifier handling", () => {
 
         await handler(createEvent());
 
-        expect(jwtVerifyMock).toHaveBeenCalledWith(
-            "fake-jwt-token",
-            expect.any(Uint8Array),
-        );
+        expect(jwtVerifyMock).toHaveBeenCalledWith("fake-jwt-token", expect.any(Uint8Array));
         expect(setUserSessionSpy).toHaveBeenCalledWith(
             expect.anything(),
             expect.objectContaining({ user: expect.objectContaining({ id: 42 }) }),

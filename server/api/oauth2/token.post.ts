@@ -26,25 +26,25 @@ export default defineEventHandler(
             rawBody = await readBody(event);
         }
 
-    let body: OAuth2TokenRequest;
-    try {
-        body = await OAuth2TokenRequest.parseAsync(rawBody);
-    } catch (err: any) {
-        const issues = err.issues?.map((i: any) => i.message).join(", ");
-        const message = issues || err.message || "Invalid request";
-        throw createError({
-            statusCode: 400,
-            statusMessage: "invalid_request",
-            message,
-        });
-    }
+        let body: OAuth2TokenRequest;
+        try {
+            body = await OAuth2TokenRequest.parseAsync(rawBody);
+        } catch (err: any) {
+            const issues = err.issues?.map((i: any) => i.message).join(", ");
+            const message = issues || err.message || "Invalid request";
+            throw createError({
+                statusCode: 400,
+                statusMessage: "invalid_request",
+                message,
+            });
+        }
 
-    return await issueOAuth2AccessToken(event, {
-        code: body.code,
-        clientId: body.client_id,
-        clientSecret: body.client_secret,
-        redirectUri: body.redirect_uri,
-        codeVerifier: body.code_verifier,
-    });
+        return await issueOAuth2AccessToken(event, {
+            code: body.code,
+            clientId: body.client_id,
+            clientSecret: body.client_secret,
+            redirectUri: body.redirect_uri,
+            codeVerifier: body.code_verifier,
+        });
     }, AUTH_RATE_LIMIT_CONFIG),
 );
