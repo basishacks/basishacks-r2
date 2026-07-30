@@ -90,7 +90,6 @@ describe("security headers middleware", () => {
             "magnetometer=()",
             "gyroscope=()",
             "accelerometer=()",
-            "ambient-light-sensor=()",
             "autoplay=()",
             "encrypted-media=()",
             "picture-in-picture=()",
