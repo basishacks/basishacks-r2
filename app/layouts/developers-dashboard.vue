@@ -29,7 +29,6 @@ const items = computed<NavigationMenuItem[][]>(() => [
         },
         { label: "DeepSeek", icon: "i-lucide-message-square", to: "/developers/deepseek" },
         { label: "Files", icon: "i-lucide-files", to: "/developers/debug" },
-        { label: "Seasons", icon: "i-lucide-calendar", to: "/developers/seasons" },
     ],
     [
         {
