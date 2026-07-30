@@ -38,7 +38,7 @@
         "eslint": "^9.39.5",
         "https-proxy-agent": "^9.1.0",
         "jdenticon": "^3.3.0",
-        "jose": "^6.2.4",
+        "jose": "^6.2.5",
         "node-fetch": "^3.3.2",
         "node-html-markdown": "^2.0.0",
         "nuxt": "^4.5.1",
