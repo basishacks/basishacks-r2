@@ -283,14 +283,19 @@ OAuth2 application creation form.
 
 **File:** `app/pages/developers/admin.vue`
 
-Hackathon Administration panel. Only accessible to admin users; non-admins receive a hard 403 even if they know the URL. Provides:
+Hackathon Administration panel. Only accessible to admin users; non-admins receive a hard 403 even if they know the URL. The page is divided into two configuration sections:
 
-- **Season Picker**: Dropdown to select the active season, with "Set Active" and "+ New Season" buttons
-- **Season Name**: Editable text input to rename the selected season
-- **Hackathon Configuration**: Edit all global hackathon state fields (status, voting, judging, results, timestamps via datetime-local pickers, theme name, theme description)
-- **Database Export**: Download the full database as SQLite or CSV (admin-only)
+**Season Picker** — Dropdown to select the active season, with "Set Active" and "+ New Season" buttons. Defaults to the last (newest) season on open.
 
-All changes are persisted to the database immediately via dedicated admin API endpoints. Season name and theme name are fully independent; changing one does not affect the other.
+**Season Name** — Editable text input to rename the selected season, with a "Rename Season" button.
+
+**Session Configuration** — Per-season fields (status, voting_enabled, judging_open, results_published, max_votes_per_user, theme_name, theme_description, schedule_start, schedule_end). These values follow the selected season. Saved via "Save Session" button with the current `season_id`.
+
+**Hackathon State** — Global timestamp fields (start_timestamp, end_timestamp, voting_start_timestamp, voting_end_timestamp, results_open_timestamp). These are ALWAYS global — they never change when switching seasons. Changes are auto-saved instantly via debounced PATCH (400ms) with no `season_id`.
+
+**Database Export** — Download the full database as SQLite or CSV (admin-only).
+
+State fields and session fields are fully independent; changing one does not affect the other.
 
 **Layout:** `developers-dashboard`
 
