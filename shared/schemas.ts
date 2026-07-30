@@ -3,10 +3,10 @@ import rubrics from "./rubric";
 
 const MAX_EMAIL_LENGTH = 254;
 const MAX_PROJECT_NAME_LENGTH = 100;
-const MAX_PROJECT_DESCRIPTION_LENGTH = 2000;
-const MAX_PROJECT_SOURCE_LENGTH = 2000;
+const MAX_PROJECT_DESCRIPTION_LENGTH = 2147483647;
+const MAX_PROJECT_SOURCE_LENGTH = 2147483647;
 const MAX_URL_LENGTH = 2048;
-const MAX_USER_NAME_LENGTH = 30;
+const MAX_USER_NAME_LENGTH = 50;
 const MAX_OAUTH2_CODE_LENGTH = 1024;
 const MAX_CLIENT_ID_LENGTH = 256;
 const MAX_CLIENT_SECRET_LENGTH = 512;
@@ -15,7 +15,7 @@ const MAX_REDIRECT_URI_LENGTH = 2048;
 const MAX_SCOPE_LENGTH = 128;
 const MAX_SECRET_ABBREVIATED_LENGTH = 16;
 const MAX_SESSION_TOKEN_LENGTH = 2048;
-const MAX_REASONING_LENGTH = 2000;
+const MAX_REASONING_LENGTH = 2147483647;
 const MAX_VOTE_SCORES = 50;
 const MAX_ELECTION_POSITIONS = 20;
 const MAX_ELECTION_CANDIDATES = 50;
@@ -44,7 +44,7 @@ export const ProjectName = z
 export const ProjectDescription = z
     .string()
     .min(30, "Please provide more details in the description")
-    .max(MAX_PROJECT_DESCRIPTION_LENGTH, "Project description cannot exceed 2000 characters");
+    .max(MAX_PROJECT_DESCRIPTION_LENGTH, "Project description is too long");
 
 export const ProjectUrl = z
     .union([z.url(), z.literal("")])
@@ -134,7 +134,7 @@ export const SubmitTeamRequest = z.object({
         sourcing: z.optional(
             z
                 .string()
-                .max(MAX_PROJECT_SOURCE_LENGTH, "Sourcing notes cannot exceed 2000 characters"),
+                .max(MAX_PROJECT_SOURCE_LENGTH, "Sourcing notes are too long"),
         ),
     }),
 });
@@ -159,7 +159,7 @@ export const formatBytes = (bytes: number, decimals = 2) => {
 
 export const UpdateUserRequest = z.object({
     name: z.optional(
-        z.string().max(MAX_USER_NAME_LENGTH, "Name cannot be longer than 30 characters"),
+        z.string().max(MAX_USER_NAME_LENGTH, "Name is too long"),
     ),
     profile_theme_image: z
         .union([
@@ -200,7 +200,7 @@ export const CreateTeamScoresRequest = z.object({
     reasoning: z
         .string()
         .min(10, "Please write more")
-        .max(MAX_REASONING_LENGTH, "Reasoning cannot exceed 2000 characters"),
+        .max(MAX_REASONING_LENGTH, "Reasoning is too long"),
     scores: ScoreValues,
 });
 export type CreateTeamScoresRequest = z.infer<typeof CreateTeamScoresRequest>;
