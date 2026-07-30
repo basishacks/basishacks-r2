@@ -435,12 +435,7 @@ Read the current global hackathon configuration and all seasons.
 
 ### PATCH `/api/admin/hackathon`
 
-Update hackathon configuration. Fields are split into two categories:
-
-- **Session fields** (status, voting_enabled, judging_open, results_published, max_votes_per_user, schedule_start, schedule_end, theme_name, theme_description) — saved to the specified season when `season_id` is provided; saved to global when absent.
-- **State fields** (start_timestamp, end_timestamp, voting_start_timestamp, voting_end_timestamp, results_open_timestamp) — ALWAYS saved to the global hackathon, never to a season. These are global timestamps that should not change when switching seasons.
-
-When `season_id` matches the currently active season, session fields are also synced to the global hackathon row.
+Update hackathon configuration. All fields are per-season when `season_id` is provided. When `season_id` matches the currently active season, changes are also synced to the global hackathon row so the rest of the app sees the active season's config.
 
 | Field | Details |
 | --- | --- |

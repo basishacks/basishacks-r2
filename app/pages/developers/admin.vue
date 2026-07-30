@@ -38,17 +38,8 @@ function datetimeToTs(s: string): number {
     return new Date(s).getTime();
 }
 
-// State fields (event timestamps) are ALWAYS global — never per-season.
-// Session fields (status, toggles, theme, schedule) are per-season.
-const stateFieldKeys = [
-    "start_timestamp",
-    "end_timestamp",
-    "voting_start_timestamp",
-    "voting_end_timestamp",
-    "results_open_timestamp",
-] as const;
-
-const sessionFieldKeys = [
+// All config fields — every field is per-season (saved with season_id)
+const allFieldKeys = [
     "status",
     "voting_enabled",
     "judging_open",
@@ -58,57 +49,61 @@ const sessionFieldKeys = [
     "theme_description",
     "schedule_start",
     "schedule_end",
+    "start_timestamp",
+    "end_timestamp",
+    "voting_start_timestamp",
+    "voting_end_timestamp",
+    "results_open_timestamp",
 ] as const;
 
+const tsKeys: readonly string[] = [
+    "start_timestamp",
+    "end_timestamp",
+    "voting_start_timestamp",
+    "voting_end_timestamp",
+    "results_open_timestamp",
+];
+
 // ---------------------------------------------------------------------------
-// Form state — session fields (per-season, follow the dropdown)
+// Form state
 // ---------------------------------------------------------------------------
 const hackathonForm = reactive<Record<string, any>>({});
-const hackathonSaving = ref(false);
-const hackathonMessage = ref("");
-
-/** True after the very first restore has been applied. */
 const formInitialized = ref(false);
+const saving = ref(false);
+let saveTimer: ReturnType<typeof setTimeout> | null = null;
 
-/** Populate session fields from a season row, skipping DB defaults so the global value shines through. */
+/** Populate form from a season row, skipping DB defaults so the global value shines through. */
 function restoreSeasonConfig(season: any) {
     if (!season) return;
-    for (const key of sessionFieldKeys) {
+    for (const key of allFieldKeys) {
         const val = season[key];
         if (val === undefined) continue;
         if (val === null) {
             hackathonForm[key] = "";
             continue;
         }
-        if (isSessionDefault(key, val)) continue;
-        hackathonForm[key] = val;
+        if (isDefaultValue(key, val)) continue;
+        hackathonForm[key] = tsKeys.includes(key) ? tsToDatetime(val) : val;
     }
 }
 
-function isSessionDefault(key: string, val: any): boolean {
+function isDefaultValue(key: string, val: any): boolean {
     if (key === "status") return val === "not_started";
     if (key === "max_votes_per_user") return val === 0;
     if (["voting_enabled", "judging_open", "results_published"].includes(key)) return val === 0;
+    if (tsKeys.includes(key)) return val === 0;
     return false;
 }
 
-/** Initialize session fields from global, then overlay the selected season's overrides.
- *  State (timestamp) fields are initialized once and then never touched by season switches. */
+/** Initialize form from global values, then overlay the selected season's overrides. */
 function applyConfig(seasonId: number | null) {
     const h = hackathon.value;
     if (!h) return;
 
-    // State fields: initialize once from global (never change on season switch)
-    if (!formInitialized.value) {
-        for (const key of stateFieldKeys) {
-            hackathonForm[key] = tsToDatetime((h as any)[key]);
-        }
-    }
+    const raw: Record<string, any> = { ...h };
+    for (const key of tsKeys) raw[key] = tsToDatetime(raw[key]);
+    Object.assign(hackathonForm, raw);
 
-    // Session fields: always reset from global, then overlay season overrides
-    for (const key of sessionFieldKeys) {
-        hackathonForm[key] = (h as any)[key] ?? "";
-    }
     if (seasonId !== null) {
         const s = seasons.value?.find((s: any) => s.id === seasonId);
         if (s) restoreSeasonConfig(s);
@@ -117,60 +112,34 @@ function applyConfig(seasonId: number | null) {
     formInitialized.value = true;
 }
 
-async function saveHackathon() {
-    hackathonSaving.value = true;
-    hackathonMessage.value = "";
-    try {
-        const baseline = hackathon.value;
-        const body: Record<string, any> = {};
-        for (const key of sessionFieldKeys) {
-            const val = hackathonForm[key];
-            if (val === null || val === undefined) continue;
-            let normalized = typeof val === "boolean" ? (val ? 1 : 0) : val;
-            if (normalized !== (baseline as any)?.[key]) body[key] = normalized;
-        }
-        if (Object.keys(body).length === 0) {
-            hackathonMessage.value = "No changes to save.";
-            return;
-        }
-        if (activeSeasonId.value !== null) body.season_id = activeSeasonId.value;
-        await $fetch("/api/admin/hackathon", { method: "PATCH", body });
-        await refreshAdmin();
-        hackathonMessage.value = "Session config saved.";
-    } catch (e: any) {
-        hackathonMessage.value = e.data?.message || e.message || "Failed to save.";
-    } finally {
-        hackathonSaving.value = false;
-    }
+/** Normalize a form value to its wire format (bool→0/1, timestamp→number). */
+function normalize(key: string, val: any): any {
+    if (typeof val === "boolean") return val ? 1 : 0;
+    if (tsKeys.includes(key)) return datetimeToTs(val as string);
+    return val;
 }
 
-// ---------------------------------------------------------------------------
-// State fields (timestamps) — always global, instant-apply on change
-// ---------------------------------------------------------------------------
-const stateSaving = ref(false);
-let stateSaveTimer: ReturnType<typeof setTimeout> | null = null;
+/** Debounced auto-save: writes the changed field to the season (and global if active). */
+function fieldChanged(key: string) {
+    if (saveTimer) clearTimeout(saveTimer);
+    saveTimer = setTimeout(async () => {
+        const raw = hackathonForm[key];
+        const val = normalize(key, raw);
+        if (val === (hackathon.value as any)?.[key]) return; // no effective change
 
-function saveStateField(key: string) {
-    const raw = hackathonForm[key];
-    const val = datetimeToTs(raw as string);
-    if (val === (hackathon.value as any)?.[key]) return; // no change
-
-    if (stateSaveTimer) clearTimeout(stateSaveTimer);
-    stateSaveTimer = setTimeout(async () => {
-        stateSaving.value = true;
+        saving.value = true;
         try {
-            await $fetch("/api/admin/hackathon", {
-                method: "PATCH",
-                body: { [key]: val },
-            });
+            const body: Record<string, any> = { [key]: val };
+            if (activeSeasonId.value !== null) body.season_id = activeSeasonId.value;
+            await $fetch("/api/admin/hackathon", { method: "PATCH", body });
             await refreshAdmin();
         } catch {
-            // silent — the next save will retry
+            // next edit will retry
         } finally {
-            stateSaving.value = false;
-            stateSaveTimer = null;
+            saving.value = false;
+            saveTimer = null;
         }
-    }, 400);
+    }, 300);
 }
 
 // ---------------------------------------------------------------------------
@@ -294,11 +263,14 @@ async function addSeason() {
                 </div>
             </section>
 
-            <!-- 🎯 Session Configuration (per-season fields) -->
-            <section v-if="hackathon" class="bg-ui-bg border-b border-ui-border p-6 space-y-4">
-                <h2 class="text-xl font-semibold">Session Configuration</h2>
+            <!-- Hackathon Configuration (all fields per-season, auto-save on change) -->
+            <section v-if="hackathon" class="bg-ui-bg p-6 space-y-4">
+                <h2 class="text-xl font-semibold">
+                    Hackathon Configuration
+                    <span v-if="saving" class="text-sm text-primary font-normal ms-2">Saving...</span>
+                </h2>
                 <p class="text-sm text-ui-text-muted">
-                    These fields are per-season. Values follow the selected season above.
+                    All fields are per-season. Changes auto-save with the selected season.
                 </p>
 
                 <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
@@ -313,6 +285,7 @@ async function addSeason() {
                                 { label: 'Paused', value: 'paused' },
                             ]"
                             v-model="hackathonForm.status"
+                            @change="fieldChanged('status')"
                             class="w-full"
                         />
                     </div>
@@ -324,113 +297,68 @@ async function addSeason() {
                             v-model="hackathonForm.max_votes_per_user"
                             min="0"
                             max="100"
+                            @change="fieldChanged('max_votes_per_user')"
                         />
                     </div>
 
                     <div class="flex items-center gap-3">
-                        <UCheckbox v-model="hackathonForm.voting_enabled" :binary="true" />
+                        <UCheckbox v-model="hackathonForm.voting_enabled" :binary="true" @change="fieldChanged('voting_enabled')" />
                         <span class="text-sm">Voting Enabled</span>
                     </div>
 
                     <div class="flex items-center gap-3">
-                        <UCheckbox v-model="hackathonForm.judging_open" :binary="true" />
+                        <UCheckbox v-model="hackathonForm.judging_open" :binary="true" @change="fieldChanged('judging_open')" />
                         <span class="text-sm">Judging Open</span>
                     </div>
 
                     <div class="flex items-center gap-3">
-                        <UCheckbox v-model="hackathonForm.results_published" :binary="true" />
+                        <UCheckbox v-model="hackathonForm.results_published" :binary="true" @change="fieldChanged('results_published')" />
                         <span class="text-sm">Results Published</span>
                     </div>
 
                     <div>
                         <label class="block text-sm font-medium mb-1">Theme Name</label>
-                        <UInput v-model="hackathonForm.theme_name" />
+                        <UInput v-model="hackathonForm.theme_name" @change="fieldChanged('theme_name')" />
                     </div>
 
                     <div class="md:col-span-2">
                         <label class="block text-sm font-medium mb-1">Theme Description</label>
-                        <UTextarea v-model="hackathonForm.theme_description" rows="2" />
+                        <UTextarea v-model="hackathonForm.theme_description" rows="2" @change="fieldChanged('theme_description')" />
                     </div>
 
                     <div>
                         <label class="block text-sm font-medium mb-1">Schedule Start</label>
-                        <UInput type="datetime-local" v-model="hackathonForm.schedule_start" />
+                        <UInput type="datetime-local" v-model="hackathonForm.schedule_start" @change="fieldChanged('schedule_start')" />
                     </div>
 
                     <div>
                         <label class="block text-sm font-medium mb-1">Schedule End</label>
-                        <UInput type="datetime-local" v-model="hackathonForm.schedule_end" />
+                        <UInput type="datetime-local" v-model="hackathonForm.schedule_end" @change="fieldChanged('schedule_end')" />
                     </div>
-                </div>
 
-                <div class="flex items-center gap-3 pt-2">
-                    <UButton @click="saveHackathon" :loading="hackathonSaving" color="primary">
-                        Save Session
-                    </UButton>
-                    <span
-                        v-if="hackathonMessage"
-                        class="text-sm"
-                        :class="
-                            hackathonMessage.includes('Failed') ? 'text-red-500' : 'text-green-500'
-                        "
-                    >
-                        {{ hackathonMessage }}
-                    </span>
-                </div>
-            </section>
-
-            <!-- ⏱ Hackathon State (global timestamps, instant-apply) -->
-            <section v-if="hackathon" class="bg-ui-bg p-6 space-y-4">
-                <h2 class="text-xl font-semibold">Hackathon State</h2>
-                <p class="text-sm text-ui-text-muted">
-                    Timestamps are global values. Changes apply instantly — no season selection needed.
-                    <span v-if="stateSaving" class="text-primary ms-2">Saving...</span>
-                </p>
-
-                <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
                     <div>
                         <label class="block text-sm font-medium mb-1">Start</label>
-                        <UInput
-                            type="datetime-local"
-                            v-model="hackathonForm.start_timestamp"
-                            @change="saveStateField('start_timestamp')"
-                        />
+                        <UInput type="datetime-local" v-model="hackathonForm.start_timestamp" @change="fieldChanged('start_timestamp')" />
                     </div>
 
                     <div>
                         <label class="block text-sm font-medium mb-1">End</label>
-                        <UInput
-                            type="datetime-local"
-                            v-model="hackathonForm.end_timestamp"
-                            @change="saveStateField('end_timestamp')"
-                        />
+                        <UInput type="datetime-local" v-model="hackathonForm.end_timestamp" @change="fieldChanged('end_timestamp')" />
                     </div>
 
                     <div>
                         <label class="block text-sm font-medium mb-1">Voting Start</label>
-                        <UInput
-                            type="datetime-local"
-                            v-model="hackathonForm.voting_start_timestamp"
-                            @change="saveStateField('voting_start_timestamp')"
-                        />
+                        <UInput type="datetime-local" v-model="hackathonForm.voting_start_timestamp" @change="fieldChanged('voting_start_timestamp')" />
                     </div>
 
                     <div>
                         <label class="block text-sm font-medium mb-1">Voting End</label>
-                        <UInput
-                            type="datetime-local"
-                            v-model="hackathonForm.voting_end_timestamp"
-                            @change="saveStateField('voting_end_timestamp')"
-                        />
+                        <UInput type="datetime-local" v-model="hackathonForm.voting_end_timestamp" @change="fieldChanged('voting_end_timestamp')" />
                     </div>
 
                     <div>
                         <label class="block text-sm font-medium mb-1">Results Open</label>
-                        <UInput
-                            type="datetime-local"
-                            v-model="hackathonForm.results_open_timestamp"
-                            @change="saveStateField('results_open_timestamp')"
-                        />
+                        <UInput type="datetime-local" v-model="hackathonForm.results_open_timestamp" @change="fieldChanged('results_open_timestamp')" />
                     </div>
                 </div>
             </section>

@@ -283,19 +283,15 @@ OAuth2 application creation form.
 
 **File:** `app/pages/developers/admin.vue`
 
-Hackathon Administration panel. Only accessible to admin users; non-admins receive a hard 403 even if they know the URL. The page is divided into two configuration sections:
+Hackathon Administration panel. Only accessible to admin users; non-admins receive a hard 403 even if they know the URL.
 
 **Season Picker** — Dropdown to select the active season, with "Set Active" and "+ New Season" buttons. Defaults to the last (newest) season on open.
 
 **Season Name** — Editable text input to rename the selected season, with a "Rename Season" button.
 
-**Session Configuration** — Per-season fields (status, voting_enabled, judging_open, results_published, max_votes_per_user, theme_name, theme_description, schedule_start, schedule_end). These values follow the selected season. Saved via "Save Session" button with the current `season_id`.
-
-**Hackathon State** — Global timestamp fields (start_timestamp, end_timestamp, voting_start_timestamp, voting_end_timestamp, results_open_timestamp). These are ALWAYS global — they never change when switching seasons. Changes are auto-saved instantly via debounced PATCH (400ms) with no `season_id`.
+**Hackathon Configuration** — All fields are per-season (status, voting_enabled, judging_open, results_published, max_votes_per_user, theme_name, theme_description, schedule_start, schedule_end, all 5 timestamps). Changes auto-save to the selected season via a 300ms debounced PATCH with the current `season_id`. When editing the active season, values are also synced to the global hackathon row. No "Save" button needed — every field change is automatically persisted and re-fetched from the database.
 
 **Database Export** — Download the full database as SQLite or CSV (admin-only).
-
-State fields and session fields are fully independent; changing one does not affect the other.
 
 **Layout:** `developers-dashboard`
 
