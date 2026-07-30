@@ -141,32 +141,32 @@ function hasChanged(key: string, normalized: any): boolean {
     return normalized !== baseline;
 }
 
-/** Build a body of ALL fields that have changed from the global baseline. */
-function buildChangedBody() {
+/** Serialized PATCH queue — only one request in-flight at a time.
+ *  Every PATCH carries ALL current form fields so no field can be
+ *  silently dropped or overwritten by a stale concurrent request. */
+let patchChain = Promise.resolve();
+
+function onFieldChange() {
     const body: Record<string, any> = {};
     for (const key of allFieldKeys) {
         const raw = hackathonForm[key];
         if (raw === undefined || raw === null) continue;
         const val = normalize(key, raw);
         if (typeof val === "number" && Number.isNaN(val)) continue;
-        if (hasChanged(key, val)) body[key] = val;
+        body[key] = val;
     }
-    return body;
-}
+    body.season_id = activeSeasonId.value;
 
-/** Save ALL fields that differ from the global baseline in a single PATCH.
- *  Captures the form snapshot immediately (not after debounce) so Vue's
- *  reactive flush timing cannot change what gets sent. */
-function onFieldChange() {
-    const body = buildChangedBody();
-    if (Object.keys(body).length === 0) return;
-    if (activeSeasonId.value !== null) body.season_id = activeSeasonId.value;
-
+    // Chain onto the previous PATCH so they never race.
+    // Each PATCH carries every field, so even if the user changed
+    // field A, then field B before the first PATCH finished, the
+    // second PATCH will persist BOTH.
     saving.value = true;
-    $fetch("/api/admin/hackathon", { method: "PATCH", body })
+    patchChain = patchChain
+        .then(() => $fetch("/api/admin/hackathon", { method: "PATCH", body }))
         .then(() => refreshAdmin())
         .catch(() => {})
-        .finally(() => { saving.value = false; });
+        .then(() => { saving.value = false; });
 }
 
 // ---------------------------------------------------------------------------
