@@ -188,3 +188,4 @@ test-agent-file.txt
 tests/.test-meta.json
 .vitest-results.json
 userassets/
+.test-meta.json
