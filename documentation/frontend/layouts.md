@@ -20,7 +20,8 @@ The standard page layout used by most public pages.
 │ RoleHeader                   │
 ├──────────────────────────────┤
 │ UMain                        │
-│   <div class="px-4 ...">     │
+│   <div class="mx-auto        │
+│         max-w-7xl px-4 ..."> │
 │     <slot />                 │
 │                              │
 ├──────────────────────────────┤
@@ -29,7 +30,7 @@ The standard page layout used by most public pages.
 ```
 
 - `RoleHeader` — sticky navigation header with role-based menu items
-- Content wrapper — padded `div` that spans the viewport width (the global `UContainer` max-width constraint was removed so the header, footer, and content span the viewport)
+- Content wrapper — centered `div` with `max-w-7xl` (1280px). Fills full viewport width on screens under 1280px; centered above that.
 - `Footer` — site-wide footer with links and copyright
 
 **Used by:** `/`, `/profile`, `/rules`, `/voting`, `/judging`, `/judging/continue`
@@ -38,7 +39,7 @@ The standard page layout used by most public pages.
 
 **File:** `app/layouts/default-background.vue`
 
-Identical to `default` but with a **red background** (`bg-red-100`) on the `UMain` element. Used for debugging or visual testing.
+Identical to `default` but with a **red background** (`bg-red-100`) on the `UMain` element, plus the same `mx-auto max-w-7xl` centered container. Used for debugging or visual testing.
 
 ::: warning This layout is intended for development only and should not be used in production pages. :::
 

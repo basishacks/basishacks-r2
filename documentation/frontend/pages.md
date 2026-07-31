@@ -243,7 +243,7 @@ Placeholder page for the presentation event. States that top 10 teams will be in
 
 **File:** `app/pages/developers/index.vue`
 
-Developer portal landing page. Shows a welcome message.
+Developer portal landing page. Shows a welcome message. Wrapped in `UDashboardPanel` with `UDashboardNavbar` and `UDashboardSidebarCollapse` so mobile users can open the sidebar navigation.
 
 **Layout:** `developers-dashboard`
 
