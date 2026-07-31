@@ -9,7 +9,6 @@ import {
     peerVotingScores,
     oauth2Applications,
 } from "~~/server/database/schema";
-import { hasPermission } from "~~/shared/permissions";
 
 export async function getUser(event: H3Event, userID: number): Promise<User | null> {
     const row = event.context.drizzle.select().from(users).where(eq(users.id, userID)).get();
@@ -27,34 +26,15 @@ export async function getUserByEmail(event: H3Event, email: string): Promise<Use
     return row ?? null;
 }
 
-export async function addCodeToUser(event: H3Event, email: string): Promise<User> {
-    const oldUser = await getUserByEmail(event, email);
-    if (
-        oldUser?.login_expiry &&
-        oldUser.login_expiry - 9 * 60 * 1000 > Date.now() &&
-        !hasPermission(oldUser.role, "admin") // Admins can request codes more frequently for testing purposes
-    ) {
-        throw createError({
-            status: 403,
-            message: "Please wait 1 minute before requesting another code!",
-        });
-    }
+export async function createUserForEmail(event: H3Event, email: string): Promise<User> {
+    const existingUser = await getUserByEmail(event, email);
+    if (existingUser) return existingUser;
 
-    const code = Math.floor(100000 + Math.random() * 900000).toString();
-    const expiry = Date.now() + 10 * 60 * 1000;
-
-    // upsert user
-    const user = event.context.drizzle
+    return event.context.drizzle
         .insert(users)
-        .values({ email: email.toLowerCase(), login_code: code, login_expiry: expiry })
-        .onConflictDoUpdate({
-            target: users.email,
-            set: { login_code: code, login_expiry: expiry },
-        })
+        .values({ email: email.toLowerCase() })
         .returning()
         .get()!;
-
-    return user;
 }
 
 export async function updateUserName(event: H3Event, user: User) {

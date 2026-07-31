@@ -598,7 +598,7 @@ Per-table database helper modules in `server/utils/database/`.
 | --- | --- |
 | `getUser(event, userID)` | Get user by ID |
 | `getUserByEmail(event, email)` | Get user by email (case-insensitive) |
-| `addCodeToUser(event, email)` | Create or update a user record for the given email |
+| `createUserForEmail(event, email)` | Return the user for an email or create one when absent |
 | `updateUserName(event, user)` | Update user's name |
 | `updateUserProfileTheme(event, user)` | Update user's profile theme |
 | `updateUserProfilePicture(event, user)` | Update user's profile picture |

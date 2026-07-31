@@ -3,7 +3,7 @@ import { createMockEvent } from "./helpers";
 import {
     getUser,
     getUserByEmail,
-    addCodeToUser,
+    createUserForEmail,
     updateUserName,
     updateUserProfileTheme,
     updateUserProfilePicture,
@@ -53,57 +53,21 @@ describe("users database helpers", () => {
         });
     });
 
-    describe("addCodeToUser", () => {
-        it("creates a new user and sets a login code and expiry", async () => {
-            const user = await addCodeToUser(event, "new@example.com");
+    describe("createUserForEmail", () => {
+        it("creates a new user", async () => {
+            const user = await createUserForEmail(event, "NEW@example.com");
             expect(user).not.toBeNull();
             expect(user.email).toBe("new@example.com");
-            expect(user.login_code).not.toBeNull();
-            expect(user.login_code!.length).toBe(6);
-            expect(user.login_expiry).toBeGreaterThan(Date.now());
         });
 
-        it("updates the login code for an existing user", async () => {
+        it("returns the existing user", async () => {
             event.context.drizzle
                 .prepare("INSERT INTO users(email, role) VALUES('existing@example.com', 'admin')")
                 .run();
 
-            const firstCall = await addCodeToUser(event, "existing@example.com");
-            const firstCode = firstCall.login_code;
-
-            const secondCall = await addCodeToUser(event, "existing@example.com");
-            // Should have a new code (random, so very unlikely to match)
-            expect(secondCall.login_code).toBeDefined();
-        });
-
-        it("throws a 403 error when requesting a code within 9 minutes for a non-admin user", async () => {
-            // Create a user with a recent login_expiry
-            const recentExpiry = Date.now() + 10 * 60 * 1000; // 10 minutes from now
-            event.context.drizzle
-                .prepare(
-                    "INSERT INTO users(email, login_code, login_expiry, role) VALUES('rate-limited@example.com', '123456', ?, 'participant')",
-                )
-                .bind(recentExpiry)
-                .run();
-
-            await expect(addCodeToUser(event, "rate-limited@example.com")).rejects.toThrow(
-                "Please wait 1 minute before requesting another code!",
-            );
-        });
-
-        it("allows admin users to request a code even within the rate limit window", async () => {
-            const recentExpiry = Date.now() + 10 * 60 * 1000;
-            event.context.drizzle
-                .prepare(
-                    "INSERT INTO users(email, login_code, login_expiry, role) VALUES('admin@example.com', '123456', ?, 'admin')",
-                )
-                .bind(recentExpiry)
-                .run();
-
-            const user = await addCodeToUser(event, "admin@example.com");
-            expect(user.login_code).toBeDefined();
-            // Admin should get a new code, not the old one
-            expect(user.login_code).not.toBe("123456");
+            const user = await createUserForEmail(event, "EXISTING@example.com");
+            expect(user.id).toBe(1);
+            expect(user.role).toBe("admin");
         });
     });
 

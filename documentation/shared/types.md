@@ -92,17 +92,15 @@ These interfaces match the SQL schema exactly. They include all columns, includi
 
 ### `User`
 
-| Field | Type | Description |
-| --- | --- | --- |
-| `id` | `number` | Primary key |
-| `email` | `string` | User email (`@basischina.com`) |
-| `role` | `string` | Space-separated URI-encoded permission strings |
-| `name` | `string \| null` | Display name |
-| `team_id` | `number \| null` | Foreign key to team |
-| `login_code` | `string \| null` | Legacy login code (unused by current authentication) |
-| `login_expiry` | `number \| null` | Legacy login code expiry timestamp (unused by current authentication) |
-| `profile_theme` | `string \| null` | Profile theme as `"mode\|value"` string |
-| `profile_picture` | `string \| null` | Profile picture path |
+| Field             | Type             | Description                                    |
+| ----------------- | ---------------- | ---------------------------------------------- |
+| `id`              | `number`         | Primary key                                    |
+| `email`           | `string`         | User email (`@basischina.com`)                 |
+| `role`            | `string`         | Space-separated URI-encoded permission strings |
+| `name`            | `string \| null` | Display name                                   |
+| `team_id`         | `number \| null` | Foreign key to team                            |
+| `profile_theme`   | `string \| null` | Profile theme as `"mode\|value"` string        |
+| `profile_picture` | `string \| null` | Profile picture path                           |
 
 ### `Ballot`
 
@@ -186,7 +184,7 @@ Per-team assignments are stored in `team_awards`.
 
 ## API Response Interfaces
 
-These types define the shape of data returned by API endpoints. Internal fields (such as `login_code`, `login_expiry`) are stripped by `convertUserToPublic` and `convertTeamToPublic` in `server/utils/convert.ts`.
+These types define the shape of data returned by API endpoints. Internal fields are stripped by `convertUserToPublic` and `convertTeamToPublic` in `server/utils/convert.ts`.
 
 ### `ProfileTheme`
 
@@ -231,15 +229,15 @@ Parsed from the database `"mode|value"` string format.
 
 ### `APIAward`
 
-| Field         | Type                      | Description                                          |
-| ------------- | ------------------------- | ---------------------------------------------------- |
-| `namespace`   | `string`                  | Award namespace from the `awards` table              |
-| `name`        | `string`                  | Award display name                                   |
-| `description` | `string`                  | Award description                                    |
-| `icon`        | `string`                  | Icon class                                           |
-| `meta`        | `Record<string, unknown>` | Parsed JSON metadata from `team_awards`              |
-| `color`       | `string`                  | Resolved award color (defaults to `gold`)            |
-| `text`        | `string`                  | Award description                                    |
+| Field         | Type                      | Description                               |
+| ------------- | ------------------------- | ----------------------------------------- |
+| `namespace`   | `string`                  | Award namespace from the `awards` table   |
+| `name`        | `string`                  | Award display name                        |
+| `description` | `string`                  | Award description                         |
+| `icon`        | `string`                  | Icon class                                |
+| `meta`        | `Record<string, unknown>` | Parsed JSON metadata from `team_awards`   |
+| `color`       | `string`                  | Resolved award color (defaults to `gold`) |
+| `text`        | `string`                  | Award description                         |
 
 Awards are resolved by joining `team_awards` with the `awards` table, then attached to `APITeam` by `convertTeamToPublic`.
 

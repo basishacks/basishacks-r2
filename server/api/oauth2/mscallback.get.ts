@@ -180,7 +180,7 @@ export default defineEventHandler(async (event: any) => {
 
         if (!user) {
             // Create new user
-            user = await addCodeToUser(event, email);
+            user = await createUserForEmail(event, email);
             if (!user.id) {
                 return redirectWithOAuth2Error(
                     event,

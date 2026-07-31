@@ -41,14 +41,12 @@ function createEvent(overrides: Record<string, unknown> = {}) {
 }
 
 describe("GET /api/users", () => {
-    it("does not expose login_code or login_expiry", async () => {
+    it("returns public user fields", async () => {
         vi.mocked(globalThis.requirePermission).mockResolvedValue({ id: 1, role: "admin" });
 
         seedUser(ctx, {
             email: "alice@basischina.com",
             name: "Alice",
-            login_code: "123456",
-            login_expiry: Date.now() + 10 * 60 * 1000,
         });
 
         const result = await listHandler(createEvent());
@@ -62,7 +60,5 @@ describe("GET /api/users", () => {
         expect(result[0]).toHaveProperty("team_id");
         expect(result[0]).toHaveProperty("profile_theme");
         expect(result[0]).toHaveProperty("profile_picture");
-        expect(result[0]).not.toHaveProperty("login_code");
-        expect(result[0]).not.toHaveProperty("login_expiry");
     });
 });

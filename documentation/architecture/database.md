@@ -67,17 +67,15 @@ Stores judge scores for each team. Each judge can score a team exactly once.
 
 ### `users`
 
-| Column | Type | Description |
-| --- | --- | --- |
-| `id` | `INTEGER PRIMARY KEY AUTOINCREMENT` | User ID |
-| `email` | `TEXT NOT NULL UNIQUE` | User email |
-| `role` | `TEXT NOT NULL DEFAULT 'participant'` | Space-separated permission string |
-| `name` | `TEXT` | Display name |
-| `team_id` | `INTEGER` | FK to `teams.id` |
-| `login_code` | `TEXT` | Legacy login code (unused by current authentication) |
-| `login_expiry` | `INTEGER` | Legacy login code expiry timestamp |
-| `profile_theme` | `TEXT` | Profile theme as `"mode\|value"` |
-| `profile_picture` | `TEXT` | Profile picture URL or identifier |
+| Column            | Type                                  | Description                       |
+| ----------------- | ------------------------------------- | --------------------------------- |
+| `id`              | `INTEGER PRIMARY KEY AUTOINCREMENT`   | User ID                           |
+| `email`           | `TEXT NOT NULL UNIQUE`                | User email                        |
+| `role`            | `TEXT NOT NULL DEFAULT 'participant'` | Space-separated permission string |
+| `name`            | `TEXT`                                | Display name                      |
+| `team_id`         | `INTEGER`                             | FK to `teams.id`                  |
+| `profile_theme`   | `TEXT`                                | Profile theme as `"mode\|value"`  |
+| `profile_picture` | `TEXT`                                | Profile picture URL or identifier |
 
 ::: warning The `role` column originally had a `CHECK` constraint limiting it to `participant`, `judge`, or `admin`. This was removed via `migration-permissions.sql` to support space-separated permission strings such as `"participant portal.users.view portal.teams.view"`. :::
 
@@ -208,7 +206,7 @@ Each table has a dedicated helper module in `server/utils/database/`:
 
 | File | Key Functions |
 | --- | --- |
-| `users.ts` | `getUser`, `getUserByEmail`, `addCodeToUser`, `updateUserName`, `updateUserProfileTheme` |
+| `users.ts` | `getUser`, `getUserByEmail`, `createUserForEmail`, `updateUserName`, `updateUserProfileTheme` |
 | `teams.ts` | Team CRUD, project submission |
 | `members.ts` | Team member management |
 | `scores.ts` | Judge score CRUD |
@@ -229,8 +227,6 @@ interface User {
     role: string;
     name: string | null;
     team_id: number | null;
-    login_code: string | null;
-    login_expiry: number | null;
     profile_theme: string | null;
     profile_picture: string | null;
 }
@@ -308,18 +304,18 @@ In practice, the dev/prod server applies migrations automatically when `createDr
 
 `migrateLegacySchema()` in `server/database/migrate.ts` brings databases created from older `sql/archive/init.sql` schemas up to date without dropping data. It adds missing tables and columns:
 
-| Missing Table / Column                 | Action                                                  |
-| -------------------------------------- | ------------------------------------------------------- |
-| `seasons` table                        | Creates table + unique name index                       |
-| `team_awards` table                    | Creates table                                           |
-| `peer_voting_scores` table             | Creates table                                           |
-| `user_past_teams` table                | Creates table with composite PK                         |
-| Legacy `awards` table                  | Rebuilds the catalog with namespace keys, preserving rows |
-| `hackathon.*` timestamp/status columns | `ALTER TABLE ... ADD COLUMN INTEGER DEFAULT 0/NULL`     |
-| `teams.season_id`                      | `ALTER TABLE ... ADD COLUMN INTEGER DEFAULT 1 NOT NULL` |
-| `teams.sourcing`                       | `ALTER TABLE ... ADD COLUMN TEXT DEFAULT '' NOT NULL`   |
-| `team_scores.season_id`                | `ALTER TABLE ... ADD COLUMN INTEGER`                    |
-| `oauth2_applications.owner_id`         | `ALTER TABLE ... ADD COLUMN INTEGER`                    |
+| Missing Table / Column | Action |
+| --- | --- |
+| `seasons` table | Creates table + unique name index |
+| `team_awards` table | Creates table |
+| `peer_voting_scores` table | Creates table |
+| `user_past_teams` table | Creates table with composite PK |
+| Legacy `awards` table | Rebuilds the catalog with namespace keys, preserving rows |
+| `hackathon.*` timestamp/status columns | `ALTER TABLE ... ADD COLUMN INTEGER DEFAULT 0/NULL` |
+| `teams.season_id` | `ALTER TABLE ... ADD COLUMN INTEGER DEFAULT 1 NOT NULL` |
+| `teams.sourcing` | `ALTER TABLE ... ADD COLUMN TEXT DEFAULT '' NOT NULL` |
+| `team_scores.season_id` | `ALTER TABLE ... ADD COLUMN INTEGER` |
+| `oauth2_applications.owner_id` | `ALTER TABLE ... ADD COLUMN INTEGER` |
 
 ### Seeding
 
