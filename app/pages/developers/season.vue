@@ -268,7 +268,7 @@ async function addSeason() {
 
         <template #body>
             <!-- Season picker at the top -->
-            <section class="bg-ui-bg border-b border-ui-border p-6">
+            <section class="bg-ui-bg p-6">
                 <h2 class="text-xl font-semibold mb-3">Season</h2>
                 <div class="flex flex-wrap items-center gap-3">
                     <USelect
@@ -280,9 +280,10 @@ async function addSeason() {
                     <UButton @click="addSeason" variant="outline">+ New Season</UButton>
                 </div>
             </section>
+            <USeparator />
 
             <!-- Season Name (rename active season) -->
-            <section class="bg-ui-bg border-b border-ui-border p-6">
+            <section class="bg-ui-bg p-6">
                 <h2 class="text-xl font-semibold mb-3">Season Name</h2>
                 <div class="flex flex-wrap items-center gap-3">
                     <UInput v-model="seasonNameForm" class="flex-1 min-w-0" />
@@ -291,6 +292,7 @@ async function addSeason() {
                     </UButton>
                 </div>
             </section>
+            <USeparator />
 
             <!-- Hackathon Configuration (all fields per-season, auto-save on change) -->
             <section v-if="hackathon && formInitialized" class="bg-ui-bg p-6 space-y-4">
@@ -452,9 +454,10 @@ async function addSeason() {
                     </div>
                 </div>
             </section>
+            <USeparator />
 
             <!-- Database Export -->
-            <section class="bg-ui-bg border-t border-ui-border p-6 space-y-3">
+            <section class="bg-ui-bg p-6 space-y-3">
                 <h2 class="text-xl font-semibold">Database Export</h2>
                 <p class="text-sm text-ui-text-muted">Download a full snapshot of the database.</p>
                 <div class="flex flex-wrap items-center gap-3">

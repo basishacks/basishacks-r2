@@ -2,6 +2,7 @@
 import type { TableColumn } from "@nuxt/ui";
 import { upperFirst } from "scule";
 import { getPaginationRowModel } from "@tanstack/table-core";
+import { parsePermissions } from "~~/shared/permissions";
 definePageMeta({
     layout: "developers-dashboard",
 });

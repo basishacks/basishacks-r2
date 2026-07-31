@@ -29,14 +29,12 @@ const sidebarItems = computed<NavigationMenuItem[][]>(() => [
         },
         { label: "DeepSeek", icon: "i-lucide-message-square", to: "/developers/deepseek" },
         { label: "Files", icon: "i-lucide-files", to: "/developers/debug" },
-    ],
-    [
         {
-            label: "Hackathon Administration",
-            icon: "i-lucide-shield",
-            to: "/developers/admin",
+            label: "Season",
+            icon: "i-lucide-clock",
+            to: "/developers/season",
         },
-    ],
+    ]
 ]);
 
 const searchGroups = computed(() => [
