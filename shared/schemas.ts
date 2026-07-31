@@ -329,11 +329,31 @@ export const AdminUpdateHackathonRequest = z.object({
     max_votes_per_user: z.number().int().min(0).max(100).optional(),
     schedule_start: z.string().max(100).nullable().optional(),
     schedule_end: z.string().max(100).nullable().optional(),
-    start_timestamp: z.number().int().nullish().transform((v) => v ?? 0),
-    end_timestamp: z.number().int().nullish().transform((v) => v ?? 0),
-    voting_start_timestamp: z.number().int().nullish().transform((v) => v ?? 0),
-    voting_end_timestamp: z.number().int().nullish().transform((v) => v ?? 0),
-    results_open_timestamp: z.number().int().nullish().transform((v) => v ?? 0),
+    start_timestamp: z
+        .number()
+        .int()
+        .nullish()
+        .transform((v) => v ?? 0),
+    end_timestamp: z
+        .number()
+        .int()
+        .nullish()
+        .transform((v) => v ?? 0),
+    voting_start_timestamp: z
+        .number()
+        .int()
+        .nullish()
+        .transform((v) => v ?? 0),
+    voting_end_timestamp: z
+        .number()
+        .int()
+        .nullish()
+        .transform((v) => v ?? 0),
+    results_open_timestamp: z
+        .number()
+        .int()
+        .nullish()
+        .transform((v) => v ?? 0),
     theme_name: z.string().max(200).nullable().optional(),
     theme_description: z.string().max(2000).nullable().optional(),
 });

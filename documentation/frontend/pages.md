@@ -292,6 +292,7 @@ Hackathon Administration panel. Only accessible to admin users; non-admins recei
 **Hackathon Configuration** — All 14 fields are per-season. Changes auto-save via `@change` / `@update:model-value` handlers that fire a serialized PATCH chain carrying ALL form fields. Each PATCH writes to the selected season (with `season_id`); when editing the active season, values are also synced to the global hackathon row. No "Save" button — every field change is instantly persisted via a single in-flight PATCH with no race conditions.
 
 **Save mechanism details:**
+
 - All fields (`status`, `voting_enabled`, `judging_open`, `results_published`, `max_votes_per_user`, `theme_name`, `theme_description`, `schedule_start`, `schedule_end`, `start_timestamp`, `end_timestamp`, `voting_start_timestamp`, `voting_end_timestamp`, `results_open_timestamp`) are sent in every PATCH body
 - Saves are serialized via a Promise chain (`patchChain`) — only one PATCH in-flight at a time
 - `refreshAdmin()` runs after each PATCH in strict order

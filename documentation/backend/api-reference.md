@@ -437,11 +437,11 @@ Read the current global hackathon configuration and all seasons.
 
 Update hackathon configuration. All fields are per-season when `season_id` is provided. When `season_id` matches the currently active season, changes are also synced to the global hackathon row so the rest of the app sees the active season's config.
 
-| Field | Details |
-| --- | --- |
-| **Auth** | Admin |
-| **Body** | Partial `AdminUpdateHackathonRequest` (all fields optional) + `season_id?` |
-| **Response** | `{ hackathon: Hackathon, seasons: Season[] }` |
+| Field        | Details                                                                    |
+| ------------ | -------------------------------------------------------------------------- |
+| **Auth**     | Admin                                                                      |
+| **Body**     | Partial `AdminUpdateHackathonRequest` (all fields optional) + `season_id?` |
+| **Response** | `{ hackathon: Hackathon, seasons: Season[] }`                              |
 
 ### POST `/api/admin/seasons`
 

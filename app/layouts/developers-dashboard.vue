@@ -86,12 +86,13 @@ const name = computed(() => user.value?.name || "Log In");
             </template>
 
             <template #default="{ collapsed }">
-                <UDashboardSearchButton
-                    :collapsed="collapsed"
-                    class="mb-1"
-                />
+                <UDashboardSearchButton :collapsed="collapsed" class="mb-1" />
 
-                <UNavigationMenu :collapsed="collapsed" :items="sidebarItems[0]" orientation="vertical" />
+                <UNavigationMenu
+                    :collapsed="collapsed"
+                    :items="sidebarItems[0]"
+                    orientation="vertical"
+                />
 
                 <UNavigationMenu
                     v-if="sidebarItems[1]?.length"
