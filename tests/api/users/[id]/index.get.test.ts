@@ -12,7 +12,7 @@ import {
     seedTeam,
     type TestContext,
 } from "../../helpers";
-import { teamAwards, userPastTeams } from "~~/server/database/schema";
+import { teamAwards, userPastTeams, awards } from "~~/server/database/schema";
 
 let ctx: TestContext;
 let handler: any;
@@ -28,6 +28,9 @@ beforeAll(async () => {
 
     const teamsDb = await import("~~/server/utils/database/teams");
     vi.stubGlobal("getTeamById", teamsDb.getTeamById);
+
+    const seasonsDb = await import("~~/server/utils/database/seasons");
+    vi.stubGlobal("getScoreRankVisibilityResolver", seasonsDb.getScoreRankVisibilityResolver);
 
     const awardsDb = await import("~~/server/utils/database/awards");
     vi.stubGlobal("getAwardsForTeams", awardsDb.getAwardsForTeams);
@@ -148,6 +151,16 @@ describe("GET /api/users/:id", () => {
             team_id: team.id,
         });
 
+        ctx.drizzle
+            .insert(awards)
+            .values({
+                namespace: "best_overall",
+                name: "Best Overall",
+                description: "Best overall team.",
+                icon: "i-lucide-trophy",
+                color: "gold",
+            })
+            .run();
         ctx.drizzle
             .insert(teamAwards)
             .values({ team_id: team.id, award: "best_overall", meta: "{}" })

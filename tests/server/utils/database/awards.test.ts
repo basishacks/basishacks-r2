@@ -1,4 +1,4 @@
-import { describe, it, expect, beforeEach, afterEach } from "vitest";
+import { describe, it, expect, beforeEach } from "vitest";
 import { createMockEvent } from "./helpers";
 import {
     getAwards,
@@ -7,7 +7,6 @@ import {
     deleteTeamAwards,
     deleteAward,
 } from "~~/server/utils/database/awards";
-import { AWARD_REGISTRY, type Award } from "~~/shared/awards";
 
 describe("awards database helpers", () => {
     let event: Awaited<ReturnType<typeof createMockEvent>>;
@@ -32,12 +31,6 @@ describe("awards database helpers", () => {
                 "INSERT INTO awards(namespace, name, description, icon, color) VALUES('perfect_score', 'Flawless', 'Achieve a perfect score from all judges.', 'i-lucide-gem', 'gold')",
             )
             .run();
-    });
-
-    afterEach(() => {
-        // Clean up any temporary awards registered by individual tests
-        delete AWARD_REGISTRY["unknown_award"];
-        delete AWARD_REGISTRY["computed_award"];
     });
 
     describe("getAwards", () => {
@@ -72,7 +65,7 @@ describe("awards database helpers", () => {
             expect(awards[0]!.meta).toEqual({});
         });
 
-        it("falls back to namespace defaults for awards not in the registry", async () => {
+        it("returns no awards when the award namespace has no definition row", async () => {
             event.context.drizzle
                 .prepare(
                     "INSERT INTO team_awards(team_id, award, meta) VALUES(1, 'unknown_award', '{}')",
@@ -80,32 +73,31 @@ describe("awards database helpers", () => {
                 .run();
 
             const awards = await getAwards(event, 1);
-            expect(awards).toHaveLength(1);
-            expect(awards[0]!.name).toBe("unknown_award");
-            expect(awards[0]!.description).toBe("unknown_award");
-            expect(awards[0]!.icon).toBe("i-lucide-award");
-            expect(awards[0]!.color).toBe("gold");
-            expect(awards[0]!.text).toBe("unknown_award");
+            expect(awards).toHaveLength(0);
         });
 
-        it("uses a computed text function when present", async () => {
-            AWARD_REGISTRY["computed_award"] = {
-                namespace: "computed_award",
-                name: "Computed",
-                description: "A computed award",
-                icon: "i-lucide-star",
-                computed: (meta: Record<string, unknown>) => [`by ${meta.by}`],
-            } as Award;
-
+        it("resolves award details from the awards table", async () => {
             event.context.drizzle
                 .prepare(
-                    "INSERT INTO team_awards(team_id, award, meta) VALUES(1, 'computed_award', '{\"by\":\"judge\"}')",
+                    "INSERT INTO awards(namespace, name, description, icon, color) VALUES('star_award', 'Star Award', 'Earned a star.', 'i-lucide-star', 'blue')",
+                )
+                .run();
+            event.context.drizzle
+                .prepare(
+                    "INSERT INTO team_awards(team_id, award, meta) VALUES(1, 'star_award', '{}')",
                 )
                 .run();
 
             const awards = await getAwards(event, 1);
             expect(awards).toHaveLength(1);
-            expect(awards[0]!.text).toBe("by judge");
+            expect(awards[0]).toMatchObject({
+                namespace: "star_award",
+                name: "Star Award",
+                description: "Earned a star.",
+                icon: "i-lucide-star",
+                color: "blue",
+                text: "Earned a star.",
+            });
         });
     });
 
@@ -134,6 +126,11 @@ describe("awards database helpers", () => {
         });
 
         it("groups multiple awards for the same team", async () => {
+            event.context.drizzle
+                .prepare(
+                    "INSERT INTO awards(namespace, name, description, icon, color) VALUES('best_ui', 'Best UI', 'Best user interface.', 'i-lucide-palette', 'gold')",
+                )
+                .run();
             event.context.drizzle
                 .prepare(
                     "INSERT INTO team_awards(team_id, award, meta) VALUES(1, 'perfect_score', '{}')",

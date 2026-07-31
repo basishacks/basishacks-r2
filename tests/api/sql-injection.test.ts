@@ -82,6 +82,7 @@ beforeAll(async () => {
 
     const seasonsDb = await import("~~/server/utils/database/seasons");
     vi.stubGlobal("getActiveSeason", seasonsDb.getActiveSeason);
+    vi.stubGlobal("getScoreRankVisibilityResolver", seasonsDb.getScoreRankVisibilityResolver);
 
     const oauth2Db = await import("~~/server/utils/database/oauth2_applications");
     vi.stubGlobal("getOAuth2ApplicationCountByOwner", oauth2Db.getOAuth2ApplicationCountByOwner);
