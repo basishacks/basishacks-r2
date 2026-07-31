@@ -1,5 +1,5 @@
 <template>
-    <UTooltip :delay-duration="1">
+    <UPopover mode="hover" :open-delay="100" :ui="{ content: 'p-3' }">
         <UButton
             :size="props.size"
             :icon="props.award.icon"
@@ -7,11 +7,12 @@
             :color="convertColor(props.award)"
         ></UButton>
         <template #content>
-            <p class="text-sm bold">{{ props.award.name }}</p>
-            -
-            <p class="text-xs">{{ props.award.description }}</p>
+            <div class="flex flex-col gap-1">
+                <p class="text-sm font-bold">{{ props.award.name }}</p>
+                <p class="text-xs">{{ props.award.description }}</p>
+            </div>
         </template>
-    </UTooltip>
+    </UPopover>
 </template>
 
 <script setup lang="ts">

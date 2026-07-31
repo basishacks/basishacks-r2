@@ -85,7 +85,7 @@ To manually initialize the database:
 bun run db:migrate
 ```
 
-This runs Drizzle Kit migrations, which create all required tables: `hackathon`, `teams`, `team_scores`, `users`, `ballots`, `ballot_scores`, `oauth2_applications`, `seasons`, `team_awards`, `peer_voting_scores`, and `user_past_teams`.
+This runs Drizzle Kit migrations, which create all required tables: `hackathon`, `teams`, `team_scores`, `users`, `ballots`, `ballot_scores`, `oauth2_applications`, `seasons`, `awards`, `team_awards`, `peer_voting_scores`, and `user_past_teams`.
 
 ### Seed the Hackathon Row
 

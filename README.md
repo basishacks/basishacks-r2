@@ -16,8 +16,13 @@ The official website for the BIBS-C Network Hackathon (season 2, 2025–26).
 | Validation      | Zod 4.x (^4.4.3)                                                            |
 | Fonts           | @nuxt/fonts ^0.14.0 (local provider)                                        |
 | Icons           | @iconify-json/lucide, @iconify-json/material-symbols                        |
+| Animation       | GSAP ^3.15.0 with ScrollTrigger                                             |
 | Linting         | @nuxt/eslint 1.10.0 + Prettier ^3.9.4                                       |
 | Deployment      | Node.js server (VPS)                                                        |
+
+## Season Showcases
+
+The public `/beneath-the-surface` route is the Season 1 winners showcase. It loads the archived project metadata from `/api/teams?season_id=1` and presents the top three Junior and top three Senior projects as six full-screen, project-specific chapters. GSAP and ScrollTrigger provide the desktop scroll choreography, while mobile and reduced-motion visitors receive a natural, non-pinned reading experience.
 
 ## Prerequisites
 
@@ -210,7 +215,6 @@ shared/                 # Code shared between client and server
   oauth2-scopes.ts      # OAuth2 scope definitions
   oauth2.ts             # Microsoft OAuth2 static configuration
   rubric.ts             # Judging rubric definitions
-  awards.ts             # Award registry definitions
   seasons.ts            # Static season metadata
 
 sql/archive/            # ARCHIVED legacy SQL schema and migrations (not active)

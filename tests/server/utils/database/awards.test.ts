@@ -26,6 +26,11 @@ describe("awards database helpers", () => {
         event.context.drizzle
             .prepare("INSERT INTO teams(name, season_id) VALUES('Team B', 1)")
             .run();
+        event.context.drizzle
+            .prepare(
+                "INSERT INTO awards(namespace, name, description, icon, color) VALUES('perfect_score', 'Flawless', 'Achieve a perfect score from all judges.', 'i-lucide-gem', 'gold')",
+            )
+            .run();
     });
 
     describe("getAwards", () => {
@@ -94,6 +99,11 @@ describe("awards database helpers", () => {
                 .run();
             event.context.drizzle
                 .prepare(
+                    "INSERT INTO awards(namespace, name, description, icon) VALUES('custom_award', 'Custom award', 'Custom award description', 'i-lucide-award')",
+                )
+                .run();
+            event.context.drizzle
+                .prepare(
                     "INSERT INTO team_awards(team_id, award, meta) VALUES(1, 'custom_award', '{}')",
                 )
                 .run();
@@ -107,6 +117,11 @@ describe("awards database helpers", () => {
 
     describe("deleteAward", () => {
         it("removes a specific award for a team", async () => {
+            event.context.drizzle
+                .prepare(
+                    "INSERT INTO awards(namespace, name, description, icon) VALUES('award_a', 'Award A', 'Award A description', 'i-lucide-award'), ('award_b', 'Award B', 'Award B description', 'i-lucide-award')",
+                )
+                .run();
             event.context.drizzle
                 .prepare("INSERT INTO team_awards(team_id, award, meta) VALUES(1, 'award_a', '{}')")
                 .run();

@@ -192,8 +192,16 @@ export const seasons = sqliteTable(
 );
 
 // ---------------------------------------------------------------------------
-// Awards assigned to teams (arbitrary key/value metadata per award).
+// Award definitions and their per-team assignments.
 // ---------------------------------------------------------------------------
+export const awards = sqliteTable("awards", {
+    namespace: text("namespace").primaryKey(),
+    name: text("name").notNull(),
+    description: text("description").notNull(),
+    icon: text("icon").notNull(),
+    color: text("color").notNull().default("gold"),
+});
+
 export const teamAwards = sqliteTable("team_awards", {
     team_id: integer("team_id").notNull(),
     award: text("award").notNull(),

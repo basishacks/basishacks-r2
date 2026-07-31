@@ -189,6 +189,59 @@ function columnExists(sqlite: PortableSqlite, table: string, column: string): bo
     }
 }
 
+function migrateLegacyAwardsSchema(sqlite: PortableSqlite) {
+    if (!tableExists(sqlite, "awards")) return;
+
+    if (!columnExists(sqlite, "awards", "namespace")) {
+        const colorExpression = columnExists(sqlite, "awards", "color")
+            ? "COALESCE(color, 'gold')"
+            : "'gold'";
+        sqlite.exec("ALTER TABLE awards RENAME TO legacy_awards");
+        sqlite.exec(`
+      CREATE TABLE awards (
+        namespace TEXT PRIMARY KEY NOT NULL,
+        name TEXT NOT NULL,
+        description TEXT NOT NULL,
+        icon TEXT NOT NULL,
+        color TEXT NOT NULL DEFAULT 'gold'
+      )
+    `);
+        sqlite.exec(`
+      INSERT INTO awards(namespace, name, description, icon, color)
+      SELECT 'legacy_' || id, name, description, icon, ${colorExpression}
+      FROM legacy_awards
+    `);
+        sqlite.exec("DROP TABLE legacy_awards");
+        console.log("[Nitro] Migrated legacy awards catalog to namespace keys");
+    }
+
+    if (!columnExists(sqlite, "awards", "color")) {
+        sqlite.exec("ALTER TABLE awards ADD COLUMN color TEXT NOT NULL DEFAULT 'gold'");
+    }
+
+    sqlite.exec(`
+    INSERT OR IGNORE INTO awards(namespace, name, description, icon, color)
+    VALUES (
+      'perfect_score',
+      'Flawless',
+      'Achieve a perfect score from all judges.',
+      'i-lucide-gem',
+      'gold'
+    )
+  `);
+
+    if (tableExists(sqlite, "team_awards") && columnExists(sqlite, "team_awards", "award")) {
+        sqlite.exec(
+            "UPDATE team_awards SET meta = '{}' WHERE meta IS NULL OR typeof(meta) <> 'text'",
+        );
+        sqlite.exec(`
+      INSERT OR IGNORE INTO awards(namespace, name, description, icon, color)
+      SELECT DISTINCT award, award, award, 'i-lucide-award', 'gold'
+      FROM team_awards
+    `);
+    }
+}
+
 /**
  * Brings legacy databases (created from sql/archive/init.sql) up to date with
  * the current Drizzle schema without dropping existing data.
@@ -196,6 +249,8 @@ function columnExists(sqlite: PortableSqlite, table: string, column: string): bo
  * @param sqlite - SQLite database instance (bun:sqlite or better-sqlite3)
  */
 function migrateLegacySchema(sqlite: PortableSqlite) {
+    migrateLegacyAwardsSchema(sqlite);
+
     // Missing tables from the legacy init.sql schema
     if (!tableExists(sqlite, "seasons")) {
         sqlite.exec(`

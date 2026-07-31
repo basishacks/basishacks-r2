@@ -22,6 +22,7 @@ The platform manages the entire hackathon lifecycle:
 | **Developer Portal** | Administrative dashboard for managing OAuth2 applications, users, teams, seasons, and debug tools. |
 | **Microsoft Graph API** | Integration with Microsoft Entra ID for OAuth2 login, meeting scheduling, and Teams chat via the Graph API. |
 | **DeepSeek AI Chatbot** | In-memory chat session store powered by the OpenAI SDK for DeepSeek AI interactions in debug routes. |
+| **Season Showcases** | Public, art-directed winner experiences, including the six-project Beneath the Surface showcase. |
 
 ## Technology Stack
 
@@ -39,6 +40,7 @@ The platform manages the entire hackathon lifecycle:
 | **Validation** | Zod 4.x (^4.4.3) | Schema validation for all API inputs. |
 | **Fonts** | `@nuxt/fonts` ^0.14.0 | Local font provider. |
 | **Icons** | `@iconify-json/lucide`, `@iconify-json/material-symbols`, `@iconify-json/simple-icons` | Icon sets. |
+| **Animation** | `gsap` ^3.15.0 | ScrollTrigger timelines and responsive motion for the Beneath the Surface showcase. |
 | **Linting** | `@nuxt/eslint` 1.10.0 + Prettier ^3.9.4 | Semicolons enabled, double quotes. |
 | **Deployment** | Node.js server (VPS) | Bun also supported; Nitro `node-server` preset. |
 

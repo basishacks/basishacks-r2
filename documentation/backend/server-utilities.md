@@ -693,7 +693,7 @@ Per-table database helper modules in `server/utils/database/`.
 | `deleteTeamAwards(event, teamId)`         | Delete all awards for a team           |
 | `deleteAward(event, teamId, award)`       | Delete a specific award for a team     |
 
-Award definitions live in `shared/awards.ts`.
+Award definitions live in the `awards` SQLite table.
 
 ### oauth2_applications.ts
 

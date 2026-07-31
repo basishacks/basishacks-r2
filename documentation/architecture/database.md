@@ -149,14 +149,26 @@ Junction table tracking which teams a user has belonged to historically.
 
 **Primary key**: `(user_id, team_id)`
 
+### `awards`
+
+Stores the award catalog. The namespace, display name, description, and icon are data managed in SQLite rather than hard-coded in the application.
+
+| Column        | Type                        | Description                              |
+| ------------- | --------------------------- | ---------------------------------------- |
+| `namespace`   | `TEXT PRIMARY KEY NOT NULL` | Unique machine-readable award identifier |
+| `name`        | `TEXT NOT NULL`             | Human-readable award name                |
+| `description` | `TEXT NOT NULL`             | Explanation of how the award is earned   |
+| `icon`        | `TEXT NOT NULL`             | Iconify icon class                       |
+| `color`       | `TEXT NOT NULL`             | Display color (defaults to `gold`)       |
+
 ### `team_awards`
 
-Stores per-team award assignments. Award definitions live in `shared/awards.ts` (`AWARD_REGISTRY`); the database only stores the award namespace and JSON metadata, which are resolved at read time.
+Stores per-team award assignments and JSON metadata. Award details are joined from `awards` at read time.
 
 | Column    | Type               | Description                                     |
 | --------- | ------------------ | ----------------------------------------------- |
 | `team_id` | `INTEGER NOT NULL` | FK to `teams.id` (ON DELETE CASCADE)            |
-| `award`   | `TEXT NOT NULL`    | Award namespace from `AWARD_REGISTRY`           |
+| `award`   | `TEXT NOT NULL`    | Award namespace from `awards.namespace`         |
 | `meta`    | `TEXT NOT NULL`    | JSON metadata for the assignment (default `{}`) |
 
 **Primary key**: `(team_id, award)`
@@ -302,6 +314,7 @@ In practice, the dev/prod server applies migrations automatically when `createDr
 | `team_awards` table                    | Creates table                                           |
 | `peer_voting_scores` table             | Creates table                                           |
 | `user_past_teams` table                | Creates table with composite PK                         |
+| Legacy `awards` table                  | Rebuilds the catalog with namespace keys, preserving rows |
 | `hackathon.*` timestamp/status columns | `ALTER TABLE ... ADD COLUMN INTEGER DEFAULT 0/NULL`     |
 | `teams.season_id`                      | `ALTER TABLE ... ADD COLUMN INTEGER DEFAULT 1 NOT NULL` |
 | `teams.sourcing`                       | `ALTER TABLE ... ADD COLUMN TEXT DEFAULT '' NOT NULL`   |
@@ -324,6 +337,7 @@ After migrations, `seedHackathon()` ensures the `hackathon` singleton row exists
 | `migration-2026-06-02-22-00Z.sql` | Adds FK constraint on `teams.season_id` (table recreation) |
 | `migration-2026-06-02-22-15Z.sql` | Creates `user_past_teams` junction table |
 | `migration-2026-06-27-06-01Z.sql` | Creates the `team_awards` table (legacy archived migration) |
+| `0005_dynamic_awards.sql` | Creates and seeds the namespace-keyed award catalog |
 
 ## Foreign Keys
 
