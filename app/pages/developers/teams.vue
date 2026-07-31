@@ -2,8 +2,6 @@
 import type { TableColumn } from "@nuxt/ui";
 import { upperFirst } from "scule";
 import { getPaginationRowModel } from "@tanstack/table-core";
-import { hasPermission, DevPermissions } from "~~/shared/permissions";
-
 definePageMeta({
     layout: "developers-dashboard",
 });
@@ -11,6 +9,7 @@ definePageMeta({
 const UButton = resolveComponent("UButton");
 const UBadge = resolveComponent("UBadge");
 const UCheckbox = resolveComponent("UCheckbox");
+const UserAvatarGroup = resolveComponent("UserAvatarGroup");
 
 const toast = useToast();
 const table = useTemplateRef<any>("table");
@@ -25,26 +24,19 @@ const columnFilters = ref([
 const columnVisibility = ref();
 const rowSelection = ref<Record<string, boolean>>({});
 
-type AdminTeam = Team & { season_name: string | null };
+type AdminTeamMember = {
+    id: number;
+    name: string | null;
+    email: string;
+    profile_picture: string | null;
+};
+
+type AdminTeam = Team & { season_name: string | null; members: AdminTeamMember[] };
 
 const { data, status, refresh } = await useFetch<AdminTeam[]>("/api/admin/teams", {
     lazy: true,
     default: () => [],
 });
-
-// Client-side permission guard
-const { user: me } = await useApiUser();
-if (
-    !hasPermission(me.value?.role, DevPermissions.PORTAL_TEAMS_VIEW) &&
-    !hasPermission(me.value?.role, "admin")
-) {
-    useToast().add({
-        title: "Access denied",
-        description: "You do not have permission to view teams.",
-        color: "error",
-    });
-    throw await navigateTo("/developers");
-}
 
 const selectedRows = computed<any[]>(() => {
     if (!table.value?.tableApi) return [];
@@ -123,6 +115,17 @@ const columns: TableColumn<AdminTeam>[] = [
                 onClick: () => column.toggleSorting(column.getIsSorted() === "asc"),
             });
         },
+    },
+    {
+        id: "members",
+        header: "Members",
+        cell: ({ row }) =>
+            h(UserAvatarGroup, {
+                users: row.original.members ?? [],
+                max: 4,
+                size: "xs",
+                developerMode: true,
+            }),
     },
     {
         accessorKey: "pathway",

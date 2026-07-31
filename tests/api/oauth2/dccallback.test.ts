@@ -114,16 +114,16 @@ describe("GET /api/oauth2/dccallback - PKCE verifier handling", () => {
         await handler(createEvent());
 
         expect(redeemAuthorizationCodeForToken).toHaveBeenCalledTimes(1);
-        const call = redeemAuthorizationCodeForToken.mock.calls[0]![0];
-        expect(call.code).toBe("test-code");
-        expect(call.clientId).toBe("test-client-id");
-        expect(call.redirectUri).toBe("https://example.com/callback");
-        // CRITICAL regression check: the cookie value is used, not session.ms_verifier
-        expect(call.codeVerifier).toBe(VERIFIER);
-        expect(call.codeVerifier).not.toBe(MS_VERIFIER);
+        expect(redeemAuthorizationCodeForToken).toHaveBeenCalledWith({
+            code: "test-code",
+            clientId: "test-client-id",
+            redirectUri: "https://example.com/callback",
+            appPermissions: expect.any(String),
+            codeVerifier: VERIFIER,
+        });
     });
 
-    it("resolves identity via UserInfo helper and sets session from sub", async () => {
+    it("resolves identity via resolveUserInfoFromAccessToken and sets session from sub", async () => {
         getAuthorizeSession.mockReturnValue(createMockSession());
         mockCookies.values["bridge_id"] = "test-bridge-id";
         mockCookies.values["pkce_verifier"] = VERIFIER;
@@ -134,11 +134,7 @@ describe("GET /api/oauth2/dccallback - PKCE verifier handling", () => {
             token_type: "Bearer",
             expires_in: 3600,
         });
-        resolveUserInfoFromAccessToken.mockResolvedValue({
-            sub: "42",
-            name: "Test",
-            email: "t@example.com",
-        });
+        resolveUserInfoFromAccessToken.mockResolvedValue({ sub: "42" });
 
         await handler(createEvent());
 
@@ -220,5 +216,139 @@ describe("GET /api/oauth2/dccallback - PKCE verifier handling", () => {
         await handler(createEvent());
 
         expect(sendRedirectSpy).toHaveBeenCalledWith(expect.anything(), "/teams", 302);
+    });
+});
+
+describe("GET /api/oauth2/dccallback - error and validation paths", () => {
+    it("redirects to home when the upstream OAuth2 returns an error", async () => {
+        getAuthorizeSession.mockReturnValue(createMockSession());
+        mockCookies.values["bridge_id"] = "test-bridge-id";
+        mockQueryState.value = {
+            error: "access_denied",
+            error_description: "User denied access",
+            state: "test-state",
+        };
+
+        await handler(createEvent());
+
+        expect(sendRedirectSpy).toHaveBeenCalledTimes(1);
+        expect(sendRedirectSpy).toHaveBeenCalledWith(expect.anything(), "/", 302);
+        expect(redeemAuthorizationCodeForToken).not.toHaveBeenCalled();
+    });
+
+    it("throws 400 when the bridge_id cookie is missing", async () => {
+        mockQueryState.value = { code: "test-code", state: "test-state" };
+        // bridge_id cookie is intentionally not set
+
+        await expect(handler(createEvent())).rejects.toMatchObject({
+            statusCode: 400,
+            message: "Missing bridge_id cookie",
+        });
+
+        expect(redeemAuthorizationCodeForToken).not.toHaveBeenCalled();
+    });
+
+    it("throws 400 when the authorize session is not found", async () => {
+        getAuthorizeSession.mockReturnValue(null);
+        mockCookies.values["bridge_id"] = "test-bridge-id";
+        mockQueryState.value = { code: "test-code", state: "test-state" };
+
+        await expect(handler(createEvent())).rejects.toMatchObject({
+            statusCode: 400,
+            message: "Authorize session not found or expired",
+        });
+
+        expect(redeemAuthorizationCodeForToken).not.toHaveBeenCalled();
+    });
+
+    it("throws 400 when the state parameter is missing", async () => {
+        getAuthorizeSession.mockReturnValue(createMockSession());
+        mockCookies.values["bridge_id"] = "test-bridge-id";
+        mockCookies.values["pkce_verifier"] = VERIFIER;
+        mockQueryState.value = { code: "test-code" };
+
+        await expect(handler(createEvent())).rejects.toMatchObject({
+            statusCode: 400,
+            message: "State parameter mismatch",
+        });
+
+        expect(redeemAuthorizationCodeForToken).not.toHaveBeenCalled();
+    });
+
+    it("throws 400 when the state parameter does not match the session", async () => {
+        getAuthorizeSession.mockReturnValue(createMockSession());
+        mockCookies.values["bridge_id"] = "test-bridge-id";
+        mockCookies.values["pkce_verifier"] = VERIFIER;
+        mockQueryState.value = { code: "test-code", state: "wrong-state" };
+
+        await expect(handler(createEvent())).rejects.toMatchObject({
+            statusCode: 400,
+            message: "State parameter mismatch",
+        });
+
+        expect(redeemAuthorizationCodeForToken).not.toHaveBeenCalled();
+    });
+
+    it("redirects to /dashboard when given an absolute URL (blocks open redirect)", async () => {
+        getAuthorizeSession.mockReturnValue(createMockSession());
+        mockCookies.values["bridge_id"] = "test-bridge-id";
+        mockCookies.values["pkce_verifier"] = VERIFIER;
+        mockQueryState.value = {
+            code: "test-code",
+            state: "test-state",
+            redirect: "https://evil.com/phish",
+        };
+        redeemAuthorizationCodeForToken.mockResolvedValue({
+            access_token: "fake-jwt-token",
+            token_type: "Bearer",
+            expires_in: 3600,
+        });
+        resolveUserInfoFromAccessToken.mockResolvedValue({ sub: "42" });
+
+        await handler(createEvent());
+
+        expect(sendRedirectSpy).toHaveBeenCalledWith(expect.anything(), "/dashboard", 302);
+    });
+
+    it("redirects to /dashboard when given a protocol-relative URL (blocks open redirect)", async () => {
+        getAuthorizeSession.mockReturnValue(createMockSession());
+        mockCookies.values["bridge_id"] = "test-bridge-id";
+        mockCookies.values["pkce_verifier"] = VERIFIER;
+        mockQueryState.value = {
+            code: "test-code",
+            state: "test-state",
+            redirect: "//evil.com/phish",
+        };
+        redeemAuthorizationCodeForToken.mockResolvedValue({
+            access_token: "fake-jwt-token",
+            token_type: "Bearer",
+            expires_in: 3600,
+        });
+        resolveUserInfoFromAccessToken.mockResolvedValue({ sub: "42" });
+
+        await handler(createEvent());
+
+        expect(sendRedirectSpy).toHaveBeenCalledWith(expect.anything(), "/dashboard", 302);
+    });
+
+    it("redirects to the given relative path when redirect is safe", async () => {
+        getAuthorizeSession.mockReturnValue(createMockSession());
+        mockCookies.values["bridge_id"] = "test-bridge-id";
+        mockCookies.values["pkce_verifier"] = VERIFIER;
+        mockQueryState.value = {
+            code: "test-code",
+            state: "test-state",
+            redirect: "/results",
+        };
+        redeemAuthorizationCodeForToken.mockResolvedValue({
+            access_token: "fake-jwt-token",
+            token_type: "Bearer",
+            expires_in: 3600,
+        });
+        resolveUserInfoFromAccessToken.mockResolvedValue({ sub: "42" });
+
+        await handler(createEvent());
+
+        expect(sendRedirectSpy).toHaveBeenCalledWith(expect.anything(), "/results", 302);
     });
 });

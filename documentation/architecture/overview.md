@@ -25,6 +25,7 @@ basishacks is a **full-stack Nuxt 4 application** that combines a Vue 3 frontend
 | Icons | `@iconify-json/lucide`, `@iconify-json/material-symbols` |
 | Linting | `@nuxt/eslint` 1.10.0 + Prettier ^3.9.4 |
 | Deployment | Node.js server (VPS; Bun also supported) |
+| Test Suite | Vitest with **<TestCount /> tests across 87 files** |
 
 ## Directory Structure
 
@@ -32,28 +33,28 @@ basishacks is a **full-stack Nuxt 4 application** that combines a Vue 3 frontend
 basishacks-r2/
 ├── app/                    # Nuxt app (Vue frontend)
 │   ├── assets/css/         # Global styles (Tailwind + custom utilities)
-│   ├── components/         # Vue components
+│   ├── components/         # Vue components (includes SafeLink, SafeComark)
 │   ├── layouts/            # Nuxt layouts (default, dashboard, fullwidth)
 │   ├── middleware/          # Route middleware (auth.ts)
 │   ├── pages/              # File-based routing
-│   └── utils/              # Frontend utilities (consts, errors, loading)
+│   └── utils/              # Frontend utilities (consts, errors, loading, url-validation)
 ├── server/                 # Nitro backend
 │   ├── api/                # API route handlers (file-based)
-│   ├── middleware/         # Server middleware (OAuth2 authorize)
-│   ├── plugins/            # Nitro plugins (DB init, MS Graph token, JWT secret guard)
+│   ├── middleware/         # Server middleware (security-headers, debug-lockdown, oauth2-authorize)
+│   ├── plugins/            # Nitro plugins (init-database, validate-environment, microsoft, validate-oauth2-jwt-secret)
 │   ├── types/              # Type augmentations (H3EventContext)
 │   └── utils/              # Server utilities
 │       ├── database/       # Per-table DB helpers (users, teams, scores, etc.)
 │       ├── auth.ts         # requireUser / requireJudge / requireAdmin / requirePermission
 │       ├── convert.ts      # DB row -> public API object transformers
-│       ├── rateLimit.ts    # In-memory rate limiter
+│       ├── rateLimit.ts    # In-memory rate limiter (4 tiers)
 │       ├── oauth2.ts       # Microsoft OAuth2 URL construction
 │       ├── oauth2-validate.ts  # OAuth2 authorization request validation
 │       ├── oauth2-jwt.ts   # JWT verification and withOAuth2JWT() wrapper
 │       ├── profile.ts      # Profile picture helpers
-│       ├── assets.ts       # Static and user asset helpers
+│       ├── assets.ts       # Static and user asset helpers (path traversal prevention)
 │       ├── scoring.ts      # Score aggregation and final ranking
-│       ├── url-validation.ts   # Redirect URI validation
+│       ├── url-validation.ts   # SSRF prevention, private IP blocking, redirect URI validation
 │       ├── validate-oauth2-jwt-secret.ts # JWT secret guard
 │       └── deepseek-store.ts   # DeepSeek AI chat session store
 ├── shared/                 # Code shared between client and server
@@ -63,10 +64,8 @@ basishacks-r2/
 │   ├── auth.d.ts           # nuxt-auth-utils session type augmentation
 │   ├── permissions.ts      # Fine-grained permission constants and helpers
 │   ├── oauth2-scopes.ts    # OAuth2 scope definitions
-│   ├── oauth2.ts           # Microsoft OAuth2 static configuration
 │   ├── rubric.ts           # Judging rubric definitions
-│   ├── awards.ts           # Award registry definitions
-│   └── seasons.ts          # Static season metadata
+│   └── responses.d.ts      # API response interfaces
 ├── sql/archive/            # Archived legacy SQL schema and migrations
 │   ├── init.sql            # Historical base schema
 │   └── migration-*.sql     # Historical dated migrations
@@ -93,12 +92,17 @@ Client (Browser)
 Nuxt Middleware (auth.ts route guard)
   │
   ▼
-Nitro Server Middleware (OAuth2 authorize, rate limiting)
+Nitro Server Middleware
+  ├── security-headers.ts     (CSP, HSTS, X-Frame-Options, etc.)
+  ├── debug-lockdown.ts       (404 debug routes when DISABLE_DEBUG_ROUTES is set)
+  ├── oauth2-authorize.ts     (OAuth2 authorization session validation)
+  └── Rate limiting wrapper   (applied per-handler via applyRateLimit)
   │
   ▼
 Nitro API Handler (server/api/**/*.ts)
-  │  ├── Input validation via Zod schemas
-  │  ├── Role/permission checks via requireUser/requireAdmin/etc.
+  │  ├── Input validation via Zod schemas (length-bounded inputs)
+  │  ├── Role/permission checks via requireUser/requireAdmin/requirePermission
+  │  ├── OAuth2 JWT verification via withOAuth2JWT() wrapper
   │  └── Database access via event.context.drizzle
   │
   ▼
@@ -147,7 +151,7 @@ The database layer uses Drizzle ORM with a runtime-agnostic SQLite driver (`bun:
 
 ### Session-based auth
 
-Authentication uses `nuxt-auth-utils` with session cookies. The session stores only `{ user: { id: number } }` — the full user record is fetched from the database on each request. Sessions have a 30-day max age.
+Authentication uses `nuxt-auth-utils` with session cookies. The session stores only `{ user: { id: number } }` — the full user record is fetched from the database on each request. Sessions have a 30-day max age with `httpOnly`, `secure`, and `sameSite: "lax"` cookie flags.
 
 ### RBAC with fine-grained permissions
 
@@ -164,6 +168,42 @@ The `users.role` column stores space-separated permission strings (e.g., `"parti
 5. The response is stripped of internal fields and returned as JSON.
 
 </CollapsibleDetails>
+
+### URL validation (client + server)
+
+URL validation is enforced at both layers to prevent SSRF and open redirect attacks:
+
+- **Server** (`server/utils/url-validation.ts`): Validates external URLs used in OAuth2 redirects and web fetches. Blocks private IP ranges, loopback addresses, and non-`http:`/`https:` protocols.
+- **Client** (`app/utils/url-validation.ts`): The `isSafeUrl()` function used by `SafeLink` component ensures user-supplied links are either relative paths or safe `http:`/`https:` URLs. Unsafe URLs are rendered as inert strikethrough text.
+
+### SafeLink / SafeComark frontend components
+
+- **`SafeLink`** (`app/components/SafeLink.vue`): A link component that validates `href` URLs via `isSafeUrl()`. Safe external links open with `target="_blank" rel="noopener noreferrer"`; unsafe URLs are rendered as inert strikethrough text.
+- **`SafeComark`** (`app/components/SafeComark.vue`): A Markdown rendering wrapper that uses `SafeLink` for all `<a>` tags, preventing XSS and open redirect via user-supplied content.
+
+### Security middleware
+
+Three Nitro server middleware files run on every request:
+
+- **`security-headers.ts`** — Applies CSP, HSTS, `X-Frame-Options: DENY`, and other security headers to every response (pages and API).
+- **`debug-lockdown.ts`** — Returns 404 for `/api/debug/*` and `/debug*` routes when `DISABLE_DEBUG_ROUTES` is set.
+- **`oauth2-authorize.ts`** — Validates and manages OAuth2 authorization sessions.
+
+### Startup environment validation
+
+The `validate-environment.ts` Nitro plugin performs mandatory checks at server startup:
+
+- `NUXT_SESSION_PASSWORD` must be >= 32 bytes (fatal in production, warning in dev).
+- `NUXT_OAUTH2_JWT_SECRET` must be >= 32 bytes (fatal in all environments; process exits).
+- Microsoft OAuth2 config (`MICROSOFT_TENANT_ID`, `MICROSOFT_CLIENT_ID`, `MICROSOFT_CLIENT_SECRET`) warns if any are missing when others are set.
+
+### OAuth2 JWT utilities
+
+The `oauth2-jwt.ts` utility provides JWT verification, Bearer token extraction, scope checking, and a `withOAuth2JWT()` handler wrapper. All protected OAuth2 endpoints use this wrapper to verify tokens signed with `NUXT_OAUTH2_JWT_SECRET`.
+
+### Comprehensive test suite
+
+The project includes **<TestCount /> tests across 87 files** covering API endpoints, server utilities, database helpers, shared schemas, Vue components, pages, and composables.
 
 ### Shared code boundary
 

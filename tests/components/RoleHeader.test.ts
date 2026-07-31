@@ -13,4 +13,62 @@ describe("RoleHeader.vue", () => {
         expect(source).not.toContain("useFetch<GetUserResponse>");
         expect(source).not.toContain("useUserSession()");
     });
+
+    it("renders the hackathon title basishacks_2026", () => {
+        expect(source).toContain("basishacks_2026");
+    });
+
+    it("includes a Home navigation item", () => {
+        expect(source).toContain("Home");
+        expect(source).toContain('to: "/"');
+    });
+
+    it("includes a Dashboard navigation item", () => {
+        expect(source).toContain("Dashboard");
+        expect(source).toContain('to: "/dashboard"');
+    });
+
+    it("includes a Showcase navigation item", () => {
+        expect(source).toContain("Showcase");
+        expect(source).toContain('to: "/showcase"');
+    });
+
+    it("conditionally shows Voting link for non-judge/non-admin during voting", () => {
+        expect(source).toContain('hackathon.value?.status === "voting"');
+        expect(source).toContain('!hasPermission(user.value?.role, "judge")');
+        expect(source).toContain('!hasPermission(user.value?.role, "admin")');
+        expect(source).toContain('to: "/voting"');
+    });
+
+    it("conditionally shows Judging link for judge/admin during voting", () => {
+        expect(source).toContain('hasPermission(user.value?.role, "judge")');
+        expect(source).toContain('hasPermission(user.value?.role, "admin")');
+        expect(source).toContain('to: "/judging"');
+    });
+
+    it("includes a UColorModeButton for theme toggling", () => {
+        expect(source).toContain("UColorModeButton");
+    });
+
+    it("has a profile button linking to /profile", () => {
+        expect(source).toContain('href="/profile"');
+    });
+
+    it("shows UserAvatar when user is logged in", () => {
+        expect(source).toContain("UserAvatar");
+        expect(source).toContain('v-if="userRef"');
+    });
+
+    it("shows account-circle icon when user is not logged in", () => {
+        expect(source).toContain("i-material-symbols-account-circle-full");
+        expect(source).toContain("v-else");
+    });
+
+    it("uses lazy data fetching for hackathon and user data", () => {
+        expect(source).toContain("lazy: true");
+    });
+
+    it("imports hasPermission from shared permissions", () => {
+        expect(source).toContain('import { hasPermission } from "~~/shared/permissions"');
+    });
 });

@@ -4,10 +4,11 @@ import {
     getOAuth2ApplicationScopes,
 } from "~~/server/utils/database/oauth2_applications";
 import { OAuth2Scopes } from "~~/shared/oauth2-scopes";
+import { ApplicationIdParams } from "~~/shared/schemas";
 
 export default defineEventHandler(async (event) => {
     const user = await requireUser(event);
-    const clientID = getRouterParam(event, "id")!;
+    const { id: clientID } = await getValidatedRouterParams(event, ApplicationIdParams.parse);
 
     const app = await getOAuth2Application(event, clientID);
     if (!app) {

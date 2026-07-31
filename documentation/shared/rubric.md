@@ -10,7 +10,7 @@ The rubric system defines the criteria and weightings used by judges to score te
 ::: info Source Files
 
 - `shared/rubric.ts` — Rubric definitions
-- `shared/seasons.ts` — Season definitions :::
+- `documentation/shared/seasons.md` — Season system :::
 
 ## RubricData Interface
 
@@ -101,26 +101,11 @@ finalScore = 3.95 × 20 = 79
 
 ## Seasons
 
-Seasons are defined in `shared/seasons.ts` using the `HackathonSeason` interface:
+Seasons are stored in the database `seasons` table rather than in source control. Each row carries its name, active state, and a full per-season copy of the hackathon configuration (`status`, `show_scores`, `show_ranking`, timestamps, theme, and so on).
 
-```ts
-interface HackathonSeason {
-    id: number;
-    theme_name: string | null;
-    theme_description: string | null;
-    date: string | null;
-    docs: string | null;
-}
-```
+The active season is tracked through the `is_active` column and can be set via `PATCH /api/seasons/active`. Score and rank visibility for results is driven per season by the `show_scores` / `show_ranking` columns through `getScoreRankVisibilityResolver` in `server/utils/database/seasons.ts`.
 
-### Defined Seasons
-
-| ID  | Theme Name          | Date          | Description                            |
-| --- | ------------------- | ------------- | -------------------------------------- |
-| 1   | Beneath the Surface | May 2026      | Explore the hidden depths of our world |
-| 2   | Signal              | February 2026 | signal                                 |
-
-The active season is tracked in the `seasons` table through the `is_active` column and can be set via `PATCH /api/seasons/active`. The `HackathonSeason` metadata in `shared/seasons.ts` is static and mapped to `seasons` table rows by ID; the table itself stores only `id`, `name`, and `is_active`.
+See [Seasons](../shared/seasons) for the full season model and API reference.
 
 ## Related Schemas
 

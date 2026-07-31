@@ -20,6 +20,8 @@ export const hackathon = sqliteTable(
         status: text("status").notNull(),
         voting_enabled: integer("voting_enabled").notNull().default(0),
         results_published: integer("results_published").notNull().default(0),
+        show_scores: integer("show_scores").notNull().default(0),
+        show_ranking: integer("show_ranking").notNull().default(0),
         submitted_count: integer("submitted_count").notNull().default(0),
         max_votes_per_user: integer("max_votes_per_user").notNull().default(0),
         judging_open: integer("judging_open").notNull().default(0),
@@ -96,8 +98,6 @@ export const users = sqliteTable(
         role: text("role").notNull().default("participant"),
         name: text("name"),
         team_id: integer("team_id"),
-        login_code: text("login_code"),
-        login_expiry: integer("login_expiry"),
         profile_theme: text("profile_theme"),
         profile_picture: text("profile_picture"),
     },
@@ -169,13 +169,37 @@ export const seasons = sqliteTable(
         id: integer("id").primaryKey({ autoIncrement: true }),
         name: text("name").notNull().unique(),
         is_active: integer("is_active").notNull().default(0),
+        status: text("status").notNull().default("not_started"),
+        voting_enabled: integer("voting_enabled").notNull().default(0),
+        results_published: integer("results_published").notNull().default(0),
+        judging_open: integer("judging_open").notNull().default(0),
+        show_scores: integer("show_scores").notNull().default(0),
+        show_ranking: integer("show_ranking").notNull().default(0),
+        max_votes_per_user: integer("max_votes_per_user").notNull().default(0),
+        schedule_start: text("schedule_start"),
+        schedule_end: text("schedule_end"),
+        start_timestamp: integer("start_timestamp").notNull().default(0),
+        end_timestamp: integer("end_timestamp").notNull().default(0),
+        voting_start_timestamp: integer("voting_start_timestamp").notNull().default(0),
+        voting_end_timestamp: integer("voting_end_timestamp").notNull().default(0),
+        results_open_timestamp: integer("results_open_timestamp").notNull().default(0),
+        theme_name: text("theme_name"),
+        theme_description: text("theme_description"),
     },
     (table) => [check("seasons_is_active_check", sql`${table.is_active} IN (0, 1)`)],
 );
 
 // ---------------------------------------------------------------------------
-// Awards assigned to teams (arbitrary key/value metadata per award).
+// Award definitions and their per-team assignments.
 // ---------------------------------------------------------------------------
+export const awards = sqliteTable("awards", {
+    namespace: text("namespace").primaryKey(),
+    name: text("name").notNull(),
+    description: text("description").notNull(),
+    icon: text("icon").notNull(),
+    color: text("color").notNull().default("gold"),
+});
+
 export const teamAwards = sqliteTable("team_awards", {
     team_id: integer("team_id").notNull(),
     award: text("award").notNull(),

@@ -23,7 +23,7 @@
                         "
                         class="h-24 w-full bg-cover bg-center rounded-t"
                         :style="{
-                            backgroundImage: `url(/userast/${hoveredUser.profile_theme.value})`,
+                            backgroundImage: `url(${hoveredUser.profile_theme.value.startsWith('http') ? hoveredUser.profile_theme.value : `/api/users/${hoveredUser.id}/profile_picture`})`,
                         }"
                     />
                     <div class="flex items-center gap-3 p-3">

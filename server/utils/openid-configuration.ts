@@ -24,7 +24,7 @@ export function buildOpenIdConfiguration(issuer?: string) {
         token_endpoint_auth_signing_alg_values_supported: ["HS256"],
         scopes_supported: [...OAuth2ScopesList],
         claims_supported: ["sub", "name", "picture", "email", "email_verified"],
-        code_challenge_methods_supported: ["S256", "plain"],
+        code_challenge_methods_supported: ["S256"],
         claim_types_supported: ["normal"],
         request_parameter_supported: false,
         request_uri_parameter_supported: false,

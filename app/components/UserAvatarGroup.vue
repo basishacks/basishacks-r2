@@ -2,6 +2,7 @@
 const props = defineProps<{
     users: Array<
         | {
+              id?: number | null;
               name?: string | null;
               email?: string;
               profile_picture?: string | null;
@@ -13,6 +14,7 @@ const props = defineProps<{
     max?: number | string;
     class?: any;
     ui?: any;
+    developerMode?: boolean;
 }>();
 </script>
 
@@ -30,6 +32,12 @@ const props = defineProps<{
                     class="flex items-center gap-3 px-2 py-1.5 rounded-md hover:bg-elevated/50"
                 >
                     <UserItem :user="user" size="sm" />
+                    <span
+                        v-if="developerMode && user?.id != null"
+                        class="text-xs text-muted font-mono"
+                    >
+                        &lt;{{ user.id }}&gt;
+                    </span>
                 </div>
             </div>
         </template>

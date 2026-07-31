@@ -131,6 +131,16 @@ describe("oauth2_applications database helpers", () => {
             expect(abbreviated[0]).toMatch(/^sha256:[a-f0-9]{8}\.\.\.[a-f0-9]{8}$/);
         });
 
+        it("returns an empty array when the application has no secrets", async () => {
+            const abbreviated = await getOAuth2ApplicationSecretAbbreviated(event, clientId);
+            expect(abbreviated).toHaveLength(0);
+        });
+
+        it("rejects validation when the application has no secrets", async () => {
+            const valid = await validateOAuth2ApplicationSecret(event, clientId, "any-secret");
+            expect(valid).toBe(false);
+        });
+
         it("validates a correct secret", async () => {
             const { plainSecret } = await addOAuth2ApplicationSecret(event, clientId);
 
@@ -159,12 +169,50 @@ describe("oauth2_applications database helpers", () => {
             expect(remaining).toHaveLength(0);
         });
 
+        it("throws when the application has no secrets", async () => {
+            await expect(
+                removeOAuth2ApplicationSecret(event, clientId, "sha256:00000000...00000000"),
+            ).rejects.toThrow("No secrets found");
+        });
+
         it("throws when removing a secret with an invalid abbreviated format", async () => {
             await addOAuth2ApplicationSecret(event, clientId);
 
             await expect(
                 removeOAuth2ApplicationSecret(event, clientId, "bad-format"),
             ).rejects.toThrow("Invalid abbreviated secret format");
+        });
+
+        it("throws when removing a secret with valid format but no matching secret", async () => {
+            await addOAuth2ApplicationSecret(event, clientId);
+
+            await expect(
+                removeOAuth2ApplicationSecret(event, clientId, "sha256:00000000...00000000"),
+            ).rejects.toThrow("Secret not found");
+        });
+
+        it("validates a legacy plain-text secret", async () => {
+            event.context.drizzle
+                .prepare("UPDATE oauth2_applications SET client_secret = ? WHERE client_id = ?")
+                .bind("legacy-plain-secret", clientId)
+                .run();
+
+            const valid = await validateOAuth2ApplicationSecret(
+                event,
+                clientId,
+                "legacy-plain-secret",
+            );
+            expect(valid).toBe(true);
+        });
+
+        it("rejects a legacy plain-text secret that does not match", async () => {
+            event.context.drizzle
+                .prepare("UPDATE oauth2_applications SET client_secret = ? WHERE client_id = ?")
+                .bind("legacy-plain-secret", clientId)
+                .run();
+
+            const valid = await validateOAuth2ApplicationSecret(event, clientId, "wrong-secret");
+            expect(valid).toBe(false);
         });
 
         it("keeps both secrets when two are added concurrently", async () => {
@@ -190,6 +238,11 @@ describe("oauth2_applications database helpers", () => {
         beforeEach(async () => {
             const app = await createOAuth2Application(event, 1, "URI App", null, false);
             clientId = app.client_id;
+        });
+
+        it("returns an empty array when the application has no redirect URIs", async () => {
+            const uris = await getOAuth2ApplicationRedirectUris(event, clientId);
+            expect(uris).toHaveLength(0);
         });
 
         it("adds a redirect URI", async () => {
@@ -227,10 +280,27 @@ describe("oauth2_applications database helpers", () => {
             expect(uris[0]).toBe("https://b.com/cb");
         });
 
+        it("clears redirect_uris when removing the last URI", async () => {
+            await addOAuth2ApplicationRedirectUri(event, clientId, "https://a.com/cb");
+
+            await removeOAuth2ApplicationRedirectUri(event, clientId, "https://a.com/cb");
+
+            const app = await getOAuth2Application(event, clientId);
+            expect(app!.redirect_uris).toBeNull();
+        });
+
         it("throws when removing a non-existing redirect URI", async () => {
             await expect(
                 removeOAuth2ApplicationRedirectUri(event, clientId, "https://nonexistent.com/cb"),
             ).rejects.toThrow("No redirect URIs found");
+        });
+
+        it("throws when removing a redirect URI that is not in the list", async () => {
+            await addOAuth2ApplicationRedirectUri(event, clientId, "https://a.com/cb");
+
+            await expect(
+                removeOAuth2ApplicationRedirectUri(event, clientId, "https://nonexistent.com/cb"),
+            ).rejects.toThrow("Redirect URI not found");
         });
 
         it("keeps both redirect URIs when two are added concurrently", async () => {
@@ -263,12 +333,33 @@ describe("oauth2_applications database helpers", () => {
             expect(scopes).toContain("write");
         });
 
+        it("does not duplicate existing scopes", async () => {
+            await addOAuth2ApplicationScopes(event, clientId, ["read"]);
+            await addOAuth2ApplicationScopes(event, clientId, ["read", "write"]);
+
+            const scopes = await getOAuth2ApplicationScopes(event, clientId);
+            expect(scopes).toHaveLength(2);
+            expect(scopes.filter((s) => s === "read")).toHaveLength(1);
+        });
+
         it("gets all scopes for an application", async () => {
             await addOAuth2ApplicationScopes(event, clientId, ["scope1"]);
             await addOAuth2ApplicationScopes(event, clientId, ["scope2"]);
 
             const scopes = await getOAuth2ApplicationScopes(event, clientId);
             expect(scopes).toHaveLength(2);
+        });
+
+        it("returns an empty array when the application has no scopes", async () => {
+            const scopes = await getOAuth2ApplicationScopes(event, clientId);
+            expect(scopes).toHaveLength(0);
+        });
+
+        it("leaves permissions null when adding an empty scope list", async () => {
+            await addOAuth2ApplicationScopes(event, clientId, []);
+
+            const app = await getOAuth2Application(event, clientId);
+            expect(app!.permissions).toBeNull();
         });
 
         it("removes a scope from an application", async () => {
@@ -281,10 +372,27 @@ describe("oauth2_applications database helpers", () => {
             expect(scopes[0]).toBe("write");
         });
 
+        it("clears permissions when removing the last scope", async () => {
+            await addOAuth2ApplicationScopes(event, clientId, ["read"]);
+
+            await removeOAuth2ApplicationScope(event, clientId, "read");
+
+            const app = await getOAuth2Application(event, clientId);
+            expect(app!.permissions).toBeNull();
+        });
+
         it("throws when removing a non-existing scope", async () => {
             await expect(
                 removeOAuth2ApplicationScope(event, clientId, "nonexistent"),
             ).rejects.toThrow("No scopes found");
+        });
+
+        it("throws when removing a scope that is not in the list", async () => {
+            await addOAuth2ApplicationScopes(event, clientId, ["read"]);
+
+            await expect(removeOAuth2ApplicationScope(event, clientId, "write")).rejects.toThrow(
+                "Scope not found",
+            );
         });
 
         it("keeps both scopes when two batches are added concurrently", async () => {

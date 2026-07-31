@@ -15,6 +15,11 @@ import {
 import { eq, and } from "drizzle-orm";
 import { teamScores } from "~~/server/database/schema";
 
+vi.mock("~~/server/utils/rateLimit", () => ({
+    applyRateLimit: (fn: any) => fn,
+    VOTE_RATE_LIMIT_CONFIG: { maxRequests: 600, windowMs: 60 * 1000 },
+}));
+
 let ctx: TestContext;
 let scoresHandler: any;
 

@@ -2,7 +2,7 @@ import { randomUUID } from "node:crypto";
 import { createUserAsset, removeUserAsset } from "~~/server/utils/assets";
 import { updateUserProfilePicture } from "~~/server/utils/database/users";
 import { applyRateLimit } from "~~/server/utils/rateLimit";
-import { UpdateUserRequest } from "~~/shared/schemas";
+import { UpdateUserRequest, UserIdParams } from "~~/shared/schemas";
 
 const ACCEPTED_IMAGE_TYPES = ["image/jpeg", "image/jpg", "image/png", "image/gif", "image/webp"];
 const MAX_FILE_SIZE = 10 * 1024 * 1024; // 10MB
@@ -69,7 +69,7 @@ const base64ToFile = function (base64String: string): any {
 export default defineEventHandler(
     applyRateLimit(
         async (event) => {
-            const id = parseInt(getRouterParam(event, "id")!);
+            const { id } = await getValidatedRouterParams(event, UserIdParams.parse);
 
             const {
                 user: { id: userID },

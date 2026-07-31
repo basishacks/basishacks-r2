@@ -3,67 +3,110 @@ import type { NavigationMenuItem } from "@nuxt/ui";
 import { DevPermissions, hasPermission } from "~~/shared/permissions";
 
 const { user, status } = await useApiUser({ lazy: true });
+const route = useRoute();
 
-const lacksPermission = (permission: string) => {
-    if (status.value === "idle" || status.value === "pending") return false;
+const isAdmin = computed(() => hasPermission(user.value?.role, "admin"));
+const canViewApplications = computed(
+    () =>
+        isAdmin.value ||
+        hasPermission(user.value?.role, DevPermissions.PORTAL_APPLICATIONS_VIEW) ||
+        hasPermission(user.value?.role, DevPermissions.PORTAL_APPLICATIONS_VIEW_ALL),
+);
+const canCreateApplications = computed(
+    () =>
+        isAdmin.value || hasPermission(user.value?.role, DevPermissions.PORTAL_APPLICATIONS_CREATE),
+);
 
-    return (
-        !hasPermission(user.value?.role, permission) && !hasPermission(user.value?.role, "admin")
-    );
-};
+const isApplicationsRoute = computed(() => route.path.startsWith("/developers/applications"));
+const isApplicationCreateRoute = computed(() => route.path === "/developers/applications/create");
 
-const items = computed<NavigationMenuItem[][]>(() => [
-    [
-        {
-            label: "Home",
-            icon: "i-lucide-house",
-            to: "/developers",
-        },
-        {
-            label: "Users",
-            icon: "i-lucide-user",
-            to: "/developers/users",
-            disabled: lacksPermission(DevPermissions.PORTAL_USERS_VIEW),
-        },
-        {
-            label: "Teams",
-            icon: "i-lucide-users",
-            to: "/developers/teams",
-            disabled: lacksPermission(DevPermissions.PORTAL_TEAMS_VIEW),
-        },
-        {
-            label: "Applications",
-            icon: "i-lucide-app-window",
-            to: "/developers/applications/",
-            disabled: lacksPermission(DevPermissions.PORTAL_APPLICATIONS_VIEW),
-            children: [
+if (status.value !== "idle" && status.value !== "pending") {
+    const hasAccess = isApplicationCreateRoute.value
+        ? canCreateApplications.value
+        : isApplicationsRoute.value
+          ? canViewApplications.value
+          : isAdmin.value;
+
+    if (!hasAccess) {
+        throw createError({ statusCode: 403, statusMessage: "Access Denied" });
+    }
+}
+
+const sidebarItems = computed<NavigationMenuItem[][]>(() => {
+    if (!isAdmin.value) {
+        if (canViewApplications.value) {
+            return [
+                [
+                    {
+                        label: "Applications",
+                        icon: "i-lucide-app-window",
+                        to: "/developers/applications/",
+                        children: canCreateApplications.value
+                            ? [
+                                  {
+                                      label: "Create New",
+                                      icon: "i-lucide-plus",
+                                      to: "/developers/applications/create",
+                                  },
+                              ]
+                            : undefined,
+                    },
+                ],
+            ];
+        }
+
+        return [
+            [
                 {
-                    label: "Create New",
+                    label: "Create Application",
                     icon: "i-lucide-plus",
                     to: "/developers/applications/create",
-                    disabled: lacksPermission(DevPermissions.PORTAL_APPLICATIONS_CREATE),
                 },
             ],
-        },
-        {
-            label: "DeepSeek",
-            icon: "i-lucide-message-square",
-            to: "/developers/deepseek",
-            disabled: lacksPermission(DevPermissions.PORTAL_DEEPSEEK_VIEW),
-        },
-        {
-            label: "Files",
-            icon: "i-lucide-files",
-            to: "/developers/debug",
-            disabled: lacksPermission(DevPermissions.PORTAL_DEBUG_VIEW),
-        },
-        {
-            label: "Seasons",
-            icon: "i-lucide-calendar",
-            to: "/developers/seasons",
-            disabled: lacksPermission(DevPermissions.PORTAL_SEASONS_VIEW),
-        },
-    ],
+        ];
+    }
+
+    return [
+        [
+            { label: "Home", icon: "i-lucide-house", to: "/developers" },
+            { label: "Users", icon: "i-lucide-user", to: "/developers/users" },
+            { label: "Teams", icon: "i-lucide-users", to: "/developers/teams" },
+            {
+                label: "Applications",
+                icon: "i-lucide-app-window",
+                to: "/developers/applications/",
+                children: [
+                    {
+                        label: "Create New",
+                        icon: "i-lucide-plus",
+                        to: "/developers/applications/create",
+                    },
+                ],
+            },
+            { label: "DeepSeek", icon: "i-lucide-message-square", to: "/developers/deepseek" },
+            { label: "Files", icon: "i-lucide-files", to: "/developers/debug" },
+            {
+                label: "Season",
+                icon: "i-lucide-clock",
+                to: "/developers/season",
+            },
+        ],
+    ];
+});
+
+const searchGroups = computed(() => [
+    {
+        key: "pages",
+        label: "Pages",
+        items: sidebarItems.value.flat().flatMap((item: any) => [
+            { label: item.label, icon: item.icon, to: item.to },
+            ...(item.children?.map((child: any) => ({
+                label: `${item.label} / ${child.label}`,
+                icon: child.icon,
+                to: child.to,
+            })) ?? []),
+        ]),
+    },
 ]);
 
 const name = computed(() => user.value?.name || "Log In");
@@ -71,45 +114,39 @@ const name = computed(() => user.value?.name || "Log In");
 
 <template>
     <UDashboardGroup>
+        <UDashboardSearch :groups="searchGroups" />
+
         <UDashboardSidebar collapsible resizable :ui="{ footer: 'border-t border-default' }">
-            <template #header="{ collapsed }">
-                <ULink v-if="!collapsed" class="bold glow text-primary mx-auto" to="/">
-                    {{ WEBSITE_NAME }}
-                    <span class="text-secondary bold">devs</span>
-                </ULink>
-                <UButton
-                    variant="ghost"
-                    v-else-if="collapsed"
-                    class="bold glow text-primary mx-auto"
-                    @click="navigateTo('/')"
-                >
-                    b
-                </UButton>
+            <template #header="{ collapsed, collapse }">
+                <div class="flex items-center gap-1">
+                    <ULink v-if="!collapsed" class="bold glow text-primary mx-auto" to="/">
+                        {{ WEBSITE_NAME }}
+                        <span class="text-secondary bold">devs</span>
+                    </ULink>
+                    <UButton
+                        variant="ghost"
+                        v-else-if="collapsed"
+                        class="bold glow text-primary mx-auto"
+                        @click="navigateTo('/')"
+                    >
+                        b
+                    </UButton>
+                </div>
             </template>
 
             <template #default="{ collapsed }">
-                <UButton
-                    :label="collapsed ? undefined : 'Search...'"
-                    icon="i-lucide-search"
-                    color="neutral"
-                    variant="outline"
-                    block
-                    :square="collapsed"
-                >
-                    <template v-if="!collapsed" #trailing>
-                        <div class="flex items-center gap-0.5 ms-auto">
-                            <UKbd value="meta" variant="subtle" />
-                            <UKbd value="K" variant="subtle" />
-                        </div>
-                    </template>
-                </UButton>
-
-                <UNavigationMenu :collapsed="collapsed" :items="items[0]" orientation="vertical" />
+                <UDashboardSearchButton :collapsed="collapsed" class="mb-1" />
 
                 <UNavigationMenu
-                    v-if="items[1]?.length"
                     :collapsed="collapsed"
-                    :items="items[1]"
+                    :items="sidebarItems[0]"
+                    orientation="vertical"
+                />
+
+                <UNavigationMenu
+                    v-if="sidebarItems[1]?.length"
+                    :collapsed="collapsed"
+                    :items="sidebarItems[1]"
                     orientation="vertical"
                     class="mt-auto"
                 />
@@ -118,7 +155,7 @@ const name = computed(() => user.value?.name || "Log In");
             <template #footer="{ collapsed }">
                 <UButton
                     :avatar="{
-                        src: user?.profile_picture ? `/userast/${user.profile_picture}` : undefined,
+                        src: user?.id ? `/api/users/${user.id}/profile_picture` : undefined,
                         alt: name,
                         loading: 'lazy' as const,
                     }"

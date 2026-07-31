@@ -1,5 +1,5 @@
 import { defineEventHandler } from "h3";
-import { validateOAuth2AuthorizationRequest } from "~/../server/utils/oauth2-validate";
+import { validateOAuth2AuthorizationRequest } from "~~/server/utils/oauth2-validate";
 import type { AuthorizeSession } from "../api/oauth2/session.post";
 import {
     addAuthorizeSession,
@@ -134,6 +134,7 @@ export default defineEventHandler(async (event) => {
             Buffer.from(JSON.stringify(payload)).toString("base64url"),
             {
                 maxAge: 10 * 60, // 10 mins
+                httpOnly: true,
                 secure: true,
                 sameSite: "lax",
             },

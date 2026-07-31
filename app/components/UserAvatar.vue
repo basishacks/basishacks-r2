@@ -2,6 +2,7 @@
 const props = defineProps<{
     user:
         | {
+              id?: number;
               name?: string | null;
               email?: string;
               profile_picture?: string | null;
@@ -14,8 +15,8 @@ const props = defineProps<{
 
 const src = computed(() => {
     if (props.previewSrc) return props.previewSrc;
-    if (!props.user?.profile_picture) return undefined;
-    return `/userast/${props.user.profile_picture}`;
+    if (props.user?.id) return `/api/users/${props.user.id}/profile_picture`;
+    return undefined;
 });
 
 const alt = computed(() => {

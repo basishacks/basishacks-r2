@@ -1,5 +1,5 @@
 import type { H3Event } from "h3";
-import { eq, and, inArray, sql } from "drizzle-orm";
+import { eq, inArray, sql } from "drizzle-orm";
 import {
     users,
     teamScores,
@@ -9,7 +9,6 @@ import {
     peerVotingScores,
     oauth2Applications,
 } from "~~/server/database/schema";
-import { hasPermission } from "~~/shared/permissions";
 
 export async function getUser(event: H3Event, userID: number): Promise<User | null> {
     const row = event.context.drizzle.select().from(users).where(eq(users.id, userID)).get();
@@ -27,34 +26,34 @@ export async function getUserByEmail(event: H3Event, email: string): Promise<Use
     return row ?? null;
 }
 
-export async function addCodeToUser(event: H3Event, email: string): Promise<User> {
-    const oldUser = await getUserByEmail(event, email);
-    if (
-        oldUser?.login_expiry &&
-        oldUser.login_expiry - 9 * 60 * 1000 > Date.now() &&
-        !hasPermission(oldUser.role, "admin") // Admins can request codes more frequently for testing purposes
-    ) {
-        throw createError({
-            status: 403,
-            message: "Please wait 1 minute before requesting another code!",
-        });
+export async function createUserFromMicrosoftProfile(
+    event: H3Event,
+    email: string,
+    name?: string,
+): Promise<User> {
+    const normalizedEmail = email.toLowerCase();
+    const trimmedName = name?.trim();
+
+    if (trimmedName) {
+        return event.context.drizzle
+            .insert(users)
+            .values({ email: normalizedEmail, name: trimmedName })
+            .onConflictDoUpdate({
+                target: users.email,
+                set: { name: trimmedName },
+            })
+            .returning()
+            .get()!;
     }
 
-    const code = Math.floor(100000 + Math.random() * 900000).toString();
-    const expiry = Date.now() + 10 * 60 * 1000;
-
-    // upsert user
-    const user = event.context.drizzle
+    const inserted = event.context.drizzle
         .insert(users)
-        .values({ email: email.toLowerCase(), login_code: code, login_expiry: expiry })
-        .onConflictDoUpdate({
-            target: users.email,
-            set: { login_code: code, login_expiry: expiry },
-        })
+        .values({ email: normalizedEmail })
+        .onConflictDoNothing({ target: users.email })
         .returning()
-        .get()!;
+        .get();
 
-    return user;
+    return inserted ?? (await getUserByEmail(event, normalizedEmail))!;
 }
 
 export async function updateUserName(event: H3Event, user: User) {

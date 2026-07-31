@@ -39,6 +39,47 @@ Every incoming request receives the same Drizzle instance attached to `event.con
 
 ---
 
+### validate-environment.ts
+
+**File:** `server/plugins/validate-environment.ts`
+
+Comprehensive environment variable validation plugin that runs at server startup. Performs mandatory checks on critical configuration values:
+
+#### `NUXT_SESSION_PASSWORD`
+
+| Condition             | Production                     | Development/Test |
+| --------------------- | ------------------------------ | ---------------- |
+| Missing or < 32 bytes | Fatal error, `process.exit(1)` | Warning logged   |
+| >= 32 bytes           | OK                             | OK               |
+
+#### `NUXT_OAUTH2_JWT_SECRET`
+
+| Condition             | Action                                             |
+| --------------------- | -------------------------------------------------- |
+| Missing or < 32 bytes | Fatal error, `process.exit(1)` in all environments |
+| >= 32 bytes           | OK                                                 |
+
+#### Microsoft OAuth2 configuration
+
+Checks `MICROSOFT_TENANT_ID`, `MICROSOFT_CLIENT_ID`, and `MICROSOFT_CLIENT_SECRET`:
+
+- If any are set but not all three, logs a warning that Microsoft features will be unavailable.
+- If none are set, silently skips (Microsoft features gracefully disabled).
+
+```ts
+// server/plugins/validate-environment.ts — core pattern
+if (!sessionPassword || sessionPasswordLength < 32) {
+    if (isProduction) {
+        console.error("[FATAL] ...");
+        process.exit(1);
+    } else {
+        console.warn("[WARNING] ...");
+    }
+}
+```
+
+---
+
 ### validate-oauth2-jwt-secret.ts
 
 **File:** `server/plugins/validate-oauth2-jwt-secret.ts`
@@ -162,6 +203,43 @@ Manually polls chat messages via the delta endpoint (fallback for webhook failur
 
 ## Middleware
 
+### security-headers.ts
+
+**File:** `server/middleware/security-headers.ts`
+
+Applies a baseline set of HTTP security headers to every Nitro response (HTML pages, API JSON responses, and static assets). A server middleware is used instead of Nuxt `routeRules` so API routes receive the same headers as page routes without duplication.
+
+| Header | Value | Purpose |
+| --- | --- | --- |
+| `Strict-Transport-Security` | `max-age=63072000; includeSubDomains; preload` | Enforce HTTPS for two years, include subdomains, and declare HSTS preload eligibility. |
+| `X-Frame-Options` | `DENY` | Prevent clickjacking by disallowing framing. |
+| `X-Content-Type-Options` | `nosniff` | Prevent MIME sniffing. |
+| `Referrer-Policy` | `strict-origin-when-cross-origin` | Send full URL for same-origin requests, only origin for cross-origin. |
+| `Permissions-Policy` | `camera=(), microphone=(), ...` | Disable powerful browser features the app does not use. |
+| `Content-Security-Policy` | See below | Restrict resource loading to trusted origins. |
+
+#### Content Security Policy
+
+The CSP is strict but functional for the Nuxt 4 + `@nuxt/ui` stack:
+
+```
+default-src 'self';
+script-src 'self' 'unsafe-inline';
+style-src 'self' 'unsafe-inline';
+font-src 'self';
+img-src 'self' blob: data:;
+connect-src 'self' https://login.microsoftonline.com;
+object-src 'none';
+base-uri 'self';
+form-action 'self';
+frame-ancestors 'none'
+```
+
+- `'unsafe-inline'` for `script-src` is required for Nuxt SSR hydration (`window.__NUXT__`).
+- `'unsafe-inline'` for `style-src` is required for inline style bindings used by Vue / Nuxt UI components.
+- `'unsafe-eval'` is intentionally omitted.
+- `https://login.microsoftonline.com` is included in `connect-src` for Microsoft OAuth2 flows.
+
 ### oauth2-authorize.ts
 
 **File:** `server/middleware/oauth2-authorize.ts`
@@ -189,5 +267,18 @@ The `bridge_id` cookie:
 
 - Contains the session identifier.
 - Expires after 10 minutes.
-- Uses `Secure` and `SameSite=Lax` flags.
+- Uses `HttpOnly`, `Secure`, and `SameSite=Lax` flags.
 - Deleted after a successful consent flow by the caller.
+
+The `bridge_error` cookie uses the same hardened flags.
+
+### debug-lockdown.ts
+
+**File:** `server/middleware/debug-lockdown.ts`
+
+Runs on every request and rejects any request under `/api/debug/` or `/debug*` when the `DISABLE_DEBUG_ROUTES` environment variable is set to a truthy value. This allows debug utilities to be completely disabled in production regardless of route-level permission checks.
+
+| Path pattern           | Disabled response |
+| ---------------------- | ----------------- |
+| `/api/debug/*`         | 404 Not Found     |
+| `/debug` or `/debug/*` | 404 Not Found     |

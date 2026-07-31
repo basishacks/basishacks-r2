@@ -85,7 +85,7 @@ To manually initialize the database:
 bun run db:migrate
 ```
 
-This runs Drizzle Kit migrations, which create all required tables: `hackathon`, `teams`, `team_scores`, `users`, `ballots`, `ballot_scores`, `oauth2_applications`, `seasons`, `team_awards`, `peer_voting_scores`, and `user_past_teams`.
+This runs Drizzle Kit migrations, which create all required tables: `hackathon`, `teams`, `team_scores`, `users`, `ballots`, `ballot_scores`, `oauth2_applications`, `seasons`, `awards`, `team_awards`, `peer_voting_scores`, and `user_past_teams`.
 
 ### Seed the Hackathon Row
 
@@ -173,7 +173,7 @@ The preview server runs on port 24598.
 
 ## Running Tests
 
-The project uses [Vitest](https://vitest.dev) as its test framework. The suite contains **647 passing tests** covering the API, server utilities, database helpers, shared schemas, and frontend components.
+The project uses [Vitest](https://vitest.dev) as its test framework. The suite maintains **100% line, branch, function, and statement coverage** on all tracked source files and currently contains **<TestCount /> passing tests** covering the API, server utilities, database helpers, shared schemas, and frontend components.
 
 ```bash
 # Run the full test suite (canonical command)
@@ -186,7 +186,7 @@ bun run test:watch
 bun run test:coverage
 ```
 
-These invoke `vitest run --pool=forks`, which resolves Nuxt's `~~/` and `~/` path aliases via `vitest.config.ts` and runs `tests/setup.ts` as a setup file to populate in-memory SQLite databases and Microsoft OAuth2 environment variables.
+These invoke `vitest run --pool=forks`, which resolves Nuxt's `~~/` and `~/` path aliases via `vitest.config.ts` and runs `tests/setup.ts` as a setup file to populate in-memory SQLite databases and Microsoft OAuth2 environment variables. See the [Testing guide](/guide/testing) for more details on the coverage policy and excluded files.
 
 ### About `bun test`
 
@@ -230,7 +230,7 @@ New users are assigned the `participant` role by default. To elevate your permis
     ```sql
     UPDATE users SET role = 'admin' WHERE email = 'your@basischina.com';
     ```
-3. Refresh the browser. You should now have access to admin features and the developer portal.
+3. Refresh the browser. You should now have access to admin features and the mod portal.
 
 ## Verify Everything Works
 
@@ -239,7 +239,7 @@ After logging in, check the following:
 - **Dashboard** loads at `/dashboard`
 - **Teams page** is accessible at `/dashboard/teams`
 - **Profile page** shows your user information at `/profile`
-- **Admin/Developer portal** (if elevated) is available at `/developers`
+- **Admin/Mod portal** (if elevated) is available at `/developers`
 
 ## Next Steps
 

@@ -16,9 +16,7 @@ const votingStartDate = computed(() => new Date(hackathon.value.voting_start_tim
 const votingEndDate = computed(() => new Date(hackathon.value.voting_end_timestamp));
 const resultsOpenDate = computed(() => new Date(hackathon.value.results_open_timestamp));
 
-const themeDescription = computed(() =>
-    hackathon.value.theme_description ? escapeHtml(hackathon.value.theme_description) : "",
-);
+const themeDescription = computed(() => hackathon.value.theme_description || "");
 </script>
 
 <template>
@@ -113,7 +111,7 @@ const themeDescription = computed(() =>
                 <span class="bold glow text-primary">{{ hackathon.theme_name }}</span>
                 !
             </p>
-            <p class="mb-4" v-html="themeDescription" />
+            <p class="mb-4 whitespace-pre-wrap">{{ themeDescription }}</p>
         </template>
 
         <h2 class="text-3xl bold mb-4 glow-sm">Resources</h2>

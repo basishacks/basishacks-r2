@@ -5,7 +5,7 @@ import { join, resolve } from "node:path";
 import Database from "better-sqlite3";
 import { sql } from "drizzle-orm";
 import * as schema from "~~/server/database/schema";
-import { createDrizzleDatabase } from "~~/server/database";
+import { createDrizzleDatabase, getDb } from "~~/server/database";
 
 // Hoisted mocks for the Bun branch. `vi.mock` is hoisted to the top of the
 // file, so the factories can only reference values created via `vi.hoisted`.
@@ -100,6 +100,46 @@ describe("createDrizzleDatabase — Node.js / better-sqlite3 path", () => {
         expect(row).toBeDefined();
         expect(row!.id).toBe(1);
         expect(row!.status).toBe("not_started");
+
+        const award = db
+            .select()
+            .from(schema.awards)
+            .where(sql`${schema.awards.namespace} = 'perfect_score'`)
+            .get();
+        expect(award).toMatchObject({
+            name: "Flawless",
+            description: "Achieve a perfect score from all judges.",
+            icon: "i-lucide-gem",
+        });
+    });
+
+    it("preserves a legacy awards catalog while adding namespace keys", async () => {
+        const legacy = new Database(dbPath);
+        legacy.exec(`
+          CREATE TABLE awards (
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            name TEXT NOT NULL,
+            description TEXT NOT NULL,
+            icon TEXT NOT NULL
+          );
+          INSERT INTO awards(name, description, icon)
+          VALUES ('Legacy Award', 'Legacy description', 'i-lucide-award');
+        `);
+        legacy.close();
+
+        db = await createDrizzleDatabase(dbPath);
+
+        const legacyAward = db
+            .select()
+            .from(schema.awards)
+            .where(sql`${schema.awards.namespace} = 'legacy_1'`)
+            .get();
+        expect(legacyAward).toMatchObject({
+            name: "Legacy Award",
+            description: "Legacy description",
+            icon: "i-lucide-award",
+            color: "gold",
+        });
     });
 });
 
@@ -121,5 +161,14 @@ describe("createDrizzleDatabase — Bun / bun:sqlite path", () => {
 
         expect(bunDatabaseCtor).toHaveBeenCalledWith(":memory:");
         expect(db).toBe(bunDrizzleResult);
+    });
+});
+
+describe("getDb", () => {
+    it("delegates to createDrizzleDatabase and returns a Drizzle instance", async () => {
+        db = await getDb(dbPath);
+
+        expect(typeof db.select).toBe("function");
+        expect(typeof db.insert).toBe("function");
     });
 });

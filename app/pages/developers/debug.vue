@@ -1,29 +1,15 @@
 <script setup lang="ts">
 import { onMounted } from "vue";
-import { hasPermission, DevPermissions } from "~~/shared/permissions";
 
 definePageMeta({
     layout: "developers-dashboard",
 });
 
-// Client-side permission guard
-const { user: me } = await useApiUser();
-if (
-    !hasPermission(me.value?.role, DevPermissions.PORTAL_DEBUG_VIEW) &&
-    !hasPermission(me.value?.role, "admin")
-) {
-    useToast().add({
-        title: "Access denied",
-        description: "You do not have permission to view debug tools.",
-        color: "error",
-    });
-    throw await navigateTo("/developers");
-}
-
 // File upload state
 const file = ref<File | null>(null);
 const uploading = ref(false);
 const permalink = ref("");
+const safePermalink = computed(() => safeUrl(permalink.value));
 const uploadError = ref("");
 const loadingFiles = ref(false);
 const fileLists = ref({
@@ -150,12 +136,17 @@ onMounted(loadFiles);
                         <p class="text-sm">
                             Permalink:
                             <a
-                                :href="permalink"
+                                v-if="safePermalink"
+                                :href="safePermalink"
                                 target="_blank"
+                                rel="noopener noreferrer"
                                 class="text-primary hover:underline"
                             >
                                 {{ permalink }}
                             </a>
+                            <span v-else class="text-muted">
+                                {{ permalink }} (blocked unsafe URL)
+                            </span>
                         </p>
                     </div>
                 </UCard>

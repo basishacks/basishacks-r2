@@ -25,6 +25,11 @@ vi.mock("~~/server/utils/auth", () => ({
     requirePermission: vi.fn(),
 }));
 
+vi.mock("~~/server/utils/rateLimit", () => ({
+    applyRateLimit: (fn: any) => fn,
+    VOTE_RATE_LIMIT_CONFIG: { maxRequests: 600, windowMs: 60 * 1000 },
+}));
+
 let ctx: TestContext;
 let getBallotHandler: any;
 let postBallotHandler: any;
@@ -133,9 +138,197 @@ describe("GET /api/ballot", () => {
         expect(result).toHaveProperty("scores");
         expect(result).toHaveProperty("reasoning");
     });
+
+    it("returns 403 when user's team has not submitted a project", async () => {
+        resetTestContext(ctx);
+        seedHackathon(ctx, { status: "voting" });
+        const season = seedSeason(ctx);
+
+        const userTeam = seedTeam(ctx, {
+            name: "My Team",
+            project_submitted: 0,
+            pathway: "junior",
+            season_id: season.id,
+        });
+        seedUser(ctx, { email: "voter@basischina.com", team_id: userTeam.id });
+
+        vi.mocked(globalThis.requireUser).mockResolvedValue({
+            id: 1,
+            team_id: userTeam.id,
+            role: "participant",
+        });
+
+        await expect(getBallotHandler(createEvent())).rejects.toMatchObject({ statusCode: 403 });
+    });
+
+    it("falls back to zero scores when stored vote score is invalid JSON", async () => {
+        resetTestContext(ctx);
+        seedHackathon(ctx, { status: "voting" });
+        const season = seedSeason(ctx);
+
+        const userTeam = seedTeam(ctx, {
+            name: "My Team",
+            project_submitted: 1,
+            pathway: "junior",
+            season_id: season.id,
+        });
+        seedUser(ctx, { email: "voter@basischina.com", team_id: userTeam.id });
+
+        seedTeam(ctx, {
+            name: "Other Team",
+            project_submitted: 1,
+            pathway: "junior",
+            season_id: season.id,
+        });
+
+        ctx.drizzle
+            .insert(peerVotingScores)
+            .values({ user_id: 1, score: "not-json", reasoning: "Oops" })
+            .run();
+
+        vi.mocked(globalThis.requireUser).mockResolvedValue({
+            id: 1,
+            team_id: userTeam.id,
+            role: "participant",
+        });
+
+        const result = await getBallotHandler(createEvent());
+
+        expect(result.submitted).toBe(true);
+        expect(result.reasoning).toBe("Oops");
+        expect(result.scores).toEqual([0]);
+    });
+
+    it("restores scores from a previously submitted valid vote", async () => {
+        resetTestContext(ctx);
+        seedHackathon(ctx, { status: "voting" });
+        const season = seedSeason(ctx);
+
+        const userTeam = seedTeam(ctx, {
+            name: "My Team",
+            project_submitted: 1,
+            pathway: "junior",
+            season_id: season.id,
+        });
+        seedUser(ctx, { email: "voter@basischina.com", team_id: userTeam.id });
+
+        const otherTeam = seedTeam(ctx, {
+            name: "Other Team",
+            project_submitted: 1,
+            pathway: "junior",
+            season_id: season.id,
+        });
+        const anotherTeam = seedTeam(ctx, {
+            name: "Another Team",
+            project_submitted: 1,
+            pathway: "junior",
+            season_id: season.id,
+        });
+
+        ctx.drizzle
+            .insert(peerVotingScores)
+            .values({
+                user_id: 1,
+                score: JSON.stringify({ [otherTeam.id]: 7 }),
+                reasoning: "Good work.",
+            })
+            .run();
+
+        vi.mocked(globalThis.requireUser).mockResolvedValue({
+            id: 1,
+            team_id: userTeam.id,
+            role: "participant",
+        });
+
+        const result = await getBallotHandler(createEvent());
+
+        expect(result.submitted).toBe(true);
+        expect(result.reasoning).toBe("Good work.");
+        expect(result.scores).toEqual([7, 0]);
+    });
 });
 
 describe("POST /api/ballot", () => {
+    it("returns 409 when hackathon is not in voting phase", async () => {
+        vi.mocked(globalThis.requireUser).mockResolvedValue({
+            id: 1,
+            team_id: 1,
+            role: "participant",
+        });
+
+        await expect(postBallotHandler(createEvent())).rejects.toMatchObject({ statusCode: 409 });
+    });
+
+    it("returns 403 when user has no team", async () => {
+        resetTestContext(ctx);
+        seedHackathon(ctx, { status: "voting" });
+        seedSeason(ctx);
+
+        vi.mocked(globalThis.requireUser).mockResolvedValue({
+            id: 1,
+            team_id: null,
+            role: "participant",
+        });
+
+        await expect(postBallotHandler(createEvent())).rejects.toMatchObject({ statusCode: 403 });
+    });
+
+    it("returns 403 when user's team has not submitted a project", async () => {
+        resetTestContext(ctx);
+        seedHackathon(ctx, { status: "voting" });
+        const season = seedSeason(ctx);
+
+        const userTeam = seedTeam(ctx, {
+            name: "My Team",
+            project_submitted: 0,
+            pathway: "junior",
+            season_id: season.id,
+        });
+        seedUser(ctx, { email: "voter@basischina.com", team_id: userTeam.id });
+
+        vi.mocked(globalThis.requireUser).mockResolvedValue({
+            id: 1,
+            team_id: userTeam.id,
+            role: "participant",
+        });
+
+        await expect(postBallotHandler(createEvent())).rejects.toMatchObject({ statusCode: 403 });
+    });
+
+    it("returns 403 when scores count does not match eligible projects", async () => {
+        resetTestContext(ctx);
+        seedHackathon(ctx, { status: "voting" });
+        const season = seedSeason(ctx);
+
+        const userTeam = seedTeam(ctx, {
+            name: "My Team",
+            project_submitted: 1,
+            pathway: "junior",
+            season_id: season.id,
+        });
+        seedUser(ctx, { email: "voter@basischina.com", team_id: userTeam.id });
+
+        seedTeam(ctx, {
+            name: "Other Team",
+            project_submitted: 1,
+            pathway: "junior",
+            season_id: season.id,
+        });
+
+        vi.mocked(globalThis.requireUser).mockResolvedValue({
+            id: 1,
+            team_id: userTeam.id,
+            role: "participant",
+        });
+
+        mockBody.value = {
+            scores: [5, 5],
+            reasoning: "Wrong count.",
+        };
+
+        await expect(postBallotHandler(createEvent())).rejects.toMatchObject({ statusCode: 403 });
+    });
+
     it("submits a peer vote", async () => {
         resetTestContext(ctx);
         seedHackathon(ctx, { status: "voting" });
@@ -237,5 +430,41 @@ describe("GET /api/ballot/summary", () => {
         expect(result).toHaveProperty("current");
         expect(result).toHaveProperty("past");
         expect(Array.isArray(result.past)).toBe(true);
+    });
+
+    it("separates current and past seasons", async () => {
+        resetTestContext(ctx);
+        seedHackathon(ctx);
+
+        const pastSeason = seedSeason(ctx, { name: "Past Season", is_active: 0 });
+        const currentSeason = seedSeason(ctx, { name: "Current Season", is_active: 1 });
+
+        seedTeam(ctx, { name: "Past Team", season_id: pastSeason.id, project_submitted: 1 });
+        seedTeam(ctx, { name: "Current Team", season_id: currentSeason.id, project_submitted: 1 });
+
+        const { requireUser } = await import("~~/server/utils/auth");
+        (requireUser as any).mockResolvedValue({ id: 1, role: "judge" });
+
+        const result = await summaryHandler(createEvent());
+
+        expect(result.current).not.toBeNull();
+        expect(result.current!.season_id).toBe(currentSeason.id);
+        expect(result.past).toHaveLength(1);
+        expect(result.past[0].season_id).toBe(pastSeason.id);
+    });
+
+    it("returns null current season when no season is active", async () => {
+        resetTestContext(ctx);
+        seedHackathon(ctx);
+        seedSeason(ctx, { name: "Past Season", is_active: 0 });
+
+        const { requireUser } = await import("~~/server/utils/auth");
+        (requireUser as any).mockResolvedValue({ id: 1, role: "judge" });
+        vi.stubGlobal("getActiveSeason", async () => null);
+
+        const result = await summaryHandler(createEvent());
+
+        expect(result.current).toBeNull();
+        expect(result.past).toHaveLength(1);
     });
 });

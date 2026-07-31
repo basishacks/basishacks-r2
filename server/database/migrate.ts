@@ -128,11 +128,11 @@ export function seedHackathon(sqlite: PortableSqlite) {
         sqlite.exec(
             `
       INSERT INTO hackathon (
-        id, status, voting_enabled, results_published, submitted_count,
-        max_votes_per_user, judging_open, schedule_start, schedule_end,
+        id, status, voting_enabled, results_published, show_scores, show_ranking,
+        submitted_count, max_votes_per_user, judging_open, schedule_start, schedule_end,
         start_timestamp, end_timestamp, voting_start_timestamp,
         voting_end_timestamp, results_open_timestamp, theme_name, theme_description
-      ) VALUES (1, 'not_started', 0, 0, 0, 0, 0, NULL, NULL, 0, 0, 0, 0, 0, NULL, NULL)
+      ) VALUES (1, 'not_started', 0, 0, 0, 0, 0, 0, 0, NULL, NULL, 0, 0, 0, 0, 0, NULL, NULL)
     `,
         );
         console.log("[Nitro] Seeded default hackathon row");
@@ -180,12 +180,65 @@ function tableExists(sqlite: PortableSqlite, table: string): boolean {
     return row ? row.count > 0 : false;
 }
 
-function columnExists(sqlite: PortableSqlite, table: string, column: string): boolean {
+export function columnExists(sqlite: PortableSqlite, table: string, column: string): boolean {
     try {
         const rows = sqlite.prepare(`PRAGMA table_info(${table})`).all<{ name: string }>();
         return rows.some((row) => row.name === column);
     } catch {
         return false;
+    }
+}
+
+function migrateLegacyAwardsSchema(sqlite: PortableSqlite) {
+    if (!tableExists(sqlite, "awards")) return;
+
+    if (!columnExists(sqlite, "awards", "namespace")) {
+        const colorExpression = columnExists(sqlite, "awards", "color")
+            ? "COALESCE(color, 'gold')"
+            : "'gold'";
+        sqlite.exec("ALTER TABLE awards RENAME TO legacy_awards");
+        sqlite.exec(`
+      CREATE TABLE awards (
+        namespace TEXT PRIMARY KEY NOT NULL,
+        name TEXT NOT NULL,
+        description TEXT NOT NULL,
+        icon TEXT NOT NULL,
+        color TEXT NOT NULL DEFAULT 'gold'
+      )
+    `);
+        sqlite.exec(`
+      INSERT INTO awards(namespace, name, description, icon, color)
+      SELECT 'legacy_' || id, name, description, icon, ${colorExpression}
+      FROM legacy_awards
+    `);
+        sqlite.exec("DROP TABLE legacy_awards");
+        console.log("[Nitro] Migrated legacy awards catalog to namespace keys");
+    }
+
+    if (!columnExists(sqlite, "awards", "color")) {
+        sqlite.exec("ALTER TABLE awards ADD COLUMN color TEXT NOT NULL DEFAULT 'gold'");
+    }
+
+    sqlite.exec(`
+    INSERT OR IGNORE INTO awards(namespace, name, description, icon, color)
+    VALUES (
+      'perfect_score',
+      'Flawless',
+      'Achieve a perfect score from all judges.',
+      'i-lucide-gem',
+      'gold'
+    )
+  `);
+
+    if (tableExists(sqlite, "team_awards") && columnExists(sqlite, "team_awards", "award")) {
+        sqlite.exec(
+            "UPDATE team_awards SET meta = '{}' WHERE meta IS NULL OR typeof(meta) <> 'text'",
+        );
+        sqlite.exec(`
+      INSERT OR IGNORE INTO awards(namespace, name, description, icon, color)
+      SELECT DISTINCT award, award, award, 'i-lucide-award', 'gold'
+      FROM team_awards
+    `);
     }
 }
 
@@ -196,6 +249,8 @@ function columnExists(sqlite: PortableSqlite, table: string, column: string): bo
  * @param sqlite - SQLite database instance (bun:sqlite or better-sqlite3)
  */
 function migrateLegacySchema(sqlite: PortableSqlite) {
+    migrateLegacyAwardsSchema(sqlite);
+
     // Missing tables from the legacy init.sql schema
     if (!tableExists(sqlite, "seasons")) {
         sqlite.exec(`
@@ -243,10 +298,53 @@ function migrateLegacySchema(sqlite: PortableSqlite) {
         console.log("[Nitro] Created legacy-missing table: user_past_teams");
     }
 
+    // Missing columns on the seasons table (per-season hackathon config)
+    const seasonColumns = [
+        "status",
+        "voting_enabled",
+        "results_published",
+        "max_votes_per_user",
+        "judging_open",
+        "schedule_start",
+        "schedule_end",
+        "start_timestamp",
+        "end_timestamp",
+        "voting_start_timestamp",
+        "voting_end_timestamp",
+        "results_open_timestamp",
+        "theme_name",
+        "theme_description",
+    ];
+    for (const column of seasonColumns) {
+        if (!columnExists(sqlite, "seasons", column)) {
+            const type =
+                column.endsWith("_timestamp") ||
+                [
+                    "voting_enabled",
+                    "results_published",
+                    "max_votes_per_user",
+                    "judging_open",
+                ].includes(column)
+                    ? "INTEGER NOT NULL DEFAULT 0"
+                    : column.endsWith("_name") ||
+                        column.endsWith("_description") ||
+                        column.startsWith("schedule_") ||
+                        column === "status"
+                      ? column === "status"
+                          ? "TEXT NOT NULL DEFAULT 'not_started'"
+                          : "TEXT"
+                      : "INTEGER NOT NULL DEFAULT 0";
+            sqlite.exec(`ALTER TABLE seasons ADD COLUMN ${column} ${type}`);
+            console.log(`[Nitro] Added missing column: seasons.${column}`);
+        }
+    }
+
     // Missing columns on the legacy hackathon table
     const hackathonColumns = [
         "voting_enabled",
         "results_published",
+        "show_scores",
+        "show_ranking",
         "submitted_count",
         "max_votes_per_user",
         "judging_open",
@@ -260,6 +358,32 @@ function migrateLegacySchema(sqlite: PortableSqlite) {
                 `ALTER TABLE hackathon ADD COLUMN ${column} INTEGER DEFAULT ${defaultValue}`,
             );
             console.log(`[Nitro] Added legacy-missing column: hackathon.${column}`);
+        }
+    }
+
+    // Missing tweak columns on the legacy seasons table
+    const seasonTweakColumns: Array<{ name: string; ddl: string }> = [
+        { name: "status", ddl: "TEXT NOT NULL DEFAULT 'not_started'" },
+        { name: "voting_enabled", ddl: "INTEGER NOT NULL DEFAULT 0" },
+        { name: "results_published", ddl: "INTEGER NOT NULL DEFAULT 0" },
+        { name: "judging_open", ddl: "INTEGER NOT NULL DEFAULT 0" },
+        { name: "show_scores", ddl: "INTEGER NOT NULL DEFAULT 0" },
+        { name: "show_ranking", ddl: "INTEGER NOT NULL DEFAULT 0" },
+        { name: "max_votes_per_user", ddl: "INTEGER NOT NULL DEFAULT 0" },
+        { name: "schedule_start", ddl: "TEXT" },
+        { name: "schedule_end", ddl: "TEXT" },
+        { name: "start_timestamp", ddl: "INTEGER NOT NULL DEFAULT 0" },
+        { name: "end_timestamp", ddl: "INTEGER NOT NULL DEFAULT 0" },
+        { name: "voting_start_timestamp", ddl: "INTEGER NOT NULL DEFAULT 0" },
+        { name: "voting_end_timestamp", ddl: "INTEGER NOT NULL DEFAULT 0" },
+        { name: "results_open_timestamp", ddl: "INTEGER NOT NULL DEFAULT 0" },
+        { name: "theme_name", ddl: "TEXT" },
+        { name: "theme_description", ddl: "TEXT" },
+    ];
+    for (const { name, ddl } of seasonTweakColumns) {
+        if (!columnExists(sqlite, "seasons", name)) {
+            sqlite.exec(`ALTER TABLE seasons ADD COLUMN ${name} ${ddl}`);
+            console.log(`[Nitro] Added legacy-missing column: seasons.${name}`);
         }
     }
 

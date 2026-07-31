@@ -1,6 +1,7 @@
 import { createHash, randomBytes } from "crypto";
 import { buildOnsiteRedirectUri } from "~~/server/utils/oauth2";
 import { AuthorizeSession } from "./oauth2/session.post";
+import { applyRateLimit, AUTH_RATE_LIMIT_CONFIG } from "~~/server/utils/rateLimit";
 
 export function constructOnSiteLoginURL(event: any, postLoginRedirect?: string) {
     /* Constructs DevConnect OAuth URL with PKCE
@@ -31,16 +32,25 @@ export function constructOnSiteLoginURL(event: any, postLoginRedirect?: string) 
     url.searchParams.set("code_challenge", code_challenge);
     url.searchParams.set("code_challenge_method", "S256");
     if (postLoginRedirect) {
-        url.searchParams.set("post_login_redirect", postLoginRedirect);
+        // Only allow relative paths to prevent open redirect
+        const safe =
+            !postLoginRedirect.startsWith("http://") &&
+            !postLoginRedirect.startsWith("https://") &&
+            !postLoginRedirect.startsWith("//");
+        if (safe) {
+            url.searchParams.set("post_login_redirect", postLoginRedirect);
+        }
     }
     return url.pathname + url.search;
 }
 
-export default defineEventHandler(async (event) => {
-    const query = getQuery(event);
-    await sendRedirect(
-        event,
-        constructOnSiteLoginURL(event, query.redirect as string | undefined),
-        302,
-    );
-});
+export default defineEventHandler(
+    applyRateLimit(async (event) => {
+        const query = getQuery(event);
+        await sendRedirect(
+            event,
+            constructOnSiteLoginURL(event, query.redirect as string | undefined),
+            302,
+        );
+    }, AUTH_RATE_LIMIT_CONFIG),
+);

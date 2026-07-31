@@ -49,6 +49,18 @@ const { data: members } = await useFetch<GetTeamMembersResponse>(
                 {{ team.pathway === "junior" ? "Junior" : "Senior" }}
             </UBadge>
         </div>
+        <h4 class="text-xl font-bold truncate">{{ team.project?.name || "(No Project Name)" }}</h4>
+        <p class="text-sm truncate mt-1">
+            {{ team.project?.description || "(No Project Description)" }}
+        </p>
+        <UserAvatarGroup
+            v-if="members && members.length > 0"
+            :users="members"
+            :max="5"
+            size="sm"
+            class="mt-3"
+        />
+        <p v-else class="text-muted text-sm mt-3">(No members)</p>
     </div>
 </template>
 

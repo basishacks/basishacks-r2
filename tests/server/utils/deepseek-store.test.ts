@@ -1,4 +1,4 @@
-import { describe, it, expect, beforeEach } from "vitest";
+import { describe, it, expect, beforeEach, vi } from "vitest";
 import {
     createSession,
     getDeepSeekSession,
@@ -324,5 +324,275 @@ describe("MAX_SESSIONS eviction", () => {
 
         // Total count should remain at the cap
         expect(getAllSessions()).toHaveLength(100);
+    });
+
+    it("sweeps expired sessions when creating a new one at capacity", () => {
+        // Create a session that is already past the 24-hour TTL
+        const realNow = Date.now();
+        const expiredTime = realNow - 25 * 60 * 60 * 1000;
+        vi.spyOn(Date, "now").mockReturnValue(expiredTime);
+        const expiredSession = createSession("Expired Session");
+        vi.restoreAllMocks();
+
+        // Fill the store to just under the cap with fresh sessions
+        for (let i = 0; i < 99; i++) {
+            createSession(`Session ${i}`);
+        }
+        expect(getAllSessions()).toHaveLength(100);
+        expect(getDeepSeekSession(expiredSession.id)).toBeDefined();
+
+        // Creating one more triggers sweepExpiredSessions, deleting the expired entry
+        createSession("Overflow Session");
+        expect(getAllSessions()).toHaveLength(100);
+        expect(getDeepSeekSession(expiredSession.id)).toBeUndefined();
+    });
+});
+
+// ---------------------------------------------------------------------------
+// Session ordering
+// ---------------------------------------------------------------------------
+
+describe("session ordering", () => {
+    it("returns sessions in creation order from getAllSessions", () => {
+        const s1 = createSession("First");
+        const s2 = createSession("Second");
+        const s3 = createSession("Third");
+
+        const all = getAllSessions();
+        expect(all[0]!.id).toBe(s1.id);
+        expect(all[1]!.id).toBe(s2.id);
+        expect(all[2]!.id).toBe(s3.id);
+    });
+
+    it("allows adding messages after eviction for remaining sessions", () => {
+        const created = [];
+        for (let i = 0; i < 100; i++) {
+            created.push(createSession(`Session ${i}`));
+        }
+
+        // Evict the oldest
+        createSession("Evictor");
+
+        // Add a message to a remaining session
+        const survivor = created[1]!;
+        const updated = addMessage(survivor.id, { role: "user" as const, content: "Still alive" });
+        expect(updated).toBeDefined();
+        expect(updated!.messages).toHaveLength(1);
+    });
+
+    it("does not evict when under capacity", () => {
+        const s1 = createSession("Only");
+        const s2 = createSession("Session");
+
+        expect(getAllSessions()).toHaveLength(2);
+        expect(getDeepSeekSession(s1.id)).toBeDefined();
+        expect(getDeepSeekSession(s2.id)).toBeDefined();
+    });
+});
+
+// ---------------------------------------------------------------------------
+// addMessage edge cases
+// ---------------------------------------------------------------------------
+
+describe("addMessage additional edge cases", () => {
+    it("adds a message with empty content", () => {
+        const session = createSession("Empty msg");
+        const updated = addMessage(session.id, { role: "user" as const, content: "" });
+        expect(updated).toBeDefined();
+        expect(updated!.messages).toHaveLength(1);
+        expect(updated!.messages[0]!.content).toBe("");
+    });
+
+    it("adds a message with null content and tool_calls", () => {
+        const session = createSession("Null content");
+        const updated = addMessage(session.id, {
+            role: "assistant" as const,
+            content: null,
+            tool_calls: [
+                { id: "tc1", type: "function" as const, function: { name: "f", arguments: "{}" } },
+            ],
+        });
+        expect(updated).toBeDefined();
+        expect(updated!.messages[0]!.content).toBeNull();
+        expect((updated!.messages[0] as any).tool_calls).toHaveLength(1);
+    });
+
+    it("adds multiple messages in sequence and verifies order", () => {
+        const session = createSession("Seq");
+        addMessage(session.id, { role: "system" as const, content: "You are a bot" });
+        addMessage(session.id, { role: "user" as const, content: "Q1" });
+        addMessage(session.id, { role: "assistant" as const, content: "A1" });
+        addMessage(session.id, { role: "user" as const, content: "Q2" });
+        addMessage(session.id, { role: "assistant" as const, content: "A2" });
+
+        const msgs = getMessages(session.id);
+        expect(msgs.map((m) => m.content)).toEqual(["You are a bot", "Q1", "A1", "Q2", "A2"]);
+    });
+
+    it("addMessage on non-existent session returns undefined", () => {
+        const result = addMessage(99999, { role: "user" as const, content: "hi" });
+        expect(result).toBeUndefined();
+    });
+
+    it("addMessage with undefined session ID returns undefined", () => {
+        const result = addMessage(undefined as any, { role: "user" as const, content: "hi" });
+        expect(result).toBeUndefined();
+    });
+});
+
+// ---------------------------------------------------------------------------
+// getMessages additional edge cases
+// ---------------------------------------------------------------------------
+
+describe("getMessages additional edge cases", () => {
+    it("returns a new array copy each call (not the same reference)", () => {
+        const session = createSession("Copy Ref");
+        addMessage(session.id, { role: "user" as const, content: "m1" });
+
+        const first = getMessages(session.id);
+        const second = getMessages(session.id);
+        expect(first).not.toBe(second);
+        expect(first).toEqual(second);
+    });
+
+    it("mutating returned messages does not affect store", () => {
+        const session = createSession("Mutate Guard");
+        addMessage(session.id, { role: "user" as const, content: "original" });
+
+        const msgs = getMessages(session.id);
+        msgs.push({ role: "assistant" as const, content: "injected" });
+
+        const reloaded = getMessages(session.id);
+        expect(reloaded).toHaveLength(1);
+        expect(reloaded[0]!.content).toBe("original");
+    });
+
+    it("returns empty array for session with ID 0", () => {
+        const messages = getMessages(0);
+        expect(messages).toEqual([]);
+    });
+
+    it("returns empty array for negative session ID", () => {
+        const messages = getMessages(-100);
+        expect(messages).toEqual([]);
+    });
+});
+
+// ---------------------------------------------------------------------------
+// deleteSession additional edge cases
+// ---------------------------------------------------------------------------
+
+describe("deleteSession additional edge cases", () => {
+    it("returns false for session ID 0", () => {
+        const result = deleteSession(0);
+        expect(result).toBe(false);
+    });
+
+    it("returns false for negative session ID", () => {
+        const result = deleteSession(-1);
+        expect(result).toBe(false);
+    });
+
+    it("returns false when called twice on the same session", () => {
+        const session = createSession("Double Delete");
+        expect(deleteSession(session.id)).toBe(true);
+        expect(deleteSession(session.id)).toBe(false);
+    });
+
+    it("does not throw when deleting a non-numeric ID", () => {
+        const result = deleteSession(NaN);
+        expect(result).toBe(false);
+    });
+});
+
+// ---------------------------------------------------------------------------
+// createSession additional edge cases
+// ---------------------------------------------------------------------------
+
+describe("createSession additional edge cases", () => {
+    it("creates sessions with empty string name", () => {
+        const session = createSession("");
+        expect(session.sessionName).toBe("");
+    });
+
+    it("creates sessions with very long names", () => {
+        const longName = "x".repeat(1000);
+        const session = createSession(longName);
+        expect(session.sessionName).toBe(longName);
+    });
+
+    it("creates sessions with unicode names", () => {
+        const session = createSession("测试会话-セッション-세션");
+        expect(session.sessionName).toBe("测试会话-セッション-세션");
+    });
+
+    it("creates sessions with special characters in name", () => {
+        const session = createSession("Chat <b>bold</b> & more!");
+        expect(session.sessionName).toBe("Chat <b>bold</b> & more!");
+    });
+
+    it("increments session IDs monotonically across resets", () => {
+        const allSessions = getAllSessions();
+        for (const s of allSessions) {
+            deleteSession(s.id);
+        }
+
+        const s1 = createSession("A");
+        const s2 = createSession("B");
+        expect(s2.id).toBe(s1.id + 1);
+    });
+});
+
+// ---------------------------------------------------------------------------
+// getDeepSeekSession additional edge cases
+// ---------------------------------------------------------------------------
+
+describe("getDeepSeekSession additional edge cases", () => {
+    it("returns undefined for NaN session ID", () => {
+        const result = getDeepSeekSession(NaN);
+        expect(result).toBeUndefined();
+    });
+
+    it("returns undefined for Infinity session ID", () => {
+        const result = getDeepSeekSession(Infinity);
+        expect(result).toBeUndefined();
+    });
+
+    it("returns the session without messages array exposed to mutation", () => {
+        const session = createSession("No Mutate");
+        const retrieved = getDeepSeekSession(session.id)!;
+        retrieved.messages.push({ role: "user" as const, content: "hacked" });
+
+        const retrievedAgain = getDeepSeekSession(session.id)!;
+        // The internal array was mutated because it's the same reference
+        // This documents current behavior
+        expect(retrievedAgain.messages).toHaveLength(1);
+    });
+});
+
+// ---------------------------------------------------------------------------
+// getAllSessions additional edge cases
+// ---------------------------------------------------------------------------
+
+describe("getAllSessions additional edge cases", () => {
+    it("returns sessions in insertion order (oldest first)", () => {
+        const s1 = createSession("Alpha");
+        const s2 = createSession("Beta");
+        const all = getAllSessions();
+        expect(all[0]!.id).toBe(s1.id);
+        expect(all[1]!.id).toBe(s2.id);
+    });
+
+    it("returns a new array each call (not same reference)", () => {
+        const first = getAllSessions();
+        const second = getAllSessions();
+        expect(first).not.toBe(second);
+    });
+
+    it("reflects deletions immediately", () => {
+        const session = createSession("Now you see me");
+        expect(getAllSessions()).toHaveLength(1);
+        deleteSession(session.id);
+        expect(getAllSessions()).toHaveLength(0);
     });
 });

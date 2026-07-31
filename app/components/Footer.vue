@@ -11,7 +11,7 @@
                 <ULink class="text-xs" to="/contributing" target="_blank">
                     Contribute to basishacks
                 </ULink>
-                <ULink class="text-xs" to="/developers">Developer Portal</ULink>
+                <ULink v-if="isAdmin" class="text-xs" to="/developers">Mod Portal</ULink>
             </div>
         </template>
 
@@ -242,10 +242,17 @@
 <script setup lang="ts">
 import type { NavigationMenuItem } from "@nuxt/ui";
 
+const { data: user, status } = await useApiUser({ lazy: true });
+
+const isAdmin = computed(() => {
+    if (status.value === "idle" || status.value === "pending") return false;
+    return user.value?.role === "admin";
+});
+
 const items: NavigationMenuItem[] = [
     {
         label: "biszweb.club",
-        to: "https://biszweb.club/club_sites/developers_club",
+        to: "https://biszweb.club/clubs/developers_club",
         target: "_blank",
     },
     {

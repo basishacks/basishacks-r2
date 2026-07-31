@@ -128,6 +128,23 @@ export async function createTestDatabase(): Promise<SQLiteDatabase> {
     );
     CREATE UNIQUE INDEX IF NOT EXISTS idx_seasons_active ON seasons(is_active) WHERE is_active = 1;
 
+    ALTER TABLE seasons ADD COLUMN status TEXT NOT NULL DEFAULT 'not_started';
+    ALTER TABLE seasons ADD COLUMN voting_enabled INTEGER NOT NULL DEFAULT 0;
+    ALTER TABLE seasons ADD COLUMN results_published INTEGER NOT NULL DEFAULT 0;
+    ALTER TABLE seasons ADD COLUMN show_scores INTEGER NOT NULL DEFAULT 0;
+    ALTER TABLE seasons ADD COLUMN show_ranking INTEGER NOT NULL DEFAULT 0;
+    ALTER TABLE seasons ADD COLUMN max_votes_per_user INTEGER NOT NULL DEFAULT 0;
+    ALTER TABLE seasons ADD COLUMN judging_open INTEGER NOT NULL DEFAULT 0;
+    ALTER TABLE seasons ADD COLUMN schedule_start TEXT;
+    ALTER TABLE seasons ADD COLUMN schedule_end TEXT;
+    ALTER TABLE seasons ADD COLUMN start_timestamp INTEGER NOT NULL DEFAULT 0;
+    ALTER TABLE seasons ADD COLUMN end_timestamp INTEGER NOT NULL DEFAULT 0;
+    ALTER TABLE seasons ADD COLUMN voting_start_timestamp INTEGER NOT NULL DEFAULT 0;
+    ALTER TABLE seasons ADD COLUMN voting_end_timestamp INTEGER NOT NULL DEFAULT 0;
+    ALTER TABLE seasons ADD COLUMN results_open_timestamp INTEGER NOT NULL DEFAULT 0;
+    ALTER TABLE seasons ADD COLUMN theme_name TEXT;
+    ALTER TABLE seasons ADD COLUMN theme_description TEXT;
+
     ALTER TABLE teams ADD COLUMN season_id INTEGER NOT NULL DEFAULT 1;
     CREATE INDEX IF NOT EXISTS teams_season ON teams (season_id);
 
@@ -160,13 +177,24 @@ export async function createTestDatabase(): Promise<SQLiteDatabase> {
       FOREIGN KEY(team_id) REFERENCES teams(id) ON DELETE CASCADE
     );
 
+    CREATE TABLE IF NOT EXISTS awards (
+      namespace TEXT PRIMARY KEY,
+      name TEXT NOT NULL,
+      description TEXT NOT NULL,
+      icon TEXT NOT NULL,
+      color TEXT NOT NULL DEFAULT 'gold'
+    );
+
     ALTER TABLE hackathon ADD COLUMN voting_enabled INTEGER NOT NULL DEFAULT 0;
     ALTER TABLE hackathon ADD COLUMN results_published INTEGER NOT NULL DEFAULT 0;
+    ALTER TABLE hackathon ADD COLUMN show_scores INTEGER NOT NULL DEFAULT 0;
+    ALTER TABLE hackathon ADD COLUMN show_ranking INTEGER NOT NULL DEFAULT 0;
     ALTER TABLE hackathon ADD COLUMN submitted_count INTEGER NOT NULL DEFAULT 0;
     ALTER TABLE hackathon ADD COLUMN max_votes_per_user INTEGER NOT NULL DEFAULT 0;
     ALTER TABLE hackathon ADD COLUMN judging_open INTEGER NOT NULL DEFAULT 0;
     ALTER TABLE hackathon ADD COLUMN schedule_start TEXT;
     ALTER TABLE hackathon ADD COLUMN schedule_end TEXT;
+
   `);
 
     return new SQLiteDatabase(db);
@@ -183,6 +211,7 @@ export function resetTestDatabase(wrapper: SQLiteDatabase): void {
     DELETE FROM ballots;
     DELETE FROM team_scores;
     DELETE FROM team_awards;
+    DELETE FROM awards;
     DELETE FROM peer_voting_scores;
     DELETE FROM user_past_teams;
     DELETE FROM users;

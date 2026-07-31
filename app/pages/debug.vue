@@ -60,7 +60,16 @@
             <div v-if="permalink" class="mt-4">
                 <p>
                     Permalink:
-                    <a :href="permalink" target="_blank" class="text-blue-500">{{ permalink }}</a>
+                    <a
+                        v-if="safePermalink"
+                        :href="safePermalink"
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        class="text-blue-500"
+                    >
+                        {{ permalink }}
+                    </a>
+                    <span v-else class="text-muted">{{ permalink }} (blocked unsafe URL)</span>
                 </p>
             </div>
             <div v-if="error" class="mt-4 text-red-500">Error: {{ error }}</div>
@@ -245,6 +254,7 @@ const activeTab = ref<"upload" | "deepseek">("upload");
 const file = ref<File | null>(null);
 const uploading = ref(false);
 const permalink = ref("");
+const safePermalink = computed(() => safeUrl(permalink.value));
 const error = ref("");
 const loadingFiles = ref(false);
 const fileLists = ref({

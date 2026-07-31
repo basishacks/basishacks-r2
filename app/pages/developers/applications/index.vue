@@ -2,8 +2,7 @@
 import type { TableColumn } from "@nuxt/ui";
 import { upperFirst } from "scule";
 import { getPaginationRowModel } from "@tanstack/table-core";
-import { hasPermission, DevPermissions } from "~~/shared/permissions";
-
+import { DevPermissions, hasPermission } from "~~/shared/permissions";
 definePageMeta({
     layout: "developers-dashboard",
 });
@@ -31,19 +30,7 @@ const { data, status, refresh } = await useFetch<OAuth2Application[]>("/api/appl
     default: () => [],
 });
 
-// Client-side permission guard
 const { user: me } = await useApiUser();
-if (
-    !hasPermission(me.value?.role, DevPermissions.PORTAL_APPLICATIONS_VIEW) &&
-    !hasPermission(me.value?.role, "admin")
-) {
-    useToast().add({
-        title: "Access denied",
-        description: "You do not have permission to view applications.",
-        color: "error",
-    });
-    throw await navigateTo("/developers");
-}
 
 const selectedRows = computed<any[]>(() => {
     if (!table.value?.tableApi) return [];
@@ -219,12 +206,17 @@ const paginationOptions = {
     getPaginationRowModel: getPaginationRowModel(),
 };
 
-const create_authorized = computed(() => {
-    return (
+const canCreateApplications = computed(
+    () =>
         hasPermission(me.value?.role, DevPermissions.PORTAL_APPLICATIONS_CREATE) ||
-        hasPermission(me.value?.role, "admin")
-    );
-});
+        hasPermission(me.value?.role, "admin"),
+);
+
+const canDeleteApplications = computed(
+    () =>
+        hasPermission(me.value?.role, DevPermissions.PORTAL_APPLICATIONS_DELETE) ||
+        hasPermission(me.value?.role, "admin"),
+);
 </script>
 
 <template>
@@ -244,7 +236,7 @@ const create_authorized = computed(() => {
                     @click="navigateTo('/developers/applications/create')"
                     icon="i-lucide-plus"
                     label="Create Application"
-                    :disabled="!create_authorized"
+                    :disabled="!canCreateApplications"
                 />
             </div>
 
@@ -258,7 +250,7 @@ const create_authorized = computed(() => {
 
                 <div class="flex flex-wrap items-center gap-1.5">
                     <UButton
-                        v-if="selectedRows.length"
+                        v-if="selectedRows.length && canDeleteApplications"
                         label="Delete selected"
                         color="error"
                         variant="subtle"

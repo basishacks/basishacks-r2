@@ -72,7 +72,8 @@ shared/             # Code shared between client and server
   database.d.ts     # TypeScript types matching DB schema exactly
   responses.d.ts    # API response interface definitions
   auth.d.ts         # nuxt-auth-utils session type augmentation
-  oauth2.ts         # Microsoft OAuth2 static config
+  permissions.ts    # Fine-grained permission constants and helpers
+  oauth2-scopes.ts  # OAuth2 scope definitions
   rubric.ts         # Judging rubric definitions
 
 sql/archive/        # Archived legacy SQL schema and migrations
@@ -192,6 +193,7 @@ Use the helpers in `server/utils/auth.ts` to enforce roles:
 - The `auth` route middleware (`app/middleware/auth.ts`) redirects unauthenticated users to `/login`.
 - Layouts are declared with `definePageMeta({ layout: '...' })`.
 - UI components come from `@nuxt/ui` (e.g., `UButton`, `UForm`, `UAlert`).
+- Run `bun run format` always before you commit
 
 ---
 
@@ -286,6 +288,7 @@ In production, these are configured in the server environment.
 ## Useful Notes
 
 - The `hackathon` table has a single row (`id = 1`) that controls the global event state (`not_started`, `in_progress`, `voting`, `finished`, `paused`).
+- Each `seasons` row stores its own copy of the tweakable settings (`status`, `show_scores`, `show_ranking` — see `SEASON_TWEAK_FIELDS` in `server/utils/database/seasons.ts`). Editing tweaks via `PATCH /api/seasons/:id/tweaks` also updates the `hackathon` row when the season is live; `setActiveSeason` copies the newly active season's tweaks into the `hackathon` row.
 - Team project submissions are only accepted while the hackathon status is `not_started` or `in_progress`.
 - Peer voting scores must sum to exactly 10.
 - Judge scoring uses rubric criteria defined in `shared/rubric.ts` with scores 0–5 per criterion.
@@ -295,11 +298,11 @@ In production, these are configured in the server environment.
 
 ## Documentation Maintenance
 
-**This is a mandatory step.** Before ending every request or finalizing any plan, you MUST:
+**This is a mandatory step.** Before ending every request or finalizing any plan or whenever possible, you MUST:
 
 1. **Update `README.md`** — If your changes affect any feature, configuration, command, or behavior described in the README, update the relevant sections to reflect the current state of the project.
 
-2. **Update VitePress documentation** — If your changes affect any area documented in the `documentation/` directory, update the corresponding pages:
+2. **Update VitePress documentation whenever you apply a change (whenever possible)** — If your changes affect any area documented in the `documentation/` directory, update the corresponding pages:
     - `documentation/guide/` — Getting started, project overview, environment setup
     - `documentation/architecture/` — Overview, runtime, database, auth, OAuth2
     - `documentation/frontend/` — Components, pages, layouts, composables

@@ -5,7 +5,20 @@ description: Complete reference for all API endpoints in the basishacks backend
 
 # API Reference
 
-All API routes live in `server/api/` and use Nitro's file-based routing. Input validation is performed with Zod schemas from `shared/schemas.ts`. Auth helpers from `server/utils/auth.ts` enforce role-based and permission-based access.
+All API routes live in `server/api/` and use Nitro's file-based routing.
+
+### Security measures applied to all endpoints
+
+Every API endpoint in the system enforces the following security measures:
+
+| Measure | Implementation |
+| --- | --- |
+| **Rate limiting** | All endpoints are wrapped with `applyRateLimit()` using one of four tier configs (`DEFAULT`, `AUTH`, `VOTE`, `UPLOAD`). Returns 429 with `Retry-After` header when exceeded. |
+| **Input validation** | `readValidatedBody(event, Schema.parse)` or `getValidatedQuery(event, Schema.parse)` with shared Zod schemas from `shared/schemas.ts`. |
+| **Length-bounded inputs** | All string fields in Zod schemas have explicit `min()`/`max()` bounds to prevent resource exhaustion. Example: `name: z.string().min(1).max(50)`. |
+| **Authentication** | `requireUser()`, `requireAdmin()`, `requirePermission()` from `server/utils/auth.ts` provide RBAC enforcement. |
+| **OAuth2 JWT** | `withOAuth2JWT()` wrapper for Bearer token endpoints with scope verification. |
+| **HTTP headers** | Security headers (CSP, HSTS, X-Frame-Options, etc.) applied by `security-headers.ts` middleware on every response. |
 
 <AnimatedCounter :target="54" suffix="endpoints" />
 
@@ -110,13 +123,14 @@ Initiate Microsoft OAuth2 login flow.
 
 ### GET `/api/oauth2/mscallback`
 
-Microsoft OAuth2 callback. Exchanges the authorization code for a Microsoft token, creates or updates the user, and continues the OAuth2 flow.
+Microsoft OAuth2 callback. Validates the returned `state` and PKCE verifier, exchanges the authorization code for a Microsoft token, creates or updates the user from the Microsoft profile, and continues the OAuth2 flow.
 
-| Field        | Details                                                  |
-| ------------ | -------------------------------------------------------- |
-| **Auth**     | None                                                     |
-| **Query**    | `code`, `state`, `session_state`                         |
-| **Cookies**  | `bridge_id` (required, binds to authorize session)       |
+| Field | Details |
+| --- | --- |
+| **Auth** | None |
+| **Query** | `code`, `state`, `session_state` |
+| **Cookies** | `bridge_id` (required, binds to authorize session) |
+| **Validation** | Requires matching `state` and a valid PKCE `code_verifier` stored in the authorize session |
 | **Response** | 302 redirect to consent page or application redirect URI |
 
 ### GET `/api/oauth2/dccallback`
@@ -151,7 +165,7 @@ OAuth2 UserInfo endpoint. Returns user profile data based on the Bearer token sc
 
 ### GET `/api/users`
 
-List all users (developer portal).
+List all users (mod portal).
 
 | Field        | Details                                           |
 | ------------ | ------------------------------------------------- |
@@ -176,7 +190,7 @@ Get a single user's profile.
 | Field | Details |
 | --- | --- |
 | **Auth** | Any authenticated user |
-| **Response** | Self: `GetUserResponse` — full user with team and past teams; Others: `APIUser` — public profile only |
+| **Response** | Self: `GetUserResponse` — full user with team and past teams; Others: `APIUser` — public profile only. For participants, each team's `score`/`rank` (current and past teams alike) are only included when the `show_scores`/`show_ranking` toggles of that team's own season are enabled; users with `portal.teams.view` or admin always see them |
 
 ### PATCH `/api/users/:id`
 
@@ -211,7 +225,7 @@ List all teams for the active season, or filter by season.
 | --- | --- |
 | **Auth** | Any authenticated user |
 | **Query** | `judging` (if `1`, returns only submitted unjudged teams for the current judge); `season_id` (optional season filter) |
-| **Response** | `APITeam[]` |
+| **Response** | `APITeam[]`; in the public listing, each team's `rank` is only included when the `show_ranking` toggle of that team's own season is enabled |
 
 ### POST `/api/teams`
 
@@ -232,7 +246,7 @@ Get a single team's details.
 | Field | Details |
 | --- | --- |
 | **Auth** | Any authenticated user |
-| **Response** | `APITeam`; score is included only for team members or users with the `portal.teams.view` permission |
+| **Response** | `APITeam`; score is included only for team members (when the `show_scores` toggle of the team's own season is enabled) or users with the `portal.teams.view` permission/admin. `rank` is only included when the team's season `show_ranking` toggle is enabled, or for privileged users |
 
 ### PATCH `/api/teams/:id`
 
@@ -355,11 +369,11 @@ Get the currently active season (public).
 | Field | Details |
 | --- | --- |
 | **Auth** | None |
-| **Response** | Combined season and hackathon state; theme is hidden when hackathon status is `not_started` or `paused` |
+| **Response** | Combined season and hackathon state (including `show_scores` / `show_ranking` toggles); theme is hidden when hackathon status is `not_started` or `paused` |
 
 ### PATCH `/api/seasons/active`
 
-Set the active season.
+Set the active season. The newly active season's tweaks are copied into the live `hackathon` row.
 
 | Field          | Details                                                    |
 | -------------- | ---------------------------------------------------------- |
@@ -367,18 +381,40 @@ Set the active season.
 | **Validation** | `SetActiveSeasonRequest` — `{ season_id: number \| null }` |
 | **Response**   | `{ message: string }`                                      |
 
+### GET `/api/seasons/:id/tweaks`
+
+Get the tweakable settings of a single season.
+
+| Field        | Details                                             |
+| ------------ | --------------------------------------------------- |
+| **Auth**     | User with `portal.seasons.view` permission or admin |
+| **Response** | `Season`                                            |
+
+### PATCH `/api/seasons/:id/tweaks`
+
+Update the tweakable settings of a single season. Accepts a partial body with any of: `status`, `show_scores`, `show_ranking` (booleans). Only these three settings are tweakable; any other fields in the request body are stripped.
+
+When the season is the currently active (live) season, the `hackathon` singleton row is updated as well so changes take effect immediately.
+
+| Field          | Details                                             |
+| -------------- | --------------------------------------------------- |
+| **Auth**       | User with `portal.seasons.edit` permission or admin |
+| **Validation** | `UpdateSeasonTweaksRequest` (at least one field)    |
+| **Response**   | `{ message: string }`                               |
+| **Rate limit** | Yes                                                 |
+
 ---
 
 ## Admin
 
 ### GET `/api/admin/teams`
 
-List all teams across all seasons (developer portal).
+List all teams across all seasons (mod portal).
 
-| Field        | Details                                        |
-| ------------ | ---------------------------------------------- |
-| **Auth**     | User with `dev_teams` permission or admin      |
-| **Response** | Array of team objects with `season_name` field |
+| Field | Details |
+| --- | --- |
+| **Auth** | User with `dev_teams` permission or admin |
+| **Response** | Array of team objects with `season_name` and `members` (array of `{ id, name, email, profile_picture }`) |
 
 ### DELETE `/api/admin/teams`
 
@@ -386,7 +422,7 @@ Delete teams by ID.
 
 | Field | Details |
 | --- | --- |
-| **Auth** | User with `dev_teams` permission or admin |
+| **Auth** | Admin |
 | **Body** | `{ ids: number[] }` |
 | **Response** | `{ message: string }` |
 | **Side effects** | Removes ballot_scores, team_scores, team_awards, user_past_teams, and unassigns users |
@@ -409,6 +445,65 @@ Recalculate all judge scores and ranks for active season 1.
 | ------------ | -------------------------------- |
 | **Auth**     | None (internal utility endpoint) |
 | **Response** | `{ message: string }`            |
+
+### GET `/api/admin/hackathon`
+
+Read the current global hackathon configuration and all seasons.
+
+| Field        | Details                                       |
+| ------------ | --------------------------------------------- |
+| **Auth**     | Admin                                         |
+| **Response** | `{ hackathon: Hackathon, seasons: Season[] }` |
+
+### PATCH `/api/admin/hackathon`
+
+Update hackathon configuration. All fields are per-season when `season_id` is provided. When `season_id` matches the currently active season, changes are also synced to the global hackathon row so the rest of the app sees the active season's config.
+
+| Field        | Details                                                                    |
+| ------------ | -------------------------------------------------------------------------- |
+| **Auth**     | Admin                                                                      |
+| **Body**     | Partial `AdminUpdateHackathonRequest` (all fields optional) + `season_id?` |
+| **Response** | `{ hackathon: Hackathon, seasons: Season[] }`                              |
+
+### POST `/api/admin/seasons`
+
+Create a new season.
+
+| Field        | Details                                |
+| ------------ | -------------------------------------- |
+| **Auth**     | Admin                                  |
+| **Body**     | `{ name: string, is_active?: 0 \| 1 }` |
+| **Response** | `{ seasons: Season[] }`                |
+
+### PATCH `/api/admin/seasons`
+
+Rename, activate, or deactivate a season.
+
+| Field        | Details                                             |
+| ------------ | --------------------------------------------------- |
+| **Auth**     | Admin                                               |
+| **Body**     | `{ id: number, name?: string, is_active?: 0 \| 1 }` |
+| **Response** | `{ seasons: Season[] }`                             |
+
+### DELETE `/api/admin/seasons/[id]`
+
+Delete a season by ID.
+
+| Field        | Details                 |
+| ------------ | ----------------------- |
+| **Auth**     | Admin                   |
+| **Params**   | `id` — positive integer |
+| **Response** | `{ seasons: Season[] }` |
+
+### GET `/api/admin/database/export`
+
+Download a full snapshot of the database in SQLite or CSV format.
+
+| Field | Details |
+| --- | --- |
+| **Auth** | Admin |
+| **Query** | `format` — `sqlite` (default) or `csv` |
+| **Response** | SQLite: `application/x-sqlite3` binary file. CSV: `text/csv` with per-table sections |
 
 ---
 

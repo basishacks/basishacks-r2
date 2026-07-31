@@ -19,9 +19,12 @@ The platform manages the entire hackathon lifecycle:
 | **Peer Voting** | Participants vote on projects by distributing 10 stars across eligible projects in the same pathway. The total must equal exactly 10. |
 | **Judge Scoring** | Judges score projects using a weighted rubric system with criteria scored 0–5 per criterion. Separate rubrics are used for junior and senior pathways. |
 | **OAuth2 Application Integrations** | Full OAuth2 2.0/2.1 authorization server with PKCE support, allowing third-party and first-party applications to integrate with the platform. |
-| **Developer Portal** | Administrative dashboard for managing OAuth2 applications, users, teams, seasons, and debug tools. |
+| **Mod Portal** | Administrative dashboard for managing OAuth2 applications, users, teams, seasons, and debug tools. |
 | **Microsoft Graph API** | Integration with Microsoft Entra ID for OAuth2 login, meeting scheduling, and Teams chat via the Graph API. |
 | **DeepSeek AI Chatbot** | In-memory chat session store powered by the OpenAI SDK for DeepSeek AI interactions in debug routes. |
+| **SafeLink / SafeComark Components** | Client-side components that sanitize user-provided links and markdown content, preventing XSS and open redirects in rendered project descriptions. |
+| **Security Middleware** | A middleware pipeline including HTTP security headers (6 headers, 10 CSP directives), debug route lockdown (`DISABLE_DEBUG_ROUTES`), and rate limiting (4 tiers). |
+| **Season Showcases** | Public, art-directed winner experiences, including the six-project Beneath the Surface showcase. |
 
 ## Technology Stack
 
@@ -39,6 +42,7 @@ The platform manages the entire hackathon lifecycle:
 | **Validation** | Zod 4.x (^4.4.3) | Schema validation for all API inputs. |
 | **Fonts** | `@nuxt/fonts` ^0.14.0 | Local font provider. |
 | **Icons** | `@iconify-json/lucide`, `@iconify-json/material-symbols`, `@iconify-json/simple-icons` | Icon sets. |
+| **Animation** | `gsap` ^3.15.0 | ScrollTrigger timelines and responsive motion for the Beneath the Surface showcase. |
 | **Linting** | `@nuxt/eslint` 1.10.0 + Prettier ^3.9.4 | Semicolons enabled, double quotes. |
 | **Deployment** | Node.js server (VPS) | Bun also supported; Nitro `node-server` preset. |
 
@@ -78,7 +82,7 @@ Users are assigned one of three core roles in the database:
 | ------------- | -------------------------------------------------------------------------------- |
 | `participant` | Default role. Can join teams, submit projects, and vote.                         |
 | `judge`       | Can score projects using the rubric system. Has access to the judging interface. |
-| `admin`       | Full access to all features, including the developer portal.                     |
+| `admin`       | Full access to all features, including the mod portal.                           |
 
 ### Fine-Grained Developer Permissions
 
@@ -90,10 +94,10 @@ Beyond the three core roles, the platform supports fine-grained permissions stor
 | `dev_teams` | Access to team management utilities. |
 | `dev_debug` | Access to debug endpoints. |
 | `dev_deepseek` | Access to DeepSeek AI features. |
-| `portal.users.view` | View users in the developer portal. |
-| `portal.debug.view` | View debug tools in the developer portal. |
-| `portal.teams.view` | View teams in the developer portal. |
-| `portal.deepseek.view` | View DeepSeek tools in the developer portal. |
+| `portal.users.view` | View users in the mod portal. |
+| `portal.debug.view` | View debug tools in the mod portal. |
+| `portal.teams.view` | View teams in the mod portal. |
+| `portal.deepseek.view` | View DeepSeek tools in the mod portal. |
 | `portal.applications.view` | View OAuth2 applications. |
 | `portal.applications.create` | Create OAuth2 applications. |
 | `portal.applications.create.firstparty` | Create first-party OAuth2 applications. |
@@ -106,17 +110,15 @@ The `hasPermission()` helper checks both the specific permission and the `admin`
 
 ## Seasons System
 
-The platform supports multiple hackathon seasons. Each season has:
+The platform supports multiple hackathon seasons stored in the `seasons` table. Each season has:
 
-- **Theme name**: the creative theme for the hackathon (for example, "Signal" or "Beneath the Surface").
-- **Theme description**: a brief description of the theme.
-- **Date**: when the season takes place.
-- **Documentation link**: optional link to season documentation.
-- **Active status**: only one season can be active at a time.
+- **Name**: the display name of the season.
+- **Active status**: only one season can be active at a time (partial unique index on `is_active`).
+- **Per-season configuration**: every hackathon config field is stored per season (`status`, `voting_enabled`, `judging_open`, `results_published`, `show_scores`, `show_ranking`, `max_votes_per_user`, `schedule_start`, `schedule_end`, all five timestamps, `theme_name`, `theme_description`). Seasons can override the global `hackathon` row, or fall back to it via defaults.
 
 Teams are associated with a specific season via the `season_id` foreign key. The active season determines which teams and projects are displayed.
 
-Season metadata is defined in `shared/seasons.ts` and managed through the `/api/seasons/` endpoints.
+Season management happens through the `/api/seasons/` endpoints and the Hackathon Administration page at `/developers/season`. Editing tweaks (`status`, `show_scores`, `show_ranking`) on the live season also updates the `hackathon` row; `setActiveSeason` copies the newly active season's tweaks into the global row.
 
 ## Directory Structure
 
@@ -125,16 +127,18 @@ basishacks-r2/
 ├── app/                        # Nuxt app (Vue frontend)
 │   ├── assets/css/             # Global styles (Tailwind + custom utilities)
 │   ├── components/             # Vue components
+│   │   ├── SafeLink.vue        # URL-aware link renderer with open redirect protection
+│   │   ├── SafeComark.vue      # Safe markdown renderer using SafeLink for links
 │   ├── composables/            # Vue composables (useApiUser, etc.)
 │   ├── layouts/                # Nuxt layouts (default, dashboard, fullwidth, etc.)
 │   ├── middleware/             # Route middleware (auth.ts)
 │   ├── pages/                  # File-based routing
 │   │   ├── dashboard/          # Dashboard pages (teams, general, results)
-│   │   ├── developers/         # Admin/developer portal
+│   │   ├── developers/         # Admin/mod portal
 │   │   │   ├── applications/   # OAuth2 app management (create, list, detail)
 │   │   │   ├── debug.vue       # Debug tools
 │   │   │   ├── deepseek.vue    # DeepSeek AI chat interface
-│   │   │   ├── seasons.vue     # Season management
+│   │   │   ├── season.vue      # Hackathon Administration (seasons + config)
 │   │   │   ├── teams.vue       # Team management
 │   │   │   └── users.vue       # User management
 │   │   ├── user/               # User profile pages
@@ -160,7 +164,10 @@ basishacks-r2/
 │   │   ├── teams/              # Team CRUD, member management, scoring, submission
 │   │   ├── users/              # User CRUD and profile pictures
 │   │   └── _webhooks/          # Lifecycle and update webhooks
-│   ├── middleware/             # Server middleware (OAuth2 authorize validation)
+│   ├── middleware/             # Server middleware
+│   │   ├── security-headers.ts # HTTP security headers (6 headers, CSP, HSTS, etc.)
+│   │   ├── debug-lockdown.ts   # Disables debug routes in production via DISABLE_DEBUG_ROUTES
+│   │   └── oauth2-authorize.ts # OAuth2 authorize session validation
 │   ├── database/               # Drizzle ORM schema, migration runner, and DB wrapper
 │   │   ├── schema.ts           # Drizzle table definitions
 │   │   ├── migrate.ts          # Custom migration runner, legacy schema repair, seeding
@@ -168,7 +175,8 @@ basishacks-r2/
 │   ├── plugins/                # Nitro plugins
 │   │   ├── init-database.ts    # Database initialization and attach Drizzle to event context
 │   │   ├── microsoft.ts        # MS Graph API token initialization and centralized API calls
-│   │   └── validate-oauth2-jwt-secret.ts # Startup guard for NUXT_OAUTH2_JWT_SECRET
+│   │   ├── validate-environment.ts     # Startup guard for NUXT_SESSION_PASSWORD and NUXT_OAUTH2_JWT_SECRET
+│   │   └── validate-oauth2-jwt-secret.ts # Startup guard for NUXT_OAUTH2_JWT_SECRET (also exposed as testable utility)
 │   ├── types/                  # Type augmentations (H3EventContext, OAuth2 JWT)
 │   └── utils/                  # Server utilities
 │       ├── database/           # Per-table DB helpers
@@ -184,12 +192,14 @@ basishacks-r2/
 │       │   └── users.ts
 │       ├── auth.ts             # requireUser, requireJudge, requireAdmin, requirePermission
 │       ├── convert.ts          # DB row to public API object transformers
-│       ├── rateLimit.ts        # In-memory rate limiter (60 req/min default)
+│       ├── rateLimit.ts        # In-memory rate limiter (4 tiers: general/auth/vote/upload)
 │       ├── oauth2.ts           # Microsoft OAuth2 configuration and link generation
 │       ├── oauth2-jwt.ts       # JWT verification and withOAuth2JWT() wrapper for API routes
 │       ├── oauth2-validate.ts  # OAuth2 authorization request validation and consent flow
 │       ├── profile.ts          # Profile picture helpers
 │       ├── assets.ts           # Asset helpers
+│       ├── url-validation.ts   # SSRF protection — validates external URLs, blocks private IPs
+│       ├── validate-oauth2-jwt-secret.ts # Dev-only fallback for NUXT_OAUTH2_JWT_SECRET
 │       └── deepseek-store.ts   # DeepSeek AI chat session store (in-memory)
 │
 ├── shared/                     # Code shared between client and server

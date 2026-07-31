@@ -19,6 +19,8 @@ The hackathon table always has exactly one row (`id = 1`) that controls the glob
 | `status` | `TEXT` | One of: `not_started`, `in_progress`, `voting`, `finished`, `paused` |
 | `voting_enabled` | `INTEGER` | Whether peer voting is enabled |
 | `results_published` | `INTEGER` | Whether results are visible |
+| `show_scores` | `INTEGER` | Whether participants can see scores in results |
+| `show_ranking` | `INTEGER` | Whether participants can see rankings in results |
 | `submitted_count` | `INTEGER` | Number of submitted projects |
 | `max_votes_per_user` | `INTEGER` | Maximum votes allowed per user |
 | `judging_open` | `INTEGER` | Whether judge scoring is open |
@@ -65,17 +67,15 @@ Stores judge scores for each team. Each judge can score a team exactly once.
 
 ### `users`
 
-| Column | Type | Description |
-| --- | --- | --- |
-| `id` | `INTEGER PRIMARY KEY AUTOINCREMENT` | User ID |
-| `email` | `TEXT NOT NULL UNIQUE` | User email |
-| `role` | `TEXT NOT NULL DEFAULT 'participant'` | Space-separated permission string |
-| `name` | `TEXT` | Display name |
-| `team_id` | `INTEGER` | FK to `teams.id` |
-| `login_code` | `TEXT` | Legacy login code (unused by current authentication) |
-| `login_expiry` | `INTEGER` | Legacy login code expiry timestamp |
-| `profile_theme` | `TEXT` | Profile theme as `"mode\|value"` |
-| `profile_picture` | `TEXT` | Profile picture URL or identifier |
+| Column            | Type                                  | Description                       |
+| ----------------- | ------------------------------------- | --------------------------------- |
+| `id`              | `INTEGER PRIMARY KEY AUTOINCREMENT`   | User ID                           |
+| `email`           | `TEXT NOT NULL UNIQUE`                | User email                        |
+| `role`            | `TEXT NOT NULL DEFAULT 'participant'` | Space-separated permission string |
+| `name`            | `TEXT`                                | Display name                      |
+| `team_id`         | `INTEGER`                             | FK to `teams.id`                  |
+| `profile_theme`   | `TEXT`                                | Profile theme as `"mode\|value"`  |
+| `profile_picture` | `TEXT`                                | Profile picture URL or identifier |
 
 ::: warning The `role` column originally had a `CHECK` constraint limiting it to `participant`, `judge`, or `admin`. This was removed via `migration-permissions.sql` to support space-separated permission strings such as `"participant portal.users.view portal.teams.view"`. :::
 
@@ -126,6 +126,10 @@ Individual project scores within a ballot. Scores must be 1–5 or null.
 | `name`      | `TEXT NOT NULL UNIQUE`              | Season name                                  |
 | `is_active` | `INTEGER NOT NULL DEFAULT 0`        | Only one season can be active (CHECK 0 or 1) |
 
+Each season also stores its own copy of the tweakable settings (`status`, `show_scores`, `show_ranking`), which also exist on the `hackathon` singleton. Editing the tweaks of the currently active season also updates the `hackathon` row so changes take effect immediately, and activating a season copies its tweaks into the `hackathon` row. The remaining hackathon-state columns (`voting_enabled`, `results_published`, `judging_open`, timestamps, theme, etc.) still exist on both tables but are not part of the season tweaks system.
+
+When the API decides whether to expose a team's `score`/`rank`, it resolves the `show_scores`/`show_ranking` toggles from the team's **own** season (via `getScoreRankVisibilityResolver` in `server/utils/database/seasons.ts`), falling back to the `hackathon` singleton only when the season no longer exists. This keeps past-season results governed by their own season's settings rather than the live season's.
+
 A partial unique index ensures at most one active season:
 
 ```sql
@@ -143,14 +147,26 @@ Junction table tracking which teams a user has belonged to historically.
 
 **Primary key**: `(user_id, team_id)`
 
+### `awards`
+
+Stores the award catalog. The namespace, display name, description, and icon are data managed in SQLite rather than hard-coded in the application.
+
+| Column        | Type                        | Description                              |
+| ------------- | --------------------------- | ---------------------------------------- |
+| `namespace`   | `TEXT PRIMARY KEY NOT NULL` | Unique machine-readable award identifier |
+| `name`        | `TEXT NOT NULL`             | Human-readable award name                |
+| `description` | `TEXT NOT NULL`             | Explanation of how the award is earned   |
+| `icon`        | `TEXT NOT NULL`             | Iconify icon class                       |
+| `color`       | `TEXT NOT NULL`             | Display color (defaults to `gold`)       |
+
 ### `team_awards`
 
-Stores per-team award assignments. Award definitions live in `shared/awards.ts` (`AWARD_REGISTRY`); the database only stores the award namespace and JSON metadata, which are resolved at read time.
+Stores per-team award assignments and JSON metadata. Award details are joined from `awards` at read time.
 
 | Column    | Type               | Description                                     |
 | --------- | ------------------ | ----------------------------------------------- |
 | `team_id` | `INTEGER NOT NULL` | FK to `teams.id` (ON DELETE CASCADE)            |
-| `award`   | `TEXT NOT NULL`    | Award namespace from `AWARD_REGISTRY`           |
+| `award`   | `TEXT NOT NULL`    | Award namespace from `awards.namespace`         |
 | `meta`    | `TEXT NOT NULL`    | JSON metadata for the assignment (default `{}`) |
 
 **Primary key**: `(team_id, award)`
@@ -190,14 +206,14 @@ Each table has a dedicated helper module in `server/utils/database/`:
 
 | File | Key Functions |
 | --- | --- |
-| `users.ts` | `getUser`, `getUserByEmail`, `addCodeToUser`, `updateUserName`, `updateUserProfileTheme` |
+| `users.ts` | `getUser`, `getUserByEmail`, `createUserFromMicrosoftProfile`, `updateUserName`, `updateUserProfileTheme` |
 | `teams.ts` | Team CRUD, project submission |
 | `members.ts` | Team member management |
 | `scores.ts` | Judge score CRUD |
 | `ballots.ts` | Ballot and ballot score management |
 | `hackathon.ts` | Hackathon state queries and updates |
 | `oauth2_applications.ts` | Application CRUD, secret management, redirect URI management |
-| `seasons.ts` | `getSeasons`, `getSeasonById`, `getActiveSeason`, `setActiveSeason` |
+| `seasons.ts` | `getSeasons`, `getSeasonById`, `getActiveSeason`, `setActiveSeason`, `getScoreRankVisibilityResolver` |
 | `awards.ts` | `getAwards`, `getAwardsForTeams`, `createAward`, `deleteTeamAwards`, `deleteAward` |
 
 ## Type Conventions
@@ -211,8 +227,6 @@ interface User {
     role: string;
     name: string | null;
     team_id: number | null;
-    login_code: string | null;
-    login_expiry: number | null;
     profile_theme: string | null;
     profile_picture: string | null;
 }
@@ -290,17 +304,18 @@ In practice, the dev/prod server applies migrations automatically when `createDr
 
 `migrateLegacySchema()` in `server/database/migrate.ts` brings databases created from older `sql/archive/init.sql` schemas up to date without dropping data. It adds missing tables and columns:
 
-| Missing Table / Column                 | Action                                                  |
-| -------------------------------------- | ------------------------------------------------------- |
-| `seasons` table                        | Creates table + unique name index                       |
-| `team_awards` table                    | Creates table                                           |
-| `peer_voting_scores` table             | Creates table                                           |
-| `user_past_teams` table                | Creates table with composite PK                         |
-| `hackathon.*` timestamp/status columns | `ALTER TABLE ... ADD COLUMN INTEGER DEFAULT 0/NULL`     |
-| `teams.season_id`                      | `ALTER TABLE ... ADD COLUMN INTEGER DEFAULT 1 NOT NULL` |
-| `teams.sourcing`                       | `ALTER TABLE ... ADD COLUMN TEXT DEFAULT '' NOT NULL`   |
-| `team_scores.season_id`                | `ALTER TABLE ... ADD COLUMN INTEGER`                    |
-| `oauth2_applications.owner_id`         | `ALTER TABLE ... ADD COLUMN INTEGER`                    |
+| Missing Table / Column | Action |
+| --- | --- |
+| `seasons` table | Creates table + unique name index |
+| `team_awards` table | Creates table |
+| `peer_voting_scores` table | Creates table |
+| `user_past_teams` table | Creates table with composite PK |
+| Legacy `awards` table | Rebuilds the catalog with namespace keys, preserving rows |
+| `hackathon.*` timestamp/status columns | `ALTER TABLE ... ADD COLUMN INTEGER DEFAULT 0/NULL` |
+| `teams.season_id` | `ALTER TABLE ... ADD COLUMN INTEGER DEFAULT 1 NOT NULL` |
+| `teams.sourcing` | `ALTER TABLE ... ADD COLUMN TEXT DEFAULT '' NOT NULL` |
+| `team_scores.season_id` | `ALTER TABLE ... ADD COLUMN INTEGER` |
+| `oauth2_applications.owner_id` | `ALTER TABLE ... ADD COLUMN INTEGER` |
 
 ### Seeding
 
@@ -318,6 +333,7 @@ After migrations, `seedHackathon()` ensures the `hackathon` singleton row exists
 | `migration-2026-06-02-22-00Z.sql` | Adds FK constraint on `teams.season_id` (table recreation) |
 | `migration-2026-06-02-22-15Z.sql` | Creates `user_past_teams` junction table |
 | `migration-2026-06-27-06-01Z.sql` | Creates the `team_awards` table (legacy archived migration) |
+| `0005_dynamic_awards.sql` | Creates and seeds the namespace-keyed award catalog |
 
 ## Foreign Keys
 

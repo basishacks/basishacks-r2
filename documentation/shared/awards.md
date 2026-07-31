@@ -5,46 +5,33 @@ description: How team awards are defined, stored, and returned in API responses.
 
 # Awards System
 
-Team awards are a lightweight way to recognize special achievements (for example, a perfect judge score). Award definitions live in shared code, while per-team award assignments are stored in the database.
+Team awards are a lightweight way to recognize special achievements (for example, a perfect judge score). Both award definitions and per-team assignments are stored in the database.
 
 ## Award Definition
 
-The `Award` interface in `shared/awards.ts` describes an award:
+The `awards` table describes an award:
 
-```ts
-export interface Award {
-    namespace: string;
-    name: string;
-    description: string;
-    icon: string;
-    computed?: (meta: Record<string, unknown>) => string[];
-}
+```sql
+CREATE TABLE awards (
+    namespace TEXT PRIMARY KEY NOT NULL,
+    name TEXT NOT NULL,
+    description TEXT NOT NULL,
+    icon TEXT NOT NULL,
+    color TEXT NOT NULL DEFAULT 'gold'
+);
 ```
 
-| Field         | Description                                                               |
-| ------------- | ------------------------------------------------------------------------- |
-| `namespace`   | Unique machine-readable identifier                                        |
-| `name`        | Human-readable display name                                               |
-| `description` | Short explanation of how the award is earned                              |
-| `icon`        | Iconify icon class                                                        |
-| `computed`    | Optional function that derives extra display strings from stored metadata |
+| Field         | Description                                  |
+| ------------- | -------------------------------------------- |
+| `namespace`   | Unique machine-readable identifier           |
+| `name`        | Human-readable display name                  |
+| `description` | Short explanation of how the award is earned |
+| `icon`        | Iconify icon class                           |
+| `color`       | Display color, defaulting to `gold`          |
 
-## Registry
+## Catalog
 
-Awards are registered in `AWARD_REGISTRY`:
-
-```ts
-export const AWARD_REGISTRY: Record<string, Award> = {
-    perfect_score: {
-        namespace: "perfect_score",
-        name: "Flawless",
-        description: "Achieve a perfect score from all judges.",
-        icon: "i-lucide-gem",
-    },
-};
-```
-
-Only `perfect_score` is currently defined. Adding a new award only requires adding an entry to the registry; no schema changes are needed.
+The initial migration seeds the `perfect_score` award. Add or change awards by editing rows in the `awards` table; no application-code or schema change is required.
 
 ## API Representation
 
@@ -62,7 +49,7 @@ interface APIAward {
 }
 ```
 
-`APITeam.awards` is an array of `APIAward` objects. The `convertTeamToPublic` helper resolves award metadata using `server/utils/database/awards.ts`. If an award defines a `computed` function, its `text` field is the joined result of that function; otherwise `text` falls back to the award description.
+`APITeam.awards` is an array of `APIAward` objects. The `convertTeamToPublic` helper receives awards resolved by `server/utils/database/awards.ts`; `text` is the stored award description.
 
 ## Database Helpers
 
@@ -72,15 +59,15 @@ interface APIAward {
 | --- | --- |
 | `getAwards(event, teamId)` | Select resolved awards for a single team from `team_awards` |
 | `getAwardsForTeams(event, teamIds)` | Select resolved awards for multiple teams, grouped by team |
-| `createAward(event, teamId, award, meta?)` | Insert a team award (`award` is a registry namespace); `meta` is an optional JSON string defaulting to `{}` |
+| `createAward(event, teamId, award, meta?)` | Insert a team award (`award` is an `awards.namespace`); `meta` is an optional JSON string defaulting to `{}` |
 | `deleteTeamAwards(event, teamId)` | Delete all awards for a team |
 | `deleteAward(event, teamId, award)` | Delete a specific award namespace for a team |
 
-Award storage uses the `team_awards` table with columns `team_id`, `award` (the registry namespace), and `meta` (a JSON string). The `meta` column is non-null and defaults to `{}` at insert time. Metadata is parsed and resolved at read time through `AWARD_REGISTRY` in `shared/awards.ts`.
+Award storage uses the `team_awards` table with columns `team_id`, `award` (the catalog namespace), and `meta` (a JSON string). The `meta` column is non-null and defaults to `{}` at insert time. Metadata is parsed and the catalog details are resolved through an inner join with `awards`.
 
 ## Source Files
 
-- `shared/awards.ts` — award definitions
+- `server/database/schema.ts` — award catalog and assignment schema
 - `shared/responses.d.ts` — `APIAward` interface
 - `server/utils/database/awards.ts` — database helpers
 - `server/utils/convert.ts` — resolves awards when converting teams

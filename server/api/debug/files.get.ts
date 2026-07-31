@@ -2,6 +2,7 @@ import { join } from "node:path";
 import { readdir } from "node:fs/promises";
 import { requirePermission } from "~~/server/utils/auth";
 import { DevPermissions } from "~~/shared/permissions";
+import { applyRateLimit, DEFAULT_RATE_LIMIT_CONFIG } from "~~/server/utils/rateLimit";
 
 const readDirectoryFiles = async (dir: string) => {
     try {
@@ -12,14 +13,16 @@ const readDirectoryFiles = async (dir: string) => {
     }
 };
 
-export default defineEventHandler(async (event) => {
-    await requirePermission(event, DevPermissions.PORTAL_DEBUG_VIEW);
+export default defineEventHandler(
+    applyRateLimit(async (event) => {
+        await requirePermission(event, DevPermissions.PORTAL_DEBUG_VIEW);
 
-    const assetsDir = join(process.cwd(), "public", "assets");
-    const userAstDir = join(process.cwd(), "public", "userast");
+        const assetsDir = join(process.cwd(), "public", "assets");
+        const userAstDir = join(process.cwd(), "public", "userast");
 
-    return {
-        assets: await readDirectoryFiles(assetsDir),
-        userast: await readDirectoryFiles(userAstDir),
-    };
-});
+        return {
+            assets: await readDirectoryFiles(assetsDir),
+            userast: await readDirectoryFiles(userAstDir),
+        };
+    }, DEFAULT_RATE_LIMIT_CONFIG),
+);

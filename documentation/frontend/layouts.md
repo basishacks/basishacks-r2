@@ -1,6 +1,6 @@
 ---
 title: Layouts
-description: Nuxt layouts used across the basishacks frontend — default, dashboard, fullwidth, and developer portal.
+description: Nuxt layouts used across the basishacks frontend — default, dashboard, fullwidth, and mod portal.
 ---
 
 # Layouts
@@ -20,7 +20,8 @@ The standard page layout used by most public pages.
 │ RoleHeader                   │
 ├──────────────────────────────┤
 │ UMain                        │
-│   <div class="px-4 ...">     │
+│   <div class="mx-auto        │
+│         max-w-7xl px-4 ..."> │
 │     <slot />                 │
 │                              │
 ├──────────────────────────────┤
@@ -29,7 +30,7 @@ The standard page layout used by most public pages.
 ```
 
 - `RoleHeader` — sticky navigation header with role-based menu items
-- Content wrapper — padded `div` that spans the viewport width (the global `UContainer` max-width constraint was removed so the header, footer, and content span the viewport)
+- Content wrapper — centered `div` with `max-w-7xl` (1280px). Fills full viewport width on screens under 1280px; centered above that.
 - `Footer` — site-wide footer with links and copyright
 
 **Used by:** `/`, `/profile`, `/rules`, `/voting`, `/judging`, `/judging/continue`
@@ -38,7 +39,7 @@ The standard page layout used by most public pages.
 
 **File:** `app/layouts/default-background.vue`
 
-Identical to `default` but with a **red background** (`bg-red-100`) on the `UMain` element. Used for debugging or visual testing.
+Identical to `default` but with a **red background** (`bg-red-100`) on the `UMain` element, plus the same `mx-auto max-w-7xl` centered container. Used for debugging or visual testing.
 
 ::: warning This layout is intended for development only and should not be used in production pages. :::
 
@@ -84,7 +85,7 @@ Same as `fullwidth` but with a **non-sticky** header (`class="relative"` on `Rol
 └──────────────────────────────┘
 ```
 
-**Used by:** `/showcase` — the showcase page needs the header to scroll away for an immersive full-screen experience.
+**Used by:** `/showcase` and `/beneath-the-surface` — showcase pages need the header to scroll away for an immersive full-screen experience.
 
 ## dashboard
 
@@ -132,7 +133,7 @@ Participant dashboard layout with a visible left sidebar containing the active p
 
 **File:** `app/layouts/developers-dashboard.vue`
 
-Developer portal layout using `UDashboardGroup` with a collapsible, resizable sidebar.
+Mod portal layout using `UDashboardGroup` with a collapsible, resizable sidebar.
 
 **Structure:**
 
@@ -158,22 +159,19 @@ Developer portal layout using `UDashboardGroup` with a collapsible, resizable si
 | Navigation | Permission-gated menu items                                                 |
 | Footer     | User avatar button linking to `/profile`                                    |
 
-**Navigation items with permission gates:**
+**Navigation and access rules:**
 
-| Item         | Route                             | Permission Required                   |
-| ------------ | --------------------------------- | ------------------------------------- |
-| Home         | `/developers`                     | None                                  |
-| Users        | `/developers/users`               | `PORTAL_USERS_VIEW` or admin          |
-| Teams        | `/developers/teams`               | `PORTAL_TEAMS_VIEW` or admin          |
-| Applications | `/developers/applications/`       | `PORTAL_APPLICATIONS_VIEW` or admin   |
+| Item | Route | Permission Required |
+| --- | --- | --- |
+| Home, Users, Teams, DeepSeek, Files, Season | `/developers/*` | Admin |
+| Applications | `/developers/applications/` | `PORTAL_APPLICATIONS_VIEW`, `PORTAL_APPLICATIONS_VIEW_ALL`, or admin |
 | ↳ Create New | `/developers/applications/create` | `PORTAL_APPLICATIONS_CREATE` or admin |
-| DeepSeek     | `/developers/deepseek`            | `PORTAL_DEEPSEEK_VIEW` or admin       |
-| Files        | `/developers/debug`               | `PORTAL_DEBUG_VIEW` or admin          |
-| Seasons      | `/developers/seasons`             | `PORTAL_SEASONS_VIEW` or admin        |
 
-Items are disabled (not hidden) when the user lacks the required permission. Permission checks use `hasPermission()` from `~~/shared/permissions` with `DevPermissions` constants.
+Within Applications, the list is limited to the caller's applications with `PORTAL_APPLICATIONS_VIEW`; `PORTAL_APPLICATIONS_VIEW_ALL` returns every application. Creating and deleting are gated by `PORTAL_APPLICATIONS_CREATE` and `PORTAL_APPLICATIONS_DELETE`, respectively (or admin).
 
-**Used by:** `/developers`, `/developers/users`, `/developers/teams`, `/developers/applications`, `/developers/applications/create`, `/developers/applications/[id]`, `/developers/deepseek`, `/developers/debug`, `/developers/seasons`
+Non-admin users see only the application navigation they can access. Permission checks use `hasPermission()` from `~~/shared/permissions` with `DevPermissions` constants.
+
+**Used by:** `/developers`, `/developers/users`, `/developers/teams`, `/developers/applications`, `/developers/applications/create`, `/developers/applications/[id]`, `/developers/deepseek`, `/developers/debug`, `/developers/season`
 
 ## Layout Comparison
 

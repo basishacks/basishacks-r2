@@ -1,7 +1,12 @@
-import oAuth2Config, { structureLink, buildOnsiteRedirectUri } from "~~/server/utils/oauth2";
+import oAuth2Config, {
+    buildOnsiteRedirectUri,
+    buildMicrosoftRedirectUri,
+} from "~~/server/utils/oauth2";
 import { generateExchangeCode, getAuthorizeSession } from "./session.post";
 import { createHash } from "crypto";
 import { determinePostMicrosoft } from "~~/server/utils/oauth2-validate";
+import { applyRateLimit, AUTH_RATE_LIMIT_CONFIG } from "~~/server/utils/rateLimit";
+import { createUserFromMicrosoftProfile } from "~~/server/utils/database/users";
 
 function decodeJWT(token: string) {
     try {
@@ -10,8 +15,8 @@ function decodeJWT(token: string) {
             throw new Error("Invalid JWT format");
         }
         const payload = parts[1];
-        //@ts-ignore Lol.
-        const decoded = Buffer.from(payload, "base64").toString("utf-8");
+        const padding = "=".repeat((4 - (payload.length % 4)) % 4);
+        const decoded = Buffer.from(payload + padding, "base64url").toString("utf-8");
         return JSON.parse(decoded);
     } catch (error) {
         console.error("Failed to decode JWT:", error);
@@ -37,181 +42,184 @@ function redirectWithOAuth2Error(
     return sendRedirect(event, url.toString());
 }
 
-export default defineEventHandler(async (event: any) => {
-    const query = getQuery(event);
-    const token = getCookie(event, "bridge_id");
-    const session = token ? getAuthorizeSession(token) : null;
+export default defineEventHandler(
+    applyRateLimit(async (event: any) => {
+        const query = getQuery(event);
+        const token = getCookie(event, "bridge_id");
+        const session = token ? getAuthorizeSession(token) : null;
 
-    const errorRedirectUri = session?.redirect_uri || getFallbackRedirectUri();
-    const errorState = session?.bh_state || null;
+        const errorRedirectUri = session?.redirect_uri || getFallbackRedirectUri();
+        const errorState = session?.bh_state || null;
 
-    if (query.error) {
-        console.log(
-            "[Authorize -> OAuth2] MS Endpoint error: " +
-                query.error +
-                ": " +
-                query.error_description,
-        );
-        return redirectWithOAuth2Error(
-            event,
-            errorRedirectUri,
-            query.error as string,
-            (query.error_description as string) || "Unknown error",
-            errorState,
-        );
-    }
-
-    const code = query.code as string;
-
-    if (!code) {
-        return redirectWithOAuth2Error(
-            event,
-            errorRedirectUri,
-            "invalid_request",
-            "Login Failed: No valid Microsoft OAuth2 code provided. Please ensure you are redirected here with a valid code, or try using alternative login options.",
-            errorState,
-        );
-    }
-
-    if (!token) {
-        return redirectWithOAuth2Error(
-            event,
-            getFallbackRedirectUri(),
-            "invalid_request",
-            "Your login session does not exist or has expired. Please login again.",
-        );
-    }
-
-    if (!session) {
-        return redirectWithOAuth2Error(
-            event,
-            getFallbackRedirectUri(),
-            "invalid_request",
-            "Your login session does not exist or has expired. Please login again.",
-        );
-    }
-
-    const hashed = createHash("sha256")
-        .update(session.ms_verifier || "")
-        .digest("base64url");
-    console.log(
-        "[Authorize -> MSCallBack] Requested Redeeming MS Code: T:" +
-            token.substring(0, 16) +
-            "... Verif:" +
-            session?.ms_verifier?.substring(0, 16) +
-            "... SHA256:" +
-            hashed.substring(0, 16) +
-            "...",
-    );
-
-    const msClientSecret = process.env.MICROSOFT_CLIENT_SECRET;
-    if (!msClientSecret) {
-        return redirectWithOAuth2Error(
-            event,
-            errorRedirectUri,
-            "access_denied",
-            "Server configuration error: MICROSOFT_CLIENT_SECRET is not set. Please configure it in .env to enable Microsoft OAuth2 login.",
-            errorState,
-        );
-    }
-
-    try {
-        const tokenResponse = await fetch(
-            `https://login.microsoftonline.com/${oAuth2Config.tenant}/oauth2/v2.0/token`,
-            {
-                method: "POST",
-                headers: {
-                    "Content-Type": "application/x-www-form-urlencoded",
-                },
-                body: new URLSearchParams({
-                    client_id: oAuth2Config.clientId,
-                    code: code,
-                    client_secret: msClientSecret,
-                    code_verifier: session.ms_verifier || "",
-                    redirect_uri:
-                        (process.env.CURRENT_URL_ORIGIN || "http://localhost:3000") +
-                        oAuth2Config.redirectUri,
-                    grant_type: "authorization_code",
-                    scope: oAuth2Config.scope,
-                }).toString(),
-            },
-        );
-
-        if (!tokenResponse.ok) {
-            const error: any = await tokenResponse.json();
-            console.error(
-                "[Authorize -> MSCallBack] Token exchange failed:",
-                error.error,
-                error.error_description,
+        if (query.error) {
+            console.log(
+                "[Authorize -> OAuth2] MS Endpoint error: " +
+                    query.error +
+                    ": " +
+                    query.error_description,
             );
+            return redirectWithOAuth2Error(
+                event,
+                errorRedirectUri,
+                query.error as string,
+                (query.error_description as string) || "Unknown error",
+                errorState,
+            );
+        }
+
+        const code = query.code as string;
+
+        if (!code) {
+            return redirectWithOAuth2Error(
+                event,
+                errorRedirectUri,
+                "invalid_request",
+                "Login Failed: No valid Microsoft OAuth2 code provided. Please ensure you are redirected here with a valid code, or try using alternative login options.",
+                errorState,
+            );
+        }
+
+        if (!token) {
+            return redirectWithOAuth2Error(
+                event,
+                getFallbackRedirectUri(),
+                "invalid_request",
+                "Your login session does not exist or has expired. Please login again.",
+            );
+        }
+
+        if (!session) {
+            return redirectWithOAuth2Error(
+                event,
+                getFallbackRedirectUri(),
+                "invalid_request",
+                "Your login session does not exist or has expired. Please login again.",
+            );
+        }
+
+        if (!query.state || query.state !== session.ms_state) {
+            return redirectWithOAuth2Error(
+                event,
+                errorRedirectUri,
+                "invalid_request",
+                "Login Failed: Invalid or missing OAuth2 state parameter. Please restart the login flow.",
+                errorState,
+            );
+        }
+
+        const hashed = createHash("sha256").update(session.ms_verifier).digest("base64url");
+        console.log(
+            "[Authorize -> MSCallBack] Requested Redeeming MS Code: T:" +
+                token.substring(0, 16) +
+                "... Verif:" +
+                session?.ms_verifier?.substring(0, 16) +
+                "... SHA256:" +
+                hashed.substring(0, 16) +
+                "...",
+        );
+
+        const msClientSecret = process.env.MICROSOFT_CLIENT_SECRET;
+        if (!msClientSecret) {
+            return redirectWithOAuth2Error(
+                event,
+                errorRedirectUri,
+                "access_denied",
+                "Server configuration error: MICROSOFT_CLIENT_SECRET is not set. Please configure it in .env to enable Microsoft OAuth2 login.",
+                errorState,
+            );
+        }
+
+        if (!session.ms_verifier || session.ms_verifier.length === 0) {
+            return redirectWithOAuth2Error(
+                event,
+                errorRedirectUri,
+                "invalid_request",
+                "Login Failed: Missing PKCE code verifier. Please restart the login flow.",
+                errorState,
+            );
+        }
+
+        try {
+            const tokenResponse = await fetch(
+                `https://login.microsoftonline.com/${oAuth2Config.tenant}/oauth2/v2.0/token`,
+                {
+                    method: "POST",
+                    headers: {
+                        "Content-Type": "application/x-www-form-urlencoded",
+                    },
+                    body: new URLSearchParams({
+                        client_id: oAuth2Config.clientId,
+                        code: code,
+                        client_secret: msClientSecret,
+                        code_verifier: session.ms_verifier,
+                        redirect_uri: buildMicrosoftRedirectUri(),
+                        grant_type: "authorization_code",
+                        scope: oAuth2Config.scope,
+                    }).toString(),
+                },
+            );
+
+            if (!tokenResponse.ok) {
+                const error: any = await tokenResponse.json();
+                console.error(
+                    "[Authorize -> MSCallBack] Token exchange failed:",
+                    error.error,
+                    error.error_description,
+                );
+
+                return redirectWithOAuth2Error(
+                    event,
+                    errorRedirectUri,
+                    "access_denied",
+                    "Failed to exchange authorization code: " +
+                        (error.error_description || "Unknown error"),
+                    errorState,
+                );
+            }
+
+            const tokenData: any = await tokenResponse.json();
+            const accessToken = tokenData.access_token;
+
+            const decodedToken = decodeJWT(accessToken);
+            const email =
+                decodedToken.mail ||
+                decodedToken.email ||
+                decodedToken.upn ||
+                decodedToken.preferred_username;
+            const name = decodedToken.name;
+            if (!email) {
+                return redirectWithOAuth2Error(
+                    event,
+                    errorRedirectUri,
+                    "access_denied",
+                    "Failed to exchange authorization code: Invalid or malformed token",
+                    errorState,
+                );
+            }
+
+            // Step 3: Find or create user in database
+            const user = await createUserFromMicrosoftProfile(event, email, name);
+
+            session.user = user;
+
+            const redir = determinePostMicrosoft(event, session);
+
+            console.log(
+                "[Authorization -> OAuth2] MS Token Exchange sucess " + session.redirect_uri,
+            );
+
+            return sendRedirect(event, redir);
+        } catch (error) {
+            console.error("OAuth callback error:", error);
 
             return redirectWithOAuth2Error(
                 event,
                 errorRedirectUri,
                 "access_denied",
                 "Failed to exchange authorization code: " +
-                    (error.error_description || "Unknown error"),
+                    (error instanceof Error ? error.message : String(error)),
                 errorState,
             );
         }
-
-        const tokenData: any = await tokenResponse.json();
-        const accessToken = tokenData.access_token;
-
-        const decodedToken = decodeJWT(accessToken);
-        const email =
-            decodedToken.mail ||
-            decodedToken.email ||
-            decodedToken.upn ||
-            decodedToken.preferred_username;
-        const name = decodedToken.name;
-        if (!email) {
-            return redirectWithOAuth2Error(
-                event,
-                errorRedirectUri,
-                "access_denied",
-                "Failed to exchange authorization code: Invalid or malformed token",
-                errorState,
-            );
-        }
-
-        // Step 3: Find or create user in database
-        let user = await getUserByEmail(event, email);
-
-        if (!user) {
-            // Create new user
-            user = await addCodeToUser(event, email);
-            if (!user.id) {
-                return redirectWithOAuth2Error(
-                    event,
-                    errorRedirectUri,
-                    "access_denied",
-                    "Failed to exchange authorization code: Failed to create user",
-                    errorState,
-                );
-            }
-        }
-
-        user.name = name || user.name;
-        await updateUserName(event, user);
-
-        session.user = user;
-
-        const redir = determinePostMicrosoft(event, session);
-
-        console.log("[Authorization -> OAuth2] MS Token Exchange sucess " + session.redirect_uri);
-
-        return sendRedirect(event, redir);
-    } catch (error) {
-        console.error("OAuth callback error:", error);
-
-        return redirectWithOAuth2Error(
-            event,
-            errorRedirectUri,
-            "access_denied",
-            "Failed to exchange authorization code: " +
-                (error instanceof Error ? error.message : String(error)),
-            errorState,
-        );
-    }
-});
+    }, AUTH_RATE_LIMIT_CONFIG),
+);

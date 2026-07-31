@@ -34,6 +34,7 @@ export default defineConfig({
                         { text: "Getting Started", link: "/guide/getting-started" },
                         { text: "Project Overview", link: "/guide/project-overview" },
                         { text: "Environment Setup", link: "/guide/environment-setup" },
+                        { text: "Testing", link: "/guide/testing" },
                         { text: "Documentation Site", link: "/guide/documentation-site" },
                         { text: "Migration from main", link: "/guide/migration-from-main" },
                         { text: "Voting", link: "/guide/voting-and-elections" },
@@ -94,6 +95,7 @@ export default defineConfig({
                     items: [
                         { text: "Security", link: "/deployment/security" },
                         { text: "Rate Limiting", link: "/deployment/rate-limiting" },
+                        { text: "Performance", link: "/deployment/performance" },
                     ],
                 },
             ],

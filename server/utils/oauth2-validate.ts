@@ -67,11 +67,11 @@ export async function validateOAuth2AuthorizationRequest(
         });
     }
 
-    // RFC 7636 §4.3: code_challenge_method MUST be 'S256' or 'plain'
-    if (code_challenge_type !== "S256" && code_challenge_type !== "plain") {
+    // RFC 7636 §4.4.2: 'plain' provides no additional security; require S256
+    if (code_challenge_type !== "S256") {
         throw createError({
             statusCode: 400,
-            statusMessage: "invalid_request: code_challenge_method must be S256 or plain",
+            statusMessage: "invalid_request: code_challenge_method must be S256",
         });
     }
 
@@ -118,29 +118,27 @@ export async function validateOAuth2AuthorizationRequest(
                 message: `Application '${app.name}' does not have permission for the following scope(s): ${unauthorizedScopes.join(", ")}`,
             });
         }
-    } else if (requestedScopes.length > 0) {
+    } else {
         throw createError({
             statusCode: 403,
             message: `Application '${app.name}' has no configured permissions`,
         });
     }
 
-    // Validate redirect_uri if provided
-    if (redirectUri) {
-        if (app.redirect_uris) {
-            const allowedRedirectUris = app.redirect_uris.split(" ").filter((u) => u);
-            if (!allowedRedirectUris.includes(redirectUri)) {
-                throw createError({
-                    statusCode: 403,
-                    message: `Application '${app.name}' does not allow redirect_uri '${redirectUri}'. Add it to the application's registered redirect URIs (space-separated in the oauth2_applications.redirect_uris column or via the admin API).`,
-                });
-            }
-        } else {
+    // Validate redirect_uri
+    if (app.redirect_uris) {
+        const allowedRedirectUris = app.redirect_uris.split(" ").filter((u) => u);
+        if (!allowedRedirectUris.includes(redirectUri)) {
             throw createError({
                 statusCode: 403,
-                message: `Application '${app.name}' has no configured redirect URIs`,
+                message: `Application '${app.name}' does not allow redirect_uri '${redirectUri}'. Add it to the application's registered redirect URIs (space-separated in the oauth2_applications.redirect_uris column or via the admin API).`,
             });
         }
+    } else {
+        throw createError({
+            statusCode: 403,
+            message: `Application '${app.name}' has no configured redirect URIs`,
+        });
     }
 
     return {

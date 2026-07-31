@@ -183,3 +183,9 @@ basishacks.sqlite
 # Agent/skill working artifacts
 skills-*.json
 test-agent-file.txt
+
+# Generated test metadata (regenerated on every test run)
+tests/.test-meta.json
+.vitest-results.json
+userassets/
+.test-meta.json

@@ -1,11 +1,11 @@
 ---
 title: Pages
-description: File-based routes in the basishacks frontend — home, dashboard, voting, judging, developer portal, and OAuth2 flows.
+description: File-based routes in the basishacks frontend — home, dashboard, voting, judging, mod portal, and OAuth2 flows.
 ---
 
 # Pages
 
-The basishacks frontend contains **25 page files** in `app/pages/`, mapped to routes via Nuxt's file-based routing. All pages use `<script setup lang="ts">`.
+The basishacks frontend contains **27 page files** in `app/pages/`, mapped to routes via Nuxt's file-based routing. All pages use `<script setup lang="ts">`.
 
 ## Public Pages
 
@@ -99,6 +99,29 @@ Animated showcase page for the top projects from the current season. A highly vi
 
 ::: tip This page uses custom CSS animations including `metallic-gold`, `metallic-silver`, `metallic-bronze`, `neon` flicker, and `appearAndShake` word animations. :::
 
+### `/beneath-the-surface`
+
+**File:** `app/pages/beneath-the-surface.vue`
+
+Season 1's data-driven winners showcase for **Beneath the Surface**. Its `ShowcaseBeneathTheSurface` component fetches `/api/teams?season_id=1` and merges the public records with a frozen historical winner configuration.
+
+**Layout:** `fullwidth-nostick`
+
+| Pathway | Rank | Project                    |
+| ------- | ---- | -------------------------- |
+| Junior  | 1    | Where the Rainbow Ends     |
+| Junior  | 2    | Beneath the Land           |
+| Junior  | 3    | Horror Forest              |
+| Senior  | 1    | metadata manipulation tool |
+| Senior  | 2    | Unseen Layers              |
+| Senior  | 3    | TraceShadow                |
+
+Each winner receives a full-viewport, project-specific visual chapter. Project names, team names, and external links come from the Season 1 API; the frozen title and summary remain visible if a record cannot be loaded.
+
+**Motion:** GSAP and ScrollTrigger create the hero entrance, depth progress, desktop pinned sections, scroll-linked reveals, ambient layers, and pointer parallax. Mobile layouts use natural scrolling. `prefers-reduced-motion` disables pinning, scrubbing, parallax, and ambient movement while keeping all content visible.
+
+**Components used:** `ShowcaseBeneathTheSurface`, `GoBackUp`
+
 ### `/voting`
 
 **File:** `app/pages/voting.vue`
@@ -115,6 +138,14 @@ Peer voting page. Protected by `auth` middleware. Only accessible during the `vo
 6. Submit with browser `confirm()` dialog
 
 **Validation:** Uses `SubmitVoteRequest` schema. Posts to `/api/ballot`.
+
+**Layout:** `default`
+
+### `/contributing`
+
+**File:** `app/pages/contributing.vue`
+
+Contributing guidelines and security disclosure policy. Contains commit guidelines, instructions for privately reporting security issues (with guidance on self-fixing via obfuscated pull requests), a responsible disclosure policy, and a code of conduct. Written in professional academic American English. Linked from the site footer.
 
 **Layout:** `default`
 
@@ -149,7 +180,7 @@ Active judging interface. Protected by `auth` middleware. Accessible only by jud
 **Flow:**
 
 1. Fetches teams for judging from `/api/teams?judging=1`
-2. Renders a `JudgingCard` for each team
+2. Renders a `JudgingCard` for each team (project descriptions rendered via `SafeComark`)
 3. After scoring, refreshes the list
 
 **Layout:** `default`
@@ -186,6 +217,8 @@ Project editing page. Protected by `auth` middleware.
 - No team and hackathon started → "You don't have a team yet!" CTA
 - Has team → `ProjectForm` (disabled when submission is closed or already submitted)
 - Project already submitted → congratulations message with disabled form
+
+**XSS-safe content:** All user-provided project content (descriptions, sourcing notes) is rendered using `SafeComark` throughout the page, which sanitizes inline Markdown and replaces `<a>` tags with `SafeLink` to prevent unsafe URLs.
 
 **Unsaved changes protection:** Same pattern as dashboard index — `onBeforeRouteLeave` + `beforeunload`.
 
@@ -225,13 +258,15 @@ Placeholder page for the presentation event. States that top 10 teams will be in
 
 **Layout:** `dashboard`
 
-## Developer Portal
+## Mod Portal
+
+**Access:** The entire mod portal is admin-only. The `developers-dashboard` layout enforces this with a hard 403 at the layout level. There is no non-admin developer role.
 
 ### `/developers`
 
 **File:** `app/pages/developers/index.vue`
 
-Developer portal landing page. Shows a welcome message.
+Mod portal landing page. Shows a welcome message. Wrapped in `UDashboardPanel` with `UDashboardNavbar` and `UDashboardSidebarCollapse` so mobile users can open the sidebar navigation.
 
 **Layout:** `developers-dashboard`
 
@@ -239,7 +274,7 @@ Developer portal landing page. Shows a welcome message.
 
 **File:** `app/pages/developers/users.vue`
 
-User management page. Permission-gated via the sidebar navigation.
+User management page.
 
 **Layout:** `developers-dashboard`
 
@@ -247,7 +282,9 @@ User management page. Permission-gated via the sidebar navigation.
 
 **File:** `app/pages/developers/teams.vue`
 
-Team management page. Permission-gated via the sidebar navigation.
+Team management page.
+
+The table includes a **Members** column that renders a `UserAvatarGroup` (with `developer-mode` enabled, so hovering shows each member's id beside their name) fed by the `members` array returned from `GET /api/admin/teams`.
 
 **Layout:** `developers-dashboard`
 
@@ -289,15 +326,13 @@ OAuth2 application editor with two tabs: **General details** and **Authorization
 | Scope Permissions | Add scopes from `OAuth2Scopes` registry. Admin-only scopes require elevated permissions. Sensitive scopes show "User Consent" badge. |
 | OAuth2 URL Generator | Select scopes and redirect URI to generate an authorization URL. Includes PKCE requirement notice. |
 
-**Permission guard:** Client-side check using `useApiUser()` — admin or `PORTAL_APPLICATIONS_VIEW_ALL` permission required.
-
 **Layout:** `developers-dashboard`
 
 ### `/developers/deepseek`
 
 **File:** `app/pages/developers/deepseek.vue`
 
-DeepSeek AI chat interface. Permission-gated.
+DeepSeek AI chat interface.
 
 **Layout:** `developers-dashboard`
 
@@ -309,11 +344,16 @@ File upload and debug utilities. Permission-gated.
 
 **Layout:** `developers-dashboard`
 
-### `/developers/seasons`
+### `/developers/season`
 
-**File:** `app/pages/developers/seasons.vue`
+**File:** `app/pages/developers/season.vue`
 
-Season management page. Permission-gated.
+Hackathon Administration page (admin-only, hard 403 for non-admins). Contains:
+
+- **Season** — pick the season to manage and activate it (`PATCH /api/seasons/active`); "New Season" creates one via `POST /api/admin/seasons`.
+- **Season Name** — rename the selected season via `PATCH /api/admin/seasons`.
+- **Hackathon Configuration** — all settings are per-season (including score and rank visibility) and auto-save through `/api/admin/hackathon` with `season_id`. Editing the active season also syncs to the global `hackathon` row. No "Save" button; every field change is persisted via a serialized PATCH chain carrying all form fields, so no field is ever dropped and no two PATCHes race.
+- **Database Export** — download the SQLite database or a CSV snapshot via `GET /api/admin/database/export`.
 
 **Layout:** `developers-dashboard`
 

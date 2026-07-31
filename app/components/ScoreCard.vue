@@ -14,8 +14,11 @@
                         </UBadge>
                     </div>
                 </div>
-                <div v-if="team.score" class="w-full flex flex-row justify-between items-center">
-                    <div class="w-1/2">
+                <div
+                    v-if="team.score || team.rank"
+                    class="w-full flex flex-row justify-between items-center"
+                >
+                    <div v-if="team.score" class="w-1/2">
                         <span class="uppercase text-sm text-muted">score</span>
                         <div class="w-1/2 flex items-baseline-last gap-1">
                             <span
@@ -27,7 +30,7 @@
                             <span class="text-muted">/800</span>
                         </div>
                     </div>
-                    <div class="w-1/2">
+                    <div v-if="team.rank" class="w-1/2">
                         <span class="uppercase text-sm text-muted">ranking</span>
                         <div class="flex items-baseline-last gap-1">
                             <span
@@ -49,7 +52,7 @@
                             class="flex flex-row items-center gap-2 rounded-lg bg-background/80 px-4 py-2 shadow-sm backdrop-blur-sm text-muted"
                         >
                             <UIcon name="i-lucide-x"></UIcon>
-                            <span>Project not submitted</span>
+                            <span>Not available</span>
                         </div>
                     </div>
                     <div class="w-1/2 blur-md select-none">
@@ -98,12 +101,7 @@
                         <ProjectCard :id="team.id" />
                     </template>
                 </UModal>
-                <ULink
-                    class="text-xs"
-                    :href="hackathonSeasons[team.season_id!]?.docs || '#'"
-                    target="_blank"
-                    external
-                >
+                <ULink class="text-xs" href="#" target="_blank" external>
                     <UIcon name="i-lucide-calendar" class="text-xs"></UIcon>
                     See Season Details
                     <UIcon name="i-lucide-arrow-right" class="text-xs"></UIcon>
@@ -114,21 +112,20 @@
 </template>
 
 <script setup lang="ts">
-import hackathonSeasons from "~~/shared/seasons";
-
 const props = defineProps<{
     team: GetTeamResponse;
 }>();
 
-const seasonDate = computed(() => {
-    if (!props.team.season_id) return "Unknown Date";
-    return hackathonSeasons[props.team.season_id]?.date || "Unknown Date";
+const { data: seasons } = await useFetch<Season[]>("/api/seasons", { lazy: true });
+
+const seasonMeta = computed(() => {
+    if (!props.team.season_id) return { name: "Unknown", date: null };
+    const s = seasons.value?.find((s: any) => s.id === props.team.season_id);
+    return { name: s?.name ?? `Season ${props.team.season_id}`, date: null };
 });
 
-const seasonName = computed(() => {
-    if (!props.team.season_id) return "Unknown Name";
-    return hackathonSeasons[props.team.season_id]?.theme_name || "Unknown Name";
-});
+const seasonDate = computed(() => seasonMeta.value.date);
+const seasonName = computed(() => seasonMeta.value.name);
 
 const { data: members } = await useFetch<GetTeamMembersResponse>(
     () => `/api/teams/${props.team.id}/users`,

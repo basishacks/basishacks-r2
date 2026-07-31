@@ -11,21 +11,48 @@ basishacks supports two authentication methods and a fine-grained permission sys
 
 ### 1. Microsoft OAuth2
 
-Delegates authentication to Microsoft Entra ID (Azure AD):
+Delegates authentication to Microsoft Entra ID (Azure AD). This is the **only** login method for the hackathon registry; the legacy email-verification-code flow has been removed.
 
 - **Tenant**: read from the `MICROSOFT_TENANT_ID` environment variable
 - **Client ID**: read from the `MICROSOFT_CLIENT_ID` environment variable
+- **Client Secret**: read from `MICROSOFT_CLIENT_SECRET` for the token exchange
 - **Scopes**: `openid profile email`
-- **Redirect URI**: `/api/oauth2/mscallback`
-- **PKCE**: Supported with `S256` code challenge method
+- **Redirect URI**: `/api/oauth2/mscallback` (alias also exposed at `/api/auth`)
+- **PKCE**: Enforced with the `S256` code challenge method
 
-The flow redirects the user to Microsoft's login page, then back to the basishacks callback endpoint where the authorization code is exchanged for a session.
+The hardened flow works as follows:
 
-### 2. basishacks connect
+1. The authorize middleware generates a cryptographically random `state` value and a PKCE `code_verifier`, then stores them in the in-memory authorization session.
+2. The user is redirected to Microsoft's authorization endpoint with `response_type=code`, `code_challenge`, `code_challenge_method=S256`, and `state`.
+3. Microsoft redirects back to `/api/oauth2/mscallback` with an authorization `code` and the same `state`.
+4. The callback validates that the returned `state` matches the session, rejects the request if it does not, and exchanges the code using the original PKCE `code_verifier`.
+5. The user's profile is extracted from the Microsoft ID token, and `createUserFromMicrosoftProfile` creates or updates the local user record.
+6. The basishacks session cookie is established with `httpOnly`, `secure`, `sameSite: "lax"` flags and the user is redirected to the post-login destination.
 
-A custom OAuth2 integration that allows users to log in through the basishacks OAuth2 provider itself. The internal first-party application is identified by the `ONSITE_LOGIN_CLIENT_ID` environment variable and is registered during initialization.
+::: danger PKCE enforcement PKCE is **mandatory** with `code_challenge_method=S256` only. The `plain` method is rejected at the validation layer per RFC 7636 §4.4.2. All authorization requests without PKCE or with `plain` method receive a `invalid_request: code_challenge_method must be S256` error. :::
+
+### 2. basishacks connect (onsite OAuth2 application)
+
+A custom OAuth2 integration used by the first-party application identified by `ONSITE_LOGIN_CLIENT_ID`. The typical site login path is:
+
+```
+/api/login  →  /api/oauth2/authorize  →  Microsoft OAuth2  →  /api/oauth2/mscallback  →  /api/oauth2/dccallback
+```
+
+`/api/login` constructs a full OAuth2 + PKCE authorization request against basishacks itself, sets a short-lived `pkce_verifier` cookie, and redirects to `/api/oauth2/authorize`. Because the onsite application is a normal OAuth2 application, it is subject to the same state validation and PKCE enforcement as third-party clients.
 
 See [OAuth2 System](./oauth2) for full details on the authorization code flow.
+
+### Login rate limiting
+
+The `/api/login` endpoint is rate-limited using `AUTH_RATE_LIMIT_CONFIG` (default: 600 requests per minute, configurable via `RATE_LIMIT_AUTH_MAX`). This prevents brute-force attempts against the Microsoft OAuth2 redirect.
+
+### Open redirect prevention
+
+The `redirect` query parameter in `/api/login` is validated to prevent open redirect attacks:
+
+- Only relative paths are accepted (no `http://`, `https://`, or protocol-relative `//` prefixes).
+- The same check applies to the `redirect` parameter in `/api/oauth2/dccallback`.
 
 ## Auth Endpoints
 
@@ -37,16 +64,39 @@ See [OAuth2 System](./oauth2) for full details on the authorization code flow.
 
 ## Session Management
 
+### nuxt-auth-utils session
+
 Sessions are handled by `nuxt-auth-utils`:
 
-| Property | Value                                 |
-| -------- | ------------------------------------- |
-| Storage  | Encrypted cookie                      |
-| Content  | `{ user: { id: number } }`            |
-| Max age  | 30 days (`30 * 24 * 60 * 60` seconds) |
-| Password | `NUXT_SESSION_PASSWORD` (>= 32 bytes) |
+| Property | Value                                   |
+| -------- | --------------------------------------- |
+| Storage  | Encrypted cookie                        |
+| Content  | `{ user: { id: number } }`              |
+| Max age  | 30 days (`30 * 24 * 60 * 60` seconds)   |
+| Password | `NUXT_SESSION_PASSWORD` (>= 32 bytes)   |
+| Cookie   | `httpOnly`, `secure`, `sameSite: "lax"` |
 
 The session stores only the user ID. The full user record is fetched from the database on every authenticated request via `requireUser()`.
+
+### OAuth2 authorization session state machine
+
+The OAuth2 authorization flow uses a state machine with four states, stored in the in-memory `AuthorizeSession`:
+
+| State            | Meaning                                                          |
+| ---------------- | ---------------------------------------------------------------- |
+| `identification` | Application identified; user needs to authenticate               |
+| `requesting`     | External authentication in progress (e.g., Microsoft OAuth2)     |
+| `consent`        | User authenticated; awaiting explicit consent (sensitive scopes) |
+| `completed`      | Authorization code generated; awaiting token exchange            |
+
+Transitions:
+
+1. `identification` → `requesting` — user is redirected to Microsoft login
+2. `requesting` → `consent` — Microsoft callback received, user authenticated
+3. `consent` → `completed` — user grants consent, authorization code generated
+4. `identification` → `completed` — direct completion without sensitive scopes
+
+Sessions expire after 10 minutes with a `bridge_id` cookie (httpOnly, secure, sameSite: lax).
 
 ### Session type augmentation
 
@@ -156,6 +206,17 @@ export async function requirePermission(event: H3Event, permission: string) {
 }
 ```
 
+### JWT validation middleware
+
+OAuth2 JWT Bearer tokens are validated by `oauth2-jwt.ts` utilities:
+
+- `verifyAccessToken(token)` — Verifies a JWT against `NUXT_OAUTH2_JWT_SECRET` using the `jose` library. Throws 401 for invalid or expired tokens.
+- `extractBearerToken(event)` — Extracts the Bearer token from the `Authorization` header. Throws 401 if missing.
+- `requireScopes(grantedScopes, requiredScopes)` — Throws 403 with `insufficient_scope` if any required scope is missing.
+- `withOAuth2JWT(handler, options)` — High-level wrapper that handles extraction, verification, scope checking, and optional user loading.
+
+The `NUXT_OAUTH2_JWT_SECRET` is validated at startup by the `validate-environment.ts` plugin (>= 32 bytes, otherwise the process exits).
+
 ### Migration from simple roles
 
 The original schema had a `CHECK` constraint limiting `users.role` to `participant`, `judge`, or `admin`. This was removed via `migration-permissions.sql` which recreated the `users` table without the constraint:
@@ -183,5 +244,17 @@ Authorization: requires admin
 ```
 
 This sets the session to the target user's ID, allowing admins to debug issues from the user's perspective. The impersonation is permanent until the admin logs out or impersonates another user.
+
+### Audit logging
+
+Every impersonation event is logged via `console.log` with the `[AUDIT]` prefix:
+
+```ts
+console.log(
+    `[AUDIT] Admin ${admin.id} (${admin.email}) impersonated user ${targetUser.id} (${targetUser.email})`,
+);
+```
+
+This provides a server-side audit trail of all impersonation activity. Logs include both the admin's and target user's ID and email, and are visible in the server's stdout and log capture.
 
 ::: warning Impersonation completely replaces the session. There is no "return to admin" mechanism — the admin must log in again. :::

@@ -5,7 +5,7 @@ description: Vue components used across the basishacks frontend — navigation, 
 
 # Components
 
-The basishacks frontend contains **25 Vue components** organized in `app/components/`. All components use `<script setup lang="ts">` and the `@nuxt/ui` component library.
+The basishacks frontend contains **26 Vue components** organized in `app/components/`. All components use `<script setup lang="ts">` and the `@nuxt/ui` component library.
 
 ## Navigation & Layout
 
@@ -29,6 +29,7 @@ The main navigation header rendered at the top of every page. Uses `UHeader` fro
 | Home | Always visible |
 | Dashboard (with children: Overview, General, Teams, Results) | Always visible |
 | Showcase | Always visible |
+| Beneath the Surface | Always visible |
 | Voting | Hackathon status is `voting` and user is not a judge or admin |
 | Judging | User is a judge or admin, and hackathon status is `voting` |
 
@@ -46,7 +47,7 @@ Site-wide footer using `UFooter`. Contains three sections:
 
 | Section | Content |
 | --- | --- |
-| Left | Copyright notice (auto-updates year), link to the contributing page, and link to the developer portal |
+| Left | Copyright notice (auto-updates year), link to the contributing page, and link to the mod portal |
 | Center | Navigation links to [biszweb.club](https://biszweb.club/club_sites/developers_club) and [binj.dev](https://binj.dev) |
 | Right | Microsoft Teams button (inline SVG) and GitHub button linking to the repository |
 
@@ -222,7 +223,7 @@ Primary results card used on the dashboard results page. Displays season results
 | #3          | `metallic-bronze` | Bronze gradient shimmer animation |
 | Score = 800 | `rainbow-once`    | One-time rainbow sweep animation  |
 
-The card displays season date and name (from `~~/shared/seasons`), score out of 800, ranking, team name, pathway badge, member avatars via `UserAvatarGroup`, awarded badges via `AwardButton`, and a link to season details. A modal trigger renders the full project inside a `ProjectCard`. When a project has not been submitted, the score and rank are blurred with an overlay message.
+The card displays season date and name (fetched from `/api/seasons`), score out of 800, ranking, team name, pathway badge, member avatars via `UserAvatarGroup`, awarded badges via `AwardButton`, and a link to season details. A modal trigger renders the full project inside a `ProjectCard`. When a project has not been submitted, the score and rank are blurred with an overlay message.
 
 ```vue
 <ScoreCard :team="team" />
@@ -248,7 +249,7 @@ Compact card showing judging progress for a single season: how many projects hav
 
 **File:** `app/components/ShowcaseMarqueeCard.vue`
 
-Horizontal scroll card used in the showcase marquee. Displays project rank, pathway badge, and awarded badges. Applies metallic gradient text for ranks 1–3, and renders "Unranked" otherwise.
+Horizontal scroll card used in the showcase marquee. Displays project rank, awarded badges, pathway badge, project name, project description, and member avatars via `UserAvatarGroup` (fetched from `/api/teams/[id]/users`; only visible to logged-in users, "(No members)" otherwise). Applies metallic gradient text for ranks 1–3, and renders "Unranked" otherwise.
 
 **Props:**
 
@@ -300,13 +301,21 @@ Icon-based project link buttons for GitHub, demo, and video. The video button op
 <ResultsProjectLinks github-link="..." demo-link="..." video-link="..." />
 ```
 
+### ShowcaseBeneathTheSurface
+
+**File:** `app/components/showcase/BeneathTheSurface.vue`
+
+Season 1's immersive winners experience. It fetches `/api/teams?season_id=1`, merges those public records with six frozen winner profiles, and renders one full-viewport chapter per project. Project-specific HTML and SVG scenes cover cyberpunk dialogue, a flooded pixel world, a night forest, a metadata inspector, fractured memories, and a third-party request graph.
+
+GSAP and ScrollTrigger are loaded after mount so server rendering remains safe. Responsive `matchMedia()` timelines pin and scrub sections only on desktop; reduced-motion visitors see the complete static composition. All timelines, ScrollTriggers, pointer handlers, and inline animation styles are reverted when the component unmounts.
+
 ## Awards
 
 ### AwardButton
 
 **File:** `app/components/AwardButton.vue`
 
-Tooltip button that renders an award icon and description. Maps award colors (`gold`, `silver`, `bronze`, or default) to `@nuxt/ui` button colors.
+Hover popover button that renders an award icon. On hover, it shows the award name as a bold title and the description as the body. Maps award colors (`gold`, `silver`, `bronze`, or default) to `@nuxt/ui` button colors.
 
 **Props:**
 
@@ -349,18 +358,20 @@ Renders multiple `UserAvatar` components in a `UAvatarGroup` with a hover popove
 
 **Props:**
 
-| Prop    | Type               | Default | Description                  |
-| ------- | ------------------ | ------- | ---------------------------- |
-| `users` | `Array`            | —       | Array of user objects        |
-| `size`  | `string`           | —       | Avatar size (passed through) |
-| `max`   | `number \| string` | —       | Maximum visible avatars      |
-| `class` | `any`              | —       | Classes passed to the group  |
-| `ui`    | `any`              | —       | UI overrides for the group   |
+| Prop | Type | Default | Description |
+| --- | --- | --- | --- |
+| `users` | `Array` | — | Array of user objects (`id`, `name`, `email`, `profile_picture`) |
+| `size` | `string` | — | Avatar size (passed through) |
+| `max` | `number \| string` | — | Maximum visible avatars |
+| `class` | `any` | — | Classes passed to the group |
+| `ui` | `any` | — | UI overrides for the group |
+| `developerMode` | `boolean` | `false` | Shows each user's id in grayed `<id>` brackets beside their name in the popover |
 
-The popover contains a scrollable list of `UserItem` components.
+The popover contains a scrollable list of `UserItem` components. When `developerMode` is enabled, a grayed `<id>` badge is rendered next to each user entry.
 
 ```vue
 <UserAvatarGroup :users="members" :max="5" size="md" />
+<UserAvatarGroup :users="members" :max="4" size="xs" developer-mode />
 ```
 
 ### UserItem
@@ -449,6 +460,63 @@ Inline version of the infinity SVG loader (same animation, no overlay). Used ins
 ```vue
 <LoaderAnimationInline />
 ```
+
+## Security & Validation
+
+### SafeLink
+
+**File:** `app/components/SafeLink.vue`
+
+An `<a>` tag that validates its `href` attribute through `isSafeUrl()` before rendering. Unsafe URLs (javascript:, data:, etc.) render as a `<span>` with muted strikethrough styling instead.
+
+**Props:**
+
+| Prop   | Type     | Description                     |
+| ------ | -------- | ------------------------------- |
+| `href` | `string` | The URL to validate and link to |
+
+**Behavior:**
+
+- **Safe external URL** (`http://` / `https://`) → renders `<a target="_blank" rel="noopener noreferrer">`
+- **Safe same-origin URL** (starts with `/` but not `//`) → renders `<a>` without target/rel
+- **Unsafe URL** (javascript:, data:, etc.) → renders `<span class="text-muted line-through">`
+
+```vue
+<SafeLink href="https://example.com">Visit</SafeLink>
+<SafeLink href="javascript:alert(1)">This renders as span</SafeLink>
+```
+
+### SafeComark
+
+**File:** `app/components/SafeComark.vue`
+
+Wraps the `Comark` component (inline Markdown renderer) with XSS-safe configuration. Disables raw HTML (`html: false`) and replaces `<a>` tags with `SafeLink` to prevent unsafe links. Used wherever user-provided content is rendered (project descriptions, sourcing notes, etc.).
+
+```vue
+<SafeComark>{{ team.project.description }}</SafeComark>
+```
+
+### url-validation.ts
+
+**File:** `app/utils/url-validation.ts`
+
+Utility functions for safe URL validation used by `SafeLink` and other components.
+
+Form input components (`ProjectForm.vue`, `JudgingCard.vue`, `voting.vue`) bind `:maxlength` to the exported `MAX_*` constants from `shared/schemas.ts` (e.g. `MAX_PROJECT_DESCRIPTION_LENGTH`, `MAX_REASONING_LENGTH`, `MAX_URL_LENGTH`), preventing users from exceeding validation limits before form submission.
+
+| Function | Signature | Description |
+| --- | --- | --- |
+| `isSafeUrl` | `(url: string) => boolean` | Returns `true` for relative paths rooted at `/` (but not protocol-relative `//`) or for absolute `http://` / `https://` URLs. Returns `false` for empty strings. |
+| `safeUrl` | `(url: string \| null \| undefined) => string \| undefined` | Returns the URL unchanged if safe, or `undefined` if null/unsafe. |
+
+```ts
+isSafeUrl("https://example.com"); // → true
+isSafeUrl("/relative/path"); // → true
+isSafeUrl("javascript:alert(1)"); // → false
+safeUrl(null); // → undefined
+```
+
+---
 
 ## Utility Components
 

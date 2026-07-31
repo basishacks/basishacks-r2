@@ -105,6 +105,15 @@ describe("teams database helpers", () => {
             const team = await getTeam(event, 999);
             expect(team).toBeNull();
         });
+
+        it("returns null when there is no active season", async () => {
+            event.context.drizzle
+                .prepare("INSERT INTO teams(name, season_id) VALUES('Team A', 1)")
+                .run();
+
+            const team = await getTeam(event, 1);
+            expect(team).toBeNull();
+        });
     });
 
     describe("getAllTeams", () => {
@@ -125,6 +134,15 @@ describe("teams database helpers", () => {
             const teams = await getAllTeams(event);
             expect(teams).toHaveLength(2);
             expect(teams.map((t) => t.name)).toEqual(["Team A", "Team B"]);
+        });
+
+        it("returns an empty array when there is no active season", async () => {
+            event.context.drizzle
+                .prepare("INSERT INTO teams(name, season_id) VALUES('Team A', 1)")
+                .run();
+
+            const teams = await getAllTeams(event);
+            expect(teams).toHaveLength(0);
         });
     });
 
@@ -164,6 +182,17 @@ describe("teams database helpers", () => {
             expect(teams).toHaveLength(1);
             expect(teams[0]!.name).toBe("Team B");
         });
+
+        it("returns an empty array when there is no active season", async () => {
+            event.context.drizzle
+                .prepare(
+                    "INSERT INTO teams(name, season_id, project_submitted) VALUES('Team A', 1, 1)",
+                )
+                .run();
+
+            const teams = await getSubmittedUnjudgedTeams(event, 1);
+            expect(teams).toHaveLength(0);
+        });
     });
 
     describe("getSubmittedTeams", () => {
@@ -189,6 +218,17 @@ describe("teams database helpers", () => {
             const teams = await getSubmittedTeams(event);
             expect(teams).toHaveLength(2);
             expect(teams.map((t) => t.name)).toEqual(["Team A", "Team C"]);
+        });
+
+        it("returns an empty array when there is no active season", async () => {
+            event.context.drizzle
+                .prepare(
+                    "INSERT INTO teams(name, season_id, project_submitted) VALUES('Team A', 1, 1)",
+                )
+                .run();
+
+            const teams = await getSubmittedTeams(event);
+            expect(teams).toHaveLength(0);
         });
     });
 

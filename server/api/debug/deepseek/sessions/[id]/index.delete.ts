@@ -1,46 +1,46 @@
 import { getDeepSeekSession, deleteSession } from "~~/server/utils/deepseek-store";
 import { requirePermission } from "~~/server/utils/auth";
 import { DevPermissions } from "~~/shared/permissions";
+import { DeepSeekSessionIdParams } from "~~/shared/schemas";
+import { applyRateLimit, DEFAULT_RATE_LIMIT_CONFIG } from "~~/server/utils/rateLimit";
 
-export default defineEventHandler(async (event) => {
-    await requirePermission(event, DevPermissions.DEEPSEEK);
+export default defineEventHandler(
+    applyRateLimit(async (event) => {
+        await requirePermission(event, DevPermissions.DEEPSEEK);
 
-    const sessionId = getRouterParam(event, "id");
+        const { id: sessionId } = await getValidatedRouterParams(
+            event,
+            DeepSeekSessionIdParams.parse,
+        );
 
-    if (!sessionId || isNaN(Number(sessionId))) {
-        throw createError({
-            statusCode: 400,
-            statusMessage: "Invalid session ID",
-        });
-    }
+        try {
+            // Verify session exists
+            const session = getDeepSeekSession(sessionId);
 
-    try {
-        // Verify session exists
-        const session = getDeepSeekSession(Number(sessionId));
+            if (!session) {
+                throw createError({
+                    statusCode: 404,
+                    statusMessage: "Session not found",
+                });
+            }
 
-        if (!session) {
+            // Delete the session
+            deleteSession(sessionId);
+
+            return {
+                success: true,
+                message: "Session deleted successfully",
+                deletedSessionId: sessionId,
+            };
+        } catch (error: any) {
+            console.error("Error deleting deepseek session:", error);
+            if (error.statusCode) {
+                throw error;
+            }
             throw createError({
-                statusCode: 404,
-                statusMessage: "Session not found",
+                statusCode: 500,
+                statusMessage: "Failed to delete session",
             });
         }
-
-        // Delete the session
-        deleteSession(Number(sessionId));
-
-        return {
-            success: true,
-            message: "Session deleted successfully",
-            deletedSessionId: Number(sessionId),
-        };
-    } catch (error: any) {
-        console.error("Error deleting deepseek session:", error);
-        if (error.statusCode) {
-            throw error;
-        }
-        throw createError({
-            statusCode: 500,
-            statusMessage: "Failed to delete session",
-        });
-    }
-});
+    }, DEFAULT_RATE_LIMIT_CONFIG),
+);

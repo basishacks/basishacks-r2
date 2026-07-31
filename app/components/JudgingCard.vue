@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import type { FormSubmitEvent } from "@nuxt/ui";
 import rubrics from "~~/shared/rubric";
-import { CreateTeamScoresRequest } from "~~/shared/schemas";
+import { CreateTeamScoresRequest, MAX_REASONING_LENGTH } from "~~/shared/schemas";
 
 const { team } = defineProps<{
     team: APITeam;
@@ -11,6 +11,9 @@ const emit = defineEmits<{
 }>();
 
 const toast = useToast();
+
+const safeRepoUrl = computed(() => safeUrl(team.project.repo_url));
+const safeDemoUrl = computed(() => safeUrl(team.project.demo_url));
 
 const state = reactive<CreateTeamScoresRequest>({
     reasoning: "",
@@ -59,7 +62,7 @@ async function onSubmit(event: FormSubmitEvent<CreateTeamScoresRequest>) {
                 {{ team.pathway == "junior" ? "Junior" : "Senior" }}
             </UBadge>
         </div>
-        <Comark class="my-4 mx-[2ch] text-wrap">{{ team.project.description }}</Comark>
+        <SafeComark class="my-4 mx-[2ch] text-wrap">{{ team.project.description }}</SafeComark>
         <UAlert
             v-if="team.project.sourcing"
             icon="i-lucide-book-open"
@@ -69,28 +72,32 @@ async function onSubmit(event: FormSubmitEvent<CreateTeamScoresRequest>) {
             class="mb-4"
         >
             <template #description>
-                <Comark>{{ team.project.sourcing }}</Comark>
+                <SafeComark>{{ team.project.sourcing }}</SafeComark>
             </template>
         </UAlert>
         <div class="flex flex-wrap gap-2">
-            <UTooltip :text="team.project.repo_url!">
+            <UTooltip :text="safeRepoUrl ?? 'Repo link not available'">
                 <UButton
                     variant="subtle"
                     icon="i-material-symbols-merge"
-                    :href="team.project.repo_url!"
+                    :href="safeRepoUrl"
                     external
                     target="_blank"
+                    rel="noopener noreferrer"
+                    :disabled="!safeRepoUrl"
                 >
                     Repo
                 </UButton>
             </UTooltip>
-            <UTooltip :text="team.project.demo_url!">
+            <UTooltip :text="safeDemoUrl ?? 'Demo link not available'">
                 <UButton
                     variant="subtle"
                     icon="i-material-symbols-play-arrow"
-                    :href="team.project.demo_url!"
+                    :href="safeDemoUrl"
                     external
                     target="_blank"
+                    rel="noopener noreferrer"
+                    :disabled="!safeDemoUrl"
                 >
                     Demo
                 </UButton>
@@ -132,6 +139,7 @@ async function onSubmit(event: FormSubmitEvent<CreateTeamScoresRequest>) {
                     class="w-full"
                     placeholder="Please briefly share your reasoning on this score."
                     :rows="5"
+                    :maxlength="MAX_REASONING_LENGTH"
                 />
             </UFormField>
 

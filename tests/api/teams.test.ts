@@ -15,7 +15,7 @@ import {
     type TestContext,
 } from "./helpers";
 import { eq } from "drizzle-orm";
-import { teams, users } from "~~/server/database/schema";
+import { teams, users, hackathon, userPastTeams, seasons } from "~~/server/database/schema";
 
 vi.mock("~~/server/utils/auth", () => ({
     requireUser: vi.fn(),
@@ -26,6 +26,8 @@ vi.mock("~~/server/utils/auth", () => ({
 
 vi.mock("~~/server/utils/rateLimit", () => ({
     applyRateLimit: (fn: any) => fn,
+    DEFAULT_RATE_LIMIT_CONFIG: { maxRequests: 6000, windowMs: 60 * 1000 },
+    VOTE_RATE_LIMIT_CONFIG: { maxRequests: 600, windowMs: 60 * 1000 },
 }));
 
 let ctx: TestContext;
@@ -66,6 +68,7 @@ beforeAll(async () => {
 
     const seasonsDb = await import("~~/server/utils/database/seasons");
     vi.stubGlobal("getActiveSeason", seasonsDb.getActiveSeason);
+    vi.stubGlobal("getScoreRankVisibilityResolver", seasonsDb.getScoreRankVisibilityResolver);
 
     const awardsDb = await import("~~/server/utils/database/awards");
     vi.stubGlobal("getAwardsForTeams", awardsDb.getAwardsForTeams);
@@ -138,6 +141,9 @@ describe("GET /api/teams", () => {
 
         seedTeam(ctx, { name: "Submitted Team", project_submitted: 1, pathway: "junior" });
 
+        // Enable judging for this test
+        ctx.drizzle.update(hackathon).set({ judging_open: 1 }).where(eq(hackathon.id, 1)).run();
+
         mockQueryState.value = { judging: "true" };
 
         const result = await listHandler(createEvent());
@@ -151,6 +157,17 @@ describe("POST /api/teams", () => {
     it("returns 401 when not authenticated", async () => {
         mockBody.value = { name: "New Team" };
         await expect(createHandler(createEvent())).rejects.toMatchObject({ statusCode: 401 });
+    });
+
+    it("returns 401 when logged-in user is not found", async () => {
+        // No user seeded with id 1, so getUser returns undefined
+        mockSession.value = { user: { id: 1 } };
+        mockBody.value = { name: "Ghost Team" };
+
+        await expect(createHandler(createEvent())).rejects.toMatchObject({
+            statusCode: 401,
+            message: "Logged in user not found",
+        });
     });
 
     it("returns 403 when user is already in a team", async () => {
@@ -177,6 +194,21 @@ describe("POST /api/teams", () => {
         // Verify the user was added to the team
         const updatedUser = ctx.drizzle.select().from(users).where(eq(users.id, 1)).get();
         expect(updatedUser!.team_id).toBe(result.id);
+    });
+
+    it("creates a team without joining when add query is false", async () => {
+        seedUser(ctx, { email: "user@basischina.com", name: "Creator" });
+
+        mockSession.value = { user: { id: 1 } };
+        mockBody.value = { name: "Solo Team" };
+        mockQueryState.value = { add: false };
+
+        const result = await createHandler(createEvent());
+
+        expect(result).toHaveProperty("name", "Solo Team");
+
+        const updatedUser = ctx.drizzle.select().from(users).where(eq(users.id, 1)).get();
+        expect(updatedUser!.team_id).toBeNull();
     });
 
     it("returns 403 when hackathon is not in progress", async () => {
@@ -239,6 +271,103 @@ describe("GET /api/teams/:id", () => {
 
         expect(result).toHaveProperty("name", "My Team");
         expect(result).toHaveProperty("awards");
+    });
+
+    it("hides score and rank for a member when hackathon toggles are off", async () => {
+        const team = seedTeam(ctx, { name: "My Team" });
+        ctx.drizzle.update(teams).set({ score: 95, rank: 1 }).where(eq(teams.id, team.id)).run();
+        (globalThis as any).requireUser.mockResolvedValue({
+            id: 1,
+            team_id: team.id,
+            role: "participant",
+        });
+
+        mockParams.values["id"] = String(team.id);
+
+        const result = await getHandler(createEvent());
+
+        expect(result.score).toBeNull();
+        expect(result.rank).toBeNull();
+    });
+
+    it("shows score and rank for a member when the season toggles are on", async () => {
+        resetTestContext(ctx);
+        seedHackathon(ctx);
+        const season = seedSeason(ctx, { show_scores: 1, show_ranking: 1 });
+
+        const team = seedTeam(ctx, { name: "My Team", season_id: season.id });
+        ctx.drizzle.update(teams).set({ score: 95, rank: 1 }).where(eq(teams.id, team.id)).run();
+        (globalThis as any).requireUser.mockResolvedValue({
+            id: 1,
+            team_id: team.id,
+            role: "participant",
+        });
+
+        mockParams.values["id"] = String(team.id);
+
+        const result = await getHandler(createEvent());
+
+        expect(result.score).toBe(95);
+        expect(result.rank).toBe(1);
+    });
+
+    it("shows score and rank for privileged roles regardless of toggles", async () => {
+        const team = seedTeam(ctx, { name: "My Team" });
+        ctx.drizzle.update(teams).set({ score: 95, rank: 1 }).where(eq(teams.id, team.id)).run();
+        (globalThis as any).requireUser.mockResolvedValue({
+            id: 1,
+            team_id: null,
+            role: "admin",
+        });
+
+        mockParams.values["id"] = String(team.id);
+
+        const result = await getHandler(createEvent());
+
+        expect(result.score).toBe(95);
+        expect(result.rank).toBe(1);
+    });
+
+    it("hides rank in the public team listing when the hackathon toggle is off", async () => {
+        const team = seedTeam(ctx, { name: "Team Alpha" });
+        ctx.drizzle.update(teams).set({ rank: 3 }).where(eq(teams.id, team.id)).run();
+
+        const result = await listHandler(createEvent());
+
+        expect(result[0].rank).toBeNull();
+    });
+
+    it("shows rank in the public team listing when the season toggle is on", async () => {
+        resetTestContext(ctx);
+        seedHackathon(ctx);
+        const season = seedSeason(ctx, { show_ranking: 1 });
+
+        const team = seedTeam(ctx, { name: "Team Alpha", season_id: season.id });
+        ctx.drizzle.update(teams).set({ rank: 3 }).where(eq(teams.id, team.id)).run();
+
+        const result = await listHandler(createEvent());
+
+        expect(result[0].rank).toBe(3);
+    });
+
+    it("binds listing rank visibility to each team's own season, not the live season", async () => {
+        resetTestContext(ctx);
+        seedHackathon(ctx, { show_ranking: 1 });
+        const liveSeason = seedSeason(ctx, { name: "Live Season", show_ranking: 1 });
+        const oldSeason = seedSeason(ctx, { name: "Old Season", is_active: 0, show_ranking: 0 });
+
+        const liveTeam = seedTeam(ctx, { name: "Live Team", season_id: liveSeason.id });
+        const oldTeam = seedTeam(ctx, { name: "Old Team", season_id: oldSeason.id });
+        ctx.drizzle.update(teams).set({ rank: 1 }).where(eq(teams.id, liveTeam.id)).run();
+        ctx.drizzle.update(teams).set({ rank: 2 }).where(eq(teams.id, oldTeam.id)).run();
+
+        mockQueryState.value = { season_id: String(liveSeason.id) };
+        const liveResult = await listHandler(createEvent());
+        expect(liveResult[0].rank).toBe(1);
+
+        mockQueryState.value = { season_id: String(oldSeason.id) };
+        const oldResult = await listHandler(createEvent());
+        expect(oldResult[0].rank).toBeNull();
     });
 });
 
@@ -336,6 +465,88 @@ describe("POST /api/teams/:id/submit", () => {
 
         await expect(submitHandler(createEvent())).rejects.toMatchObject({ statusCode: 403 });
     });
+
+    it("returns 403 when hackathon has finished", async () => {
+        resetTestContext(ctx);
+        seedHackathon(ctx, { status: "finished" });
+        seedSeason(ctx);
+
+        const team = seedTeam(ctx, { name: "My Team", pathway: "junior" });
+        seedUser(ctx, { email: "user@basischina.com", team_id: team.id });
+
+        mockSession.value = { user: { id: 1 } };
+        mockParams.values["id"] = String(team.id);
+        mockBody.value = {
+            pathway: "junior",
+            project: {
+                name: "Awesome Project",
+                description: "This is a really awesome project that we built over the weekend.",
+                demo_url: "https://demo.example.com",
+                repo_url: "https://github.com/example/repo",
+            },
+        };
+
+        await expect(submitHandler(createEvent())).rejects.toMatchObject({
+            statusCode: 403,
+            message: "Cannot submit project when hackathon is finished",
+        });
+    });
+
+    it("returns 404 when team is not found", async () => {
+        // Stub getUser so the user appears to belong to a non-existent team
+        // without violating the users.team_id foreign key constraint.
+        const originalGetUser = globalThis.getUser;
+        vi.stubGlobal(
+            "getUser",
+            vi.fn().mockResolvedValue({ id: 1, team_id: 9999, role: "participant" }),
+        );
+
+        mockSession.value = { user: { id: 1 } };
+        mockParams.values["id"] = "9999";
+        mockBody.value = {
+            pathway: "junior",
+            project: {
+                name: "Awesome Project",
+                description: "This is a really awesome project that we built over the weekend.",
+                demo_url: "https://demo.example.com",
+                repo_url: "https://github.com/example/repo",
+            },
+        };
+
+        await expect(submitHandler(createEvent())).rejects.toMatchObject({
+            statusCode: 404,
+            message: "Team not found or not accessible currently",
+        });
+
+        vi.stubGlobal("getUser", originalGetUser);
+    });
+
+    it("returns 403 when project is already submitted", async () => {
+        const team = seedTeam(ctx, {
+            name: "My Team",
+            pathway: "junior",
+            project_submitted: 1,
+            project_name: "Existing Project",
+        });
+        seedUser(ctx, { email: "user@basischina.com", team_id: team.id });
+
+        mockSession.value = { user: { id: 1 } };
+        mockParams.values["id"] = String(team.id);
+        mockBody.value = {
+            pathway: "junior",
+            project: {
+                name: "Awesome Project",
+                description: "This is a really awesome project that we built over the weekend.",
+                demo_url: "https://demo.example.com",
+                repo_url: "https://github.com/example/repo",
+            },
+        };
+
+        await expect(submitHandler(createEvent())).rejects.toMatchObject({
+            statusCode: 403,
+            message: "Project is already submitted",
+        });
+    });
 });
 
 describe("GET /api/teams/:id/users", () => {
@@ -391,6 +602,36 @@ describe("GET /api/teams/:id/users", () => {
             team_id: team.id,
         });
     });
+
+    it("returns all current and past members for an old team", async () => {
+        // The default active season (id=1) becomes inactive so we can create a
+        // new active season; the legacy team belongs to the now-inactive season.
+        ctx.drizzle.update(seasons).set({ is_active: 0 }).where(eq(seasons.id, 1)).run();
+        const newSeason = seedSeason(ctx, { name: "New Season", is_active: 1 });
+
+        const team = seedTeam(ctx, { name: "Legacy Team", season_id: 1 });
+        const alice = seedUser(ctx, {
+            email: "alice@basischina.com",
+            name: "Alice",
+            team_id: team.id,
+        });
+        const bob = seedUser(ctx, {
+            email: "bob@basischina.com",
+            name: "Bob",
+            team_id: null,
+        });
+
+        // Record Bob as a past member of the legacy team
+        ctx.drizzle.insert(userPastTeams).values({ user_id: bob.id, team_id: team.id }).run();
+
+        mockParams.values["id"] = String(team.id);
+
+        const result = await membersHandler(createEvent());
+
+        expect(result).toHaveLength(2);
+        const ids = result.map((u: any) => u.id).sort((a: number, b: number) => a - b);
+        expect(ids).toEqual([alice.id, bob.id].sort((a, b) => a - b));
+    });
 });
 
 describe("POST /api/teams/:id/users", () => {
@@ -425,6 +666,53 @@ describe("POST /api/teams/:id/users", () => {
 
         await expect(addMemberHandler(createEvent())).rejects.toMatchObject({ statusCode: 404 });
     });
+
+    it("returns 403 when current user is not a team member", async () => {
+        const team = seedTeam(ctx, { name: "Team" });
+        const otherTeam = seedTeam(ctx, { name: "Other Team" });
+        seedUser(ctx, { email: "outsider@basischina.com", team_id: otherTeam.id });
+
+        mockSession.value = { user: { id: 1 } };
+        mockParams.values["id"] = String(team.id);
+        mockBody.value = { email: "nobody@basischina.com" };
+
+        await expect(addMemberHandler(createEvent())).rejects.toMatchObject({
+            statusCode: 403,
+            message: "Cannot add members to other teams",
+        });
+    });
+
+    it("returns 403 when hackathon has finished", async () => {
+        resetTestContext(ctx);
+        seedHackathon(ctx, { status: "finished" });
+        seedSeason(ctx);
+
+        const team = seedTeam(ctx, { name: "Team" });
+        seedUser(ctx, { email: "owner@basischina.com", team_id: team.id });
+
+        mockSession.value = { user: { id: 1 } };
+        mockParams.values["id"] = String(team.id);
+        mockBody.value = { email: "nobody@basischina.com" };
+
+        await expect(addMemberHandler(createEvent())).rejects.toMatchObject({
+            statusCode: 403,
+            message: "Cannot add members after hackathon has finished",
+        });
+    });
+
+    it("returns 403 when project is already submitted", async () => {
+        const team = seedTeam(ctx, { name: "Team", project_submitted: 1 });
+        seedUser(ctx, { email: "owner@basischina.com", team_id: team.id });
+
+        mockSession.value = { user: { id: 1 } };
+        mockParams.values["id"] = String(team.id);
+        mockBody.value = { email: "nobody@basischina.com" };
+
+        await expect(addMemberHandler(createEvent())).rejects.toMatchObject({
+            statusCode: 403,
+            message: "Cannot add members after project is submitted",
+        });
+    });
 });
 
 describe("DELETE /api/teams/:id/users/:user", () => {
@@ -443,5 +731,55 @@ describe("DELETE /api/teams/:id/users/:user", () => {
 
         const updated = ctx.drizzle.select().from(users).where(eq(users.id, member.id)).get();
         expect(updated!.team_id).toBeNull();
+    });
+
+    it("returns 403 when current user is not a team member", async () => {
+        const team = seedTeam(ctx, { name: "Team" });
+        const otherTeam = seedTeam(ctx, { name: "Other Team" });
+        seedUser(ctx, { email: "outsider@basischina.com", team_id: otherTeam.id });
+        const member = seedUser(ctx, { email: "member@basischina.com", team_id: team.id });
+
+        mockSession.value = { user: { id: 1 } };
+        mockParams.values["id"] = String(team.id);
+        mockParams.values["user"] = String(member.id);
+
+        await expect(removeMemberHandler(createEvent())).rejects.toMatchObject({
+            statusCode: 403,
+            message: "Cannot remove members of other teams",
+        });
+    });
+
+    it("returns 403 when hackathon has finished", async () => {
+        resetTestContext(ctx);
+        seedHackathon(ctx, { status: "finished" });
+        seedSeason(ctx);
+
+        const team = seedTeam(ctx, { name: "Team" });
+        seedUser(ctx, { email: "owner@basischina.com", team_id: team.id });
+        const member = seedUser(ctx, { email: "member@basischina.com", team_id: team.id });
+
+        mockSession.value = { user: { id: 1 } };
+        mockParams.values["id"] = String(team.id);
+        mockParams.values["user"] = String(member.id);
+
+        await expect(removeMemberHandler(createEvent())).rejects.toMatchObject({
+            statusCode: 403,
+            message: "Cannot remove members after hackathon has finished",
+        });
+    });
+
+    it("returns 403 when project is already submitted", async () => {
+        const team = seedTeam(ctx, { name: "Team", project_submitted: 1 });
+        seedUser(ctx, { email: "owner@basischina.com", team_id: team.id });
+        const member = seedUser(ctx, { email: "member@basischina.com", team_id: team.id });
+
+        mockSession.value = { user: { id: 1 } };
+        mockParams.values["id"] = String(team.id);
+        mockParams.values["user"] = String(member.id);
+
+        await expect(removeMemberHandler(createEvent())).rejects.toMatchObject({
+            statusCode: 403,
+            message: "Cannot remove members after project is submitted",
+        });
     });
 });

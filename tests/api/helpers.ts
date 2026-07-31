@@ -14,6 +14,23 @@ const migrationSQL = `
   );
   CREATE UNIQUE INDEX IF NOT EXISTS idx_seasons_active ON seasons(is_active) WHERE is_active = 1;
 
+  ALTER TABLE seasons ADD COLUMN status TEXT NOT NULL DEFAULT 'not_started';
+  ALTER TABLE seasons ADD COLUMN voting_enabled INTEGER NOT NULL DEFAULT 0;
+  ALTER TABLE seasons ADD COLUMN results_published INTEGER NOT NULL DEFAULT 0;
+  ALTER TABLE seasons ADD COLUMN show_scores INTEGER NOT NULL DEFAULT 0;
+  ALTER TABLE seasons ADD COLUMN show_ranking INTEGER NOT NULL DEFAULT 0;
+  ALTER TABLE seasons ADD COLUMN max_votes_per_user INTEGER NOT NULL DEFAULT 0;
+  ALTER TABLE seasons ADD COLUMN judging_open INTEGER NOT NULL DEFAULT 0;
+  ALTER TABLE seasons ADD COLUMN schedule_start TEXT;
+  ALTER TABLE seasons ADD COLUMN schedule_end TEXT;
+  ALTER TABLE seasons ADD COLUMN start_timestamp INTEGER NOT NULL DEFAULT 0;
+  ALTER TABLE seasons ADD COLUMN end_timestamp INTEGER NOT NULL DEFAULT 0;
+  ALTER TABLE seasons ADD COLUMN voting_start_timestamp INTEGER NOT NULL DEFAULT 0;
+  ALTER TABLE seasons ADD COLUMN voting_end_timestamp INTEGER NOT NULL DEFAULT 0;
+  ALTER TABLE seasons ADD COLUMN results_open_timestamp INTEGER NOT NULL DEFAULT 0;
+  ALTER TABLE seasons ADD COLUMN theme_name TEXT;
+  ALTER TABLE seasons ADD COLUMN theme_description TEXT;
+
   ALTER TABLE teams ADD COLUMN season_id INTEGER NOT NULL DEFAULT 1;
   CREATE INDEX IF NOT EXISTS teams_season ON teams (season_id);
 
@@ -46,13 +63,24 @@ const migrationSQL = `
     FOREIGN KEY(team_id) REFERENCES teams(id) ON DELETE CASCADE
   );
 
+  CREATE TABLE IF NOT EXISTS awards (
+    namespace TEXT PRIMARY KEY,
+    name TEXT NOT NULL,
+    description TEXT NOT NULL,
+    icon TEXT NOT NULL,
+    color TEXT NOT NULL DEFAULT 'gold'
+  );
+
   ALTER TABLE hackathon ADD COLUMN voting_enabled INTEGER NOT NULL DEFAULT 0;
   ALTER TABLE hackathon ADD COLUMN results_published INTEGER NOT NULL DEFAULT 0;
+  ALTER TABLE hackathon ADD COLUMN show_scores INTEGER NOT NULL DEFAULT 0;
+  ALTER TABLE hackathon ADD COLUMN show_ranking INTEGER NOT NULL DEFAULT 0;
   ALTER TABLE hackathon ADD COLUMN submitted_count INTEGER NOT NULL DEFAULT 0;
   ALTER TABLE hackathon ADD COLUMN max_votes_per_user INTEGER NOT NULL DEFAULT 0;
   ALTER TABLE hackathon ADD COLUMN judging_open INTEGER NOT NULL DEFAULT 0;
   ALTER TABLE hackathon ADD COLUMN schedule_start TEXT;
   ALTER TABLE hackathon ADD COLUMN schedule_end TEXT;
+
 `;
 
 async function createRawDatabase(): Promise<any> {
@@ -94,6 +122,7 @@ export function resetTestContext(ctx: TestContext): void {
     DELETE FROM ballots;
     DELETE FROM team_scores;
     DELETE FROM team_awards;
+    DELETE FROM awards;
     DELETE FROM peer_voting_scores;
     DELETE FROM user_past_teams;
     DELETE FROM oauth2_applications;
@@ -130,11 +159,12 @@ export function seedHackathon(ctx: TestContext, overrides: Record<string, unknow
 
 export function seedSeason(
     ctx: TestContext,
-    overrides: { name?: string; is_active?: number } = {},
+    overrides: { name?: string; is_active?: number } & Record<string, unknown> = {},
 ) {
+    const { name, is_active, ...rest } = overrides;
     return ctx.drizzle
         .insert(schema.seasons)
-        .values({ name: overrides.name ?? "Season 1", is_active: overrides.is_active ?? 1 })
+        .values({ name: name ?? "Season 1", is_active: is_active ?? 1, ...rest } as any)
         .returning()
         .get();
 }
@@ -146,8 +176,6 @@ export function seedUser(
         role?: string;
         name?: string | null;
         team_id?: number | null;
-        login_code?: string | null;
-        login_expiry?: number | null;
     } = {},
 ) {
     return ctx.drizzle
@@ -157,8 +185,6 @@ export function seedUser(
             role: overrides.role ?? "participant",
             name: overrides.name ?? "Test User",
             team_id: overrides.team_id ?? null,
-            login_code: overrides.login_code ?? null,
-            login_expiry: overrides.login_expiry ?? null,
         } as any)
         .returning()
         .get();
@@ -230,6 +256,17 @@ function paramMock(_event: any, name: string) {
     return mockParams.values[name];
 }
 
+async function getValidatedRouterParamsMock(_event: any, schema: any) {
+    const params: Record<string, string> = {};
+    for (const [key, value] of Object.entries(mockParams.values)) {
+        if (value !== undefined) {
+            params[key] = value;
+        }
+    }
+    const validate = typeof schema === "function" ? schema : schema.parse;
+    return validate(params);
+}
+
 function queryMock(_event: any) {
     return mockQueryState.value;
 }
@@ -291,6 +328,7 @@ export function setupNitroGlobals() {
     vi.stubGlobal("getValidatedQuery", readQueryMock);
     vi.stubGlobal("getCookie", cookieMock);
     vi.stubGlobal("getRouterParam", paramMock);
+    vi.stubGlobal("getValidatedRouterParams", getValidatedRouterParamsMock);
     vi.stubGlobal("getQuery", queryMock);
     vi.stubGlobal("getHeader", headerMock);
     vi.stubGlobal("setHeader", setHeaderMock);

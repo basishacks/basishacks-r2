@@ -6,10 +6,14 @@ export default defineNuxtConfig({
 
     css: ["~/assets/css/main.css"],
     runtimeConfig: {
-        sendCodeURL: "",
         session: {
             password: "",
             maxAge: 30 * 24 * 60 * 60,
+            cookie: {
+                httpOnly: true,
+                secure: process.env.NODE_ENV === "production",
+                sameSite: "lax",
+            },
         },
     },
     colorMode: {
@@ -22,10 +26,28 @@ export default defineNuxtConfig({
         port: 24598,
     },
     icon: {
-        customCollections: [],
+        clientBundle: {
+            scan: true,
+        },
     },
     fonts: {
         provider: "local",
+        defaults: {
+            display: "swap",
+            preload: true,
+        },
+        processCSSVariables: true,
+    },
+    routeRules: {
+        "/_nuxt/**": {
+            headers: { "Cache-Control": "public, max-age=31536000, immutable" },
+        },
+        "/assets/**": {
+            headers: { "Cache-Control": "public, max-age=31536000, immutable" },
+        },
+        "/fonts/**": {
+            headers: { "Cache-Control": "public, max-age=31536000, immutable" },
+        },
     },
     vite: {
         server: {
@@ -35,6 +57,8 @@ export default defineNuxtConfig({
             include: ["@comark/vue"],
         },
         build: {
+            // Kept at es2020: the project currently builds reliably with this
+            // target, and both Node.js >= v24 and Bun support it without issue.
             target: "es2020",
             minify: "esbuild",
             sourcemap: true,
@@ -54,6 +78,9 @@ export default defineNuxtConfig({
         // Bun dev uses the bun preset implicitly; production defaults to node-server
         // so the same build runs under Node.js (better-sqlite3) or Bun (bun:sqlite).
         preset: process.env.NITRO_PRESET ?? "node-server",
+        compressPublicAssets: true,
+        // Reject request bodies larger than 10 MiB before buffering into memory.
+        maxRequestSize: 10 * 1024 * 1024,
         externals: {
             // trace: true
             trace: false,

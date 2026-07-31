@@ -7,9 +7,47 @@ interface RateLimitConfig {
     keyGenerator?: (event: H3Event) => Promise<string | null> | string | null;
 }
 
+function parseEnvInt(name: string, fallback: number): number {
+    const value = process.env[name];
+    if (!value) return fallback;
+    const parsed = Number.parseInt(value, 10);
+    return Number.isNaN(parsed) ? fallback : parsed;
+}
+
+/** General API rate limit (requests per minute). */
+export const RATE_LIMIT_GENERAL_MAX = parseEnvInt("RATE_LIMIT_GENERAL_MAX", 6000);
+export const RATE_LIMIT_WINDOW_MS = parseEnvInt("RATE_LIMIT_WINDOW_MS", 60 * 1000);
+
+/** Authentication/login rate limit (attempts per minute). */
+export const RATE_LIMIT_AUTH_MAX = parseEnvInt("RATE_LIMIT_AUTH_MAX", 600);
+
+/** Voting/scoring rate limit (submissions per minute). */
+export const RATE_LIMIT_VOTE_MAX = parseEnvInt("RATE_LIMIT_VOTE_MAX", 600);
+
+/** File upload rate limit (uploads per minute). */
+export const RATE_LIMIT_UPLOAD_MAX = parseEnvInt("RATE_LIMIT_UPLOAD_MAX", 600);
+
 export const DEFAULT_RATE_LIMIT_CONFIG: RateLimitConfig = {
-    maxRequests: 60, // 60 requests per minute
-    windowMs: 60 * 1000, // per minute
+    maxRequests: RATE_LIMIT_GENERAL_MAX,
+    windowMs: RATE_LIMIT_WINDOW_MS,
+};
+
+export const AUTH_RATE_LIMIT_CONFIG: RateLimitConfig = {
+    maxRequests: RATE_LIMIT_AUTH_MAX,
+    windowMs: RATE_LIMIT_WINDOW_MS,
+    keyPrefix: "auth",
+};
+
+export const VOTE_RATE_LIMIT_CONFIG: RateLimitConfig = {
+    maxRequests: RATE_LIMIT_VOTE_MAX,
+    windowMs: RATE_LIMIT_WINDOW_MS,
+    keyPrefix: "vote",
+};
+
+export const UPLOAD_RATE_LIMIT_CONFIG: RateLimitConfig = {
+    maxRequests: RATE_LIMIT_UPLOAD_MAX,
+    windowMs: RATE_LIMIT_WINDOW_MS,
+    keyPrefix: "upload",
 };
 
 // Map to store request history: key -> array of timestamps
@@ -25,6 +63,7 @@ let lastCleanup = 0;
 /** Clear the rate limit history — exposed for testing. */
 export function clearRateLimitHistory() {
     requestHistory.clear();
+    lastCleanup = 0;
 }
 
 function cleanupStaleEntries(now: number) {
@@ -141,10 +180,8 @@ export function applyRateLimit(
 
         // Enforce Map size cap by evicting the oldest entry
         if (requestHistory.size > MAX_TRACKED_KEYS) {
-            const firstKey = requestHistory.keys().next().value;
-            if (firstKey !== undefined) {
-                requestHistory.delete(firstKey);
-            }
+            const firstKey = requestHistory.keys().next().value!;
+            requestHistory.delete(firstKey);
         }
 
         return await handler(event);

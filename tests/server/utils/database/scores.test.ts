@@ -1,6 +1,10 @@
 import { describe, it, expect, beforeEach } from "vitest";
 import { createMockEvent } from "./helpers";
-import { createTeamScores, getTeamScoresByTeamID } from "~~/server/utils/database/scores";
+import {
+    createTeamScores,
+    getTeamScoresByTeamID,
+    getTeamScoresBySeasonId,
+} from "~~/server/utils/database/scores";
 
 describe("scores database helpers", () => {
     let event: Awaited<ReturnType<typeof createMockEvent>>;
@@ -42,6 +46,68 @@ describe("scores database helpers", () => {
             expect(scores.reasoning).toBe("Great project overall");
             expect(scores.season_id).toBe(42);
         });
+
+        it("creates team scores with null reasoning (default applied)", async () => {
+            const scores = await createTeamScores(event, {
+                team_id: 1,
+                judge_user_id: 1,
+                scores: '{"innovation":3}',
+            } as any);
+
+            expect(scores).not.toBeNull();
+            expect(scores.scores).toBe('{"innovation":3}');
+            // reasoning defaults to '<no reasoning provided>' when not provided
+            expect(scores.reasoning).toBe("<no reasoning provided>");
+        });
+
+        it("creates team scores with null season when no active season exists", async () => {
+            // Deactivate the only season
+            event.context.drizzle.prepare("UPDATE seasons SET is_active = 0").run();
+
+            const scores = await createTeamScores(event, {
+                team_id: 1,
+                judge_user_id: 1,
+                scores: '{"innovation":4}',
+                reasoning: "No season test",
+            });
+
+            expect(scores).not.toBeNull();
+            expect(scores.season_id).toBeNull();
+        });
+
+        it("creates multiple scores for the same team from different judges", async () => {
+            event.context.drizzle
+                .prepare("INSERT INTO users(email, role) VALUES('judge2@example.com', 'judge')")
+                .run();
+
+            const scores1 = await createTeamScores(event, {
+                team_id: 1,
+                judge_user_id: 1,
+                scores: '{"innovation":5}',
+                reasoning: "Judge 1",
+            });
+            const scores2 = await createTeamScores(event, {
+                team_id: 1,
+                judge_user_id: 2,
+                scores: '{"innovation":4}',
+                reasoning: "Judge 2",
+            });
+
+            const all = await getTeamScoresByTeamID(event, 1);
+            expect(all).toHaveLength(2);
+            expect(all[0]!.judge_user_id).not.toBe(all[1]!.judge_user_id);
+        });
+
+        it("accepts an empty JSON object as scores", async () => {
+            const scores = await createTeamScores(event, {
+                team_id: 1,
+                judge_user_id: 1,
+                scores: "{}",
+                reasoning: "Empty scores",
+            });
+
+            expect(scores.scores).toBe("{}");
+        });
     });
 
     describe("getTeamScoresByTeamID", () => {
@@ -60,6 +126,103 @@ describe("scores database helpers", () => {
 
         it("returns an empty array when the team has no scores", async () => {
             const scores = await getTeamScoresByTeamID(event, 1);
+            expect(scores).toHaveLength(0);
+        });
+
+        it("returns multiple scores for the same team", async () => {
+            event.context.drizzle
+                .prepare("INSERT INTO users(email, role) VALUES('judge2@example.com', 'judge')")
+                .run();
+            event.context.drizzle
+                .prepare(
+                    "INSERT INTO team_scores(team_id, judge_user_id, scores, reasoning) VALUES(1, 1, '{\"a\":1}', 'First'), (1, 2, '{\"b\":2}', 'Second')",
+                )
+                .run();
+
+            const scores = await getTeamScoresByTeamID(event, 1);
+            expect(scores).toHaveLength(2);
+        });
+
+        it("returns only scores for the requested team", async () => {
+            event.context.drizzle
+                .prepare("INSERT INTO teams(name, season_id) VALUES('Team B', 42)")
+                .run();
+            event.context.drizzle
+                .prepare(
+                    "INSERT INTO team_scores(team_id, judge_user_id, scores, reasoning) VALUES(1, 1, '{\"a\":1}', 'Team A'), (2, 1, '{\"b\":2}', 'Team B')",
+                )
+                .run();
+
+            const scores = await getTeamScoresByTeamID(event, 2);
+            expect(scores).toHaveLength(1);
+            expect(scores[0]!.team_id).toBe(2);
+        });
+
+        it("returns an empty array for a non-existent team id", async () => {
+            const scores = await getTeamScoresByTeamID(event, 999);
+            expect(scores).toHaveLength(0);
+        });
+    });
+
+    describe("getTeamScoresBySeasonId", () => {
+        it("returns scores for a season that has them", async () => {
+            event.context.drizzle
+                .prepare(
+                    "INSERT INTO team_scores(team_id, judge_user_id, scores, reasoning, season_id) VALUES(1, 1, '{\"innovation\":3}', 'Decent', 42)",
+                )
+                .run();
+
+            const scores = await getTeamScoresBySeasonId(event, 42);
+            expect(scores).toHaveLength(1);
+            expect(scores[0]!.team_id).toBe(1);
+            expect(scores[0]!.season_id).toBe(42);
+        });
+
+        it("returns an empty array when the season has no scores", async () => {
+            const scores = await getTeamScoresBySeasonId(event, 42);
+            expect(scores).toHaveLength(0);
+        });
+
+        it("returns multiple scores in the same season", async () => {
+            event.context.drizzle
+                .prepare("INSERT INTO users(email, role) VALUES('judge2@example.com', 'judge')")
+                .run();
+            event.context.drizzle
+                .prepare("INSERT INTO teams(name, season_id) VALUES('Team B', 42)")
+                .run();
+            event.context.drizzle
+                .prepare(
+                    "INSERT INTO team_scores(team_id, judge_user_id, scores, reasoning, season_id) VALUES(1, 1, '{\"a\":1}', 'First', 42), (2, 2, '{\"b\":2}', 'Second', 42)",
+                )
+                .run();
+
+            const scores = await getTeamScoresBySeasonId(event, 42);
+            expect(scores).toHaveLength(2);
+        });
+
+        it("returns scores only for the requested season", async () => {
+            event.context.drizzle
+                .prepare("INSERT INTO seasons(name, is_active) VALUES('S99', 0)")
+                .run();
+            event.context.drizzle
+                .prepare("INSERT INTO teams(name, season_id) VALUES('Team C', 43)")
+                .run();
+            event.context.drizzle
+                .prepare("INSERT INTO users(email, role) VALUES('judge2@example.com', 'judge')")
+                .run();
+            event.context.drizzle
+                .prepare(
+                    "INSERT INTO team_scores(team_id, judge_user_id, scores, reasoning, season_id) VALUES(1, 1, '{\"a\":1}', 'S42', 42), (2, 2, '{\"b\":2}', 'S43', 43)",
+                )
+                .run();
+
+            const scores = await getTeamScoresBySeasonId(event, 43);
+            expect(scores).toHaveLength(1);
+            expect(scores[0]!.season_id).toBe(43);
+        });
+
+        it("returns an empty array for a non-existent season id", async () => {
+            const scores = await getTeamScoresBySeasonId(event, 999);
             expect(scores).toHaveLength(0);
         });
     });

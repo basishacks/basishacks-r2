@@ -10,6 +10,9 @@ const emit = defineEmits<{
     increment: [];
     decrement: [];
 }>();
+
+const safeRepoUrl = computed(() => safeUrl(team.project.repo_url));
+const safeDemoUrl = computed(() => safeUrl(team.project.demo_url));
 </script>
 
 <template>
@@ -25,28 +28,30 @@ const emit = defineEmits<{
                 {{ team.pathway == "junior" ? "Junior" : "Senior" }}
             </UBadge>
         </div>
-        <Comark class="my-4 mx-[2ch] text-wrap">{{ team.project.description }}</Comark>
+        <SafeComark class="my-4 mx-[2ch] text-wrap">{{ team.project.description }}</SafeComark>
         <div class="flex flex-wrap gap-2">
-            <UTooltip :text="team.project.repo_url!">
+            <UTooltip :text="safeRepoUrl ?? 'Repo link not available'">
                 <UButton
                     variant="subtle"
                     icon="i-material-symbols-merge"
-                    :href="team.project.repo_url!"
+                    :href="safeRepoUrl"
                     external
                     target="_blank"
-                    :disabled="!team.project.repo_url"
+                    rel="noopener noreferrer"
+                    :disabled="!safeRepoUrl"
                 >
                     Repo
                 </UButton>
             </UTooltip>
-            <UTooltip :text="team.project.demo_url!">
+            <UTooltip :text="safeDemoUrl ?? 'Demo link not available'">
                 <UButton
                     variant="subtle"
                     icon="i-material-symbols-play-arrow"
-                    :href="team.project.demo_url!"
+                    :href="safeDemoUrl"
                     external
                     target="_blank"
-                    :disabled="!team.project.demo_url"
+                    rel="noopener noreferrer"
+                    :disabled="!safeDemoUrl"
                 >
                     Demo
                 </UButton>

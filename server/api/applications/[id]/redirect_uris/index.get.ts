@@ -3,10 +3,11 @@ import {
     getOAuth2Application,
     getOAuth2ApplicationRedirectUris,
 } from "~~/server/utils/database/oauth2_applications";
+import { ApplicationIdParams } from "~~/shared/schemas";
 
 export default defineEventHandler(async (event) => {
     const user = await requireUser(event);
-    const clientID = getRouterParam(event, "id")!;
+    const { id: clientID } = await getValidatedRouterParams(event, ApplicationIdParams.parse);
 
     const app = await getOAuth2Application(event, clientID);
     if (!app) {

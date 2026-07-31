@@ -128,6 +128,150 @@ describe("electionPositions", () => {
         });
     });
 
+    describe("position ordering", () => {
+        it("positions are in a logical order starting with President", () => {
+            const titles = electionPositions.map((p) => p.title);
+            expect(titles[0]).toBe("President");
+            expect(titles[1]).toBe("Vice President");
+        });
+
+        it("President appears before lesser positions", () => {
+            const titles = electionPositions.map((p) => p.title);
+            const presIndex = titles.indexOf("President");
+            const vpIndex = titles.indexOf("Vice President");
+            expect(presIndex).toBeLessThan(vpIndex);
+        });
+    });
+
+    describe("candidate name validation", () => {
+        it("no candidate has an empty shortName", () => {
+            for (const position of electionPositions) {
+                for (const candidate of position.candidates) {
+                    expect(candidate.shortName.trim().length).toBeGreaterThan(0);
+                }
+            }
+        });
+
+        it("no candidate has an empty fullName", () => {
+            for (const position of electionPositions) {
+                for (const candidate of position.candidates) {
+                    expect(candidate.fullName.trim().length).toBeGreaterThan(0);
+                }
+            }
+        });
+
+        it("no candidate has leading or trailing whitespace in names", () => {
+            for (const position of electionPositions) {
+                for (const candidate of position.candidates) {
+                    expect(candidate.shortName).toBe(candidate.shortName.trim());
+                    expect(candidate.fullName).toBe(candidate.fullName.trim());
+                    expect(candidate.email).toBe(candidate.email.trim());
+                }
+            }
+        });
+
+        it("all fullNames follow 'Last, First' format containing a comma", () => {
+            for (const position of electionPositions) {
+                for (const candidate of position.candidates) {
+                    expect(candidate.fullName).toContain(", ");
+                }
+            }
+        });
+
+        it("all shortNames are non-empty and do not contain commas", () => {
+            for (const position of electionPositions) {
+                for (const candidate of position.candidates) {
+                    expect(candidate.shortName.length).toBeGreaterThan(0);
+                    expect(candidate.shortName).not.toContain(",");
+                }
+            }
+        });
+    });
+
+    describe("candidate ID validation", () => {
+        it("all candidate IDs are purely numeric strings", () => {
+            for (const position of electionPositions) {
+                for (const candidate of position.candidates) {
+                    expect(candidate.id).toMatch(/^\d+$/);
+                }
+            }
+        });
+
+        it("no candidate ID has leading zeros", () => {
+            for (const position of electionPositions) {
+                for (const candidate of position.candidates) {
+                    expect(candidate.id).toBe(String(Number(candidate.id)));
+                }
+            }
+        });
+
+        it("no duplicate shortNames across all positions", () => {
+            const allShortNames = electionPositions.flatMap((p) =>
+                p.candidates.map((c) => c.shortName.toLowerCase()),
+            );
+            const uniqueShortNames = new Set(allShortNames);
+            expect(uniqueShortNames.size).toBe(allShortNames.length);
+        });
+
+        it("no duplicate fullNames across all positions", () => {
+            const allFullNames = electionPositions.flatMap((p) =>
+                p.candidates.map((c) => c.fullName.toLowerCase()),
+            );
+            const uniqueFullNames = new Set(allFullNames);
+            expect(uniqueFullNames.size).toBe(allFullNames.length);
+        });
+    });
+
+    describe("email format validation", () => {
+        it("all emails contain exactly one @ symbol", () => {
+            for (const position of electionPositions) {
+                for (const candidate of position.candidates) {
+                    const atCount = (candidate.email.match(/@/g) || []).length;
+                    expect(atCount).toBe(1);
+                }
+            }
+        });
+
+        it("email local parts contain a dot separator", () => {
+            for (const position of electionPositions) {
+                for (const candidate of position.candidates) {
+                    const localPart = candidate.email.split("@")[0];
+                    expect(localPart).toContain(".");
+                }
+            }
+        });
+
+        it("emails do not have leading or trailing whitespace", () => {
+            for (const position of electionPositions) {
+                for (const candidate of position.candidates) {
+                    expect(candidate.email).toBe(candidate.email.trim());
+                }
+            }
+        });
+
+        it("email domain is lowercase", () => {
+            for (const position of electionPositions) {
+                for (const candidate of position.candidates) {
+                    const domain = candidate.email.split("@")[1];
+                    expect(domain).toBe(domain.toLowerCase());
+                }
+            }
+        });
+    });
+
+    describe("total candidate count", () => {
+        it("sums to 25 candidates across all positions", () => {
+            const total = electionPositions.reduce((sum, p) => sum + p.candidates.length, 0);
+            expect(total).toBe(25);
+        });
+
+        it("has at least 1 candidate per position", () => {
+            for (const position of electionPositions) {
+                expect(position.candidates.length).toBeGreaterThanOrEqual(1);
+            }
+        });
+    });
+
     describe("specific position counts", () => {
         it("President has exactly 1 candidate", () => {
             const president = electionPositions.find((p) => p.title === "President");

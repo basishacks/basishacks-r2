@@ -1,24 +1,68 @@
 import z from "zod";
 import rubrics from "./rubric";
 
-const BasisEmail = z
+export const MAX_EMAIL_LENGTH = 254;
+export const MAX_PROJECT_NAME_LENGTH = 100;
+export const MAX_PROJECT_DESCRIPTION_LENGTH = 2147483647;
+export const MAX_PROJECT_SOURCE_LENGTH = 2147483647;
+export const MAX_URL_LENGTH = 2048;
+export const MAX_USER_NAME_LENGTH = 50;
+export const MAX_OAUTH2_CODE_LENGTH = 1024;
+export const MAX_CLIENT_ID_LENGTH = 256;
+export const MAX_CLIENT_SECRET_LENGTH = 512;
+export const MAX_CODE_VERIFIER_LENGTH = 128;
+export const MAX_REDIRECT_URI_LENGTH = 2048;
+export const MAX_SCOPE_LENGTH = 128;
+export const MAX_SECRET_ABBREVIATED_LENGTH = 16;
+export const MAX_SESSION_TOKEN_LENGTH = 2048;
+export const MAX_REASONING_LENGTH = 2147483647;
+export const MAX_VOTE_SCORES = 50;
+export const MAX_ELECTION_POSITIONS = 20;
+export const MAX_ELECTION_CANDIDATES = 50;
+export const MAX_ELECTION_TITLE_LENGTH = 128;
+export const MAX_ELECTION_CANDIDATE_ID_LENGTH = 64;
+export const MAX_APPLICATION_IDS_DELETE = 100;
+
+export const BasisEmail = z
     .email()
+    .max(MAX_EMAIL_LENGTH, "Email must be 254 characters or less")
     .refine(
         (s) => s.toLowerCase().endsWith("@basischina.com"),
         "Please use a @basischina.com email",
     );
 
-const TeamName = z
+export const TeamName = z
     .string()
     .min(2, "Team name must be at least 2 characters")
     .max(30, "Team name cannot be longer than 30 characters");
 
+export const ProjectName = z
+    .string()
+    .min(1, "Project name is required")
+    .max(MAX_PROJECT_NAME_LENGTH, "Project name cannot be longer than 100 characters");
+
+export const ProjectDescription = z
+    .string()
+    .min(30, "Please provide more details in the description")
+    .max(MAX_PROJECT_DESCRIPTION_LENGTH, "Project description is too long");
+
+export const ProjectUrl = z
+    .union([z.url(), z.literal("")])
+    .refine(
+        (v) => v === "" || v.length <= MAX_URL_LENGTH,
+        "URL cannot be longer than 2048 characters",
+    );
+
+const RequiredProjectUrl = z
+    .url("Invalid URL format")
+    .max(MAX_URL_LENGTH, "URL cannot be longer than 2048 characters");
+
 const TeamPathway = z.enum(["junior", "senior"]);
 
-const BooleanString = z.enum(["true", "false"]).transform((s) => s === "true");
+export const BooleanString = z.enum(["true", "false"]).transform((s) => s === "true");
 
-const ZeroToFive = z.number().int().min(0).max(5);
-const ScoreValues = z.object(
+export const ZeroToFive = z.number().int().min(0).max(5);
+export const ScoreValues = z.object(
     Object.keys(rubrics["junior"]).reduce(
         (obj, key) => ({
             ...obj,
@@ -28,8 +72,20 @@ const ScoreValues = z.object(
     ),
 );
 
+export const PositiveIntParam = z.coerce.number().int().positive().finite();
+export const TeamIdParams = z.object({ id: PositiveIntParam });
+export const TeamUserParams = z.object({ id: PositiveIntParam, user: PositiveIntParam });
+export const UserIdParams = z.object({ id: PositiveIntParam });
+export const DeepSeekSessionIdParams = z.object({ id: PositiveIntParam });
+export const ApplicationIdParams = z.object({
+    id: z.string().min(1).max(MAX_CLIENT_ID_LENGTH, "Invalid client_id"),
+});
+
 export const MicrosoftRedirectRequest = z.object({
-    token: z.string().min(1, "Token must not be empty"),
+    token: z
+        .string()
+        .min(1, "Token must not be empty")
+        .max(MAX_SESSION_TOKEN_LENGTH, "Token is too long"),
 });
 export type MicrosoftRedirectRequest = z.infer<typeof MicrosoftRedirectRequest>;
 
@@ -37,6 +93,12 @@ export const CreateTeamQuery = z.object({
     add: BooleanString.optional(),
 });
 export type CreateTeamQuery = z.infer<typeof CreateTeamQuery>;
+
+export const GetTeamsQuery = z.object({
+    judging: BooleanString.optional(),
+    season_id: z.coerce.number().int().positive().finite().optional(),
+});
+export type GetTeamsQuery = z.infer<typeof GetTeamsQuery>;
 
 export const CreateTeamRequest = z.object({
     name: TeamName,
@@ -48,17 +110,15 @@ export const UpdateTeamRequest = z.object({
     pathway: z.optional(TeamPathway),
     project: z.optional(
         z.object({
-            name: z.optional(z.string().max(50)),
-            description: z.optional(z.string().max(2000)),
-            demo_url: z
-                .union([z.url(), z.literal("")])
-                .nullish()
-                .transform((v) => (v === "" ? null : v)),
-            repo_url: z
-                .union([z.url(), z.literal("")])
-                .nullish()
-                .transform((v) => (v === "" ? null : v)),
-            sourcing: z.optional(z.string().max(2000)),
+            name: z.optional(ProjectName),
+            description: z.optional(
+                z.string().max(MAX_PROJECT_DESCRIPTION_LENGTH, "Project description is too long"),
+            ),
+            demo_url: ProjectUrl.nullish().transform((v) => (v === "" ? null : v)),
+            repo_url: ProjectUrl.nullish().transform((v) => (v === "" ? null : v)),
+            sourcing: z.optional(
+                z.string().max(MAX_PROJECT_SOURCE_LENGTH, "Sourcing notes are too long"),
+            ),
         }),
     ),
 });
@@ -67,11 +127,13 @@ export type UpdateTeamRequest = z.infer<typeof UpdateTeamRequest>;
 export const SubmitTeamRequest = z.object({
     pathway: TeamPathway,
     project: z.object({
-        name: z.string().nonempty(),
-        description: z.string().min(30, "Please provide more details in the description"),
-        demo_url: z.url(),
-        repo_url: z.url(),
-        sourcing: z.optional(z.string().max(2000)),
+        name: ProjectName,
+        description: ProjectDescription,
+        demo_url: RequiredProjectUrl,
+        repo_url: RequiredProjectUrl,
+        sourcing: z.optional(
+            z.string().max(MAX_PROJECT_SOURCE_LENGTH, "Sourcing notes are too long"),
+        ),
     }),
 });
 export type SubmitTeamRequest = z.infer<typeof SubmitTeamRequest>;
@@ -84,7 +146,7 @@ export type AddTeamMemberRequest = z.infer<typeof AddTeamMemberRequest>;
 const MAX_FILE_SIZE = 10 * 1024 * 1024; // 10MB
 const ACCEPTED_IMAGE_TYPES = ["image/jpeg", "image/jpg", "image/png", "image/webp"];
 
-const formatBytes = (bytes: number, decimals = 2) => {
+export const formatBytes = (bytes: number, decimals = 2) => {
     if (bytes === 0) return "0 Bytes";
     const k = 1024;
     const dm = decimals < 0 ? 0 : decimals;
@@ -94,7 +156,7 @@ const formatBytes = (bytes: number, decimals = 2) => {
 };
 
 export const UpdateUserRequest = z.object({
-    name: z.optional(z.string().max(30)),
+    name: z.optional(z.string().max(MAX_USER_NAME_LENGTH, "Name is too long")),
     profile_theme_image: z
         .union([
             z
@@ -131,15 +193,20 @@ export const UpdateUserRequest = z.object({
 export type UpdateUserRequest = z.infer<typeof UpdateUserRequest>;
 
 export const CreateTeamScoresRequest = z.object({
-    reasoning: z.string().min(10, "Please write more").max(2000),
+    reasoning: z
+        .string()
+        .min(10, "Please write more")
+        .max(MAX_REASONING_LENGTH, "Reasoning is too long"),
     scores: ScoreValues,
 });
 export type CreateTeamScoresRequest = z.infer<typeof CreateTeamScoresRequest>;
 
 export const SubmitVoteRequest = z
     .object({
-        scores: z.array(z.number().int().min(0).max(5)),
-        reasoning: z.string().max(2000, "You wrote too much!"),
+        scores: z
+            .array(z.number().int().min(0).max(5))
+            .max(MAX_VOTE_SCORES, "Too many scores submitted"),
+        reasoning: z.string().max(MAX_REASONING_LENGTH, "You wrote too much!"),
     })
     .refine(({ scores }) => scores.reduce((a, b) => a + b, 0) === 10, "Stars must sum to 10");
 export type SubmitVoteRequest = z.infer<typeof SubmitVoteRequest>;
@@ -159,7 +226,12 @@ export const CreateApplicationRequest = z.object({
 export type CreateApplicationRequest = z.infer<typeof CreateApplicationRequest>;
 
 export const DeleteApplicationsRequest = z.object({
-    ids: z.array(z.string().min(1)).max(100, "Cannot delete more than 100 applications at once"),
+    ids: z
+        .array(z.string().min(1))
+        .max(
+            MAX_APPLICATION_IDS_DELETE,
+            `Cannot delete more than ${MAX_APPLICATION_IDS_DELETE} applications at once`,
+        ),
 });
 export type DeleteApplicationsRequest = z.infer<typeof DeleteApplicationsRequest>;
 
@@ -182,11 +254,24 @@ export const OAuth2TokenRequest = z.object({
     grant_type: z.literal("authorization_code", {
         message: "Only 'authorization_code' grant type is supported",
     }),
-    code: z.string("Authorization code is required").min(1, "Authorization code is required"),
-    client_id: z.string("client_id is required").min(1, "client_id is required"),
-    client_secret: z.string("client_secret is required").min(1, "client_secret is required"),
-    redirect_uri: z.string().optional(),
-    code_verifier: z.string().optional(),
+    code: z
+        .string("Authorization code is required")
+        .min(1, "Authorization code is required")
+        .max(MAX_OAUTH2_CODE_LENGTH, "Authorization code is too long"),
+    client_id: z
+        .string("client_id is required")
+        .min(1, "client_id is required")
+        .max(MAX_CLIENT_ID_LENGTH, "client_id is too long"),
+    client_secret: z
+        .string("client_secret is required")
+        .min(1, "client_secret is required")
+        .max(MAX_CLIENT_SECRET_LENGTH, "client_secret is too long"),
+    redirect_uri: z
+        .string()
+        .max(MAX_REDIRECT_URI_LENGTH, "redirect_uri is too long")
+        .optional()
+        .or(z.literal("")),
+    code_verifier: z.string().max(MAX_CODE_VERIFIER_LENGTH, "code_verifier is too long").optional(),
 });
 export type OAuth2TokenRequest = z.infer<typeof OAuth2TokenRequest>;
 export const OAuth2SessionActionRequest = z.object({
@@ -202,17 +287,107 @@ export const SetActiveSeasonRequest = z.object({
 });
 export type SetActiveSeasonRequest = z.infer<typeof SetActiveSeasonRequest>;
 
+export const UpdateSeasonTweaksRequest = z
+    .object({
+        status: z.enum(["not_started", "in_progress", "voting", "finished", "paused"]).optional(),
+        show_scores: z.boolean().optional(),
+        show_ranking: z.boolean().optional(),
+    })
+    .refine((data) => Object.values(data).some((value) => value !== undefined), {
+        message: "At least one field must be provided",
+    });
+export type UpdateSeasonTweaksRequest = z.infer<typeof UpdateSeasonTweaksRequest>;
+
 export const ElectionVoteRequest = z.object({
-    positions: z.array(
-        z.object({
-            title: z.string(),
-            candidates: z.array(
-                z.object({
-                    id: z.string(),
-                    rank: z.number().int().min(1).nullable(),
-                }),
-            ),
-        }),
-    ),
+    positions: z
+        .array(
+            z.object({
+                title: z.string().max(MAX_ELECTION_TITLE_LENGTH, "Position title is too long"),
+                candidates: z
+                    .array(
+                        z.object({
+                            id: z
+                                .string()
+                                .max(MAX_ELECTION_CANDIDATE_ID_LENGTH, "Candidate ID is too long"),
+                            rank: z.number().int().min(1).nullable(),
+                        }),
+                    )
+                    .max(MAX_ELECTION_CANDIDATES, "Too many candidates"),
+            }),
+        )
+        .max(MAX_ELECTION_POSITIONS, "Too many positions"),
 });
 export type ElectionVoteRequest = z.infer<typeof ElectionVoteRequest>;
+
+// ---------------------------------------------------------------------------
+// Admin – hackathon configuration
+// ---------------------------------------------------------------------------
+
+export const HackathonStatusEnum = z.enum([
+    "not_started",
+    "in_progress",
+    "voting",
+    "finished",
+    "paused",
+]);
+
+export const AdminUpdateHackathonRequest = z.object({
+    season_id: z.number().int().positive().optional(),
+    status: HackathonStatusEnum.optional(),
+    voting_enabled: z.union([z.literal(0), z.literal(1)]).optional(),
+    results_published: z.union([z.literal(0), z.literal(1)]).optional(),
+    judging_open: z.union([z.literal(0), z.literal(1)]).optional(),
+    show_scores: z.union([z.literal(0), z.literal(1)]).optional(),
+    show_ranking: z.union([z.literal(0), z.literal(1)]).optional(),
+    max_votes_per_user: z.number().int().min(0).max(100).optional(),
+    schedule_start: z.string().max(100).nullable().optional(),
+    schedule_end: z.string().max(100).nullable().optional(),
+    start_timestamp: z
+        .number()
+        .int()
+        .nullish()
+        .transform((v) => v ?? 0),
+    end_timestamp: z
+        .number()
+        .int()
+        .nullish()
+        .transform((v) => v ?? 0),
+    voting_start_timestamp: z
+        .number()
+        .int()
+        .nullish()
+        .transform((v) => v ?? 0),
+    voting_end_timestamp: z
+        .number()
+        .int()
+        .nullish()
+        .transform((v) => v ?? 0),
+    results_open_timestamp: z
+        .number()
+        .int()
+        .nullish()
+        .transform((v) => v ?? 0),
+    theme_name: z.string().max(200).nullable().optional(),
+    theme_description: z.string().max(2000).nullable().optional(),
+});
+export type AdminUpdateHackathonRequest = z.infer<typeof AdminUpdateHackathonRequest>;
+
+// ---------------------------------------------------------------------------
+// Admin – season management
+// ---------------------------------------------------------------------------
+
+export const CreateSeasonRequest = z.object({
+    name: z.string().min(1).max(200),
+    is_active: z
+        .union([z.literal(0), z.literal(1)])
+        .optional()
+        .default(0),
+});
+export type CreateSeasonRequest = z.infer<typeof CreateSeasonRequest>;
+
+export const UpdateSeasonRequest = z.object({
+    id: z.number().int().positive(),
+    name: z.string().min(1).max(200).optional(),
+    is_active: z.union([z.literal(0), z.literal(1)]).optional(),
+});
+export type UpdateSeasonRequest = z.infer<typeof UpdateSeasonRequest>;

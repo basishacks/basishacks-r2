@@ -21,7 +21,7 @@ if (
     throw await navigateTo("/");
 }
 
-const { data, error, refresh } = await useFetch<APITeam[]>("/api/teams?judging=1");
+const { data, error, refresh } = await useFetch<APITeam[]>("/api/teams?judging=true");
 if (error.value) {
     throw error.value;
 }

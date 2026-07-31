@@ -54,6 +54,21 @@ describe("members database helpers", () => {
             const members = await getTeamMembers(event, 2);
             expect(members).toHaveLength(0);
         });
+
+        it("does not include past team members", async () => {
+            event.context.drizzle
+                .prepare("INSERT INTO user_past_teams(user_id, team_id) VALUES(3, 1)")
+                .run();
+
+            const members = await getTeamMembers(event, 1);
+            expect(members).toHaveLength(2);
+            expect(members.map((m) => m.name)).toEqual(["Alice", "Bob"]);
+        });
+
+        it("returns an empty array for a non-existent team id", async () => {
+            const members = await getTeamMembers(event, 999);
+            expect(members).toHaveLength(0);
+        });
     });
 
     describe("getAllTeamMembers", () => {
@@ -78,6 +93,33 @@ describe("members database helpers", () => {
             expect(members).toHaveLength(2);
             expect(members.map((m) => m.name)).toEqual(["Alice", "Bob"]);
         });
+
+        it("returns just current members when there are no past members", async () => {
+            const members = await getAllTeamMembers(event, 1);
+            expect(members).toHaveLength(2);
+            expect(members.map((m) => m.name)).toEqual(["Alice", "Bob"]);
+        });
+
+        it("returns an empty array when the team has no members at all", async () => {
+            const members = await getAllTeamMembers(event, 2);
+            expect(members).toHaveLength(0);
+        });
+
+        it("includes multiple past team members", async () => {
+            event.context.drizzle
+                .prepare("INSERT INTO users(email, name) VALUES('dave@example.com', 'Dave')")
+                .run();
+            event.context.drizzle
+                .prepare("INSERT INTO user_past_teams(user_id, team_id) VALUES(3, 1)")
+                .run();
+            event.context.drizzle
+                .prepare("INSERT INTO user_past_teams(user_id, team_id) VALUES(4, 1)")
+                .run();
+
+            const members = await getAllTeamMembers(event, 1);
+            expect(members).toHaveLength(4);
+            expect(members.map((m) => m.name)).toEqual(["Alice", "Bob", "Carol", "Dave"]);
+        });
     });
 
     describe("getUserPastTeams", () => {
@@ -94,6 +136,27 @@ describe("members database helpers", () => {
 
         it("returns an empty array when the user has no past teams", async () => {
             const teams = await getUserPastTeams(event, 1);
+            expect(teams).toHaveLength(0);
+        });
+
+        it("returns multiple past teams for a user", async () => {
+            event.context.drizzle
+                .prepare("INSERT INTO user_past_teams(user_id, team_id) VALUES(1, 2)")
+                .run();
+            // Add another team for past teams
+            event.context.drizzle
+                .prepare("INSERT INTO teams(name, season_id) VALUES('Team C', 1)")
+                .run();
+            event.context.drizzle
+                .prepare("INSERT INTO user_past_teams(user_id, team_id) VALUES(1, 3)")
+                .run();
+
+            const teams = await getUserPastTeams(event, 1);
+            expect(teams).toHaveLength(2);
+        });
+
+        it("returns an empty array for a non-existent user id", async () => {
+            const teams = await getUserPastTeams(event, 999);
             expect(teams).toHaveLength(0);
         });
     });
@@ -113,6 +176,26 @@ describe("members database helpers", () => {
 
             const teams = await getUserPastTeams(event, 1);
             expect(teams).toHaveLength(1);
+        });
+
+        it("adds multiple past teams for the same user", async () => {
+            event.context.drizzle
+                .prepare("INSERT INTO teams(name, season_id) VALUES('Team C', 1)")
+                .run();
+
+            await addUserPastTeam(event, 1, 2);
+            await addUserPastTeam(event, 1, 3);
+
+            const teams = await getUserPastTeams(event, 1);
+            expect(teams).toHaveLength(2);
+        });
+
+        it("throws when adding with a non-existent user id due to FK constraint", async () => {
+            await expect(addUserPastTeam(event, 999, 1)).rejects.toThrow();
+        });
+
+        it("throws when adding with a non-existent team id due to FK constraint", async () => {
+            await expect(addUserPastTeam(event, 1, 999)).rejects.toThrow();
         });
     });
 
@@ -142,6 +225,31 @@ describe("members database helpers", () => {
                 .all();
             expect(pastTeams.results).toHaveLength(0);
         });
+
+        it("throws a 404 error when the user does not exist", async () => {
+            await expect(removeTeamMember(event, 1, 999)).rejects.toThrow(
+                "User not found or not in team",
+            );
+        });
+
+        it("throws a 404 error when the user is in a different team", async () => {
+            event.context.drizzle
+                .prepare(
+                    "INSERT INTO users(email, name, team_id) VALUES('dave@example.com', 'Dave', 2)",
+                )
+                .run();
+
+            await expect(removeTeamMember(event, 1, 4)).rejects.toThrow(
+                "User not found or not in team",
+            );
+        });
+
+        it("does not record a past team entry on failure", async () => {
+            await expect(removeTeamMember(event, 1, 3)).rejects.toThrow();
+
+            const pastTeams = event.context.drizzle.prepare("SELECT * FROM user_past_teams").all();
+            expect(pastTeams.results).toHaveLength(0);
+        });
     });
 
     describe("addTeamMember", () => {
@@ -155,6 +263,27 @@ describe("members database helpers", () => {
 
         it("throws a 404 error when the user is already in a team", async () => {
             await expect(addTeamMember(event, 1, 1)).rejects.toThrow(
+                "User not found or already in a team",
+            );
+        });
+
+        it("throws a 404 error when the user does not exist", async () => {
+            await expect(addTeamMember(event, 1, 999)).rejects.toThrow(
+                "User not found or already in a team",
+            );
+        });
+
+        it("updates the user's team_id after adding", async () => {
+            await addTeamMember(event, 1, 3);
+
+            const user = event.context.drizzle
+                .prepare("SELECT team_id FROM users WHERE id = 3")
+                .first() as { team_id: number | null };
+            expect(user!.team_id).toBe(1);
+        });
+
+        it("throws when adding a user who is in a different team", async () => {
+            await expect(addTeamMember(event, 2, 1)).rejects.toThrow(
                 "User not found or already in a team",
             );
         });

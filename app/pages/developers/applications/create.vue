@@ -1,8 +1,6 @@
 <script lang="ts" setup>
 import { CreateApplicationRequest } from "~~/shared/schemas";
 import type { FormSubmitEvent } from "@nuxt/ui";
-import { DevPermissions, hasPermission } from "~~/shared/permissions";
-
 definePageMeta({
     layout: "developers-dashboard",
 });
@@ -38,22 +36,6 @@ const type_items = ref([
     { label: "First Party", value: "first" },
     { label: "Third Party", value: "third" },
 ]);
-
-const { user } = await useApiUser();
-
-const authorized = computed(() => {
-    return (
-        hasPermission(user?.value?.role, DevPermissions.PORTAL_APPLICATIONS_CREATE) ||
-        hasPermission(user.value?.role, "admin")
-    );
-});
-
-const canCreateFirstParty = computed(() => {
-    return (
-        hasPermission(user?.value?.role, DevPermissions.PORTAL_APPLICATIONS_CREATE_FIRST_PARTY) ||
-        hasPermission(user.value?.role, "admin")
-    );
-});
 </script>
 
 <template>
@@ -126,11 +108,7 @@ const canCreateFirstParty = computed(() => {
                 </UFormField>
 
                 <UFormField name="type" label="Application Type">
-                    <USelect
-                        v-model="state.type"
-                        :items="type_items"
-                        :disabled="!canCreateFirstParty"
-                    />
+                    <USelect v-model="state.type" :items="type_items" />
                 </UFormField>
 
                 <p class="text-xs text-muted">
@@ -150,7 +128,7 @@ const canCreateFirstParty = computed(() => {
                     applications that does not want to affiliate with basishacks accounts.
                 </p>
 
-                <UButton type="submit" :disabled="!authorized">Create Application</UButton>
+                <UButton type="submit">Create Application</UButton>
 
                 <p class="text-xs text-muted">
                     API keys, secrets, and permissions can be configured after the creation of this

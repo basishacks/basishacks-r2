@@ -21,6 +21,7 @@ vi.mock("~~/server/utils/auth", () => ({
 // Mock the rate limit wrapper
 vi.mock("~~/server/utils/rateLimit", () => ({
     applyRateLimit: (fn: any) => fn,
+    AUTH_RATE_LIMIT_CONFIG: { maxRequests: 600, windowMs: 60 * 1000 },
 }));
 
 let ctx: TestContext;
@@ -67,14 +68,14 @@ describe("POST /api/auth/impersonate", () => {
         });
     });
 
-    it("returns 404 when target user does not exist", async () => {
+    it("returns 403 when target user does not exist (prevents enumeration)", async () => {
         const { requireAdmin } = await import("~~/server/utils/auth");
         (requireAdmin as any).mockResolvedValue({ id: 1, role: "admin" });
 
         mockBody.value = { userId: 9999 };
 
         await expect(impersonateHandler(createEvent())).rejects.toMatchObject({
-            statusCode: 404,
+            statusCode: 403,
         });
     });
 

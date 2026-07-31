@@ -7,40 +7,43 @@
 
 import type { AuthorizeSession } from "./session.post";
 import { getAuthorizeSession, removeIfSessionExpired } from "./session.post";
+import { applyRateLimit, AUTH_RATE_LIMIT_CONFIG } from "~~/server/utils/rateLimit";
 
-export default defineEventHandler(async (event) => {
-    const sessid = getCookie(event, "bridge_id");
+export default defineEventHandler(
+    applyRateLimit(async (event) => {
+        const sessid = getCookie(event, "bridge_id");
 
-    if (!sessid) {
-        throw createError({
-            statusCode: 400,
-            message: "session_expired",
-        });
-    }
+        if (!sessid) {
+            throw createError({
+                statusCode: 400,
+                message: "session_expired",
+            });
+        }
 
-    const session: AuthorizeSession | null = getAuthorizeSession(sessid);
-    if (!session) {
-        throw createError({
-            statusCode: 400,
-            message: "session_expired",
-        });
-    }
+        const session: AuthorizeSession | null = getAuthorizeSession(sessid);
+        if (!session) {
+            throw createError({
+                statusCode: 400,
+                message: "session_expired",
+            });
+        }
 
-    if (removeIfSessionExpired(session)) {
-        throw createError({
-            statusCode: 400,
-            message: "session_expired",
-        });
-    }
+        if (removeIfSessionExpired(session)) {
+            throw createError({
+                statusCode: 400,
+                message: "session_expired",
+            });
+        }
 
-    return {
-        client_id: session.application.client_id,
-        name: session.application.name,
-        description: session.application.description,
-        type: session.application.type,
-        session: session.token,
-        login_state: session.login_state,
-        user_id: session.user?.id || null,
-        user: session.user as APIUser,
-    };
-});
+        return {
+            client_id: session.application.client_id,
+            name: session.application.name,
+            description: session.application.description,
+            type: session.application.type,
+            session: session.token,
+            login_state: session.login_state,
+            user_id: session.user?.id || null,
+            user: session.user as APIUser,
+        };
+    }, AUTH_RATE_LIMIT_CONFIG),
+);

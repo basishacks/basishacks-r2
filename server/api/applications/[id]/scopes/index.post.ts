@@ -6,15 +6,19 @@ import {
 } from "~~/server/utils/database/oauth2_applications";
 import { OAuth2ScopesList, isAdminScope } from "~~/shared/oauth2-scopes";
 import { applyRateLimit } from "~~/server/utils/rateLimit";
+import { ApplicationIdParams } from "~~/shared/schemas";
 
 const AddScopesRequest = z.object({
-    scopes: z.array(z.string()).min(1, "At least one scope is required"),
+    scopes: z
+        .array(z.string().min(1).max(128, "Scope is too long"))
+        .min(1, "At least one scope is required")
+        .max(50, "Too many scopes"),
 });
 
 export default defineEventHandler(
     applyRateLimit(async (event) => {
         const user = await requireUser(event);
-        const clientID = getRouterParam(event, "id")!;
+        const { id: clientID } = await getValidatedRouterParams(event, ApplicationIdParams.parse);
 
         const app = await getOAuth2Application(event, clientID);
         if (!app) {

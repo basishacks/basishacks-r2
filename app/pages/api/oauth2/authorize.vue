@@ -9,7 +9,7 @@
                         class="absolute left-0 w-6 h-6 cursor-pointer hover:opacity-80 transition-opacity"
                         @click="returnToApp({ result: 'cancel' })"
                     />
-                    <p class="text-xl bold glow text-primary">{{ WEBSITE_NAME }}</p>
+                    <!-- <p class="text-xl bold glow text-primary">{{ WEBSITE_NAME }}</p> -->
                 </div>
                 <USeparator></USeparator>
 
@@ -27,7 +27,12 @@
                             <h3 class="text-sm text-red-400">
                                 There was a problem during your login
                             </h3>
-                            <p class="mt-4 text-sm" v-html="error_description" />
+                            <p class="mt-4 text-sm">
+                                <template v-for="(segment, idx) in errorSegments" :key="idx">
+                                    <code v-if="segment.code">{{ segment.text }}</code>
+                                    <template v-else>{{ segment.text }}</template>
+                                </template>
+                            </p>
 
                             <UButton
                                 v-if="!error_description_initial"
@@ -172,11 +177,10 @@ import { computed, onBeforeUnmount, onMounted, ref } from "vue";
 import { OAuth2ScopeDescriptions, OAuth2Scopes } from "~~/shared/oauth2-scopes";
 
 import { buildOAuth2SessionBody } from "~~/app/utils/oauth2";
-import { escapeHtml } from "~~/app/utils/sanitize";
 
 const showLoading = ref(true);
 const status = ref("load");
-const error_description = ref("");
+const errorMessage = ref("");
 const error_description_initial = ref(true);
 const error = ref("");
 let canvasIntervalId: ReturnType<typeof setInterval> | undefined;
@@ -241,19 +245,15 @@ const queryString = (value: unknown) => {
     return "";
 };
 
-const swapQuotesToCode = (message: string): string => {
-    let inside = false;
-    let result = "";
-    for (const char of message) {
-        if (char === "'") {
-            result += inside ? "</code>" : "<code>";
-            inside = !inside;
-        } else {
-            result += escapeHtml(char);
-        }
-    }
-    return result;
-};
+const errorSegments = computed(() => {
+    const raw = errorMessage.value;
+    if (!raw) return [];
+
+    return raw.split("'").map((text, index) => ({
+        text,
+        code: index % 2 === 1,
+    }));
+});
 
 const userAvatarUrl = computed(() => `/api/users/${userId.value}/profile_picture`);
 
@@ -338,12 +338,12 @@ const animatedChange = async (newStatus: string) => {
 
 const toast = useToast();
 
-async function showLoginError(error: any, allow_back: boolean = true) {
-    error_description.value = swapQuotesToCode(
-        getErrorMessage(error) == "session_expired"
+async function showLoginError(errorValue: any, allow_back: boolean = true) {
+    const message = getErrorMessage(errorValue);
+    errorMessage.value =
+        message === "session_expired"
             ? "Your login session has expired. Please restart the login process."
-            : getErrorMessage(error),
-    );
+            : message;
     error_description_initial.value = !allow_back;
     animatedChange("error");
 }
@@ -390,7 +390,7 @@ async function loginFlowCheck(reattempt: boolean = false) {
         await fade();
         status.value = "error";
         error.value = "invalid_request";
-        error_description.value = swapQuotesToCode(json.message);
+        errorMessage.value = json.message;
         err.value = undefined;
         return;
     }
@@ -429,7 +429,7 @@ async function loginFlowCheck(reattempt: boolean = false) {
                 await fade();
                 status.value = "error";
                 error.value = "invalid_request";
-                error_description.value = swapQuotesToCode(js.message);
+                errorMessage.value = js.message;
                 error_description_initial.value = true;
             }
         } else {
@@ -480,7 +480,7 @@ const preloadImage = (url: string): Promise<void> => {
 };
 
 const matrixCharacters =
-    "01ABCDEFGHIJKLMNOPQRSTUVWXYZАБВГДЕЁЖЗИЙКЛМНОПРСТУФХЦЧШЩЪЫЬЭЮЯｱｲｳｴｵｶｷｸｹｺｻｼｽｾｿﾀﾁﾂﾃﾄﾅﾆﾇﾈﾉﾊﾋﾌﾍﾎﾏﾐﾑﾒﾓﾔﾕﾖﾗﾘﾙﾚﾛﾜｦﾝ";
+    "01ABCDEFGHIJKLMNOPQRSTUVWXYZАБВГДЕЁЖЗИЙКЛМНОПРСТУФХЦЧШЩЪЫЬЭЮЯｱｲｳｴｵｶｷｸｹｺｻｼｽｾｿﾀﾁﾂﾃﾄﾅﾆﾇﾈﾉﾊﾋﾌﾍﾎﾏﾐﾑﾒﾓﾔﾕﾖﾗﾘﾙﾚﾛﾜｦﾝ璐濆鎬濋粦瀹㈡澗����˼�ڿ���è´å¡žæ€é»‘å®¢æ¾±´ÈûË¼ºÚ¿ÍËÉ锟斤拷锟斤拷思锟节匡拷锟斤拷";
 
 function setupCanvas() {
     if (!canvas.value) return;

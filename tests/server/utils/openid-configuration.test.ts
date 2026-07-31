@@ -45,7 +45,7 @@ describe("buildOpenIdConfiguration", () => {
 
         expect(doc.response_types_supported).toEqual(["code"]);
         expect(doc.grant_types_supported).toEqual(["authorization_code"]);
-        expect(doc.code_challenge_methods_supported).toEqual(["S256", "plain"]);
+        expect(doc.code_challenge_methods_supported).toEqual(["S256"]);
         expect(doc.token_endpoint_auth_methods_supported).toEqual(["client_secret_post"]);
         expect(doc.scopes_supported).toEqual([...OAuth2ScopesList]);
         expect(doc.claims_supported).toContain("sub");

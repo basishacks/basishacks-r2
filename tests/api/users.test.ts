@@ -14,7 +14,7 @@ import {
     type TestContext,
 } from "./helpers";
 import { eq } from "drizzle-orm";
-import { users } from "~~/server/database/schema";
+import { users, teams, userPastTeams } from "~~/server/database/schema";
 
 let ctx: TestContext;
 let listHandler: any;
@@ -38,6 +38,12 @@ beforeAll(async () => {
 
     const teamsDb = await import("~~/server/utils/database/teams");
     vi.stubGlobal("getTeamById", teamsDb.getTeamById);
+
+    const hackathonDb = await import("~~/server/utils/database/hackathon");
+    vi.stubGlobal("getHackathon", hackathonDb.getHackathon);
+
+    const seasonsDb = await import("~~/server/utils/database/seasons");
+    vi.stubGlobal("getScoreRankVisibilityResolver", seasonsDb.getScoreRankVisibilityResolver);
 
     const awardsDb = await import("~~/server/utils/database/awards");
     vi.stubGlobal("getAwardsForTeams", awardsDb.getAwardsForTeams);
@@ -146,6 +152,112 @@ describe("GET /api/users/:id", () => {
         expect(result).toHaveProperty("team");
         expect(result.team).toHaveProperty("name", "My Team");
         expect(result).toHaveProperty("past_teams");
+    });
+
+    it("hides score and rank for self when hackathon toggles are off", async () => {
+        const team = seedTeam(ctx, { name: "Scored Team" });
+        ctx.drizzle.update(teams).set({ score: 95, rank: 1 }).where(eq(teams.id, team.id)).run();
+        const alice = seedUser(ctx, {
+            email: "alice@basischina.com",
+            name: "Alice",
+            team_id: team.id,
+        });
+
+        mockParams.values["id"] = String(alice.id);
+        mockSession.value = { user: { id: alice.id } };
+
+        const result = await getHandler(createEvent());
+
+        expect(result.team.score).toBeNull();
+        expect(result.team.rank).toBeNull();
+    });
+
+    it("shows score and rank for self when the season toggles are on", async () => {
+        resetTestContext(ctx);
+        seedHackathon(ctx);
+        const season = seedSeason(ctx, { show_scores: 1, show_ranking: 1 });
+
+        const team = seedTeam(ctx, { name: "Scored Team", season_id: season.id });
+        ctx.drizzle.update(teams).set({ score: 95, rank: 1 }).where(eq(teams.id, team.id)).run();
+        const alice = seedUser(ctx, {
+            email: "alice@basischina.com",
+            name: "Alice",
+            team_id: team.id,
+        });
+
+        mockParams.values["id"] = String(alice.id);
+        mockSession.value = { user: { id: alice.id } };
+
+        const result = await getHandler(createEvent());
+
+        expect(result.team.score).toBe(95);
+        expect(result.team.rank).toBe(1);
+    });
+
+    it("shows score and rank for privileged roles regardless of toggles", async () => {
+        const team = seedTeam(ctx, { name: "Scored Team" });
+        ctx.drizzle.update(teams).set({ score: 95, rank: 1 }).where(eq(teams.id, team.id)).run();
+        const admin = seedUser(ctx, {
+            email: "admin@basischina.com",
+            name: "Admin",
+            team_id: team.id,
+            role: "admin",
+        });
+
+        mockParams.values["id"] = String(admin.id);
+        mockSession.value = { user: { id: admin.id } };
+
+        const result = await getHandler(createEvent());
+
+        expect(result.team.score).toBe(95);
+        expect(result.team.rank).toBe(1);
+    });
+
+    it("binds past team visibility to each team's own season", async () => {
+        resetTestContext(ctx);
+        seedHackathon(ctx, { show_scores: 1, show_ranking: 1 });
+        const liveSeason = seedSeason(ctx, {
+            name: "Live Season",
+            show_scores: 1,
+            show_ranking: 1,
+        });
+        const oldSeason = seedSeason(ctx, {
+            name: "Old Season",
+            is_active: 0,
+            show_scores: 0,
+            show_ranking: 0,
+        });
+
+        const currentTeam = seedTeam(ctx, { name: "Current Team", season_id: liveSeason.id });
+        const pastTeam = seedTeam(ctx, { name: "Past Team", season_id: oldSeason.id });
+        ctx.drizzle
+            .update(teams)
+            .set({ score: 95, rank: 1 })
+            .where(eq(teams.id, currentTeam.id))
+            .run();
+        ctx.drizzle
+            .update(teams)
+            .set({ score: 80, rank: 2 })
+            .where(eq(teams.id, pastTeam.id))
+            .run();
+
+        const alice = seedUser(ctx, {
+            email: "alice@basischina.com",
+            name: "Alice",
+            team_id: currentTeam.id,
+        });
+        ctx.drizzle.insert(userPastTeams).values({ user_id: alice.id, team_id: pastTeam.id }).run();
+
+        mockParams.values["id"] = String(alice.id);
+        mockSession.value = { user: { id: alice.id } };
+
+        const result = await getHandler(createEvent());
+
+        expect(result.team.score).toBe(95);
+        expect(result.team.rank).toBe(1);
+        expect(result.past_teams).toHaveLength(1);
+        expect(result.past_teams[0].score).toBeNull();
+        expect(result.past_teams[0].rank).toBeNull();
     });
 });
 
