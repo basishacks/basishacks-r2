@@ -230,7 +230,7 @@ New users are assigned the `participant` role by default. To elevate your permis
     ```sql
     UPDATE users SET role = 'admin' WHERE email = 'your@basischina.com';
     ```
-3. Refresh the browser. You should now have access to admin features and the developer portal.
+3. Refresh the browser. You should now have access to admin features and the mod portal.
 
 ## Verify Everything Works
 
@@ -239,7 +239,7 @@ After logging in, check the following:
 - **Dashboard** loads at `/dashboard`
 - **Teams page** is accessible at `/dashboard/teams`
 - **Profile page** shows your user information at `/profile`
-- **Admin/Developer portal** (if elevated) is available at `/developers`
+- **Admin/Mod portal** (if elevated) is available at `/developers`
 
 ## Next Steps
 

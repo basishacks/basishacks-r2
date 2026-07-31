@@ -64,9 +64,8 @@ basishacks-r2/
 │   ├── auth.d.ts           # nuxt-auth-utils session type augmentation
 │   ├── permissions.ts      # Fine-grained permission constants and helpers
 │   ├── oauth2-scopes.ts    # OAuth2 scope definitions
-│   ├── oauth2.ts           # Microsoft OAuth2 static configuration
 │   ├── rubric.ts           # Judging rubric definitions
-│   └── seasons.ts          # Static season metadata
+│   └── responses.d.ts      # API response interfaces
 ├── sql/archive/            # Archived legacy SQL schema and migrations
 │   ├── init.sql            # Historical base schema
 │   └── migration-*.sql     # Historical dated migrations

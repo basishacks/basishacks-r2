@@ -1,6 +1,6 @@
 ---
 title: Layouts
-description: Nuxt layouts used across the basishacks frontend — default, dashboard, fullwidth, and developer portal.
+description: Nuxt layouts used across the basishacks frontend — default, dashboard, fullwidth, and mod portal.
 ---
 
 # Layouts
@@ -133,7 +133,7 @@ Participant dashboard layout with a visible left sidebar containing the active p
 
 **File:** `app/layouts/developers-dashboard.vue`
 
-Developer portal layout using `UDashboardGroup` with a collapsible, resizable sidebar.
+Mod portal layout using `UDashboardGroup` with a collapsible, resizable sidebar.
 
 **Structure:**
 
@@ -163,7 +163,7 @@ Developer portal layout using `UDashboardGroup` with a collapsible, resizable si
 
 | Item | Route | Permission Required |
 | --- | --- | --- |
-| Home, Users, Teams, DeepSeek, Files, Seasons | `/developers/*` | Admin |
+| Home, Users, Teams, DeepSeek, Files, Season | `/developers/*` | Admin |
 | Applications | `/developers/applications/` | `PORTAL_APPLICATIONS_VIEW`, `PORTAL_APPLICATIONS_VIEW_ALL`, or admin |
 | ↳ Create New | `/developers/applications/create` | `PORTAL_APPLICATIONS_CREATE` or admin |
 
@@ -171,7 +171,7 @@ Within Applications, the list is limited to the caller's applications with `PORT
 
 Non-admin users see only the application navigation they can access. Permission checks use `hasPermission()` from `~~/shared/permissions` with `DevPermissions` constants.
 
-**Used by:** `/developers`, `/developers/users`, `/developers/teams`, `/developers/applications`, `/developers/applications/create`, `/developers/applications/[id]`, `/developers/deepseek`, `/developers/debug`, `/developers/seasons`
+**Used by:** `/developers`, `/developers/users`, `/developers/teams`, `/developers/applications`, `/developers/applications/create`, `/developers/applications/[id]`, `/developers/deepseek`, `/developers/debug`, `/developers/season`
 
 ## Layout Comparison
 

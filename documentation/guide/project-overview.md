@@ -19,7 +19,7 @@ The platform manages the entire hackathon lifecycle:
 | **Peer Voting** | Participants vote on projects by distributing 10 stars across eligible projects in the same pathway. The total must equal exactly 10. |
 | **Judge Scoring** | Judges score projects using a weighted rubric system with criteria scored 0–5 per criterion. Separate rubrics are used for junior and senior pathways. |
 | **OAuth2 Application Integrations** | Full OAuth2 2.0/2.1 authorization server with PKCE support, allowing third-party and first-party applications to integrate with the platform. |
-| **Developer Portal** | Administrative dashboard for managing OAuth2 applications, users, teams, seasons, and debug tools. |
+| **Mod Portal** | Administrative dashboard for managing OAuth2 applications, users, teams, seasons, and debug tools. |
 | **Microsoft Graph API** | Integration with Microsoft Entra ID for OAuth2 login, meeting scheduling, and Teams chat via the Graph API. |
 | **DeepSeek AI Chatbot** | In-memory chat session store powered by the OpenAI SDK for DeepSeek AI interactions in debug routes. |
 | **SafeLink / SafeComark Components** | Client-side components that sanitize user-provided links and markdown content, preventing XSS and open redirects in rendered project descriptions. |
@@ -82,7 +82,7 @@ Users are assigned one of three core roles in the database:
 | ------------- | -------------------------------------------------------------------------------- |
 | `participant` | Default role. Can join teams, submit projects, and vote.                         |
 | `judge`       | Can score projects using the rubric system. Has access to the judging interface. |
-| `admin`       | Full access to all features, including the developer portal.                     |
+| `admin`       | Full access to all features, including the mod portal.                           |
 
 ### Fine-Grained Developer Permissions
 
@@ -94,10 +94,10 @@ Beyond the three core roles, the platform supports fine-grained permissions stor
 | `dev_teams` | Access to team management utilities. |
 | `dev_debug` | Access to debug endpoints. |
 | `dev_deepseek` | Access to DeepSeek AI features. |
-| `portal.users.view` | View users in the developer portal. |
-| `portal.debug.view` | View debug tools in the developer portal. |
-| `portal.teams.view` | View teams in the developer portal. |
-| `portal.deepseek.view` | View DeepSeek tools in the developer portal. |
+| `portal.users.view` | View users in the mod portal. |
+| `portal.debug.view` | View debug tools in the mod portal. |
+| `portal.teams.view` | View teams in the mod portal. |
+| `portal.deepseek.view` | View DeepSeek tools in the mod portal. |
 | `portal.applications.view` | View OAuth2 applications. |
 | `portal.applications.create` | Create OAuth2 applications. |
 | `portal.applications.create.firstparty` | Create first-party OAuth2 applications. |
@@ -110,17 +110,15 @@ The `hasPermission()` helper checks both the specific permission and the `admin`
 
 ## Seasons System
 
-The platform supports multiple hackathon seasons. Each season has:
+The platform supports multiple hackathon seasons stored in the `seasons` table. Each season has:
 
-- **Theme name**: the creative theme for the hackathon (for example, "Signal" or "Beneath the Surface").
-- **Theme description**: a brief description of the theme.
-- **Date**: when the season takes place.
-- **Documentation link**: optional link to season documentation.
-- **Active status**: only one season can be active at a time.
+- **Name**: the display name of the season.
+- **Active status**: only one season can be active at a time (partial unique index on `is_active`).
+- **Per-season configuration**: every hackathon config field is stored per season (`status`, `voting_enabled`, `judging_open`, `results_published`, `show_scores`, `show_ranking`, `max_votes_per_user`, `schedule_start`, `schedule_end`, all five timestamps, `theme_name`, `theme_description`). Seasons can override the global `hackathon` row, or fall back to it via defaults.
 
 Teams are associated with a specific season via the `season_id` foreign key. The active season determines which teams and projects are displayed.
 
-Season metadata is defined in `shared/seasons.ts` and managed through the `/api/seasons/` endpoints.
+Season management happens through the `/api/seasons/` endpoints and the Hackathon Administration page at `/developers/season`. Editing tweaks (`status`, `show_scores`, `show_ranking`) on the live season also updates the `hackathon` row; `setActiveSeason` copies the newly active season's tweaks into the global row.
 
 ## Directory Structure
 
@@ -136,11 +134,11 @@ basishacks-r2/
 │   ├── middleware/             # Route middleware (auth.ts)
 │   ├── pages/                  # File-based routing
 │   │   ├── dashboard/          # Dashboard pages (teams, general, results)
-│   │   ├── developers/         # Admin/developer portal
+│   │   ├── developers/         # Admin/mod portal
 │   │   │   ├── applications/   # OAuth2 app management (create, list, detail)
 │   │   │   ├── debug.vue       # Debug tools
 │   │   │   ├── deepseek.vue    # DeepSeek AI chat interface
-│   │   │   ├── seasons.vue     # Season management
+│   │   │   ├── season.vue      # Hackathon Administration (seasons + config)
 │   │   │   ├── teams.vue       # Team management
 │   │   │   └── users.vue       # User management
 │   │   ├── user/               # User profile pages

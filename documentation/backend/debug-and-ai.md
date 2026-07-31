@@ -46,7 +46,7 @@ For `mode=user` the response path is `/userast/<filename>` even though the file 
 
 ## DeepSeek AI Chat Sessions
 
-The DeepSeek integration provides an in-memory chat interface in the developer portal. It uses the OpenAI SDK pointing at the DeepSeek API (`https://api.deepseek.com`).
+The DeepSeek integration provides an in-memory chat interface in the mod portal. It uses the OpenAI SDK pointing at the DeepSeek API (`https://api.deepseek.com`).
 
 ### Lazy Initialization
 
@@ -121,7 +121,7 @@ Tool results are appended to the session as `role: 'tool'` messages and the conv
 
 ### UI
 
-The developer portal page `/developers/deepseek` provides the chat UI. It is gated by `portal.deepseek.view` or admin.
+The mod portal page `/developers/deepseek` provides the chat UI. It is gated by `portal.deepseek.view` or admin.
 
 ---
 
@@ -168,12 +168,12 @@ See [Plugins & Middleware](./plugins-middleware) for subscription creation and r
 
 ## Permissions
 
-| Permission             | Allows                                              |
-| ---------------------- | --------------------------------------------------- |
-| `dev_debug`            | Direct access to debug API routes                   |
-| `portal.debug.view`    | View the Debug Files page in the developer portal   |
-| `dev_deepseek`         | Direct access to DeepSeek API routes                |
-| `portal.deepseek.view` | View the DeepSeek chat page in the developer portal |
+| Permission             | Allows                                        |
+| ---------------------- | --------------------------------------------- |
+| `dev_debug`            | Direct access to debug API routes             |
+| `portal.debug.view`    | View the Debug Files page in the mod portal   |
+| `dev_deepseek`         | Direct access to DeepSeek API routes          |
+| `portal.deepseek.view` | View the DeepSeek chat page in the mod portal |
 
 Admins implicitly have all of the above.
 

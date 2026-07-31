@@ -1,11 +1,11 @@
 ---
 title: Pages
-description: File-based routes in the basishacks frontend — home, dashboard, voting, judging, developer portal, and OAuth2 flows.
+description: File-based routes in the basishacks frontend — home, dashboard, voting, judging, mod portal, and OAuth2 flows.
 ---
 
 # Pages
 
-The basishacks frontend contains **26 page files** in `app/pages/`, mapped to routes via Nuxt's file-based routing. All pages use `<script setup lang="ts">`.
+The basishacks frontend contains **27 page files** in `app/pages/`, mapped to routes via Nuxt's file-based routing. All pages use `<script setup lang="ts">`.
 
 ## Public Pages
 
@@ -258,15 +258,15 @@ Placeholder page for the presentation event. States that top 10 teams will be in
 
 **Layout:** `dashboard`
 
-## Developer Portal
+## Mod Portal
 
-**Access:** The entire developer portal is admin-only. The `developers-dashboard` layout enforces this with a hard 403 at the layout level. There is no non-admin developer role.
+**Access:** The entire mod portal is admin-only. The `developers-dashboard` layout enforces this with a hard 403 at the layout level. There is no non-admin developer role.
 
 ### `/developers`
 
 **File:** `app/pages/developers/index.vue`
 
-Developer portal landing page. Shows a welcome message. Wrapped in `UDashboardPanel` with `UDashboardNavbar` and `UDashboardSidebarCollapse` so mobile users can open the sidebar navigation.
+Mod portal landing page. Shows a welcome message. Wrapped in `UDashboardPanel` with `UDashboardNavbar` and `UDashboardSidebarCollapse` so mobile users can open the sidebar navigation.
 
 **Layout:** `developers-dashboard`
 
@@ -301,31 +301,6 @@ OAuth2 application listing page.
 **File:** `app/pages/developers/applications/create.vue`
 
 OAuth2 application creation form.
-
-**Layout:** `developers-dashboard`
-
-### `/developers/admin`
-
-**File:** `app/pages/developers/admin.vue`
-
-Hackathon Administration panel. Only accessible to admin users; non-admins receive a hard 403 even if they know the URL.
-
-**Season Picker** — Dropdown to select the active season, with "Set Active" and "+ New Season" buttons. Defaults to the last (newest) season on open.
-
-**Season Name** — Editable text input to rename the selected season, with a "Rename Season" button.
-
-**Hackathon Configuration** — All 14 fields are per-season. Changes auto-save via `@change` / `@update:model-value` handlers that fire a serialized PATCH chain carrying ALL form fields. Each PATCH writes to the selected season (with `season_id`); when editing the active season, values are also synced to the global hackathon row. No "Save" button — every field change is instantly persisted via a single in-flight PATCH with no race conditions.
-
-**Save mechanism details:**
-
-- All fields (`status`, `voting_enabled`, `judging_open`, `results_published`, `max_votes_per_user`, `theme_name`, `theme_description`, `schedule_start`, `schedule_end`, `start_timestamp`, `end_timestamp`, `voting_start_timestamp`, `voting_end_timestamp`, `results_open_timestamp`) are sent in every PATCH body
-- Saves are serialized via a Promise chain (`patchChain`) — only one PATCH in-flight at a time
-- `refreshAdmin()` runs after each PATCH in strict order
-- The form snapshot is captured synchronously in the event handler (no debounce)
-- Timestamps use `datetimeToTs()` ↔ `tsToDatetime()` for epoch ↔ datetime-local conversion
-- Booleans are stored as `0`/`1` via `:true-value="1" :false-value="0"` on UCheckbox
-
-**Database Export** — Download the full database as SQLite or CSV (admin-only).
 
 **Layout:** `developers-dashboard`
 
@@ -369,16 +344,16 @@ File upload and debug utilities. Permission-gated.
 
 **Layout:** `developers-dashboard`
 
-### `/developers/seasons`
+### `/developers/season`
 
-**File:** `app/pages/developers/seasons.vue`
+**File:** `app/pages/developers/season.vue`
 
-Season management page. Permission-gated (`portal.seasons.view`; editing requires `portal.seasons.edit` or admin).
+Hackathon Administration page (admin-only, hard 403 for non-admins). Contains:
 
-Contains two sections:
-
-- **Active Season** — select the current season (`PATCH /api/seasons/active`); activating a season copies its tweaks into the live `hackathon` row.
-- **Hackathon Configuration** — edit all settings, including per-season score and rank visibility, through `/api/admin/hackathon`.
+- **Season** — pick the season to manage and activate it (`PATCH /api/seasons/active`); "New Season" creates one via `POST /api/admin/seasons`.
+- **Season Name** — rename the selected season via `PATCH /api/admin/seasons`.
+- **Hackathon Configuration** — all settings are per-season (including score and rank visibility) and auto-save through `/api/admin/hackathon` with `season_id`. Editing the active season also syncs to the global `hackathon` row. No "Save" button; every field change is persisted via a serialized PATCH chain carrying all form fields, so no field is ever dropped and no two PATCHes race.
+- **Database Export** — download the SQLite database or a CSV snapshot via `GET /api/admin/database/export`.
 
 **Layout:** `developers-dashboard`
 

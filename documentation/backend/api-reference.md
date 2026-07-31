@@ -165,7 +165,7 @@ OAuth2 UserInfo endpoint. Returns user profile data based on the Bearer token sc
 
 ### GET `/api/users`
 
-List all users (developer portal).
+List all users (mod portal).
 
 | Field        | Details                                           |
 | ------------ | ------------------------------------------------- |
@@ -409,7 +409,7 @@ When the season is the currently active (live) season, the `hackathon` singleton
 
 ### GET `/api/admin/teams`
 
-List all teams across all seasons (developer portal).
+List all teams across all seasons (mod portal).
 
 | Field | Details |
 | --- | --- |

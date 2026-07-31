@@ -72,7 +72,8 @@ shared/             # Code shared between client and server
   database.d.ts     # TypeScript types matching DB schema exactly
   responses.d.ts    # API response interface definitions
   auth.d.ts         # nuxt-auth-utils session type augmentation
-  oauth2.ts         # Microsoft OAuth2 static config
+  permissions.ts    # Fine-grained permission constants and helpers
+  oauth2-scopes.ts  # OAuth2 scope definitions
   rubric.ts         # Judging rubric definitions
 
 sql/archive/        # Archived legacy SQL schema and migrations

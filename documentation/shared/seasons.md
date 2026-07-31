@@ -1,62 +1,56 @@
 ---
 title: Seasons
-description: Static season metadata and active-season management.
+description: Database-driven hackathon seasons, per-season configuration, and score/rank visibility.
 ---
 
 # Seasons
 
-Hackathon seasons are defined by static metadata and activated through the database/API. Each team is linked to a season via the `season_id` foreign key.
+Hackathon seasons are stored entirely in the database. Each season carries its own copy of every hackathon configuration field, so organizers can preview and tune a future season without touching the live event. Teams are linked to a season via the `season_id` foreign key.
 
-## Season Metadata
+## Season Storage
 
-`shared/seasons.ts` exports a static map of seasons:
+The `seasons` table stores the season name, its active state, and a full per-season copy of the hackathon configuration:
 
-```ts
-export interface HackathonSeason {
-    id: number;
-    theme_name: string | null;
-    theme_description: string | null;
-    date: string | null;
-    docs: string | null;
-}
-```
+| Column | Type | Notes |
+| --- | --- | --- |
+| `id` | integer | Primary key |
+| `name` | text | Display name |
+| `is_active` | integer | `1` for the single active season (partial unique index) |
+| `status` | text | `not_started`, `in_progress`, `voting`, `finished`, `paused` |
+| `voting_enabled` | integer | Toggle peer voting |
+| `judging_open` | integer | Toggle judge scoring |
+| `results_published` | integer | Publish results to participants |
+| `show_scores` | integer | Show scores to participants |
+| `show_ranking` | integer | Show rankings to participants |
+| `max_votes_per_user` | integer | Cap on peer votes per user |
+| `schedule_start` / `schedule_end` | text | Display dates |
+| `start_timestamp` / `end_timestamp` | integer | Unix timestamps (ms) |
+| `voting_start_timestamp` / `voting_end_timestamp` | integer | Voting window (ms) |
+| `results_open_timestamp` | integer | When results become visible (ms) |
+| `theme_name` / `theme_description` | text | Season theme |
 
-This metadata is checked into source control and is not stored in the database. The `seasons` table in the database stores only `id`, `name`, and `is_active`; static metadata is resolved by matching the database ID to the map in `shared/seasons.ts`.
+The `hackathon` table remains a singleton (`id = 1`) holding the **live** state. The admin page shows a merged view — global values with the selected season's non-default overrides layered on top. Saving with a `season_id` writes to that season's row (and to the global row when the season is active); saving without one writes only to the global row.
 
-Example:
+## Tweakable Settings
 
-```ts
-const hackathonSeasons: Record<number, HackathonSeason> = {
-    2: {
-        id: 2,
-        theme_name: "Signal",
-        theme_description: "signal",
-        date: "February 2026",
-        docs: "https://slack-files.com/T09V59WQY1E-F0A8LUTHZHQ-0eb4891888",
-    },
-    1: {
-        id: 1,
-        theme_name: "Beneath the Surface",
-        theme_description: "Explore the hidden depths of our world",
-        date: "May 2026",
-        docs: null,
-    },
-};
-```
+`SEASON_TWEAK_FIELDS` in `server/utils/database/seasons.ts` defines the fields that sync between a season and the live `hackathon` row: `status`, `show_scores`, `show_ranking`.
 
-::: info Season metadata is checked into source control. To add a new season, edit `shared/seasons.ts` and redeploy. :::
+- `updateSeasonTweaks` updates a season, and also the `hackathon` row when the season is the active one.
+- `setActiveSeason` copies the newly active season's tweaks into the `hackathon` row when a season is activated.
 
-## Active Season
+## Score / Rank Visibility
 
-The database tracks the currently active season in the `seasons` table through the `is_active` column. Only one season can be active at a time.
+`getScoreRankVisibilityResolver(event)` returns a resolver mapping a season ID to `{ showScores, showRanking }`. Each season's own tweaks are authoritative for its teams; teams whose season no longer exists fall back to the live `hackathon` singleton row.
 
-### API Endpoints
+## API Endpoints
 
 | Method | Path | Auth | Description |
 | --- | --- | --- | --- |
 | GET | `/api/seasons` | `PORTAL_SEASONS_VIEW` or admin | List all database seasons |
 | GET | `/api/seasons/active` | None | Get the active season merged with the global hackathon state |
 | PATCH | `/api/seasons/active` | `PORTAL_SEASONS_EDIT` or admin | Set the active season |
+| GET | `/api/seasons/:id/tweaks` | `PORTAL_SEASONS_VIEW` or admin | Get a season's tweakable settings |
+| PATCH | `/api/seasons/:id/tweaks` | `PORTAL_SEASONS_EDIT` or admin | Update a season's tweakable settings |
 
 `GET /api/seasons/active` returns the active season record together with the global `hackathon` state, including `status`, `start_timestamp`, `end_timestamp`, `voting_start_timestamp`, `voting_end_timestamp`, `results_open_timestamp`, `theme_name`, and `theme_description`. Theme fields are hidden when the hackathon status is `not_started` or `paused`.
 
@@ -70,7 +64,19 @@ The database tracks the currently active season in the `seasons` table through t
 
 Passing `null` deactivates all seasons.
 
-### Database Helpers
+`PATCH /api/seasons/:id/tweaks` accepts `UpdateSeasonTweaksRequest`:
+
+```ts
+{
+    status?: "not_started" | "in_progress" | "voting" | "finished" | "paused";
+    show_scores?: boolean;
+    show_ranking?: boolean;
+}
+```
+
+At least one field is required. Boolean values are stored as `0`/`1`.
+
+## Database Helpers
 
 `server/utils/database/seasons.ts` provides:
 
@@ -80,19 +86,24 @@ Passing `null` deactivates all seasons.
 | `getSeasonById(event, seasonId)` | Get a season by ID |
 | `getActiveSeason(event)` | Get the currently active season |
 | `setActiveSeason(event, seasonId)` | Activate one season and deactivate all others; throws 404 if the season does not exist |
+| `updateSeasonTweaks(event, seasonId, data)` | Update a season's tweaks; also updates the `hackathon` row when the season is live |
+| `getScoreRankVisibilityResolver(event)` | Build a season-ID-to-visibility resolver with a global fallback |
 
 ## Usage in the UI
 
 - The home page (`/`) fetches the active season to display the theme, date, and schedule.
 - The dashboard sidebar shows the active season's theme and date.
-- The results page (`/dashboard/results`) uses `ScoreCard`, which pulls season metadata from `shared/seasons.ts` to display the season name and date.
+- The results page (`/dashboard/results`) uses `ScoreCard`, which reads season configuration to decide whether scores and ranks are visible.
+- The Hackathon Administration page (`/developers/season`) manages seasons and their per-season configuration.
 
 ## Source Files
 
-- `shared/seasons.ts` — static season metadata
-- `shared/schemas.ts` — `SetActiveSeasonRequest`
+- `server/database/schema.ts` — `seasons` table definition
+- `shared/schemas.ts` — `SetActiveSeasonRequest`, `UpdateSeasonTweaksRequest`
 - `server/utils/database/seasons.ts` — database helpers
 - `server/api/seasons/index.get.ts`
 - `server/api/seasons/active.get.ts`
 - `server/api/seasons/active.patch.ts`
-- `app/pages/developers/seasons.vue`
+- `server/api/seasons/[id]/tweaks.get.ts`
+- `server/api/seasons/[id]/tweaks.patch.ts`
+- `app/pages/developers/season.vue` — Hackathon Administration page

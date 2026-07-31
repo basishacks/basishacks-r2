@@ -47,7 +47,7 @@ Site-wide footer using `UFooter`. Contains three sections:
 
 | Section | Content |
 | --- | --- |
-| Left | Copyright notice (auto-updates year), link to the contributing page, and link to the developer portal |
+| Left | Copyright notice (auto-updates year), link to the contributing page, and link to the mod portal |
 | Center | Navigation links to [biszweb.club](https://biszweb.club/club_sites/developers_club) and [binj.dev](https://binj.dev) |
 | Right | Microsoft Teams button (inline SVG) and GitHub button linking to the repository |
 
@@ -223,7 +223,7 @@ Primary results card used on the dashboard results page. Displays season results
 | #3          | `metallic-bronze` | Bronze gradient shimmer animation |
 | Score = 800 | `rainbow-once`    | One-time rainbow sweep animation  |
 
-The card displays season date and name (from `~~/shared/seasons`), score out of 800, ranking, team name, pathway badge, member avatars via `UserAvatarGroup`, awarded badges via `AwardButton`, and a link to season details. A modal trigger renders the full project inside a `ProjectCard`. When a project has not been submitted, the score and rank are blurred with an overlay message.
+The card displays season date and name (fetched from `/api/seasons`), score out of 800, ranking, team name, pathway badge, member avatars via `UserAvatarGroup`, awarded badges via `AwardButton`, and a link to season details. A modal trigger renders the full project inside a `ProjectCard`. When a project has not been submitted, the score and rank are blurred with an overlay message.
 
 ```vue
 <ScoreCard :team="team" />
