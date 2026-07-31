@@ -1,5 +1,6 @@
 <script setup lang="ts">
 import type { NavigationMenuItem } from "@nuxt/ui";
+import { DevPermissions, hasPermission } from "~~/shared/permissions";
 import { ManageRedirectUriRequest } from "~~/shared/schemas";
 import { OAuth2Scopes } from "~~/shared/oauth2-scopes";
 import type { FormSubmitEvent } from "@nuxt/ui";
@@ -14,10 +15,9 @@ const router = useRouter();
 const clientID = route.params.id as string;
 const toast = useToast();
 
-// Client-side permission guard
 const { user: me } = await useApiUser();
 
-const isAdminUser = computed(
+const canManageAdminScopes = computed(
     () =>
         hasPermission(me.value?.role, "admin") ||
         hasPermission(me.value?.role, DevPermissions.PORTAL_APPLICATIONS_VIEW_ALL),
@@ -741,7 +741,7 @@ async function copyGeneratedUrl() {
                         class="flex items-start gap-3 p-2 rounded hover:bg-elevated/50 cursor-pointer"
                         :class="{
                             'opacity-50 cursor-not-allowed hover:bg-transparent':
-                                meta.adminOnly && !isAdminUser,
+                                meta.adminOnly && !canManageAdminScopes,
                         }"
                     >
                         <input
@@ -749,7 +749,7 @@ async function copyGeneratedUrl() {
                             :value="scope"
                             type="checkbox"
                             class="mt-0.5 accent-primary"
-                            :disabled="meta.adminOnly && !isAdminUser"
+                            :disabled="meta.adminOnly && !canManageAdminScopes"
                         />
                         <div class="flex-1">
                             <div class="flex items-center gap-2">

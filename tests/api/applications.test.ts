@@ -11,6 +11,7 @@ import {
     seedUser,
     type TestContext,
 } from "./helpers";
+import { DevPermissions } from "~~/shared/permissions";
 
 let ctx: TestContext;
 let listHandler: any;
@@ -53,19 +54,76 @@ function createEvent(overrides: Record<string, unknown> = {}) {
 
 describe("GET /api/applications", () => {
     it("requires PORTAL_APPLICATIONS_VIEW permission", async () => {
-        vi.mocked(globalThis.requirePermission).mockRejectedValue(
-            Object.assign(new Error("Insufficient permissions"), { statusCode: 403 }),
-        );
+        vi.mocked(globalThis.requireUser).mockResolvedValue({ id: 1, role: "participant" });
 
         await expect(listHandler(createEvent())).rejects.toMatchObject({ statusCode: 403 });
     });
 
-    it("returns all applications", async () => {
-        vi.mocked(globalThis.requirePermission).mockResolvedValue({ id: 1, role: "admin" });
+    it("returns only the caller's applications with PORTAL_APPLICATIONS_VIEW", async () => {
+        const owner = seedUser(ctx, { email: "owner@basischina.com" });
+        const other = seedUser(ctx, { email: "other@basischina.com" });
+        const oauthDb = await import("~~/server/utils/database/oauth2_applications");
+        const event = createEvent();
 
-        const result = await listHandler(createEvent());
+        const ownApp = await oauthDb.createOAuth2Application(
+            event as any,
+            owner.id,
+            "Own App",
+            null,
+            false,
+            "third",
+        );
+        await oauthDb.createOAuth2Application(
+            event as any,
+            other.id,
+            "Other App",
+            null,
+            false,
+            "third",
+        );
 
-        expect(Array.isArray(result)).toBe(true);
+        vi.mocked(globalThis.requireUser).mockResolvedValue({
+            ...owner,
+            role: DevPermissions.PORTAL_APPLICATIONS_VIEW,
+        });
+
+        const result = await listHandler(event);
+
+        expect(result).toHaveLength(1);
+        expect(result[0].client_id).toBe(ownApp.client_id);
+    });
+
+    it("returns all applications with PORTAL_APPLICATIONS_VIEW_ALL", async () => {
+        const owner = seedUser(ctx, { email: "owner@basischina.com" });
+        const other = seedUser(ctx, { email: "other@basischina.com" });
+        const oauthDb = await import("~~/server/utils/database/oauth2_applications");
+        const event = createEvent();
+
+        await oauthDb.createOAuth2Application(
+            event as any,
+            owner.id,
+            "Own App",
+            null,
+            false,
+            "third",
+        );
+        await oauthDb.createOAuth2Application(
+            event as any,
+            other.id,
+            "Other App",
+            null,
+            false,
+            "third",
+        );
+
+        vi.mocked(globalThis.requireUser).mockResolvedValue({
+            ...owner,
+            role: DevPermissions.PORTAL_APPLICATIONS_VIEW_ALL,
+        });
+
+        const result = await listHandler(event);
+
+        expect(result).toHaveLength(2);
     });
 });
 

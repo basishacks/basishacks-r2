@@ -159,20 +159,17 @@ Developer portal layout using `UDashboardGroup` with a collapsible, resizable si
 | Navigation | Permission-gated menu items                                                 |
 | Footer     | User avatar button linking to `/profile`                                    |
 
-**Navigation items with permission gates:**
+**Navigation and access rules:**
 
-| Item         | Route                             | Permission Required                   |
-| ------------ | --------------------------------- | ------------------------------------- |
-| Home         | `/developers`                     | None                                  |
-| Users        | `/developers/users`               | `PORTAL_USERS_VIEW` or admin          |
-| Teams        | `/developers/teams`               | `PORTAL_TEAMS_VIEW` or admin          |
-| Applications | `/developers/applications/`       | `PORTAL_APPLICATIONS_VIEW` or admin   |
+| Item | Route | Permission Required |
+| --- | --- | --- |
+| Home, Users, Teams, DeepSeek, Files, Seasons | `/developers/*` | Admin |
+| Applications | `/developers/applications/` | `PORTAL_APPLICATIONS_VIEW`, `PORTAL_APPLICATIONS_VIEW_ALL`, or admin |
 | ↳ Create New | `/developers/applications/create` | `PORTAL_APPLICATIONS_CREATE` or admin |
-| DeepSeek     | `/developers/deepseek`            | `PORTAL_DEEPSEEK_VIEW` or admin       |
-| Files        | `/developers/debug`               | `PORTAL_DEBUG_VIEW` or admin          |
-| Seasons      | `/developers/seasons`             | `PORTAL_SEASONS_VIEW` or admin        |
 
-Items are disabled (not hidden) when the user lacks the required permission. Permission checks use `hasPermission()` from `~~/shared/permissions` with `DevPermissions` constants.
+Within Applications, the list is limited to the caller's applications with `PORTAL_APPLICATIONS_VIEW`; `PORTAL_APPLICATIONS_VIEW_ALL` returns every application. Creating and deleting are gated by `PORTAL_APPLICATIONS_CREATE` and `PORTAL_APPLICATIONS_DELETE`, respectively (or admin).
+
+Non-admin users see only the application navigation they can access. Permission checks use `hasPermission()` from `~~/shared/permissions` with `DevPermissions` constants.
 
 **Used by:** `/developers`, `/developers/users`, `/developers/teams`, `/developers/applications`, `/developers/applications/create`, `/developers/applications/[id]`, `/developers/deepseek`, `/developers/debug`, `/developers/seasons`
 

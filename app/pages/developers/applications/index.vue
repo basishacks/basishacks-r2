@@ -2,6 +2,7 @@
 import type { TableColumn } from "@nuxt/ui";
 import { upperFirst } from "scule";
 import { getPaginationRowModel } from "@tanstack/table-core";
+import { DevPermissions, hasPermission } from "~~/shared/permissions";
 definePageMeta({
     layout: "developers-dashboard",
 });
@@ -28,6 +29,8 @@ const { data, status, refresh } = await useFetch<OAuth2Application[]>("/api/appl
     lazy: true,
     default: () => [],
 });
+
+const { user: me } = await useApiUser();
 
 const selectedRows = computed<any[]>(() => {
     if (!table.value?.tableApi) return [];
@@ -203,12 +206,17 @@ const paginationOptions = {
     getPaginationRowModel: getPaginationRowModel(),
 };
 
-const create_authorized = computed(() => {
-    return (
+const canCreateApplications = computed(
+    () =>
         hasPermission(me.value?.role, DevPermissions.PORTAL_APPLICATIONS_CREATE) ||
-        hasPermission(me.value?.role, "admin")
-    );
-});
+        hasPermission(me.value?.role, "admin"),
+);
+
+const canDeleteApplications = computed(
+    () =>
+        hasPermission(me.value?.role, DevPermissions.PORTAL_APPLICATIONS_DELETE) ||
+        hasPermission(me.value?.role, "admin"),
+);
 </script>
 
 <template>
@@ -228,7 +236,7 @@ const create_authorized = computed(() => {
                     @click="navigateTo('/developers/applications/create')"
                     icon="i-lucide-plus"
                     label="Create Application"
-                    :disabled="!create_authorized"
+                    :disabled="!canCreateApplications"
                 />
             </div>
 
@@ -242,7 +250,7 @@ const create_authorized = computed(() => {
 
                 <div class="flex flex-wrap items-center gap-1.5">
                     <UButton
-                        v-if="selectedRows.length"
+                        v-if="selectedRows.length && canDeleteApplications"
                         label="Delete selected"
                         color="error"
                         variant="subtle"

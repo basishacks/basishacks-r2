@@ -1,10 +1,19 @@
-import { DevPermissions } from "~~/shared/permissions";
+import { eq } from "drizzle-orm";
+import { DevPermissions, hasPermission } from "~~/shared/permissions";
 import { oauth2Applications } from "~~/server/database/schema";
 
 export default defineEventHandler(async (event) => {
-    await requirePermission(event, DevPermissions.PORTAL_APPLICATIONS_VIEW);
+    const user = await requireUser(event);
+    const canViewAll =
+        hasPermission(user.role, "admin") ||
+        hasPermission(user.role, DevPermissions.PORTAL_APPLICATIONS_VIEW_ALL);
+    const canViewOwn = hasPermission(user.role, DevPermissions.PORTAL_APPLICATIONS_VIEW);
 
-    const results = event.context.drizzle
+    if (!canViewAll && !canViewOwn) {
+        throw createError({ status: 403, message: "Insufficient permissions" });
+    }
+
+    const query = event.context.drizzle
         .select({
             client_id: oauth2Applications.client_id,
             name: oauth2Applications.name,
@@ -16,7 +25,9 @@ export default defineEventHandler(async (event) => {
             profile_picture: oauth2Applications.profile_picture,
             owner_id: oauth2Applications.owner_id,
         })
-        .from(oauth2Applications)
+        .from(oauth2Applications);
+
+    const results = (canViewAll ? query : query.where(eq(oauth2Applications.owner_id, user.id)))
         .orderBy(oauth2Applications.name)
         .all();
 
