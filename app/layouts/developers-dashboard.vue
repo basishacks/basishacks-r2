@@ -116,7 +116,7 @@ const name = computed(() => user.value?.name || "Log In");
     <UDashboardGroup>
         <UDashboardSearch :groups="searchGroups" />
 
-        <UDashboardSidebar collapsible esizable :ui="{ footer: 'border-t border-default' }">
+        <UDashboardSidebar collapsible resizable :ui="{ footer: 'border-t border-default' }">
             <template #header="{ collapsed, collapse }">
                 <div class="flex items-center gap-1">
                     <ULink v-if="!collapsed" class="bold glow text-primary mx-auto" to="/">

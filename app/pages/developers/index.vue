@@ -7,7 +7,7 @@ definePageMeta({
 <template>
     <UDashboardPanel id="developers-home">
         <template #header>
-            <UDashboardNavbar title="Developer Portal">
+            <UDashboardNavbar title="Mod Portal">
                 <template #leading>
                     <UDashboardSidebarCollapse />
                 </template>
@@ -20,7 +20,7 @@ definePageMeta({
                 <br />
                 <p>
                     This is the official portal of the
-                    <span class="text-primary">{{ WEBSITE_NAME }} developer portal</span>
+                    <span class="text-primary">{{ WEBSITE_NAME }} mod portal</span>
                     .
                 </p>
             </div>
