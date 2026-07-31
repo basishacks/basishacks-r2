@@ -35,12 +35,41 @@ describe("convert utilities", () => {
             sourcing: null,
         };
 
-        const result = convertTeamToPublic(team, true, [
+        const result = convertTeamToPublic(team, { withScore: true }, [
             { id: 1, team_id: 1, text: ["Best", "Design"], created_at: 0 },
         ] as any);
         expect(result.id).toBe(1);
         expect(result.project.submitted).toBe(true);
         expect(result.awards[0].text).toBe("Best, Design");
+    });
+
+    it("convertTeamToPublic hides score and rank unless requested", () => {
+        const team: any = {
+            id: 1,
+            name: "Team A",
+            pathway: "senior",
+            rank: 2,
+            score: 95,
+            season_id: 1,
+            project_name: "P",
+            project_description: "desc",
+            project_demo_url: "https://demo",
+            project_repo_url: "https://repo",
+            project_submitted: 1,
+            sourcing: null,
+        };
+
+        const hidden = convertTeamToPublic(team, { withRank: false });
+        expect(hidden.score).toBeNull();
+        expect(hidden.rank).toBeNull();
+
+        const shown = convertTeamToPublic(team, { withScore: true, withRank: true });
+        expect(shown.score).toBe(95);
+        expect(shown.rank).toBe(2);
+
+        const rankOnly = convertTeamToPublic(team);
+        expect(rankOnly.score).toBeNull();
+        expect(rankOnly.rank).toBe(2);
     });
 
     it("parseProfileTheme preserves the full value when it contains pipes", () => {

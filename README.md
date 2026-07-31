@@ -18,6 +18,11 @@ The official website for the **BIBS-C Network Hackathon** (season 2, 2025–26).
 | Fonts           | @nuxt/fonts (local provider)                           |
 | Icons           | @iconify-json (lucide, material-symbols, simple-icons) |
 | Linting         | @nuxt/eslint + Prettier                                |
+| Animation       | GSAP with ScrollTrigger (showcase pages)               |
+
+## Season Showcases
+
+The public `/beneath-the-surface` route is the Season 1 winners showcase. It loads the archived project metadata from `/api/teams?season_id=1` and presents the top three Junior and top three Senior projects as six full-screen, project-specific chapters. GSAP and ScrollTrigger provide the desktop scroll choreography, while mobile and reduced-motion visitors receive a natural, non-pinned reading experience.
 
 ## Prerequisites
 

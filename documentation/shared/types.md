@@ -135,14 +135,26 @@ These interfaces match the SQL schema exactly. They include all columns, includi
 | `profile_picture` | `string \| null` | Application icon path                        |
 | `owner_id`        | `number \| null` | Foreign key to owning user                   |
 
+### `Award`
+
+Award definitions are stored in the `awards` table.
+
+| Field         | Type     | Description                        |
+| ------------- | -------- | ---------------------------------- |
+| `namespace`   | `string` | Unique machine-readable identifier |
+| `name`        | `string` | Award display name                 |
+| `description` | `string` | Award description                  |
+| `icon`        | `string` | Iconify icon class                 |
+| `color`       | `string` | Display color (defaults to `gold`) |
+
 ### `TeamAward`
 
-There is no standalone `awards` table. Award definitions are static in `shared/awards.ts`, and per-team assignments are stored in `team_awards`.
+Per-team assignments are stored in `team_awards`.
 
 | Field     | Type     | Description                                |
 | --------- | -------- | ------------------------------------------ |
 | `team_id` | `number` | Foreign key to team                        |
-| `award`   | `string` | Award namespace from `AWARD_REGISTRY`      |
+| `award`   | `string` | Award namespace from `awards.namespace`    |
 | `meta`    | `string` | JSON metadata stored as a non-empty string |
 
 ### `PeerVotingScore`
@@ -217,17 +229,17 @@ Parsed from the database `"mode|value"` string format.
 
 ### `APIAward`
 
-| Field         | Type                      | Description                                          |
-| ------------- | ------------------------- | ---------------------------------------------------- |
-| `namespace`   | `string`                  | Award namespace from `AWARD_REGISTRY`                |
-| `name`        | `string`                  | Award display name                                   |
-| `description` | `string`                  | Award description                                    |
-| `icon`        | `string`                  | Icon class                                           |
-| `meta`        | `Record<string, unknown>` | Parsed JSON metadata from `team_awards`              |
-| `color`       | `string`                  | Resolved award color (defaults to `gold`)            |
-| `text`        | `string`                  | Resolved display text, or computed text when present |
+| Field         | Type                      | Description                               |
+| ------------- | ------------------------- | ----------------------------------------- |
+| `namespace`   | `string`                  | Award namespace from the `awards` table   |
+| `name`        | `string`                  | Award display name                        |
+| `description` | `string`                  | Award description                         |
+| `icon`        | `string`                  | Icon class                                |
+| `meta`        | `Record<string, unknown>` | Parsed JSON metadata from `team_awards`   |
+| `color`       | `string`                  | Resolved award color (defaults to `gold`) |
+| `text`        | `string`                  | Award description                         |
 
-Awards are resolved from the `team_awards` table through `AWARD_REGISTRY` in `shared/awards.ts` and attached to `APITeam` by `convertTeamToPublic`.
+Awards are resolved by joining `team_awards` with the `awards` table, then attached to `APITeam` by `convertTeamToPublic`.
 
 ### `GetUserResponse`
 

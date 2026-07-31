@@ -190,7 +190,7 @@ Get a single user's profile.
 | Field | Details |
 | --- | --- |
 | **Auth** | Any authenticated user |
-| **Response** | Self: `GetUserResponse` — full user with team and past teams; Others: `APIUser` — public profile only |
+| **Response** | Self: `GetUserResponse` — full user with team and past teams; Others: `APIUser` — public profile only. For participants, each team's `score`/`rank` (current and past teams alike) are only included when the `show_scores`/`show_ranking` toggles of that team's own season are enabled; users with `portal.teams.view` or admin always see them |
 
 ### PATCH `/api/users/:id`
 
@@ -225,7 +225,7 @@ List all teams for the active season, or filter by season.
 | --- | --- |
 | **Auth** | Any authenticated user |
 | **Query** | `judging` (if `1`, returns only submitted unjudged teams for the current judge); `season_id` (optional season filter) |
-| **Response** | `APITeam[]` |
+| **Response** | `APITeam[]`; in the public listing, each team's `rank` is only included when the `show_ranking` toggle of that team's own season is enabled |
 
 ### POST `/api/teams`
 
@@ -246,7 +246,7 @@ Get a single team's details.
 | Field | Details |
 | --- | --- |
 | **Auth** | Any authenticated user |
-| **Response** | `APITeam`; score is included only for team members or users with the `portal.teams.view` permission |
+| **Response** | `APITeam`; score is included only for team members (when the `show_scores` toggle of the team's own season is enabled) or users with the `portal.teams.view` permission/admin. `rank` is only included when the team's season `show_ranking` toggle is enabled, or for privileged users |
 
 ### PATCH `/api/teams/:id`
 
@@ -369,17 +369,39 @@ Get the currently active season (public).
 | Field | Details |
 | --- | --- |
 | **Auth** | None |
-| **Response** | Combined season and hackathon state; theme is hidden when hackathon status is `not_started` or `paused` |
+| **Response** | Combined season and hackathon state (including `show_scores` / `show_ranking` toggles); theme is hidden when hackathon status is `not_started` or `paused` |
 
 ### PATCH `/api/seasons/active`
 
-Set the active season.
+Set the active season. The newly active season's tweaks are copied into the live `hackathon` row.
 
 | Field          | Details                                                    |
 | -------------- | ---------------------------------------------------------- |
 | **Auth**       | User with `portal.seasons.edit` permission or admin        |
 | **Validation** | `SetActiveSeasonRequest` — `{ season_id: number \| null }` |
 | **Response**   | `{ message: string }`                                      |
+
+### GET `/api/seasons/:id/tweaks`
+
+Get the tweakable settings of a single season.
+
+| Field        | Details                                             |
+| ------------ | --------------------------------------------------- |
+| **Auth**     | User with `portal.seasons.view` permission or admin |
+| **Response** | `Season`                                            |
+
+### PATCH `/api/seasons/:id/tweaks`
+
+Update the tweakable settings of a single season. Accepts a partial body with any of: `status`, `show_scores`, `show_ranking` (booleans). Only these three settings are tweakable; any other fields in the request body are stripped.
+
+When the season is the currently active (live) season, the `hackathon` singleton row is updated as well so changes take effect immediately.
+
+| Field          | Details                                             |
+| -------------- | --------------------------------------------------- |
+| **Auth**       | User with `portal.seasons.edit` permission or admin |
+| **Validation** | `UpdateSeasonTweaksRequest` (at least one field)    |
+| **Response**   | `{ message: string }`                               |
+| **Rate limit** | Yes                                                 |
 
 ---
 
@@ -389,10 +411,10 @@ Set the active season.
 
 List all teams across all seasons (developer portal).
 
-| Field        | Details                                        |
-| ------------ | ---------------------------------------------- |
-| **Auth**     | Admin                                          |
-| **Response** | Array of team objects with `season_name` field |
+| Field | Details |
+| --- | --- |
+| **Auth** | User with `dev_teams` permission or admin |
+| **Response** | Array of team objects with `season_name` and `members` (array of `{ id, name, email, profile_picture }`) |
 
 ### DELETE `/api/admin/teams`
 

@@ -5,6 +5,7 @@ import {
     getSeasonById,
     getActiveSeason,
     setActiveSeason,
+    updateSeasonTweaks,
 } from "~~/server/utils/database/seasons";
 
 describe("seasons database helpers", () => {
@@ -267,6 +268,79 @@ describe("seasons database helpers", () => {
 
             const season = await getActiveSeason(event);
             expect(season).toBeNull();
+        });
+    });
+
+    describe("updateSeasonTweaks", () => {
+        it("updates the given fields on the season and returns the updated row", async () => {
+            event.context.drizzle
+                .prepare("INSERT INTO seasons(name, is_active) VALUES('Season 1', 0)")
+                .run();
+
+            const updated = await updateSeasonTweaks(event, 1, {
+                status: "voting",
+                show_scores: 1,
+            });
+
+            expect(updated).not.toBeNull();
+            expect(updated!.status).toBe("voting");
+            expect(updated!.show_scores).toBe(1);
+        });
+
+        it("leaves other fields untouched", async () => {
+            event.context.drizzle
+                .prepare(
+                    "INSERT INTO seasons(name, is_active, status, show_scores) VALUES('Season 1', 0, 'in_progress', 1)",
+                )
+                .run();
+
+            const updated = await updateSeasonTweaks(event, 1, { show_ranking: 1 });
+
+            expect(updated!.status).toBe("in_progress");
+            expect(updated!.show_scores).toBe(1);
+            expect(updated!.show_ranking).toBe(1);
+        });
+
+        it("returns null when the season does not exist", async () => {
+            const updated = await updateSeasonTweaks(event, 999, { show_scores: 1 });
+            expect(updated).toBeNull();
+        });
+
+        it("also updates the hackathon row when the season is live", async () => {
+            event.context.drizzle
+                .prepare(
+                    "INSERT INTO hackathon(id, status, start_timestamp, end_timestamp, voting_start_timestamp, voting_end_timestamp, results_open_timestamp) VALUES(1, 'not_started', 0, 0, 0, 0, 0)",
+                )
+                .run();
+            event.context.drizzle
+                .prepare("INSERT INTO seasons(name, is_active) VALUES('Live', 1)")
+                .run();
+
+            await updateSeasonTweaks(event, 1, { show_scores: 1, show_ranking: 1 });
+
+            const hackathon = event.context.drizzle
+                .prepare("SELECT * FROM hackathon WHERE id = 1")
+                .first() as any;
+            expect(hackathon.show_scores).toBe(1);
+            expect(hackathon.show_ranking).toBe(1);
+        });
+
+        it("does not touch the hackathon row when the season is not live", async () => {
+            event.context.drizzle
+                .prepare(
+                    "INSERT INTO hackathon(id, status, start_timestamp, end_timestamp, voting_start_timestamp, voting_end_timestamp, results_open_timestamp) VALUES(1, 'not_started', 0, 0, 0, 0, 0)",
+                )
+                .run();
+            event.context.drizzle
+                .prepare("INSERT INTO seasons(name, is_active) VALUES('Future', 0)")
+                .run();
+
+            await updateSeasonTweaks(event, 1, { show_scores: 1 });
+
+            const hackathon = event.context.drizzle
+                .prepare("SELECT * FROM hackathon WHERE id = 1")
+                .first() as any;
+            expect(hackathon.show_scores).toBe(0);
         });
     });
 });

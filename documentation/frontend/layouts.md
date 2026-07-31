@@ -85,7 +85,7 @@ Same as `fullwidth` but with a **non-sticky** header (`class="relative"` on `Rol
 └──────────────────────────────┘
 ```
 
-**Used by:** `/showcase` — the showcase page needs the header to scroll away for an immersive full-screen experience.
+**Used by:** `/showcase` and `/beneath-the-surface` — showcase pages need the header to scroll away for an immersive full-screen experience.
 
 ## dashboard
 

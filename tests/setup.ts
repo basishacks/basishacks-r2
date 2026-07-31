@@ -131,6 +131,8 @@ export async function createTestDatabase(): Promise<SQLiteDatabase> {
     ALTER TABLE seasons ADD COLUMN status TEXT NOT NULL DEFAULT 'not_started';
     ALTER TABLE seasons ADD COLUMN voting_enabled INTEGER NOT NULL DEFAULT 0;
     ALTER TABLE seasons ADD COLUMN results_published INTEGER NOT NULL DEFAULT 0;
+    ALTER TABLE seasons ADD COLUMN show_scores INTEGER NOT NULL DEFAULT 0;
+    ALTER TABLE seasons ADD COLUMN show_ranking INTEGER NOT NULL DEFAULT 0;
     ALTER TABLE seasons ADD COLUMN max_votes_per_user INTEGER NOT NULL DEFAULT 0;
     ALTER TABLE seasons ADD COLUMN judging_open INTEGER NOT NULL DEFAULT 0;
     ALTER TABLE seasons ADD COLUMN schedule_start TEXT;
@@ -175,13 +177,24 @@ export async function createTestDatabase(): Promise<SQLiteDatabase> {
       FOREIGN KEY(team_id) REFERENCES teams(id) ON DELETE CASCADE
     );
 
+    CREATE TABLE IF NOT EXISTS awards (
+      namespace TEXT PRIMARY KEY,
+      name TEXT NOT NULL,
+      description TEXT NOT NULL,
+      icon TEXT NOT NULL,
+      color TEXT NOT NULL DEFAULT 'gold'
+    );
+
     ALTER TABLE hackathon ADD COLUMN voting_enabled INTEGER NOT NULL DEFAULT 0;
     ALTER TABLE hackathon ADD COLUMN results_published INTEGER NOT NULL DEFAULT 0;
+    ALTER TABLE hackathon ADD COLUMN show_scores INTEGER NOT NULL DEFAULT 0;
+    ALTER TABLE hackathon ADD COLUMN show_ranking INTEGER NOT NULL DEFAULT 0;
     ALTER TABLE hackathon ADD COLUMN submitted_count INTEGER NOT NULL DEFAULT 0;
     ALTER TABLE hackathon ADD COLUMN max_votes_per_user INTEGER NOT NULL DEFAULT 0;
     ALTER TABLE hackathon ADD COLUMN judging_open INTEGER NOT NULL DEFAULT 0;
     ALTER TABLE hackathon ADD COLUMN schedule_start TEXT;
     ALTER TABLE hackathon ADD COLUMN schedule_end TEXT;
+
   `);
 
     return new SQLiteDatabase(db);
@@ -198,6 +211,7 @@ export function resetTestDatabase(wrapper: SQLiteDatabase): void {
     DELETE FROM ballots;
     DELETE FROM team_scores;
     DELETE FROM team_awards;
+    DELETE FROM awards;
     DELETE FROM peer_voting_scores;
     DELETE FROM user_past_teams;
     DELETE FROM users;

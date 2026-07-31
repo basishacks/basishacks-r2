@@ -692,9 +692,10 @@ Per-table database helper modules in `server/utils/database/`.
 
 ### hackathon.ts
 
-| Function              | Description                                     |
-| --------------------- | ----------------------------------------------- |
-| `getHackathon(event)` | Get the hackathon status row (single row, id=1) |
+| Function                       | Description                                                    |
+| ------------------------------ | -------------------------------------------------------------- |
+| `getHackathon(event)`          | Get the hackathon status row (single row, id=1)                |
+| `updateHackathon(event, data)` | Update hackathon settings (partial) and return the updated row |
 
 ### ballots.ts
 
@@ -715,7 +716,11 @@ Per-table database helper modules in `server/utils/database/`.
 | `getSeasons(event)` | List all seasons ordered by ID |
 | `getSeasonById(event, seasonId)` | Get a season by ID |
 | `getActiveSeason(event)` | Get the currently active season |
-| `setActiveSeason(event, seasonId)` | Set the active season; pass `null` to clear the active flag from every season |
+| `setActiveSeason(event, seasonId)` | Set the active season (pass `null` to clear); copies the newly active season's tweaks into the `hackathon` row |
+| `updateSeasonTweaks(event, seasonId, data)` | Update a season's tweakable settings; also updates the `hackathon` row when the season is live |
+| `getScoreRankVisibilityResolver(event)` | Returns a `(seasonId) => { showScores, showRanking }` resolver that reads each season's own toggles, falling back to the `hackathon` row when the season is missing. Used by the teams and users endpoints to bind score/rank visibility to each team's own season |
+
+`SEASON_TWEAK_FIELDS` lists the tweakable columns shared by the `seasons` and `hackathon` tables.
 
 ### peer-voting.ts
 
@@ -738,7 +743,7 @@ Per-table database helper modules in `server/utils/database/`.
 | `deleteTeamAwards(event, teamId)`         | Delete all awards for a team           |
 | `deleteAward(event, teamId, award)`       | Delete a specific award for a team     |
 
-Award definitions live in `shared/awards.ts`.
+Award definitions live in the `awards` SQLite table.
 
 ### oauth2_applications.ts
 

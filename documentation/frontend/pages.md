@@ -5,7 +5,7 @@ description: File-based routes in the basishacks frontend — home, dashboard, v
 
 # Pages
 
-The basishacks frontend contains **25 page files** in `app/pages/`, mapped to routes via Nuxt's file-based routing. All pages use `<script setup lang="ts">`.
+The basishacks frontend contains **26 page files** in `app/pages/`, mapped to routes via Nuxt's file-based routing. All pages use `<script setup lang="ts">`.
 
 ## Public Pages
 
@@ -98,6 +98,29 @@ Animated showcase page for the top projects from the current season. A highly vi
 **Components used:** `GoBackUp`, `LoaderAnimation`, `ResultsProjectLinks`, `ShowcaseMarqueeCard`, `ProjectCard`
 
 ::: tip This page uses custom CSS animations including `metallic-gold`, `metallic-silver`, `metallic-bronze`, `neon` flicker, and `appearAndShake` word animations. :::
+
+### `/beneath-the-surface`
+
+**File:** `app/pages/beneath-the-surface.vue`
+
+Season 1's data-driven winners showcase for **Beneath the Surface**. Its `ShowcaseBeneathTheSurface` component fetches `/api/teams?season_id=1` and merges the public records with a frozen historical winner configuration.
+
+**Layout:** `fullwidth-nostick`
+
+| Pathway | Rank | Project                    |
+| ------- | ---- | -------------------------- |
+| Junior  | 1    | Where the Rainbow Ends     |
+| Junior  | 2    | Beneath the Land           |
+| Junior  | 3    | Horror Forest              |
+| Senior  | 1    | metadata manipulation tool |
+| Senior  | 2    | Unseen Layers              |
+| Senior  | 3    | TraceShadow                |
+
+Each winner receives a full-viewport, project-specific visual chapter. Project names, team names, and external links come from the Season 1 API; the frozen title and summary remain visible if a record cannot be loaded.
+
+**Motion:** GSAP and ScrollTrigger create the hero entrance, depth progress, desktop pinned sections, scroll-linked reveals, ambient layers, and pointer parallax. Mobile layouts use natural scrolling. `prefers-reduced-motion` disables pinning, scrubbing, parallax, and ambient movement while keeping all content visible.
+
+**Components used:** `ShowcaseBeneathTheSurface`, `GoBackUp`
 
 ### `/voting`
 
@@ -261,6 +284,8 @@ User management page.
 
 Team management page.
 
+The table includes a **Members** column that renders a `UserAvatarGroup` (with `developer-mode` enabled, so hovering shows each member's id beside their name) fed by the `members` array returned from `GET /api/admin/teams`.
+
 **Layout:** `developers-dashboard`
 
 ### `/developers/applications`
@@ -340,7 +365,20 @@ DeepSeek AI chat interface.
 
 **File:** `app/pages/developers/debug.vue`
 
-File upload and debug utilities.
+File upload and debug utilities. Permission-gated.
+
+**Layout:** `developers-dashboard`
+
+### `/developers/seasons`
+
+**File:** `app/pages/developers/seasons.vue`
+
+Season management page. Permission-gated (`portal.seasons.view`; editing requires `portal.seasons.edit` or admin).
+
+Contains two sections:
+
+- **Active Season** — select the current season (`PATCH /api/seasons/active`); activating a season copies its tweaks into the live `hackathon` row.
+- **Hackathon Configuration** — edit all settings, including per-season score and rank visibility, through `/api/admin/hackathon`.
 
 **Layout:** `developers-dashboard`
 

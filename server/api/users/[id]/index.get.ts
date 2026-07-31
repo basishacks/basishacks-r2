@@ -1,6 +1,7 @@
 import { getUserPastTeams } from "~~/server/utils/database/members";
 import { getTeamById } from "~~/server/utils/database/teams";
 import { UserIdParams } from "~~/shared/schemas";
+import { DevPermissions, hasPermission } from "~~/shared/permissions";
 
 export default defineEventHandler(async (event) => {
     const currentUser = await getUserSession(event);
@@ -28,9 +29,25 @@ export default defineEventHandler(async (event) => {
     const allTeamIds = [...(team ? [team.id] : []), ...pastTeams.map((t) => t.id)];
     const awardsByTeam = await getAwardsForTeams(event, allTeamIds);
 
+    // Scores and ranks are only shown to participants when the toggles of
+    // each team's own season are enabled; dev-portal users always see them.
+    const resolveVisibility = await getScoreRankVisibilityResolver(event);
+    const privileged =
+        hasPermission(user.role, DevPermissions.PORTAL_TEAMS_VIEW) ||
+        hasPermission(user.role, "admin");
+    const optionsFor = (t: Team) => {
+        const visibility = resolveVisibility(t.season_id);
+        return {
+            withScore: privileged || visibility.showScores,
+            withRank: privileged || visibility.showRanking,
+        };
+    };
+
     return {
         ...convertUserToPublic(user),
-        team: team && convertTeamToPublic(team, true, awardsByTeam[team.id] ?? []),
-        past_teams: pastTeams.map((t) => convertTeamToPublic(t, true, awardsByTeam[t.id] ?? [])),
+        team: team && convertTeamToPublic(team, optionsFor(team), awardsByTeam[team.id] ?? []),
+        past_teams: pastTeams.map((t) =>
+            convertTeamToPublic(t, optionsFor(t), awardsByTeam[t.id] ?? []),
+        ),
     } satisfies GetUserResponse;
 });

@@ -20,6 +20,8 @@ export const hackathon = sqliteTable(
         status: text("status").notNull(),
         voting_enabled: integer("voting_enabled").notNull().default(0),
         results_published: integer("results_published").notNull().default(0),
+        show_scores: integer("show_scores").notNull().default(0),
+        show_ranking: integer("show_ranking").notNull().default(0),
         submitted_count: integer("submitted_count").notNull().default(0),
         max_votes_per_user: integer("max_votes_per_user").notNull().default(0),
         judging_open: integer("judging_open").notNull().default(0),
@@ -170,8 +172,10 @@ export const seasons = sqliteTable(
         status: text("status").notNull().default("not_started"),
         voting_enabled: integer("voting_enabled").notNull().default(0),
         results_published: integer("results_published").notNull().default(0),
-        max_votes_per_user: integer("max_votes_per_user").notNull().default(0),
         judging_open: integer("judging_open").notNull().default(0),
+        show_scores: integer("show_scores").notNull().default(0),
+        show_ranking: integer("show_ranking").notNull().default(0),
+        max_votes_per_user: integer("max_votes_per_user").notNull().default(0),
         schedule_start: text("schedule_start"),
         schedule_end: text("schedule_end"),
         start_timestamp: integer("start_timestamp").notNull().default(0),
@@ -186,8 +190,16 @@ export const seasons = sqliteTable(
 );
 
 // ---------------------------------------------------------------------------
-// Awards assigned to teams (arbitrary key/value metadata per award).
+// Award definitions and their per-team assignments.
 // ---------------------------------------------------------------------------
+export const awards = sqliteTable("awards", {
+    namespace: text("namespace").primaryKey(),
+    name: text("name").notNull(),
+    description: text("description").notNull(),
+    icon: text("icon").notNull(),
+    color: text("color").notNull().default("gold"),
+});
+
 export const teamAwards = sqliteTable("team_awards", {
     team_id: integer("team_id").notNull(),
     award: text("award").notNull(),

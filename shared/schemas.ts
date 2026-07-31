@@ -287,6 +287,17 @@ export const SetActiveSeasonRequest = z.object({
 });
 export type SetActiveSeasonRequest = z.infer<typeof SetActiveSeasonRequest>;
 
+export const UpdateSeasonTweaksRequest = z
+    .object({
+        status: z.enum(["not_started", "in_progress", "voting", "finished", "paused"]).optional(),
+        show_scores: z.boolean().optional(),
+        show_ranking: z.boolean().optional(),
+    })
+    .refine((data) => Object.values(data).some((value) => value !== undefined), {
+        message: "At least one field must be provided",
+    });
+export type UpdateSeasonTweaksRequest = z.infer<typeof UpdateSeasonTweaksRequest>;
+
 export const ElectionVoteRequest = z.object({
     positions: z
         .array(
@@ -326,6 +337,8 @@ export const AdminUpdateHackathonRequest = z.object({
     voting_enabled: z.union([z.literal(0), z.literal(1)]).optional(),
     results_published: z.union([z.literal(0), z.literal(1)]).optional(),
     judging_open: z.union([z.literal(0), z.literal(1)]).optional(),
+    show_scores: z.union([z.literal(0), z.literal(1)]).optional(),
+    show_ranking: z.union([z.literal(0), z.literal(1)]).optional(),
     max_votes_per_user: z.number().int().min(0).max(100).optional(),
     schedule_start: z.string().max(100).nullable().optional(),
     schedule_end: z.string().max(100).nullable().optional(),

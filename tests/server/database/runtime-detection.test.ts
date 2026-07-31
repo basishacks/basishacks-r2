@@ -100,6 +100,46 @@ describe("createDrizzleDatabase — Node.js / better-sqlite3 path", () => {
         expect(row).toBeDefined();
         expect(row!.id).toBe(1);
         expect(row!.status).toBe("not_started");
+
+        const award = db
+            .select()
+            .from(schema.awards)
+            .where(sql`${schema.awards.namespace} = 'perfect_score'`)
+            .get();
+        expect(award).toMatchObject({
+            name: "Flawless",
+            description: "Achieve a perfect score from all judges.",
+            icon: "i-lucide-gem",
+        });
+    });
+
+    it("preserves a legacy awards catalog while adding namespace keys", async () => {
+        const legacy = new Database(dbPath);
+        legacy.exec(`
+          CREATE TABLE awards (
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            name TEXT NOT NULL,
+            description TEXT NOT NULL,
+            icon TEXT NOT NULL
+          );
+          INSERT INTO awards(name, description, icon)
+          VALUES ('Legacy Award', 'Legacy description', 'i-lucide-award');
+        `);
+        legacy.close();
+
+        db = await createDrizzleDatabase(dbPath);
+
+        const legacyAward = db
+            .select()
+            .from(schema.awards)
+            .where(sql`${schema.awards.namespace} = 'legacy_1'`)
+            .get();
+        expect(legacyAward).toMatchObject({
+            name: "Legacy Award",
+            description: "Legacy description",
+            icon: "i-lucide-award",
+            color: "gold",
+        });
     });
 });
 

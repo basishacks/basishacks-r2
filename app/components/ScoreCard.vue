@@ -14,8 +14,8 @@
                         </UBadge>
                     </div>
                 </div>
-                <div v-if="team.score" class="w-full flex flex-row justify-between items-center">
-                    <div class="w-1/2">
+                <div v-if="team.score || team.rank" class="w-full flex flex-row justify-between items-center">
+                    <div v-if="team.score" class="w-1/2">
                         <span class="uppercase text-sm text-muted">score</span>
                         <div class="w-1/2 flex items-baseline-last gap-1">
                             <span
@@ -27,7 +27,7 @@
                             <span class="text-muted">/800</span>
                         </div>
                     </div>
-                    <div class="w-1/2">
+                    <div v-if="team.rank" class="w-1/2">
                         <span class="uppercase text-sm text-muted">ranking</span>
                         <div class="flex items-baseline-last gap-1">
                             <span
@@ -49,7 +49,7 @@
                             class="flex flex-row items-center gap-2 rounded-lg bg-background/80 px-4 py-2 shadow-sm backdrop-blur-sm text-muted"
                         >
                             <UIcon name="i-lucide-x"></UIcon>
-                            <span>Project not submitted</span>
+                            <span>Not available</span>
                         </div>
                     </div>
                     <div class="w-1/2 blur-md select-none">

@@ -46,6 +46,8 @@ const allFieldKeys = [
     "voting_enabled",
     "judging_open",
     "results_published",
+    "show_scores",
+    "show_ranking",
     "max_votes_per_user",
     "theme_name",
     "theme_description",
@@ -66,7 +68,13 @@ const tsKeys: readonly string[] = [
     "results_open_timestamp",
 ];
 
-const boolKeys = new Set(["voting_enabled", "judging_open", "results_published"]);
+const boolKeys = new Set([
+    "voting_enabled",
+    "judging_open",
+    "results_published",
+    "show_scores",
+    "show_ranking",
+]);
 
 // ---------------------------------------------------------------------------
 // Form state
@@ -363,6 +371,26 @@ async function addSeason() {
                             @update:model-value="onFieldChange()"
                         />
                         <span class="text-sm">Results Published</span>
+                    </div>
+
+                    <div class="flex items-center gap-3">
+                        <UCheckbox
+                            v-model="hackathonForm.show_scores"
+                            :true-value="1"
+                            :false-value="0"
+                            @update:model-value="onFieldChange()"
+                        />
+                        <span class="text-sm">Show Scores</span>
+                    </div>
+
+                    <div class="flex items-center gap-3">
+                        <UCheckbox
+                            v-model="hackathonForm.show_ranking"
+                            :true-value="1"
+                            :false-value="0"
+                            @update:model-value="onFieldChange()"
+                        />
+                        <span class="text-sm">Show Ranking</span>
                     </div>
 
                     <div>

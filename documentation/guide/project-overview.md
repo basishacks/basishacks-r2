@@ -24,6 +24,7 @@ The platform manages the entire hackathon lifecycle:
 | **DeepSeek AI Chatbot** | In-memory chat session store powered by the OpenAI SDK for DeepSeek AI interactions in debug routes. |
 | **SafeLink / SafeComark Components** | Client-side components that sanitize user-provided links and markdown content, preventing XSS and open redirects in rendered project descriptions. |
 | **Security Middleware** | A middleware pipeline including HTTP security headers (6 headers, 10 CSP directives), debug route lockdown (`DISABLE_DEBUG_ROUTES`), and rate limiting (4 tiers). |
+| **Season Showcases** | Public, art-directed winner experiences, including the six-project Beneath the Surface showcase. |
 
 ## Technology Stack
 
@@ -41,6 +42,7 @@ The platform manages the entire hackathon lifecycle:
 | **Validation** | Zod 4.x (^4.4.3) | Schema validation for all API inputs. |
 | **Fonts** | `@nuxt/fonts` ^0.14.0 | Local font provider. |
 | **Icons** | `@iconify-json/lucide`, `@iconify-json/material-symbols`, `@iconify-json/simple-icons` | Icon sets. |
+| **Animation** | `gsap` ^3.15.0 | ScrollTrigger timelines and responsive motion for the Beneath the Surface showcase. |
 | **Linting** | `@nuxt/eslint` 1.10.0 + Prettier ^3.9.4 | Semicolons enabled, double quotes. |
 | **Deployment** | Node.js server (VPS) | Bun also supported; Nitro `node-server` preset. |
 

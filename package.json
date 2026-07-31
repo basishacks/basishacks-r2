@@ -37,6 +37,7 @@
         "comark": "^0.5.1",
         "drizzle-orm": "^0.45.2",
         "eslint": "^9.39.5",
+        "gsap": "^3.15.0",
         "https-proxy-agent": "^9.1.0",
         "jdenticon": "^3.3.0",
         "jose": "^6.2.5",

@@ -15,6 +15,7 @@ import {
     OAuth2TokenRequest,
     OAuth2SessionActionRequest,
     SetActiveSeasonRequest,
+    UpdateSeasonTweaksRequest,
     ElectionVoteRequest,
     ApplicationIdParams,
     TeamIdParams,
@@ -888,6 +889,44 @@ describe("SetActiveSeasonRequest", () => {
 
     it("rejects a non-integer season_id", () => {
         expect(() => SetActiveSeasonRequest.parse({ season_id: 1.5 })).toThrow();
+    });
+});
+
+describe("UpdateSeasonTweaksRequest", () => {
+    it("accepts a single toggle", () => {
+        expect(() => UpdateSeasonTweaksRequest.parse({ show_scores: true })).not.toThrow();
+    });
+
+    it("accepts all fields together", () => {
+        expect(() =>
+            UpdateSeasonTweaksRequest.parse({
+                status: "voting",
+                show_scores: true,
+                show_ranking: true,
+            }),
+        ).not.toThrow();
+    });
+
+    it("rejects an empty object", () => {
+        expect(() => UpdateSeasonTweaksRequest.parse({})).toThrow();
+    });
+
+    it("rejects an invalid status", () => {
+        expect(() => UpdateSeasonTweaksRequest.parse({ status: "bogus" })).toThrow();
+    });
+
+    it("strips non-tweakable fields", () => {
+        const parsed = UpdateSeasonTweaksRequest.parse({
+            show_scores: true,
+            theme_name: "Hacked",
+            voting_enabled: true,
+        } as any);
+
+        expect(parsed).toEqual({ show_scores: true });
+    });
+
+    it("rejects a non-boolean toggle", () => {
+        expect(() => UpdateSeasonTweaksRequest.parse({ show_scores: 1 })).toThrow();
     });
 });
 

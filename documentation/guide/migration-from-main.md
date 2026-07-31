@@ -45,7 +45,7 @@ If you have an existing database from the original `main` branch:
 
 2. **Start the server** — the `init-database.ts` plugin automatically:
     - Applies pending Drizzle migrations
-    - Runs `migrateLegacySchema()` to add any missing tables (`seasons`, `team_awards`, `peer_voting_scores`, `user_past_teams`) and columns
+    - Runs `migrateLegacySchema()` to add any missing tables (`seasons`, `team_awards`, `peer_voting_scores`, `user_past_teams`) and columns, and converts legacy award catalogs to namespace-keyed rows
     - Preserves all existing data
 
 3. **Verify startup** — check the server logs for:

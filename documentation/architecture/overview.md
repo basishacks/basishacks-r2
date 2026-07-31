@@ -66,7 +66,6 @@ basishacks-r2/
 │   ├── oauth2-scopes.ts    # OAuth2 scope definitions
 │   ├── oauth2.ts           # Microsoft OAuth2 static configuration
 │   ├── rubric.ts           # Judging rubric definitions
-│   ├── awards.ts           # Award registry definitions
 │   └── seasons.ts          # Static season metadata
 ├── sql/archive/            # Archived legacy SQL schema and migrations
 │   ├── init.sql            # Historical base schema

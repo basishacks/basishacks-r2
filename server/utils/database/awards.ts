@@ -1,7 +1,6 @@
 import type { H3Event } from "h3";
-import { eq, inArray, and } from "drizzle-orm";
-import { teamAwards } from "~~/server/database/schema";
-import { AWARD_REGISTRY, type Award } from "~~/shared/awards";
+import { and, eq, inArray } from "drizzle-orm";
+import { awards, teamAwards } from "~~/server/database/schema";
 
 export interface ResolvedAward {
     team_id: number;
@@ -22,33 +21,42 @@ function parseMeta(meta: string): Record<string, unknown> {
     }
 }
 
-function resolveAward(row: { team_id: number; award: string; meta: string }): ResolvedAward {
-    const definition: Award | undefined = AWARD_REGISTRY[row.award];
+function resolveAward(row: {
+    team_id: number;
+    namespace: string;
+    name: string;
+    description: string;
+    icon: string;
+    color: string;
+    meta: string | null;
+}): ResolvedAward {
     const meta = parseMeta(row.meta);
-    const namespace = row.award;
-
-    const name = definition?.name ?? namespace;
-    const description = definition?.description ?? namespace;
-    const icon = definition?.icon ?? "i-lucide-award";
-    const color = (definition as (Award & { color?: string }) | undefined)?.color ?? "gold";
-    const text = definition?.computed ? definition.computed(meta).join(", ") : description;
 
     return {
         team_id: row.team_id,
-        namespace,
-        name,
-        description,
-        icon,
+        namespace: row.namespace,
+        name: row.name,
+        description: row.description,
+        icon: row.icon,
         meta,
-        color,
-        text,
+        color: row.color,
+        text: row.description,
     };
 }
 
 export async function getAwards(event: H3Event, teamId: number): Promise<ResolvedAward[]> {
     const rows = await event.context.drizzle
-        .select()
+        .select({
+            team_id: teamAwards.team_id,
+            namespace: awards.namespace,
+            name: awards.name,
+            description: awards.description,
+            icon: awards.icon,
+            color: awards.color,
+            meta: teamAwards.meta,
+        })
         .from(teamAwards)
+        .innerJoin(awards, eq(teamAwards.award, awards.namespace))
         .where(eq(teamAwards.team_id, teamId))
         .all();
 
@@ -62,8 +70,17 @@ export async function getAwardsForTeams(
     if (teamIds.length === 0) return {};
 
     const rows = await event.context.drizzle
-        .select()
+        .select({
+            team_id: teamAwards.team_id,
+            namespace: awards.namespace,
+            name: awards.name,
+            description: awards.description,
+            icon: awards.icon,
+            color: awards.color,
+            meta: teamAwards.meta,
+        })
         .from(teamAwards)
+        .innerJoin(awards, eq(teamAwards.award, awards.namespace))
         .where(inArray(teamAwards.team_id, teamIds))
         .all();
 

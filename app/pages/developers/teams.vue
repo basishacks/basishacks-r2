@@ -9,6 +9,7 @@ definePageMeta({
 const UButton = resolveComponent("UButton");
 const UBadge = resolveComponent("UBadge");
 const UCheckbox = resolveComponent("UCheckbox");
+const UserAvatarGroup = resolveComponent("UserAvatarGroup");
 
 const toast = useToast();
 const table = useTemplateRef<any>("table");
@@ -23,7 +24,14 @@ const columnFilters = ref([
 const columnVisibility = ref();
 const rowSelection = ref<Record<string, boolean>>({});
 
-type AdminTeam = Team & { season_name: string | null };
+type AdminTeamMember = {
+    id: number;
+    name: string | null;
+    email: string;
+    profile_picture: string | null;
+};
+
+type AdminTeam = Team & { season_name: string | null; members: AdminTeamMember[] };
 
 const { data, status, refresh } = await useFetch<AdminTeam[]>("/api/admin/teams", {
     lazy: true,
@@ -107,6 +115,17 @@ const columns: TableColumn<AdminTeam>[] = [
                 onClick: () => column.toggleSorting(column.getIsSorted() === "asc"),
             });
         },
+    },
+    {
+        id: "members",
+        header: "Members",
+        cell: ({ row }) =>
+            h(UserAvatarGroup, {
+                users: row.original.members ?? [],
+                max: 4,
+                size: "xs",
+                developerMode: true,
+            }),
     },
     {
         accessorKey: "pathway",

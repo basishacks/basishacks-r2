@@ -27,8 +27,8 @@ interface APITeam {
     id: number;
     name: string;
     pathway: TeamPathway | null;
-    rank: number | null;
-    score: number | null;
+    rank?: number | null;
+    score?: number | null;
     season_id: number;
     project: {
         name: string;
