@@ -396,10 +396,10 @@ A `null` rank records an abstention for that candidate. The schema does not enfo
 
 All fields are optional, but at least one must be provided. Only these three settings are tweakable; any other fields in the request body are stripped.
 
-| Field | Type | Constraints |
-| --- | --- | --- |
-| `status` | `string` | One of `not_started`, `in_progress`, `voting`, `finished`, `paused` |
-| `show_scores` | `boolean` | Show scores to participants in results |
-| `show_ranking` | `boolean` | Show rankings to participants in results |
+| Field          | Type      | Constraints                                                         |
+| -------------- | --------- | ------------------------------------------------------------------- |
+| `status`       | `string`  | One of `not_started`, `in_progress`, `voting`, `finished`, `paused` |
+| `show_scores`  | `boolean` | Show scores to participants in results                              |
+| `show_ranking` | `boolean` | Show rankings to participants in results                            |
 
 **API endpoint:** `PATCH /api/seasons/:id/tweaks`

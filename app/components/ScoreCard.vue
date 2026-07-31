@@ -14,7 +14,10 @@
                         </UBadge>
                     </div>
                 </div>
-                <div v-if="team.score || team.rank" class="w-full flex flex-row justify-between items-center">
+                <div
+                    v-if="team.score || team.rank"
+                    class="w-full flex flex-row justify-between items-center"
+                >
                     <div v-if="team.score" class="w-1/2">
                         <span class="uppercase text-sm text-muted">score</span>
                         <div class="w-1/2 flex items-baseline-last gap-1">
