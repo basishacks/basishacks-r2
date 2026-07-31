@@ -260,6 +260,7 @@ async function copyGeneratedUrl() {
         <template #header>
             <UDashboardNavbar :title="data?.name ?? 'Application'">
                 <template #leading>
+                    <UDashboardSidebarCollapse />
                     <UButton
                         icon="i-lucide-arrow-left"
                         color="neutral"
