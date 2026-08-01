@@ -268,7 +268,7 @@ Placeholder page for the presentation event. States that top 10 teams will be in
 
 ## Mod Portal
 
-**Access:** The entire mod portal is admin-only. The `developers-dashboard` layout enforces this with a hard 403 at the layout level. There is no non-admin developer role.
+**Access:** Home, users, teams, DeepSeek, files, and season management require admin permission. The applications portal remains granular: application view, view-all, and create permissions grant access to their corresponding application routes; all other developer routes return a hard 403 for non-admin users.
 
 ### `/developers`
 

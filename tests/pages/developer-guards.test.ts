@@ -12,5 +12,6 @@ describe("developer portal access guard", () => {
         expect(source).toContain("DevPermissions.PORTAL_APPLICATIONS_VIEW");
         expect(source).toContain("DevPermissions.PORTAL_APPLICATIONS_CREATE");
         expect(source).toContain("statusCode: 403");
+        expect(source).toContain('id: "pages"');
     });
 });
