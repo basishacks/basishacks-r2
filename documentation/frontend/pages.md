@@ -71,9 +71,17 @@ Static rules page listing hackathon requirements:
 
 ### `/showcase`
 
-**File:** `app/pages/showcase.vue`
+**File:** `app/pages/showcase/index.vue`
 
-Animated showcase page for the top projects from the current season. A highly visual, scroll-driven experience.
+Season showcase index. The featured top section links to the current Beneath the Surface experience, and the archive section beneath it links to the previous Signal experience.
+
+**Layout:** `fullwidth-nostick`
+
+### `/showcase/signal`
+
+**File:** `app/pages/showcase/signal.vue`
+
+Animated Signal showcase for the previous season's top projects. A highly visual, scroll-driven experience.
 
 **Layout:** `fullwidth-nostick`
 
@@ -99,9 +107,9 @@ Animated showcase page for the top projects from the current season. A highly vi
 
 ::: tip This page uses custom CSS animations including `metallic-gold`, `metallic-silver`, `metallic-bronze`, `neon` flicker, and `appearAndShake` word animations. :::
 
-### `/beneath-the-surface`
+### `/showcase/beneath-the-surface`
 
-**File:** `app/pages/beneath-the-surface.vue`
+**File:** `app/pages/showcase/beneath-the-surface.vue`
 
 Season 1's data-driven winners showcase for **Beneath the Surface**. Its `ShowcaseBeneathTheSurface` component fetches `/api/teams?season_id=1` and merges the public records with a frozen historical winner configuration.
 

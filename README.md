@@ -22,7 +22,7 @@ The official website for the **BIBS-C Network Hackathon** (season 2, 2025–26).
 
 ## Season Showcases
 
-The public `/beneath-the-surface` route is the Season 1 winners showcase. It loads the archived project metadata from `/api/teams?season_id=1` and presents the top three Junior and top three Senior projects as six full-screen, project-specific chapters. GSAP and ScrollTrigger provide the desktop scroll choreography, while mobile and reduced-motion visitors receive a natural, non-pinned reading experience.
+The public `/showcase` page collects the season showcases in one place. The current featured experience, Beneath the Surface, lives at `/showcase/beneath-the-surface`; the previous Signal experience lives at `/showcase/signal`. Beneath the Surface loads archived project metadata from `/api/teams?season_id=1` and presents the top three Junior and top three Senior projects as six full-screen, project-specific chapters. GSAP and ScrollTrigger provide the desktop scroll choreography, while mobile and reduced-motion visitors receive a natural, non-pinned reading experience.
 
 ## Prerequisites
 

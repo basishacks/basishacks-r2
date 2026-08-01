@@ -272,7 +272,7 @@ onUnmounted(() => {
             </div>
 
             <div class="hero-content">
-                <p class="hero-kicker">BIBS-C Network Hackathon · May 2026</p>
+                <p class="hero-kicker">May 2026</p>
                 <h1>
                     <span class="title-mask"><span class="hero-title-line">Beneath</span></span>
                     <span class="title-mask title-offset">
