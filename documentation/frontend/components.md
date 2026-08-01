@@ -307,6 +307,10 @@ Icon-based project link buttons for GitHub, demo, and video. The video button op
 
 Season 1's immersive winners experience. It fetches `/api/teams?season_id=1`, merges those public records with six frozen winner profiles, and renders one full-viewport chapter per project. Project-specific HTML and SVG scenes cover cyberpunk dialogue, a flooded pixel world, a night forest, a metadata inspector, fractured memories, and a third-party request graph.
 
+The page uses locally hosted display fonts (registered in `nuxt.config.ts`, files in `public/fonts/`): **Unbounded** for the hero and closing headings, and a per-chapter display font wired through the `--display-font` custom property — **Orbitron** (Where the Rainbow Ends), **Silkscreen** (Beneath the Land), **Creepster** (Horror Forest), **Space Mono** (metadata manipulation tool), **Cormorant Garamond** (Unseen Layers), and **Chakra Petch** (TraceShadow).
+
+Each chapter announces its result with a shimmering metallic medal (`#1` gold, `#2` silver, `#3` bronze — echoing the previous season's showcase) plus a pathway chip: a pulsing sonar dot next to the pathway label (junior or senior). Shimmer and ping animations are disabled under `prefers-reduced-motion`.
+
 GSAP and ScrollTrigger are loaded after mount so server rendering remains safe. Responsive `matchMedia()` timelines pin and scrub sections only on desktop; reduced-motion visitors see the complete static composition. All timelines, ScrollTriggers, pointer handlers, and inline animation styles are reverted when the component unmounts.
 
 ## Awards

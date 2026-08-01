@@ -37,6 +37,19 @@ export default defineNuxtConfig({
             preload: true,
         },
         processCSSVariables: true,
+        families: [
+            { name: "Unbounded", src: "/fonts/unbounded-800.woff2", weight: 800 },
+            { name: "Orbitron", src: "/fonts/orbitron-700.woff2", weight: 700 },
+            { name: "Silkscreen", src: "/fonts/silkscreen-700.woff2", weight: 700 },
+            { name: "Creepster", src: "/fonts/creepster-400.woff2", weight: 400 },
+            { name: "Space Mono", src: "/fonts/space-mono-700.woff2", weight: 700 },
+            {
+                name: "Cormorant Garamond",
+                src: "/fonts/cormorant-garamond-600.woff2",
+                weight: 600,
+            },
+            { name: "Chakra Petch", src: "/fonts/chakra-petch-700.woff2", weight: 700 },
+        ],
     },
     routeRules: {
         "/_nuxt/**": {
