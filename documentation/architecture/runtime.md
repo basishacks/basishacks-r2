@@ -38,6 +38,8 @@ The production build is generated with:
 bun run build
 ```
 
+Nitro traces runtime dependencies into `.output/server/node_modules`, making `.output/` a self-contained deployment artifact. The GitHub release workflow runs this build when a `v*` tag is pushed and publishes the resulting `.output/` tarball. Before starting an extracted release, create a writable `database/` directory next to `.output/`; the SQLite database is not part of the artifact.
+
 ::: warning The in-memory rate limiter is per-process. Under high concurrency or with multiple server instances, consider using a shared store (e.g., Redis) for consistent rate limiting. :::
 
 ## Drizzle ORM

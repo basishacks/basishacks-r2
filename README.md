@@ -132,7 +132,7 @@ bun start                            # Bun runtime
 node .output/server/index.mjs        # Node.js runtime
 ```
 
-The same `.output/` artifact runs under both runtimes — the SQLite driver is selected at startup.
+The same `.output/` artifact runs under both runtimes — the SQLite driver is selected at startup. Nitro traces production dependencies into `.output/server/node_modules`, so the artifact is self-contained and can be deployed without the source checkout or its `node_modules` directory.
 
 Place a reverse proxy (Nginx, Caddy) in front for TLS termination. The SQLite database lives at `./database/basishacks.sqlite` (WAL mode).
 
@@ -142,6 +142,10 @@ Place a reverse proxy (Nginx, Caddy) in front for TLS termination. The SQLite da
 2. Set all required environment variables in the server environment
 3. Start with `bun start` (Bun) or `node .output/server/index.mjs` (Node.js)
 4. Reverse proxy with TLS in front (port defaults to `3000`)
+
+### GitHub tag releases
+
+Pushing a tag beginning with `v` runs `.github/workflows/release.yml`. It builds a self-contained Bun production artifact and attaches `production-<version>-<commit>-linux-amd64-bun.tar.gz` to the corresponding GitHub release. Extract the archive on the target host, provide the required environment variables, and start the server from the directory containing `.output/`. Create a writable `database/` directory beside `.output/` first; it holds the SQLite database and is intentionally not included in the release artifact.
 
 ## Project Structure
 
