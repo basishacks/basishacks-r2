@@ -16,4 +16,11 @@ describe("ProjectCard.vue regressions", () => {
     it("disables the Demo button based on the safe demo URL", () => {
         expect(source).toContain(':disabled="!safeDemoUrl"');
     });
+
+    it("uses a supplied public team record without fetching the protected team endpoint", () => {
+        expect(source).toContain("id: number");
+        expect(source).toContain("team?: GetTeamResponse");
+        expect(source).toContain("immediate: !props.team");
+        expect(source).toContain("props.team ?? fetchedTeam.value");
+    });
 });

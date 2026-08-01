@@ -271,7 +271,7 @@ Horizontal scroll card used in the showcase marquee. Displays project rank, awar
 
 **File:** `app/components/ProjectCard.vue`
 
-Fetches and displays a team's project card by ID. Shows project name, team name, description rendered with `Comark`, repo/demo links, and awarded badges via `AwardButton`.
+Fetches and displays a team's project card by ID. Shows project name, team name, description rendered with `SafeComark`, repo/demo links, and awarded badges via `AwardButton`. `SafeComark` extracts the supplied slot text and passes it to Comark as markdown, so descriptions render consistently in every card context.
 
 **Props:**
 
@@ -282,6 +282,8 @@ Fetches and displays a team's project card by ID. Shows project name, team name,
 ```vue
 <ProjectCard :id="teamId" />
 ```
+
+When a parent already has a public `GetTeamResponse`, it can pass `:team="team"` instead. This avoids a second request to the authenticated single-team endpoint, which is how public showcase modals render project details.
 
 ### ResultsProjectLinks
 

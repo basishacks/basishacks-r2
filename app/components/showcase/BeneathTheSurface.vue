@@ -355,7 +355,7 @@ onUnmounted(() => {
                                 Open project
                             </UButton>
                             <template #body>
-                                <ProjectCard :id="winner.team.id" />
+                                <ProjectCard :id="winner.team.id" :team="winner.team" />
                             </template>
                         </UModal>
                         <UButton

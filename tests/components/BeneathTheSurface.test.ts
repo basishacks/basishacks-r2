@@ -34,6 +34,10 @@ describe("BeneathTheSurface.vue", () => {
         );
     });
 
+    it("passes each resolved team id into the public project card modal", () => {
+        expect(source).toContain('<ProjectCard :id="winner.team.id" :team="winner.team" />');
+    });
+
     it("does not regress to the old global top-four gallery", () => {
         expect(source).not.toContain("featuredTeams");
         expect(source).not.toContain("slice(0, 4)");
