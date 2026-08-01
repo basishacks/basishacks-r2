@@ -71,9 +71,17 @@ Static rules page listing hackathon requirements:
 
 ### `/showcase`
 
-**File:** `app/pages/showcase.vue`
+**File:** `app/pages/showcase/index.vue`
 
-Animated showcase page for the top projects from the current season. A highly visual, scroll-driven experience.
+Season showcase index. The featured top section links to the current Beneath the Surface experience, and the archive section beneath it links to the previous Signal experience.
+
+**Layout:** `fullwidth-nostick`
+
+### `/showcase/signal`
+
+**File:** `app/pages/showcase/signal.vue`
+
+Animated Signal showcase for the previous season's top projects. A highly visual, scroll-driven experience.
 
 **Layout:** `fullwidth-nostick`
 
@@ -99,9 +107,9 @@ Animated showcase page for the top projects from the current season. A highly vi
 
 ::: tip This page uses custom CSS animations including `metallic-gold`, `metallic-silver`, `metallic-bronze`, `neon` flicker, and `appearAndShake` word animations. :::
 
-### `/beneath-the-surface`
+### `/showcase/beneath-the-surface`
 
-**File:** `app/pages/beneath-the-surface.vue`
+**File:** `app/pages/showcase/beneath-the-surface.vue`
 
 Season 1's data-driven winners showcase for **Beneath the Surface**. Its `ShowcaseBeneathTheSurface` component fetches `/api/teams?season_id=1` and merges the public records with a frozen historical winner configuration.
 
@@ -116,7 +124,7 @@ Season 1's data-driven winners showcase for **Beneath the Surface**. Its `Showca
 | Senior  | 2    | Unseen Layers              |
 | Senior  | 3    | TraceShadow                |
 
-Each winner receives a full-viewport, project-specific visual chapter. Project names, team names, and external links come from the Season 1 API; the frozen title and summary remain visible if a record cannot be loaded.
+Each winner receives a full-viewport, project-specific visual chapter. Project names, team names, and links come from the Season 1 API; the frozen title and summary remain visible if a record cannot be loaded. "Open project" launches a `UModal` with the shared `ProjectCard` using the already loaded public team record, while the repository button links out directly. The hero and closing headings use Unbounded, and each chapter heading uses its own locally hosted display font (Orbitron, Silkscreen, Creepster, Space Mono, Cormorant Garamond, Chakra Petch). Ranks appear as shimmering metallic `#1`/`#2`/`#3` medals (gold/silver/bronze, like the previous season), and pathways as sonar chips labeled junior or senior.
 
 **Motion:** GSAP and ScrollTrigger create the hero entrance, depth progress, desktop pinned sections, scroll-linked reveals, ambient layers, and pointer parallax. Mobile layouts use natural scrolling. `prefers-reduced-motion` disables pinning, scrubbing, parallax, and ambient movement while keeping all content visible.
 
@@ -260,7 +268,7 @@ Placeholder page for the presentation event. States that top 10 teams will be in
 
 ## Mod Portal
 
-**Access:** The entire mod portal is admin-only. The `developers-dashboard` layout enforces this with a hard 403 at the layout level. There is no non-admin developer role.
+**Access:** Home, users, teams, DeepSeek, files, and season management require admin permission. The applications portal remains granular: application view, view-all, and create permissions grant access to their corresponding application routes; all other developer routes return a hard 403 for non-admin users.
 
 ### `/developers`
 

@@ -77,11 +77,6 @@ const navItems = computed<NavigationMenuItem[]>(() => {
             to: "/showcase",
             icon: "i-lucide-spotlight",
         },
-        {
-            label: "Beneath the Surface",
-            to: "/beneath-the-surface",
-            icon: "i-lucide-waves",
-        },
     ];
     if (
         hackathon.value?.status === "voting" &&

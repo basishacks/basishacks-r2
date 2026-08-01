@@ -263,19 +263,6 @@ onUnmounted(() => {
     <main ref="root" class="surface-story">
         <div class="story-grain" aria-hidden="true" />
 
-        <nav class="depth-rail" aria-label="Winner sections">
-            <span class="depth-rail-label">Depth</span>
-            <div class="depth-track"><i class="depth-progress" /></div>
-            <a
-                v-for="winner in winners"
-                :key="winner.config.id"
-                :href="`#winner-${winner.config.id}`"
-                :aria-label="`${rankLabel(winner.config.rank)}, ${winner.config.projectName}`"
-            >
-                {{ String(winner.config.rank).padStart(2, "0") }}
-            </a>
-        </nav>
-
         <section class="surface-hero">
             <div class="hero-glow" aria-hidden="true" />
             <div class="hero-sonar" aria-hidden="true">
@@ -285,7 +272,7 @@ onUnmounted(() => {
             </div>
 
             <div class="hero-content">
-                <p class="hero-kicker">BIBS-C Network Hackathon · May 2026</p>
+                <p class="hero-kicker">May 2026</p>
                 <h1>
                     <span class="title-mask"><span class="hero-title-line">Beneath</span></span>
                     <span class="title-mask title-offset">
@@ -296,17 +283,6 @@ onUnmounted(() => {
                     Six projects looked past what was obvious. Descend through the top three
                     discoveries from each pathway.
                 </p>
-                <div class="hero-actions">
-                    <UButton
-                        size="xl"
-                        color="primary"
-                        trailing-icon="i-lucide-arrow-down"
-                        @click="scrollToWinners"
-                    >
-                        Begin the descent
-                    </UButton>
-                    <span>06 winner profiles · 02 pathways</span>
-                </div>
             </div>
 
             <div class="hero-chart" aria-hidden="true">
@@ -352,9 +328,18 @@ onUnmounted(() => {
 
                 <article class="project-copy">
                     <div class="project-meta" data-reveal>
-                        <span>{{ pathwayLabel(winner.config.pathway) }}</span>
-                        <i />
-                        <span>{{ rankLabel(winner.config.rank) }}</span>
+                        <span
+                            class="rank-medal"
+                            :class="`medal-r${winner.config.rank}`"
+                            role="img"
+                            :aria-label="rankLabel(winner.config.rank)"
+                        >
+                            #{{ winner.config.rank }}
+                        </span>
+                        <span class="pathway-chip" :class="`pathway-${winner.config.pathway}`">
+                            <i class="pathway-sonar" aria-hidden="true" />
+                            <span>{{ pathwayLabel(winner.config.pathway) }}</span>
+                        </span>
                     </div>
                     <p class="project-chapter" data-reveal>{{ winner.config.chapter }}</p>
                     <h2 data-reveal>
@@ -365,16 +350,14 @@ onUnmounted(() => {
                     </p>
                     <p class="project-lede" data-reveal>{{ winner.config.lede }}</p>
                     <div v-if="winner.team" class="project-actions" data-reveal>
-                        <UButton
-                            v-if="winner.team.project.demo_url"
-                            :href="winner.team.project.demo_url"
-                            target="_blank"
-                            external
-                            color="primary"
-                            trailing-icon="i-lucide-arrow-up-right"
-                        >
-                            Open project
-                        </UButton>
+                        <UModal :title="winner.team.project.name || winner.config.projectName">
+                            <UButton color="primary" trailing-icon="i-lucide-arrow-up-right">
+                                Open project
+                            </UButton>
+                            <template #body>
+                                <ProjectCard :id="winner.team.id" :team="winner.team" />
+                            </template>
+                        </UModal>
                         <UButton
                             v-if="winner.team.project.repo_url"
                             :href="winner.team.project.repo_url"
@@ -631,7 +614,7 @@ onUnmounted(() => {
     align-items: center;
     gap: clamp(2rem, 6vw, 7rem);
     isolation: isolate;
-    padding: clamp(6rem, 11vw, 9rem) max(2rem, calc((100vw - 82rem) / 2));
+    padding: clamp(2rem, 6vw, 7rem) max(2rem, calc((100vw - 82rem) / 2));
     overflow: hidden;
     background:
         linear-gradient(180deg, rgb(9 74 88 / 48%), transparent 38%),
@@ -711,10 +694,11 @@ onUnmounted(() => {
 .surface-hero h1 {
     display: grid;
     margin: 0;
+    font-family: "Unbounded", "Monaspace Neon", monospace;
     font-size: clamp(4.5rem, 10.6vw, 9.6rem);
-    font-weight: 700;
-    letter-spacing: -0.085em;
-    line-height: 0.8;
+    font-weight: 800;
+    letter-spacing: -0.045em;
+    line-height: 0.9;
 }
 
 .title-mask {
@@ -886,14 +870,113 @@ onUnmounted(() => {
 .project-meta {
     display: flex;
     align-items: center;
-    gap: 0.75rem;
+    flex-wrap: wrap;
+    gap: 0.9rem;
     color: var(--accent);
 }
 
-.project-meta i {
-    width: 2.5rem;
-    height: 1px;
-    background: currentColor;
+.rank-medal {
+    font-size: 2.4rem;
+    font-weight: 800;
+    letter-spacing: -0.02em;
+    line-height: 1;
+    background-size: 200% 200%;
+    -webkit-background-clip: text;
+    background-clip: text;
+    -webkit-text-fill-color: transparent;
+    animation: medal-shimmer 3s ease-in-out infinite;
+}
+
+.medal-r1 {
+    background-image: linear-gradient(
+        135deg,
+        #ffd700,
+        #ffa500 25%,
+        #fff3b0 50%,
+        #ffa500 75%,
+        #ffd700
+    );
+}
+
+.medal-r2 {
+    background-image: linear-gradient(
+        135deg,
+        #e8e8e8,
+        #c0c0c0 25%,
+        #ffffff 50%,
+        #c0c0c0 75%,
+        #e8e8e8
+    );
+}
+
+.medal-r3 {
+    background-image: linear-gradient(
+        135deg,
+        #cd7f32,
+        #b87333 25%,
+        #df9953 50%,
+        #b87333 75%,
+        #cd7f32
+    );
+}
+
+@keyframes medal-shimmer {
+    0%,
+    100% {
+        background-position: 0% 50%;
+    }
+
+    50% {
+        background-position: 100% 50%;
+    }
+}
+
+.pathway-chip {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.55rem;
+    padding: 0.45rem 0.7rem;
+    border: 1px solid rgb(var(--accent-rgb) / 35%);
+    border-radius: 999px;
+    background: rgb(var(--accent-rgb) / 7%);
+    letter-spacing: 0.14em;
+}
+
+.pathway-sonar {
+    position: relative;
+    width: 0.5rem;
+    aspect-ratio: 1;
+    flex-shrink: 0;
+    border-radius: 50%;
+    background: var(--accent);
+    box-shadow: 0 0 0.5rem var(--accent);
+}
+
+.pathway-sonar::before,
+.pathway-sonar::after {
+    content: "";
+    position: absolute;
+    inset: -0.35rem;
+    border: 1px solid var(--accent);
+    border-radius: 50%;
+    opacity: 0;
+    animation: sonar-ping 2.4s ease-out infinite;
+}
+
+.pathway-sonar::after {
+    animation-delay: 1.2s;
+}
+
+@keyframes sonar-ping {
+    0% {
+        transform: scale(0.4);
+        opacity: 0.9;
+    }
+
+    100% {
+        transform: scale(1.6);
+        opacity: 0;
+    }
 }
 
 .project-chapter {
@@ -907,10 +990,12 @@ onUnmounted(() => {
 .project-copy h2 {
     margin: 0;
     color: #f3f8f6;
+    font-family: var(--display-font, inherit);
     font-size: clamp(3rem, 6.3vw, 6.7rem);
-    font-weight: 720;
-    letter-spacing: -0.075em;
+    font-weight: var(--display-weight, 720);
+    letter-spacing: var(--display-spacing, -0.075em);
     line-height: 0.9;
+    text-transform: var(--display-transform, none);
     text-wrap: balance;
 }
 
@@ -956,6 +1041,10 @@ onUnmounted(() => {
     --accent: #75f6ff;
     --accent-rgb: 117 246 255;
     --section-bg: linear-gradient(120deg, #10071f 0%, #170a2b 46%, #041525 100%);
+    --display-font: "Orbitron", "Monaspace Neon", monospace;
+    --display-weight: 700;
+    --display-spacing: -0.01em;
+    --display-transform: uppercase;
 }
 
 .tokyo-sun {
@@ -1112,6 +1201,9 @@ onUnmounted(() => {
     --accent: #ffd17b;
     --accent-rgb: 255 209 123;
     --section-bg: linear-gradient(135deg, #0a2935 0%, #08202a 48%, #211a13 100%);
+    --display-font: "Silkscreen", "Monaspace Neon", monospace;
+    --display-weight: 700;
+    --display-spacing: -0.02em;
 }
 
 .pixel-sky {
@@ -1249,6 +1341,9 @@ onUnmounted(() => {
     --accent: #ff756b;
     --accent-rgb: 255 117 107;
     --section-bg: linear-gradient(180deg, #1b2940 0%, #16251f 50%, #090d0b 100%);
+    --display-font: "Creepster", "Monaspace Neon", monospace;
+    --display-weight: 400;
+    --display-spacing: 0.02em;
 }
 
 .forest-moon {
@@ -1360,6 +1455,9 @@ onUnmounted(() => {
     --section-bg:
         radial-gradient(circle at 80% 30%, #173426, transparent 29rem),
         linear-gradient(135deg, #07100d, #0a1712);
+    --display-font: "Space Mono", "Monaspace Neon", monospace;
+    --display-weight: 700;
+    --display-spacing: -0.05em;
 }
 
 .file-inspector {
@@ -1466,6 +1564,9 @@ onUnmounted(() => {
     --section-bg:
         radial-gradient(circle at 76% 40%, #5b5d58, transparent 22rem),
         linear-gradient(145deg, #171a1c, #252728 55%, #101213);
+    --display-font: "Cormorant Garamond", serif;
+    --display-weight: 600;
+    --display-spacing: 0;
 }
 
 .memory-room {
@@ -1569,6 +1670,9 @@ onUnmounted(() => {
     --section-bg:
         radial-gradient(circle at 77% 48%, #102f37, transparent 31rem),
         linear-gradient(135deg, #040b12, #07141d);
+    --display-font: "Chakra Petch", "Monaspace Neon", monospace;
+    --display-weight: 700;
+    --display-spacing: -0.02em;
 }
 
 .trace-panel {
@@ -1683,9 +1787,11 @@ onUnmounted(() => {
 .surface-return h2 {
     max-width: 64rem;
     margin: 0;
+    font-family: "Unbounded", "Monaspace Neon", monospace;
     font-size: clamp(2.7rem, 6vw, 6.5rem);
-    letter-spacing: -0.07em;
-    line-height: 0.95;
+    font-weight: 800;
+    letter-spacing: -0.04em;
+    line-height: 1;
     text-wrap: balance;
 }
 
@@ -1816,6 +1922,12 @@ onUnmounted(() => {
         opacity: 1 !important;
         transform: none !important;
         visibility: visible !important;
+    }
+
+    .rank-medal,
+    .pathway-sonar::before,
+    .pathway-sonar::after {
+        animation: none;
     }
 }
 </style>

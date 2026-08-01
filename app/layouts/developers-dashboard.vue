@@ -96,7 +96,7 @@ const sidebarItems = computed<NavigationMenuItem[][]>(() => {
 
 const searchGroups = computed(() => [
     {
-        key: "pages",
+        id: "pages",
         label: "Pages",
         items: sidebarItems.value.flat().flatMap((item: any) => [
             { label: item.label, icon: item.icon, to: item.to },
@@ -127,7 +127,7 @@ const name = computed(() => user.value?.name || "Log In");
                         variant="ghost"
                         v-else-if="collapsed"
                         class="bold glow text-primary mx-auto"
-                        @click="navigateTo('/')"
+                        @click="() => void navigateTo('/')"
                     >
                         b
                     </UButton>
@@ -163,7 +163,7 @@ const name = computed(() => user.value?.name || "Log In");
                     color="neutral"
                     variant="ghost"
                     class="w-full"
-                    @click="navigateTo('/profile')"
+                    @click="() => void navigateTo('/profile')"
                     :block="collapsed"
                 />
             </template>

@@ -273,7 +273,11 @@
 <script setup>
 definePageMeta({
     layout: "fullwidth-nostick",
-    title: `Results | ${WEBSITE_NAME}`,
+    title: `Signal | ${WEBSITE_NAME}`,
+});
+
+useHead({
+    title: `Signal | ${WEBSITE_NAME}`,
 });
 
 useHead({
