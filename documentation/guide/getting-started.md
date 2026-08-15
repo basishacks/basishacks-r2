@@ -163,6 +163,14 @@ Build the application for production:
 bun run build
 ```
 
+For artifacts built by GitHub Actions, rewrite the embedded checkout root for the production server before packaging:
+
+```bash
+bun run refractor-artifact
+```
+
+This replaces `/home/runner/work/basishacks-r2/basishacks-r2` with `/home/devleaderz/basishacks-r2` throughout `.output/`.
+
 Preview the production build:
 
 ```bash

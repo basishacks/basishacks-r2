@@ -128,9 +128,12 @@ Do **not** use `bun test` — it cannot resolve Nuxt path aliases. `bunfig.toml`
 
 ```bash
 bun run build                        # Nitro node-server preset
+bun run refractor-artifact           # Rewrite GitHub build paths for production
 bun start                            # Bun runtime
 node .output/server/index.mjs        # Node.js runtime
 ```
+
+Run `bun run refractor-artifact` after building a GitHub release artifact. It rewrites the GitHub checkout root to `/home/devleaderz/basishacks-r2` inside `.output/`.
 
 The same `.output/` artifact runs under both runtimes — the SQLite driver is selected at startup.
 
