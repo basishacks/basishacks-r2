@@ -72,12 +72,12 @@ export async function findOrLinkBasisAuthUser(
     event: H3Event,
     identity: BasisAuthIdentity,
 ): Promise<User> {
-    // if (!identity.emailVerified) {
-    //     throw createError({
-    //         statusCode: 403,
-    //         message: "A verified email address is required",
-    //     });
-    // }
+    if (!identity.emailVerified) {
+        throw createError({
+            statusCode: 403,
+            message: "A verified email address is required",
+        });
+    }
 
     const normalizedEmail = identity.email.trim().toLowerCase();
     const trimmedName = identity.name?.trim() || null;
