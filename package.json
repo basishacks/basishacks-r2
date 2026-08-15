@@ -5,6 +5,7 @@
     "scripts": {
         "start": "cross-env NODE_ENV=production bun start-fix.mjs",
         "build": "cross-env NODE_OPTIONS=--no-deprecation nuxt build",
+        "refractor-artifact": "bash scripts/rewrite-build-paths.sh .output",
         "dev": "cross-env NODE_OPTIONS=--no-deprecation nuxt dev",
         "test": "vitest run --pool=forks --reporter=json | bun run test:meta",
         "test:watch": "vitest",

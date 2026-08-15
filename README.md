@@ -126,6 +126,7 @@ Do **not** use `bun test` — it cannot resolve Nuxt path aliases. `bunfig.toml`
 
 ```bash
 bun run build                        # Nitro node-server preset
+bun run refractor-artifact           # Rewrite GitHub build paths for production
 bun start                            # Bun runtime
 node .output/server/index.mjs        # Node.js runtime
 ```
