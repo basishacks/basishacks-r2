@@ -1,8 +1,7 @@
 import { readFileSync } from "node:fs";
 import { resolve } from "node:path";
 
-// Microsoft OAuth2 env vars used by server/utils/oauth2.ts and
-// server/plugins/microsoft.ts. These are read at module load time, so they
+// Graph env vars used by server/plugins/microsoft.ts. These are read at module load time, so they
 // must be set before any test imports those modules. The values mirror the
 // previously hardcoded configuration so existing assertions still hold.
 process.env.MICROSOFT_TENANT_ID = "cbc6e1e2-a6bb-4002-bbdc-6da892a051a7";

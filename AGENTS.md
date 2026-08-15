@@ -12,7 +12,7 @@ This file contains project-specific context for AI coding agents. The reader is 
 - Team creation and management
 - Project submission (name, description, demo URL, repo URL)
 - Peer voting and judge scoring
-- OAuth2 application integrations
+- basis-auth login and resource-token integration
 
 The stack is Vue 3 (frontend) + Nitro (backend) + SQLite via Drizzle ORM (`bun:sqlite` under Bun, `better-sqlite3` under Node.js).
 
@@ -51,7 +51,7 @@ app/                # Nuxt app (Vue frontend)
 server/             # Nitro backend
   api/              # API route handlers (file-based)
   middleware/       # Server middleware (OAuth2 authorize)
-  plugins/          # Nitro plugins (DB init, MS Graph token init)
+  plugins/          # Nitro plugins (DB init, Graph integration, environment validation)
   database/         # Drizzle ORM schema, migrations, and runtime-agnostic init
     schema.ts       # Canonical Drizzle schema
     migrate.ts      # Custom migration runner + legacy schema repair
@@ -143,10 +143,9 @@ bun run test
 
 ## Auth & Roles
 
-Two auth methods are supported:
+Authentication is delegated to the separately deployed **basis-auth** OpenID Connect service. The login flow uses discovery, authorization code with S256 PKCE, state, nonce, a confidential client secret, validated ID tokens, and UserInfo.
 
-1. **Microsoft OAuth2** — delegates to Microsoft Entra ID (tenant configured via `MICROSOFT_TENANT_ID`). This is the only login method for the hackathon registry.
-2. **basishacks connect** — custom OAuth2 integration.
+Graph integration is independent from login and must never create or authenticate a basishacks session.
 
 Session storage is handled by `nuxt-auth-utils`. The session cookie stores only `{ user: { id: number } }`.
 
@@ -220,7 +219,7 @@ The suite currently contains **647 passing tests** covering API endpoints, serve
 
 Do **not** use `bun test`. Bun's native test runner cannot resolve Nuxt's `~~/` and `~/` path aliases. `bunfig.toml` redirects `bun test` to `bun-shim/shim.test.ts`, which prints guidance pointing to `bun run test`.
 
-Legacy files such as `tests/index.js`, `tests/test.oauth2.js`, `tests/test.microsoft.ts`, and `tests/test.deepseek.ts` are kept for reference but are not part of the active Vitest suite.
+Legacy files such as `tests/index.js`, `tests/test.oauth2.js`, and `tests/test.deepseek.ts` are kept for reference but are not part of the active Vitest suite.
 
 ---
 
@@ -231,7 +230,7 @@ Legacy files such as `tests/index.js`, `tests/test.oauth2.js`, `tests/test.micro
 - **Foreign keys** are enforced (`PRAGMA foreign_keys = ON`).
 - **Input validation** is performed with Zod on every API endpoint.
 - **RBAC** is enforced server-side; never trust the frontend for permission checks.
-- **MS Graph API** calls are centralized in `server/plugins/microsoft.ts` for auditability.
+- **Graph API** calls are centralized in `server/plugins/microsoft.ts` for auditability and are not used for login.
 
 ---
 
@@ -255,31 +254,29 @@ Copy `.env.example` to `.env` and fill in at least the required values:
 
 ### Required
 
-| Variable | Purpose |
-| --- | --- |
-| `NUXT_SESSION_PASSWORD` | Session encryption key (>= 32 bytes) |
-| `NUXT_OAUTH2_JWT_SECRET` | JWT signing secret for OAuth2 token exchange (>= 32 bytes). Validated at startup. |
-| `ONSITE_LOGIN_CLIENT_ID` | OAuth2 `client_id` of the basishacks app used for the onsite login flow |
+| Variable                   | Purpose                                                 |
+| -------------------------- | ------------------------------------------------------- |
+| `NUXT_SESSION_PASSWORD`    | Session encryption key (>= 32 bytes)                    |
+| `BASIS_AUTH_ISSUER`        | Exact basis-auth issuer URL                             |
+| `BASIS_AUTH_CLIENT_ID`     | Confidential basis-auth client ID for basishacks        |
+| `BASIS_AUTH_CLIENT_SECRET` | Confidential basis-auth client secret                   |
+| `BASIS_AUTH_RESOURCE`      | Required resource audience for basishacks access tokens |
 
-### Optional (for Microsoft features)
+### Optional (for Graph features)
 
-| Variable | Purpose |
-| --- | --- |
-| `MICROSOFT_TENANT_ID` | Microsoft Entra ID tenant ID |
-| `MICROSOFT_CLIENT_ID` | Microsoft Entra ID application (client) ID |
-| `MICROSOFT_CLIENT_SECRET` | Microsoft Entra ID client secret for Graph API |
-| `MICROSOFT_REDIRECT_URI` | Microsoft OAuth2 redirect URI path (default `/api/oauth2/mscallback`) |
+| Variable                  | Purpose                                           |
+| ------------------------- | ------------------------------------------------- |
+| `MICROSOFT_TENANT_ID`     | Tenant ID used only for Graph API access          |
+| `MICROSOFT_CLIENT_ID`     | Application ID used only for Graph API access     |
+| `MICROSOFT_CLIENT_SECRET` | Application secret used only for Graph API access |
 
 ### Optional (for development)
 
 | Variable | Purpose |
 | --- | --- |
-| `CURRENT_URL_ORIGIN` | Public base origin for OAuth2 callbacks, JWT `iss`, and OpenID Discovery (default `http://localhost:3000`) |
-| `REDIRECT_URI` | Onsite OAuth2 redirect path (default `/api/oauth2/dccallback`) |
+| `CURRENT_URL_ORIGIN` | Public basishacks origin used to derive `/api/auth/basis/callback` (default `http://localhost:3000`) |
 | `DEEPSEEK_API_KEY` | DeepSeek API key for AI chat features |
 | `PORT` / `HOST` | Server port/host override (defaults: `3000` / `0.0.0.0`) |
-| `MICROSOFT_DUMMY_USER_NAME` | ROPC test user (rarely used) |
-| `MICROSOFT_DUMMY_USER_PASSWORD` | ROPC test password (rarely used) |
 
 In production, these are configured in the server environment.
 

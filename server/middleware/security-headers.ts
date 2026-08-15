@@ -41,9 +41,7 @@ export default defineEventHandler(async (event) => {
     //                               Nuxt UI components (e.g. :style bindings).
     // font-src 'self'               Fonts are self-hosted via @nuxt/fonts local provider.
     // img-src 'self' blob: data:    Self-hosted images, avatar blob previews, and data URIs.
-    // connect-src 'self' https://login.microsoftonline.com
-    //                               API calls to the same origin; Microsoft auth origin
-    //                               included for OAuth2-related flows.
+    // connect-src 'self'           API calls to the same origin.
     // object-src 'none'             No Flash / plugin objects.
     // base-uri 'self'               Prevent injected <base> tags from rewriting origins.
     // form-action 'self'            Restrict form submissions to same origin.
@@ -51,6 +49,6 @@ export default defineEventHandler(async (event) => {
     setHeader(
         event,
         "Content-Security-Policy",
-        "default-src 'self'; script-src 'self' 'unsafe-inline'; style-src 'self' 'unsafe-inline'; font-src 'self'; img-src 'self' blob: data:; connect-src 'self' https://login.microsoftonline.com; object-src 'none'; base-uri 'self'; form-action 'self'; frame-ancestors 'none'",
+        "default-src 'self'; script-src 'self' 'unsafe-inline'; style-src 'self' 'unsafe-inline'; font-src 'self'; img-src 'self' blob: data:; connect-src 'self'; object-src 'none'; base-uri 'self'; form-action 'self'; frame-ancestors 'none'",
     );
 });

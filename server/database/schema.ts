@@ -157,7 +157,6 @@ export const oauth2Applications = sqliteTable("oauth2_applications", {
     redirect_uris: text("redirect_uris"),
     name: text("name").notNull(),
     description: text("description"),
-    proxy_microsoft: integer("proxy_microsoft").notNull().default(0),
     type: text("type"),
     profile_picture: text("profile_picture"),
     owner_id: integer("owner_id"),

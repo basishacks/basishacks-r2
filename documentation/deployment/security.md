@@ -18,9 +18,9 @@ Every response from the Nitro server includes a baseline set of **6 security hea
 | `X-Content-Type-Options` | `nosniff` |
 | `Referrer-Policy` | `strict-origin-when-cross-origin` |
 | `Permissions-Policy` | `camera=(), microphone=(), geolocation=(), payment=(), usb=(), magnetometer=(), gyroscope=(), accelerometer=(), autoplay=(), encrypted-media=(), picture-in-picture=()` |
-| `Content-Security-Policy` | `default-src 'self'; script-src 'self' 'unsafe-inline'; style-src 'self' 'unsafe-inline'; font-src 'self'; img-src 'self' blob: data:; connect-src 'self' https://login.microsoftonline.com; object-src 'none'; base-uri 'self'; form-action 'self'; frame-ancestors 'none'` |
+| `Content-Security-Policy` | `default-src 'self'; script-src 'self' 'unsafe-inline'; style-src 'self' 'unsafe-inline'; font-src 'self'; img-src 'self' blob: data:; connect-src 'self'; object-src 'none'; base-uri 'self'; form-action 'self'; frame-ancestors 'none'` |
 
-The `Content-Security-Policy` header includes **10 directives** that restrict resource loading to same-origin sources by default, with allowances for Nuxt SSR hydration scripts, Vue inline styles, font files, image blobs and data URIs, and Microsoft login connectivity.
+The `Content-Security-Policy` header includes **10 directives** that restrict resource loading to same-origin sources by default, with allowances for Nuxt SSR hydration scripts, Vue inline styles, font files, image blobs, and data URIs.
 
 The middleware runs for API routes, rendered HTML pages, and static assets. The `'unsafe-inline'` source expression is required for `script-src` because Nuxt SSR hydration injects `window.__NUXT__` as an inline script, and for `style-src` because Vue and Nuxt UI components apply inline style bindings. The `'unsafe-eval'` source expression is intentionally omitted.
 
@@ -172,8 +172,8 @@ The log line includes both the admin's ID/email and the target user's ID/email. 
 ## Microsoft Graph API
 
 - All Microsoft Graph API calls are centralized in `server/plugins/microsoft.ts` for auditability
-- The Microsoft OAuth2 configuration reads the Entra ID tenant and client ID from the `MICROSOFT_TENANT_ID` and `MICROSOFT_CLIENT_ID` environment variables
-- Client ID and tenant are defined in `server/utils/oauth2.ts`; if either env var is missing, Microsoft Graph features are disabled gracefully
+- Graph configuration reads the tenant and client ID from `MICROSOFT_TENANT_ID` and `MICROSOFT_CLIENT_ID`.
+- Graph features are independent from basis-auth and cannot authenticate a basishacks session.
 
 ## OAuth2 Client Secret Storage
 

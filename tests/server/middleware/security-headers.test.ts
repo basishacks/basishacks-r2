@@ -57,7 +57,7 @@ describe("security headers middleware", () => {
         expect(csp).toContain("style-src 'self' 'unsafe-inline'");
         expect(csp).toContain("font-src 'self'");
         expect(csp).toContain("img-src 'self' blob: data:");
-        expect(csp).toContain("connect-src 'self' https://login.microsoftonline.com");
+        expect(csp).toContain("connect-src 'self'");
         expect(csp).toContain("object-src 'none'");
         expect(csp).toContain("base-uri 'self'");
         expect(csp).toContain("form-action 'self'");
@@ -197,12 +197,12 @@ describe("security headers middleware", () => {
         expect(csp).toContain("img-src 'self' blob: data:");
     });
 
-    it("CSP contains connect-src 'self' https://login.microsoftonline.com", async () => {
+    it("CSP restricts connections to the same origin", async () => {
         const event = createMockEvent("/api/test");
         await middleware(event);
 
         const csp = event.node.res.getHeader("content-security-policy") as string;
-        expect(csp).toContain("connect-src 'self' https://login.microsoftonline.com");
+        expect(csp).toContain("connect-src 'self'");
     });
 
     it("CSP contains object-src 'none'", async () => {

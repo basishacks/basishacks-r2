@@ -1,6 +1,6 @@
 # basishacks
 
-The official website for the **BIBS-C Network Hackathon** (season 2, 2025–26). Full-stack Nuxt 4 application with basis-auth login, peer voting, judge scoring, team management, and Microsoft Graph API integration.
+The official website for the **BIBS-C Network Hackathon** (season 2, 2025–26). Full-stack Nuxt 4 application with basis-auth login, peer voting, judge scoring, team management, and independent Graph integration.
 
 ## Technology Stack
 
@@ -55,9 +55,9 @@ The canonical list of variables lives in `.env.example`. The table below summari
 | `BASIS_AUTH_CLIENT_ID` | Required | Confidential client ID registered for basishacks |
 | `BASIS_AUTH_CLIENT_SECRET` | Required | Confidential client secret; keep it server-side |
 | `BASIS_AUTH_RESOURCE` | Required | Resource audience for basishacks access tokens (normally `urn:basis:api:basishacks`) |
-| `MICROSOFT_TENANT_ID` | Optional | Microsoft Entra ID tenant used only by Microsoft Graph integration |
-| `MICROSOFT_CLIENT_ID` | Optional | Microsoft Entra ID app used only by Microsoft Graph integration |
-| `MICROSOFT_CLIENT_SECRET` | Optional | Microsoft Entra ID app secret used only by Microsoft Graph integration |
+| `MICROSOFT_TENANT_ID` | Optional | Tenant used only by Graph features |
+| `MICROSOFT_CLIENT_ID` | Optional | Application ID used only by Graph features |
+| `MICROSOFT_CLIENT_SECRET` | Optional | Application secret used only by Graph features |
 | `CURRENT_URL_ORIGIN` | Optional | Public origin used to derive `/api/auth/basis/callback`. Defaults to `http://localhost:3000`; set it to the externally reachable origin in production |
 | `DEEPSEEK_API_KEY` | Optional | DeepSeek API key for AI chat features (debug routes only) |
 | `PORT` / `HOST` | Optional | Server port/host override (defaults: `3000` / `0.0.0.0`) |
@@ -75,7 +75,7 @@ The only login method is the separately deployed **basis-auth** service. `/api/l
 
 The short-lived login transaction is stored in a separate encrypted HTTP-only session. After the callback validates the ID token and loads UserInfo, basishacks links the first verified login to the existing local user by normalized email. Later logins resolve by the stable issuer and subject, preserving local user IDs, roles, teams, votes, and submissions. Provider tokens are not stored. Logout remains local to basishacks.
 
-The former basishacks OAuth provider and application-management UI/API have been retired. The legacy `oauth2_applications` table and records remain for audit and rollback. Microsoft Graph integration remains independent from login.
+The former basishacks OAuth provider and application-management UI/API have been retired. The legacy `oauth2_applications` table and records remain for audit and rollback. Graph integration is independent and is never used to authenticate a basishacks session.
 
 ## Database Setup
 
@@ -152,7 +152,7 @@ app/                    # Vue frontend
 server/                 # Nitro backend
   api/                  # API route handlers
   middleware/           # Security headers, OAuth2 authorize, debug lockdown
-  plugins/              # DB init, MS Graph token, env validation
+  plugins/              # DB initialization, Graph integration, env validation
   database/             # Drizzle ORM schema + dual-runtime init
   utils/                # Auth, rate limiting, OAuth2 JWT, URL validation, etc.
 shared/                 # Zod schemas, types, permissions, OAuth2 scopes, rubric

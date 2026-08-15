@@ -18,9 +18,8 @@ The platform manages the entire hackathon lifecycle:
 | **Project Submission** | Teams submit projects with name, description, demo URL, repository URL, and sourcing information. Submissions are accepted only during `not_started` or `in_progress` states. |
 | **Peer Voting** | Participants vote on projects by distributing 10 stars across eligible projects in the same pathway. The total must equal exactly 10. |
 | **Judge Scoring** | Judges score projects using a weighted rubric system with criteria scored 0–5 per criterion. Separate rubrics are used for junior and senior pathways. |
-| **OAuth2 Application Integrations** | Full OAuth2 2.0/2.1 authorization server with PKCE support, allowing third-party and first-party applications to integrate with the platform. |
-| **Mod Portal** | Administrative dashboard for managing OAuth2 applications, users, teams, seasons, and debug tools. |
-| **Microsoft Graph API** | Integration with Microsoft Entra ID for OAuth2 login, meeting scheduling, and Teams chat via the Graph API. |
+| **Mod Portal** | Administrative dashboard for managing users, teams, seasons, and debug tools. |
+| **Graph API** | Independent meeting scheduling and Teams chat integration. It is not an authentication provider. |
 | **DeepSeek AI Chatbot** | In-memory chat session store powered by the OpenAI SDK for DeepSeek AI interactions in debug routes. |
 | **SafeLink / SafeComark Components** | Client-side components that sanitize user-provided links and markdown content, preventing XSS and open redirects in rendered project descriptions. |
 | **Security Middleware** | A middleware pipeline including HTTP security headers (6 headers, 10 CSP directives), debug route lockdown (`DISABLE_DEBUG_ROUTES`), and rate limiting (4 tiers). |
@@ -58,7 +57,7 @@ Authentication is delegated to one provider:
 
 ### basis-auth
 
-The browser uses basis-auth discovery and authorization code with S256 PKCE, state, nonce, a confidential client secret, validated ID tokens, and UserInfo. The first verified login can attach to an existing user by normalized email; repeat logins resolve by stable issuer and subject. Microsoft credentials are retained only for independent Graph features.
+The browser uses basis-auth discovery and authorization code with S256 PKCE, state, nonce, a confidential client secret, validated ID tokens, and UserInfo. The first verified login can attach to an existing user by normalized email; repeat logins resolve by stable issuer and subject. Graph credentials are used only for independent Graph features.
 
 ## Roles & Permissions
 
@@ -76,23 +75,18 @@ Users are assigned one of three core roles in the database:
 
 Beyond the three core roles, the platform supports fine-grained permissions stored as space-separated strings in the `role` column. These are managed through the `DevPermissions` constants in `shared/permissions.ts`:
 
-| Permission | Description |
-| --- | --- |
-| `dev_users` | Access to user management utilities. |
-| `dev_teams` | Access to team management utilities. |
-| `dev_debug` | Access to debug endpoints. |
-| `dev_deepseek` | Access to DeepSeek AI features. |
-| `portal.users.view` | View users in the mod portal. |
-| `portal.debug.view` | View debug tools in the mod portal. |
-| `portal.teams.view` | View teams in the mod portal. |
+| Permission             | Description                            |
+| ---------------------- | -------------------------------------- |
+| `dev_users`            | Access to user management utilities.   |
+| `dev_teams`            | Access to team management utilities.   |
+| `dev_debug`            | Access to debug endpoints.             |
+| `dev_deepseek`         | Access to DeepSeek AI features.        |
+| `portal.users.view`    | View users in the mod portal.          |
+| `portal.debug.view`    | View debug tools in the mod portal.    |
+| `portal.teams.view`    | View teams in the mod portal.          |
 | `portal.deepseek.view` | View DeepSeek tools in the mod portal. |
-| `portal.applications.view` | View OAuth2 applications. |
-| `portal.applications.create` | Create OAuth2 applications. |
-| `portal.applications.create.firstparty` | Create first-party OAuth2 applications. |
-| `portal.applications.delete` | Delete OAuth2 applications. |
-| `portal.applications.view.all` | View all OAuth2 applications, including those owned by other users. |
-| `portal.seasons.view` | View season management. |
-| `portal.seasons.edit` | Edit seasons. |
+| `portal.seasons.view`  | View season management.                |
+| `portal.seasons.edit`  | Edit seasons.                          |
 
 The `hasPermission()` helper checks both the specific permission and the `admin` permission (admins implicitly have all permissions).
 
@@ -123,7 +117,6 @@ basishacks-r2/
 │   ├── pages/                  # File-based routing
 │   │   ├── dashboard/          # Dashboard pages (teams, general, results)
 │   │   ├── developers/         # Admin/mod portal
-│   │   │   ├── applications/   # OAuth2 app management (create, list, detail)
 │   │   │   ├── debug.vue       # Debug tools
 │   │   │   ├── deepseek.vue    # DeepSeek AI chat interface
 │   │   │   ├── season.vue      # Hackathon Administration (seasons + config)

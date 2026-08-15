@@ -230,7 +230,7 @@ DEEPSEEK_API_KEY=your_deepseek_api_key_here
 
 ## HTTPS Dev Server Setup
 
-Use HTTPS for local development because Microsoft OAuth2 and secure session cookies require a trusted context:
+Use HTTPS for local development because secure session cookies require a trusted context:
 
 ```bash
 bun dev --https

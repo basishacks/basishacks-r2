@@ -1,6 +1,5 @@
 import { describe, it, expect } from "vitest";
 import {
-    MicrosoftRedirectRequest,
     CreateTeamQuery,
     GetTeamsQuery,
     CreateTeamRequest,
@@ -10,7 +9,6 @@ import {
     UpdateUserRequest,
     CreateTeamScoresRequest,
     SubmitVoteRequest,
-    CreateApplicationRequest,
     ManageRedirectUriRequest,
     OAuth2TokenRequest,
     OAuth2SessionActionRequest,
@@ -38,24 +36,6 @@ import {
     MAX_PROJECT_SOURCE_LENGTH,
     MAX_REASONING_LENGTH,
 } from "~~/shared/schemas";
-
-describe("MicrosoftRedirectRequest", () => {
-    it("accepts a valid token", () => {
-        expect(() => MicrosoftRedirectRequest.parse({ token: "abc123" })).not.toThrow();
-    });
-
-    it("accepts a long token", () => {
-        expect(() => MicrosoftRedirectRequest.parse({ token: "a".repeat(1000) })).not.toThrow();
-    });
-
-    it("rejects an empty token", () => {
-        expect(() => MicrosoftRedirectRequest.parse({ token: "" })).toThrow();
-    });
-
-    it("rejects a missing token", () => {
-        expect(() => MicrosoftRedirectRequest.parse({})).toThrow();
-    });
-});
 
 describe("CreateTeamQuery", () => {
     it("accepts add=true", () => {
@@ -576,84 +556,6 @@ describe("SubmitVoteRequest", () => {
             SubmitVoteRequest.parse({
                 scores,
                 reasoning: "Great work",
-            }),
-        ).toThrow();
-    });
-});
-
-describe("CreateApplicationRequest", () => {
-    it("accepts a valid application", () => {
-        expect(() =>
-            CreateApplicationRequest.parse({
-                name: "My App",
-                proxy_microsoft: false,
-            }),
-        ).not.toThrow();
-    });
-
-    it("accepts a valid application with type", () => {
-        expect(() =>
-            CreateApplicationRequest.parse({
-                name: "My App",
-                proxy_microsoft: false,
-                type: "first",
-            }),
-        ).not.toThrow();
-
-        expect(() =>
-            CreateApplicationRequest.parse({
-                name: "My App",
-                proxy_microsoft: false,
-                type: "third",
-            }),
-        ).not.toThrow();
-    });
-
-    it("accepts a valid application with description", () => {
-        expect(() =>
-            CreateApplicationRequest.parse({
-                name: "My App",
-                description: "A useful app",
-                proxy_microsoft: false,
-            }),
-        ).not.toThrow();
-    });
-
-    it("rejects a missing name", () => {
-        expect(() => CreateApplicationRequest.parse({ proxy_microsoft: false })).toThrow();
-    });
-
-    it("rejects an empty name", () => {
-        expect(() =>
-            CreateApplicationRequest.parse({ name: "", proxy_microsoft: false }),
-        ).toThrow();
-    });
-
-    it("rejects a name longer than 64 characters", () => {
-        expect(() =>
-            CreateApplicationRequest.parse({
-                name: "A".repeat(65),
-                proxy_microsoft: false,
-            }),
-        ).toThrow();
-    });
-
-    it("rejects a description longer than 1024 characters", () => {
-        expect(() =>
-            CreateApplicationRequest.parse({
-                name: "My App",
-                description: "A".repeat(1025),
-                proxy_microsoft: false,
-            }),
-        ).toThrow();
-    });
-
-    it("rejects an invalid type", () => {
-        expect(() =>
-            CreateApplicationRequest.parse({
-                name: "My App",
-                proxy_microsoft: false,
-                type: "second",
             }),
         ).toThrow();
     });
@@ -1823,98 +1725,6 @@ describe("ManageRedirectUriRequest - additional", () => {
 
     it("rejects ftp:// protocol", () => {
         expect(() => ManageRedirectUriRequest.parse({ uri: "ftp://localhost/file" })).toThrow();
-    });
-});
-
-describe("CreateApplicationRequest - additional", () => {
-    it("accepts a name of exactly 1 character", () => {
-        expect(() =>
-            CreateApplicationRequest.parse({
-                name: "A",
-                proxy_microsoft: false,
-            }),
-        ).not.toThrow();
-    });
-
-    it("accepts a name of exactly 64 characters", () => {
-        expect(() =>
-            CreateApplicationRequest.parse({
-                name: "A".repeat(64),
-                proxy_microsoft: false,
-            }),
-        ).not.toThrow();
-    });
-
-    it("accepts a description of exactly 1024 characters", () => {
-        expect(() =>
-            CreateApplicationRequest.parse({
-                name: "My App",
-                description: "A".repeat(1024),
-                proxy_microsoft: false,
-            }),
-        ).not.toThrow();
-    });
-
-    it("accepts proxy_microsoft as true", () => {
-        expect(() =>
-            CreateApplicationRequest.parse({
-                name: "My App",
-                proxy_microsoft: true,
-            }),
-        ).not.toThrow();
-    });
-
-    it("accepts a name with unicode", () => {
-        expect(() =>
-            CreateApplicationRequest.parse({
-                name: "我的应用",
-                proxy_microsoft: false,
-            }),
-        ).not.toThrow();
-    });
-
-    it("accepts a name with special characters", () => {
-        expect(() =>
-            CreateApplicationRequest.parse({
-                name: "My App! @ #1 (beta)",
-                proxy_microsoft: false,
-            }),
-        ).not.toThrow();
-    });
-
-    it("accepts unknown extra fields (stripped)", () => {
-        const result = CreateApplicationRequest.parse({
-            name: "My App",
-            proxy_microsoft: false,
-            unknown_field: "should be stripped",
-        });
-        expect((result as any).unknown_field).toBeUndefined();
-    });
-
-    it("rejects missing proxy_microsoft", () => {
-        expect(() =>
-            CreateApplicationRequest.parse({
-                name: "My App",
-            }),
-        ).toThrow();
-    });
-
-    it("rejects a numeric proxy_microsoft", () => {
-        expect(() =>
-            CreateApplicationRequest.parse({
-                name: "My App",
-                proxy_microsoft: 1,
-            }),
-        ).toThrow();
-    });
-
-    it("accepts a name with spaces", () => {
-        expect(() =>
-            CreateApplicationRequest.parse({
-                name: "My Application Name",
-                proxy_microsoft: false,
-            }),
-        ).not.toThrow();
     });
 });
 

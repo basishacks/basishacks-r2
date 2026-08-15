@@ -30,7 +30,6 @@ All configurable length limits are defined as exported constants at the top of `
 | `MAX_SCOPE_LENGTH` | 128 | (scope string validation) |
 | `MAX_REASONING_LENGTH` | 2,147,483,647 | `CreateTeamScoresRequest.reasoning`, `SubmitVoteRequest.reasoning` |
 | `MAX_SECRET_ABBREVIATED_LENGTH` | 16 | Abbreviated client secret display |
-| `MAX_SESSION_TOKEN_LENGTH` | 2048 | `MicrosoftRedirectRequest.token` |
 | `MAX_REASONING_LENGTH` | 2000 | `CreateTeamScoresRequest.reasoning`, `SubmitVoteRequest.reasoning` |
 | `MAX_VOTE_SCORES` | 50 | `SubmitVoteRequest.scores` array length |
 | `MAX_ELECTION_POSITIONS` | 20 | `ElectionVoteRequest.positions` array length |
@@ -168,18 +167,6 @@ Coerces string route params to positive integers. Used by:
 
 ---
 
-## Authentication Schemas
-
-### `MicrosoftRedirectRequest`
-
-| Field   | Type     | Constraints         |
-| ------- | -------- | ------------------- |
-| `token` | `string` | Required, non-empty |
-
-::: info Legacy schema This symbol remains for source compatibility but no active route consumes it. :::
-
----
-
 ## Team Schemas
 
 ### `CreateTeamQuery`
@@ -309,15 +296,6 @@ Coerces string route params to positive integers. Used by:
 ## Retained Legacy OAuth2 Schemas
 
 These exported schemas remain for rollback and source compatibility. The native provider and `/api/applications/*` routes have been retired; new client registration belongs in basis-auth.
-
-### `CreateApplicationRequest`
-
-| Field             | Type                 | Constraints                             |
-| ----------------- | -------------------- | --------------------------------------- |
-| `name`            | `string`             | Required, 1–64 characters               |
-| `description`     | `string`             | Optional, max 1024 characters           |
-| `proxy_microsoft` | `boolean`            | Required, enables Microsoft Graph proxy |
-| `type`            | `'first' \| 'third'` | Optional, defaults to third-party       |
 
 ### `DeleteApplicationsRequest`
 

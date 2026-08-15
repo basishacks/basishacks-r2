@@ -40,22 +40,21 @@ basishacks-r2/
 │   └── utils/              # Frontend utilities (consts, errors, loading, url-validation)
 ├── server/                 # Nitro backend
 │   ├── api/                # API route handlers (file-based)
-│   ├── middleware/         # Server middleware (security-headers, debug-lockdown, oauth2-authorize)
-│   ├── plugins/            # Nitro plugins (init-database, validate-environment, microsoft, validate-oauth2-jwt-secret)
+│   ├── middleware/         # Server middleware (security-headers and debug-lockdown)
+│   ├── plugins/            # Database, Graph integration, and environment validation
 │   ├── types/              # Type augmentations (H3EventContext)
 │   └── utils/              # Server utilities
 │       ├── database/       # Per-table DB helpers (users, teams, scores, etc.)
 │       ├── auth.ts         # requireUser / requireJudge / requireAdmin / requirePermission
 │       ├── convert.ts      # DB row -> public API object transformers
 │       ├── rateLimit.ts    # In-memory rate limiter (4 tiers)
-│       ├── oauth2.ts       # Microsoft OAuth2 URL construction
-│       ├── oauth2-validate.ts  # OAuth2 authorization request validation
-│       ├── oauth2-jwt.ts   # JWT verification and withOAuth2JWT() wrapper
+│       ├── oauth2.ts       # Public origin and callback URL helpers
+│       ├── basis-auth.ts   # OIDC discovery, PKCE login, callback, and UserInfo
+│       ├── oauth2-jwt.ts   # basis-auth resource-token validation
 │       ├── profile.ts      # Profile picture helpers
 │       ├── assets.ts       # Static and user asset helpers (path traversal prevention)
 │       ├── scoring.ts      # Score aggregation and final ranking
 │       ├── url-validation.ts   # SSRF prevention, private IP blocking, redirect URI validation
-│       ├── validate-oauth2-jwt-secret.ts # JWT secret guard
 │       └── deepseek-store.ts   # DeepSeek AI chat session store
 ├── shared/                 # Code shared between client and server
 │   ├── schemas.ts          # Zod schemas for API input validation
@@ -95,7 +94,6 @@ Nuxt Middleware (auth.ts route guard)
 Nitro Server Middleware
   ├── security-headers.ts     (CSP, HSTS, X-Frame-Options, etc.)
   ├── debug-lockdown.ts       (404 debug routes when DISABLE_DEBUG_ROUTES is set)
-  ├── oauth2-authorize.ts     (OAuth2 authorization session validation)
   └── Rate limiting wrapper   (applied per-handler via applyRateLimit)
   │
   ▼
@@ -194,11 +192,12 @@ The `validate-environment.ts` Nitro plugin performs mandatory checks at server s
 
 - `NUXT_SESSION_PASSWORD` must be >= 32 bytes (fatal in production, warning in dev).
 - All four `BASIS_AUTH_*` client values are required (fatal in production, warning in development).
-- Microsoft configuration is optional and affects Graph integration only.
 
 ### OAuth2 JWT utilities
 
 The `basis-auth.ts` utility implements discovery and the browser login flow. `oauth2-jwt.ts` verifies protected-resource tokens against basis-auth JWKS with exact issuer, audience, algorithm, type, expiry, and scope checks.
+
+`server/plugins/microsoft.ts` provides independent Graph features and is never used for login.
 
 ### Comprehensive test suite
 

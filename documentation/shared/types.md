@@ -122,18 +122,17 @@ These interfaces match the SQL schema exactly. They include all columns, includi
 
 ### `OAuth2Application`
 
-| Field             | Type             | Description                                  |
-| ----------------- | ---------------- | -------------------------------------------- |
-| `client_id`       | `string`         | UUID client identifier                       |
-| `client_secret`   | `string`         | Space-separated SHA-256 hashes               |
-| `redirect_uris`   | `string \| null` | Space-separated allowed redirect URIs        |
-| `permissions`     | `string \| null` | Space-separated allowed OAuth2 scopes        |
-| `name`            | `string`         | Application display name                     |
-| `description`     | `string \| null` | Application description                      |
-| `proxy_microsoft` | `number`         | Whether app proxies Microsoft OAuth (0 or 1) |
-| `type`            | `string \| null` | First-party or third-party application type  |
-| `profile_picture` | `string \| null` | Application icon path                        |
-| `owner_id`        | `number \| null` | Foreign key to owning user                   |
+| Field             | Type             | Description                                 |
+| ----------------- | ---------------- | ------------------------------------------- |
+| `client_id`       | `string`         | UUID client identifier                      |
+| `client_secret`   | `string`         | Space-separated SHA-256 hashes              |
+| `redirect_uris`   | `string \| null` | Space-separated allowed redirect URIs       |
+| `permissions`     | `string \| null` | Space-separated allowed OAuth2 scopes       |
+| `name`            | `string`         | Application display name                    |
+| `description`     | `string \| null` | Application description                     |
+| `type`            | `string \| null` | First-party or third-party application type |
+| `profile_picture` | `string \| null` | Application icon path                       |
+| `owner_id`        | `number \| null` | Foreign key to owning user                  |
 
 ### `Award`
 

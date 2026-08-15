@@ -105,18 +105,17 @@ Individual project scores within a ballot. Scores must be 1–5 or null.
 
 ### `oauth2_applications`
 
-| Column            | Type                         | Description                    |
-| ----------------- | ---------------------------- | ------------------------------ |
-| `client_id`       | `TEXT PRIMARY KEY`           | UUID-based application ID      |
-| `client_secret`   | `TEXT NOT NULL`              | Space-separated SHA-256 hashes |
-| `permissions`     | `TEXT`                       | Space-separated allowed scopes |
-| `redirect_uris`   | `TEXT`                       | Space-separated redirect URIs  |
-| `name`            | `TEXT NOT NULL`              | Application display name       |
-| `description`     | `TEXT`                       | Application description        |
-| `proxy_microsoft` | `INTEGER NOT NULL DEFAULT 0` | Whether app proxies MS Graph   |
-| `type`            | `TEXT`                       | `first` or `third`             |
-| `profile_picture` | `TEXT`                       | Application icon               |
-| `owner_id`        | `INTEGER`                    | FK to `users.id`               |
+| Column            | Type               | Description                    |
+| ----------------- | ------------------ | ------------------------------ |
+| `client_id`       | `TEXT PRIMARY KEY` | UUID-based application ID      |
+| `client_secret`   | `TEXT NOT NULL`    | Space-separated SHA-256 hashes |
+| `permissions`     | `TEXT`             | Space-separated allowed scopes |
+| `redirect_uris`   | `TEXT`             | Space-separated redirect URIs  |
+| `name`            | `TEXT NOT NULL`    | Application display name       |
+| `description`     | `TEXT`             | Application description        |
+| `type`            | `TEXT`             | `first` or `third`             |
+| `profile_picture` | `TEXT`             | Application icon               |
+| `owner_id`        | `INTEGER`          | FK to `users.id`               |
 
 ### `seasons`
 
@@ -206,7 +205,7 @@ Each table has a dedicated helper module in `server/utils/database/`:
 
 | File | Key Functions |
 | --- | --- |
-| `users.ts` | `getUser`, `getUserByEmail`, `createUserFromMicrosoftProfile`, `updateUserName`, `updateUserProfileTheme` |
+| `users.ts` | `getUser`, `getUserByEmail`, `findOrLinkBasisAuthUser`, `getUserByBasisAuthSubject`, `updateUserName`, `updateUserProfileTheme` |
 | `teams.ts` | Team CRUD, project submission |
 | `members.ts` | Team member management |
 | `scores.ts` | Judge score CRUD |
