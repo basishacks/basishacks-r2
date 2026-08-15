@@ -7,7 +7,6 @@ const files = [
     "server/api/debug/deepseek/sessions/[id]/index.delete.ts",
     "server/api/debug/deepseek/sessions/index.post.ts",
     "server/api/debug/deepseek/sessions/[id]/message.post.ts",
-    "server/api/oauth2/token.post.ts",
     "server/api/_webhooks/lifecycle.post.ts",
 ];
 
@@ -37,28 +36,7 @@ const allApiFiles = [
     "server/api/admin/scores.get.ts",
     "server/api/admin/teams.get.ts",
     "server/api/admin/teams.delete.ts",
-    "server/api/applications/index.get.ts",
-    "server/api/applications/index.delete.ts",
-    "server/api/applications/index.post.ts",
-    "server/api/applications/[id]/index.get.ts",
-    "server/api/applications/[id]/profile_picture.get.ts",
-    "server/api/applications/[id]/secrets/index.get.ts",
-    "server/api/applications/[id]/secrets/index.post.ts",
-    "server/api/applications/[id]/secrets/index.delete.ts",
-    "server/api/applications/[id]/scopes/index.get.ts",
-    "server/api/applications/[id]/scopes/index.post.ts",
-    "server/api/applications/[id]/scopes/index.delete.ts",
-    "server/api/applications/[id]/redirect_uris/index.get.ts",
-    "server/api/applications/[id]/redirect_uris/index.post.ts",
-    "server/api/applications/[id]/redirect_uris/index.delete.ts",
-    "server/api/oauth2/token.post.ts",
-    "server/api/oauth2/session.get.ts",
-    "server/api/oauth2/session.post.ts",
-    "server/api/oauth2/session.delete.ts",
-    "server/api/oauth2/dccallback.get.ts",
-    "server/api/oauth2/mscallback.get.ts",
-    "server/api/oauth2/userinfo.get.ts",
-    "server/api/oauth2/to_microsoft.post.ts",
+    "server/api/auth/basis/callback.get.ts",
     "server/api/debug/upload.post.ts",
     "server/api/debug/files.get.ts",
     "server/api/debug/deepseek/sessions/index.post.ts",
@@ -69,7 +47,6 @@ const allApiFiles = [
     "server/api/_webhooks/update.post.ts",
     "server/api/chatbot/index.get.ts",
     "server/api/chatbot/message.get.ts",
-    "server/api/auth/index.get.ts",
 ];
 
 describe("API error messages do not leak internal details", () => {
@@ -211,24 +188,6 @@ describe("Failed request error responses", () => {
         expect(source).not.toMatch(/return createError/);
     });
 
-    it("applications/index.post.ts handles application limit with 429 status", () => {
-        const source = readFileSync(
-            resolve(
-                import.meta.dirname,
-                "..",
-                "..",
-                "server",
-                "api",
-                "applications",
-                "index.post.ts",
-            ),
-            "utf-8",
-        );
-        expect(source).toContain("429");
-        expect(source).toContain("throw createError");
-        expect(source).not.toMatch(/return createError/);
-    });
-
     it("debug/upload.post.ts validates all file upload scenarios with 400/413", () => {
         const source = readFileSync(
             resolve(import.meta.dirname, "..", "..", "server", "api", "debug", "upload.post.ts"),
@@ -290,31 +249,8 @@ describe("_webhooks error patterns", () => {
     });
 });
 
-describe("OAuth2 error responses do not leak internals", () => {
-    it("token.post.ts uses invalid_request; oauth2-token.ts uses invalid_client and invalid_grant", () => {
-        const tokenSource = readFileSync(
-            resolve(import.meta.dirname, "..", "..", "server", "api", "oauth2", "token.post.ts"),
-            "utf-8",
-        );
-        expect(tokenSource).toContain("invalid_request");
-
-        const tokenUtilSource = readFileSync(
-            resolve(import.meta.dirname, "..", "..", "server", "utils", "oauth2-token.ts"),
-            "utf-8",
-        );
-        expect(tokenUtilSource).toContain("invalid_client");
-        expect(tokenUtilSource).toContain("invalid_grant");
-    });
-
-    it("token.post.ts does not leak error.message into createError", () => {
-        const source = readFileSync(
-            resolve(import.meta.dirname, "..", "..", "server", "api", "oauth2", "token.post.ts"),
-            "utf-8",
-        );
-        expect(source).not.toMatch(/statusMessage:.*error\.message/);
-    });
-
-    it("dccallback.get.ts uses throw createError for each validation failure", () => {
+describe("basis-auth callback errors do not leak provider internals", () => {
+    it("returns a generic authentication error", () => {
         const source = readFileSync(
             resolve(
                 import.meta.dirname,
@@ -322,22 +258,13 @@ describe("OAuth2 error responses do not leak internals", () => {
                 "..",
                 "server",
                 "api",
-                "oauth2",
-                "dccallback.get.ts",
+                "auth",
+                "basis",
+                "callback.get.ts",
             ),
             "utf-8",
         );
-        const throwCount = (source.match(/throw createError/g) || []).length;
-        expect(throwCount).toBeGreaterThanOrEqual(4);
-        expect(source).not.toMatch(/return createError/);
-    });
-
-    it("session.post.ts handles errors with throw createError", () => {
-        const source = readFileSync(
-            resolve(import.meta.dirname, "..", "..", "server", "api", "oauth2", "session.post.ts"),
-            "utf-8",
-        );
-        expect(source).toMatch(/throw createError/);
-        expect(source).not.toMatch(/return createError/);
+        expect(source).toContain("Unable to complete login. Please try again.");
+        expect(source).not.toMatch(/message:\s*error\.message/);
     });
 });

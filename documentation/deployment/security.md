@@ -31,7 +31,9 @@ The following environment variables directly affect platform security and must b
 | Variable | Requirement | Purpose |
 | --- | --- | --- |
 | `NUXT_SESSION_PASSWORD` | At least 32 bytes | Encryption key for session cookies managed by `nuxt-auth-utils` |
-| `NUXT_OAUTH2_JWT_SECRET` | At least 32 bytes | Signing key for OAuth2 access tokens |
+| `BASIS_AUTH_CLIENT_SECRET` | Provider-generated confidential value | Authenticates basishacks at the basis-auth token endpoint |
+| `BASIS_AUTH_ISSUER` | Exact trusted issuer | Discovery and issuer validation |
+| `BASIS_AUTH_RESOURCE` | Exact registered audience | Resource-token audience validation |
 | `TRUST_PROXY` | Set only when behind a trusted reverse proxy | Enables use of the `x-forwarded-for` header for client IP identification in rate limiting |
 | `MICROSOFT_TENANT_ID` | Valid Microsoft Entra ID tenant | Required for Microsoft Graph API integration |
 | `MICROSOFT_CLIENT_ID` | Valid Microsoft Entra ID application ID | Required for Microsoft Graph API integration |
@@ -41,12 +43,12 @@ The following environment variables directly affect platform security and must b
 
 All API endpoints are protected by an in-memory rate limiter. Sensitive routes consume requests from dedicated buckets:
 
-| Bucket           | Default                | Routes                                 |
-| ---------------- | ---------------------- | -------------------------------------- |
-| General API      | 6000 requests / minute | All non-sensitive API routes           |
-| Authentication   | 600 requests / minute  | `/api/login`, `/api/oauth2/*`          |
-| Voting / scoring | 600 requests / minute  | `/api/ballot`, `/api/teams/:id/scores` |
-| File upload      | 600 requests / minute  | `/api/debug/upload`                    |
+| Bucket           | Default                | Routes                                   |
+| ---------------- | ---------------------- | ---------------------------------------- |
+| General API      | 6000 requests / minute | All non-sensitive API routes             |
+| Authentication   | 600 requests / minute  | `/api/login`, `/api/auth/basis/callback` |
+| Voting / scoring | 600 requests / minute  | `/api/ballot`, `/api/teams/:id/scores`   |
+| File upload      | 600 requests / minute  | `/api/debug/upload`                      |
 
 - **Client identification:** Authenticated users are identified by `user:{id}`; unauthenticated requests by `ip:{ip}`
 - **Response:** 429 status with `Retry-After` header
@@ -72,22 +74,21 @@ When this variable is truthy, requests to `/api/debug/*` or `/debug*` return `40
 - **Session password** (`NUXT_SESSION_PASSWORD`) must be at least 32 bytes.
 - Sessions are managed by `nuxt-auth-utils` with encrypted cookies.
 - Session cookies are issued with `httpOnly: true`, `sameSite: "lax"`, and `secure: true` in production.
-- The OAuth2 `bridge_id` cookie and `bridge_error` cookie use `httpOnly: true`, `secure: true`, `sameSite: "lax"`, and a short TTL of **10 minutes** (`maxAge: 10 * 60`).
-- The `pkce_verifier` cookie is also hardened with `httpOnly: true`, `secure: true`, `sameSite: "lax"`, and a **10-minute TTL**.
+- The separate basis-auth transaction session contains state, nonce, PKCE verifier, and a safe relative redirect. It is HTTP-only, encrypted, SameSite=Lax, secure in production, and limited to **10 minutes**.
 - The session cookie stores only `{ user: { id: number } }`; no sensitive data is stored client-side.
 - The full user record is fetched from the database on every authenticated request.
 
 ### Startup Validation
 
-Two critical secrets are validated at server startup in `server/plugins/validate-environment.ts`:
+Critical authentication configuration is validated at server startup in `server/plugins/validate-environment.ts`:
 
 | Variable | Validation | Production Behavior | Non-Production Behavior |
 | --- | --- | --- | --- |
 | `NUXT_SESSION_PASSWORD` | Must be set and at least 32 bytes (UTF-8 encoded) | `process.exit(1)` with fatal error message | Stderr warning, continues |
-| `NUXT_OAUTH2_JWT_SECRET` | Must be set and at least 32 bytes (UTF-8 encoded) | `process.exit(1)` with fatal error message | Uses dev-only fallback with prominent warning; NEVER used in production |
+| `BASIS_AUTH_ISSUER`, `BASIS_AUTH_CLIENT_ID`, `BASIS_AUTH_CLIENT_SECRET`, `BASIS_AUTH_RESOURCE` | All must be set | Fatal startup error when any is missing | Warning; login unavailable until configured |
 | `MICROSOFT_*` env vars | All three must be set for Graph features | Warning if partially configured | Warning if partially configured |
 
-The JWT secret validation is also exposed as a testable utility in `server/utils/validate-oauth2-jwt-secret.ts` with injectable exit and logging functions.
+Resource access tokens are verified against basis-auth JWKS and are never signed by basishacks.
 
 ## Database Security
 
@@ -194,53 +195,22 @@ const hash = createHash("sha256").update(plainSecret).digest("hex");
 if (part === hash) return true;
 ```
 
-## JWT Tokens
+## Resource Access Tokens
 
-OAuth2 access tokens are signed JWTs with the following properties:
+Protected basishacks APIs accept basis-auth access tokens with the following required properties:
 
-- **Algorithm:** HS256 (HMAC with SHA-256)
-- **Signing key:** `NUXT_OAUTH2_JWT_SECRET` environment variable
-- **Key length:** Must be at least 32 bytes
-- **Expiration:** 1 hour (`setExpirationTime('1h')`)
-- **Issuer:** `basishacks`
-- **Audience:** The application's `client_id`
-- **Payload claims:** `sub`, `user_id`, `client_id`, `redirect_uri`, `scope`
+- **Signature:** basis-auth JWKS, RS256 only
+- **Issuer:** exact `BASIS_AUTH_ISSUER`
+- **Audience:** exact `BASIS_AUTH_RESOURCE`
+- **Type:** `at+jwt`
+- **Lifetime:** token must be unexpired
+- **Claims:** string `sub`, `client_id`, and `scope`
 
-At startup, the server validates `NUXT_OAUTH2_JWT_SECRET` in `server/plugins/validate-oauth2-jwt-secret.ts`. In production, a missing or too-short secret causes a fatal error and immediate shutdown. In development and test environments, a dev-only fallback is applied with a prominent warning so local work can continue, but this fallback must never be used in production.
-
-```ts
-const jwt = await new SignJWT({
-    sub: String(session.user.id),
-    user_id: session.user.id,
-    client_id: session.application.client_id,
-    redirect_uri: session.redirect_uri,
-    scope: session.scopes.join(" "),
-})
-    .setProtectedHeader({ alg: "HS256" })
-    .setIssuer(getOAuth2Issuer()) // CURRENT_URL_ORIGIN
-    .setAudience(session.application.client_id)
-    .setIssuedAt(Date.now())
-    .setExpirationTime("1h")
-    .sign(key);
-```
-
-Token verification uses `jose.jwtVerify()` with the same secret in `server/utils/oauth2-jwt.ts`.
+Token verification uses `jose.jwtVerify()` and a remotely refreshed basis-auth JWKS. The stable `sub` is mapped through `users.auth_issuer` and `users.auth_subject`.
 
 ## PKCE Support
 
-The OAuth2 authorization flow requires **Proof Key for Code Exchange (PKCE)**. Authorization requests that omit `code_challenge` or `code_challenge_method` are rejected with a 400 `invalid_request: PKCE required` response.
-
-- Clients must provide `code_challenge` and `code_challenge_method` parameters during authorization
-- **Only `S256`** (SHA-256 hash of the code verifier, base64url-encoded) is accepted. The `plain` method has been removed because it provides no additional security over omitting PKCE entirely (RFC 7636 §4.4.2)
-- Requests using any method other than `S256` are rejected with `invalid_request: code_challenge_method must be S256`
-- During token exchange, the `code_verifier` is verified against the stored challenge:
-
-```ts
-const hash = createHash("sha256").update(codeVerifier).digest("base64url");
-verified = hash === session.bh_verifier_challenge;
-```
-
-- PKCE is mandatory for all clients, including confidential clients
+The basis-auth browser flow always generates a fresh verifier and sends an S256 challenge. The verifier, state, and nonce remain only in the encrypted short-lived transaction session, and `openid-client` validates all three during callback processing.
 
 ## Sensitive Scope Consent
 

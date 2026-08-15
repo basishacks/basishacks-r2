@@ -217,29 +217,6 @@ await withLoadingIndicator(async () => {
 
 ### oauth2.ts
 
-**File:** `app/utils/oauth2.ts`
-
-Helper for constructing the OAuth2 authorization session body.
-
-```ts
-export interface OAuth2SessionBody {
-    client_id: string;
-    response_type: string;
-    scope: string;
-    state: string;
-    code_challenge: string;
-    code_challenge_method: string;
-    redirect_uri: string;
-    post_login_redirect?: string | null;
-}
-
-export function buildOAuth2SessionBody(params: OAuth2SessionBody) {
-    return { ...params };
-}
-```
-
-Used by `app/pages/api/oauth2/authorize.vue` to submit OAuth2 session parameters to `/api/oauth2/session`.
-
 ### sanitize.ts
 
 **File:** `app/utils/sanitize.ts`

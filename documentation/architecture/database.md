@@ -316,10 +316,11 @@ In practice, the dev/prod server applies migrations automatically when `createDr
 | `teams.sourcing` | `ALTER TABLE ... ADD COLUMN TEXT DEFAULT '' NOT NULL` |
 | `team_scores.season_id` | `ALTER TABLE ... ADD COLUMN INTEGER` |
 | `oauth2_applications.owner_id` | `ALTER TABLE ... ADD COLUMN INTEGER` |
+| `users.auth_issuer`, `users.auth_subject` | Adds stable basis-auth identity columns and their unique composite index |
 
 ### Seeding
 
-After migrations, `seedHackathon()` ensures the `hackathon` singleton row exists, and `seedOAuth2ApplicationRedirectUri()` auto-registers the onsite-login redirect URI for `ONSITE_LOGIN_CLIENT_ID`.
+After migrations, `seedHackathon()` ensures the `hackathon` singleton row exists. basis-auth client and resource registration is operational configuration in basis-auth itself; basishacks does not seed or modify provider clients.
 
 ### Notable migrations
 
@@ -334,6 +335,7 @@ After migrations, `seedHackathon()` ensures the `hackathon` singleton row exists
 | `migration-2026-06-02-22-15Z.sql` | Creates `user_past_teams` junction table |
 | `migration-2026-06-27-06-01Z.sql` | Creates the `team_awards` table (legacy archived migration) |
 | `0005_dynamic_awards.sql` | Creates and seeds the namespace-keyed award catalog |
+| `0006_normal_master_mold.sql` | Adds `users.auth_issuer`, `users.auth_subject`, and the unique stable-identity index |
 
 ## Foreign Keys
 

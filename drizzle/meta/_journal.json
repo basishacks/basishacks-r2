@@ -43,6 +43,13 @@
             "when": 1784021060699,
             "tag": "0005_absurd_leader",
             "breakpoints": true
+        },
+        {
+            "idx": 6,
+            "version": "6",
+            "when": 1786737131211,
+            "tag": "0006_normal_master_mold",
+            "breakpoints": true
         }
     ]
 }

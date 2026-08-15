@@ -25,7 +25,6 @@ At startup the plugin calls `createDrizzleDatabase()` from `server/database/inde
     - Repairs legacy schemas created from `sql/archive/init.sql`.
     - Applies pending Drizzle Kit migrations from the `drizzle/` directory, tracked in `_drizzle_migrations`.
     - Seeds the `hackathon` singleton row if the table is empty.
-    - Seeds the configured onsite-login OAuth2 redirect URI if `ONSITE_LOGIN_CLIENT_ID` is set.
 
 #### Request Hook
 
@@ -52,18 +51,15 @@ Comprehensive environment variable validation plugin that runs at server startup
 | Missing or < 32 bytes | Fatal error, `process.exit(1)` | Warning logged   |
 | >= 32 bytes           | OK                             | OK               |
 
-#### `NUXT_OAUTH2_JWT_SECRET`
+#### basis-auth client configuration
 
-| Condition             | Action                                             |
-| --------------------- | -------------------------------------------------- |
-| Missing or < 32 bytes | Fatal error, `process.exit(1)` in all environments |
-| >= 32 bytes           | OK                                                 |
+`BASIS_AUTH_ISSUER`, `BASIS_AUTH_CLIENT_ID`, `BASIS_AUTH_CLIENT_SECRET`, and `BASIS_AUTH_RESOURCE` are required together. Missing values stop production startup and warn during development.
 
-#### Microsoft OAuth2 configuration
+#### Microsoft Graph configuration
 
 Checks `MICROSOFT_TENANT_ID`, `MICROSOFT_CLIENT_ID`, and `MICROSOFT_CLIENT_SECRET`:
 
-- If any are set but not all three, logs a warning that Microsoft features will be unavailable.
+- If any are set but not all three, logs a warning that Microsoft Graph features will be unavailable.
 - If none are set, silently skips (Microsoft features gracefully disabled).
 
 ```ts
@@ -77,31 +73,6 @@ if (!sessionPassword || sessionPasswordLength < 32) {
     }
 }
 ```
-
----
-
-### validate-oauth2-jwt-secret.ts
-
-**File:** `server/plugins/validate-oauth2-jwt-secret.ts`
-
-Startup guard for `NUXT_OAUTH2_JWT_SECRET`. The plugin calls `validateOAuth2JWTSecret()` from `server/utils/validate-oauth2-jwt-secret.ts`. The secret is used by `jose` to sign and verify OAuth2 access tokens (HS256) and must be at least 32 bytes long.
-
-#### Behavior
-
-| Environment | Secret Missing/Too Short | Action |
-| --- | --- | --- |
-| `NODE_ENV=production` | Missing or `< 32 bytes` | Logs a fatal error and exits the process immediately |
-| Development / Test | Missing or `< 32 bytes` | Logs a prominent warning and applies a documented dev-only fallback so local work can continue |
-
-::: warning The dev-only fallback (`"dev-only-placeholder-32-bytes!!"`) is **only** for local development and tests. Never use it in production. :::
-
-#### Implementation
-
-```ts
-export function validateOAuth2JWTSecret(options?: ValidateOAuth2JWTSecretOptions): void;
-```
-
-The function reads `process.env.NUXT_OAUTH2_JWT_SECRET`, measures its UTF-8 length, and either exits (production) or writes the fallback back to the env object (development/test).
 
 ---
 
@@ -239,38 +210,6 @@ frame-ancestors 'none'
 - `'unsafe-inline'` for `style-src` is required for inline style bindings used by Vue / Nuxt UI components.
 - `'unsafe-eval'` is intentionally omitted.
 - `https://login.microsoftonline.com` is included in `connect-src` for Microsoft OAuth2 flows.
-
-### oauth2-authorize.ts
-
-**File:** `server/middleware/oauth2-authorize.ts`
-
-Validates and manages OAuth2 authorization sessions for requests to `/api/oauth2/authorize`.
-
-#### Flow
-
-1. **Route check** — Only processes URLs containing `/api/oauth2/authorize`.
-2. **Existing session check** — Reads the `bridge_id` cookie:
-    - If a valid session exists with matching parameters (`client_id`, `scope`, `redirect_uri`, `state`) and its `login_state` is `identification` or `consent`, extends the session expiry and skips re-validation.
-    - If the parameters do not match, completes the old session and starts fresh.
-    - If the session has an invalid login state, completes the old session and starts fresh.
-3. **New session validation** — Calls `validateOAuth2AuthorizationRequest` to verify all parameters.
-4. **Session creation** — Constructs an `AuthorizeSession`, adds it to the in-memory session store, and attaches a `bridge_id` cookie.
-5. **Microsoft proxy** — If the application has `proxy_microsoft` enabled, immediately redirects to Microsoft login (skips the basishacks login page) and sets `login_state` to `requesting`.
-
-#### Error Handling
-
-Instead of throwing HTTP errors, validation errors are encoded as base64url JSON and stored in a `bridge_error` cookie. The authorize page (`authorize.vue`) reads this cookie and displays the error in the login UI.
-
-#### Session Cookie
-
-The `bridge_id` cookie:
-
-- Contains the session identifier.
-- Expires after 10 minutes.
-- Uses `HttpOnly`, `Secure`, and `SameSite=Lax` flags.
-- Deleted after a successful consent flow by the caller.
-
-The `bridge_error` cookie uses the same hardened flags.
 
 ### debug-lockdown.ts
 

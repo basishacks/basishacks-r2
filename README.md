@@ -1,6 +1,6 @@
 # basishacks
 
-The official website for the **BIBS-C Network Hackathon** (season 2, 2025–26). Full-stack Nuxt 4 application with OAuth2 authorization server, peer voting, judge scoring, team management, and Microsoft Graph API integration.
+The official website for the **BIBS-C Network Hackathon** (season 2, 2025–26). Full-stack Nuxt 4 application with basis-auth login, peer voting, judge scoring, team management, and Microsoft Graph API integration.
 
 ## Technology Stack
 
@@ -13,7 +13,7 @@ The official website for the **BIBS-C Network Hackathon** (season 2, 2025–26).
 | Package Manager | Bun (preferred); npm works                             |
 | Database        | SQLite via Drizzle ORM (bun:sqlite / better-sqlite3)   |
 | Auth            | nuxt-auth-utils (session-based)                        |
-| JWT             | jose (OAuth2 access tokens)                            |
+| OIDC            | openid-client + jose                                   |
 | Validation      | Zod 4.x                                                |
 | Fonts           | @nuxt/fonts (local provider)                           |
 | Icons           | @iconify-json (lucide, material-symbols, simple-icons) |
@@ -51,14 +51,14 @@ The canonical list of variables lives in `.env.example`. The table below summari
 | Variable | Required? | Purpose |
 | --- | --- | --- |
 | `NUXT_SESSION_PASSWORD` | Required | Session encryption key. Must be at least 32 bytes. Generate with `openssl rand -base64 32` |
-| `NUXT_OAUTH2_JWT_SECRET` | Required | JWT signing secret for OAuth2 token exchange. Must be at least 32 bytes. Generate with `openssl rand -base64 32` |
-| `ONSITE_LOGIN_CLIENT_ID` | Required for onsite login | OAuth2 `client_id` of the basishacks app used by the `/api/login` -> `/api/oauth2/authorize` onsite flow. The server auto-adds `${CURRENT_URL_ORIGIN}${REDIRECT_URI}` to this app's allowed redirect URIs on startup |
-| `MICROSOFT_TENANT_ID` | Required for MS login | Microsoft Entra ID tenant (directory) ID. Must be paired with `MICROSOFT_CLIENT_ID` |
-| `MICROSOFT_CLIENT_ID` | Required for MS login | Microsoft Entra ID application (client) ID. Must be paired with `MICROSOFT_TENANT_ID` |
-| `MICROSOFT_CLIENT_SECRET` | Optional | Microsoft Entra ID app secret for MS Graph API integration |
-| `CURRENT_URL_ORIGIN` | Optional | Public base origin (no trailing slash). Used for OAuth2 redirect callbacks, JWT `iss`, and `/.well-known/openid-configuration`. Defaults to `http://localhost:3000`; set to your real domain in production |
-| `MICROSOFT_REDIRECT_URI` | Optional | Microsoft OAuth2 redirect URI path (must start with `/`). Defaults to `/api/oauth2/mscallback` |
-| `REDIRECT_URI` | Optional | Onsite OAuth2 redirect URI path used by `/api/login`. Defaults to `/api/oauth2/dccallback`. The server auto-registers it for `ONSITE_LOGIN_CLIENT_ID` |
+| `BASIS_AUTH_ISSUER` | Required | Exact basis-auth issuer URL used for discovery and token validation |
+| `BASIS_AUTH_CLIENT_ID` | Required | Confidential client ID registered for basishacks |
+| `BASIS_AUTH_CLIENT_SECRET` | Required | Confidential client secret; keep it server-side |
+| `BASIS_AUTH_RESOURCE` | Required | Resource audience for basishacks access tokens (normally `urn:basis:api:basishacks`) |
+| `MICROSOFT_TENANT_ID` | Optional | Microsoft Entra ID tenant used only by Microsoft Graph integration |
+| `MICROSOFT_CLIENT_ID` | Optional | Microsoft Entra ID app used only by Microsoft Graph integration |
+| `MICROSOFT_CLIENT_SECRET` | Optional | Microsoft Entra ID app secret used only by Microsoft Graph integration |
+| `CURRENT_URL_ORIGIN` | Optional | Public origin used to derive `/api/auth/basis/callback`. Defaults to `http://localhost:3000`; set it to the externally reachable origin in production |
 | `DEEPSEEK_API_KEY` | Optional | DeepSeek API key for AI chat features (debug routes only) |
 | `PORT` / `HOST` | Optional | Server port/host override (defaults: `3000` / `0.0.0.0`) |
 | `RATE_LIMIT_GENERAL_MAX` | Optional | General API rate limit, requests per minute (default: `6000`) |
@@ -69,15 +69,13 @@ The canonical list of variables lives in `.env.example`. The table below summari
 | `TRUST_PROXY` | Optional | Set to any truthy value when behind a trusted reverse proxy so `x-forwarded-for` is used for rate-limit client IP resolution |
 | `DISABLE_DEBUG_ROUTES` | Optional | Set to any truthy value in production to disable `/api/debug/*` and `/debug` routes entirely |
 
-> Note: `MICROSOFT_TENANT_ID`, `MICROSOFT_CLIENT_ID`, and `ONSITE_LOGIN_CLIENT_ID` were previously hardcoded in the `main` branch. They are now read from environment variables and must be set explicitly.
-
 ## Authentication
 
-The only login method for the hackathon registry is **Microsoft OAuth2**. Users authenticate through Microsoft Entra ID (configured via `MICROSOFT_TENANT_ID` and `MICROSOFT_CLIENT_ID`), and the application creates or updates the local user record from the Microsoft profile.
+The only login method is the separately deployed **basis-auth** service. `/api/login` discovers the issuer and starts an authorization-code flow with S256 PKCE, state, and nonce. The callback URL is always `${CURRENT_URL_ORIGIN}/api/auth/basis/callback`; it must be registered exactly for each environment.
 
-The legacy email-verification-code login flow has been removed, and the `login_code` / `login_expiry` columns no longer exist in the `users` table.
+The short-lived login transaction is stored in a separate encrypted HTTP-only session. After the callback validates the ID token and loads UserInfo, basishacks links the first verified login to the existing local user by normalized email. Later logins resolve by the stable issuer and subject, preserving local user IDs, roles, teams, votes, and submissions. Provider tokens are not stored. Logout remains local to basishacks.
 
-The `/api/login` endpoint initiates the **basishacks connect** onsite OAuth2 flow (`/api/login` → `/api/oauth2/authorize` → Microsoft) for the first-party application identified by `ONSITE_LOGIN_CLIENT_ID`.
+The former basishacks OAuth provider and application-management UI/API have been retired. The legacy `oauth2_applications` table and records remain for audit and rollback. Microsoft Graph integration remains independent from login.
 
 ## Database Setup
 
@@ -132,7 +130,7 @@ bun start                            # Bun runtime
 node .output/server/index.mjs        # Node.js runtime
 ```
 
-The same `.output/` artifact runs under both runtimes — the SQLite driver is selected at startup. Nitro traces production dependencies into `.output/server/node_modules`, so the artifact is self-contained and can be deployed without the source checkout or its `node_modules` directory.
+The same `.output/` artifact runs under both runtimes — the SQLite driver is selected at startup. Nitro leaves runtime dependencies external, so deploy the artifact together with the production `node_modules` directory.
 
 Place a reverse proxy (Nginx, Caddy) in front for TLS termination. The SQLite database lives at `./database/basishacks.sqlite` (WAL mode).
 
@@ -167,7 +165,7 @@ documentation/          # VitePress site
 ### Fresh clone
 
 ```bash
-git checkout enhance-and-debloat
+git checkout codex/basis-auth-login
 bun install
 cp .env.example .env       # then edit .env
 bun run build
@@ -179,6 +177,6 @@ bun start
 
 No manual SQL is required — `migrateLegacySchema()` auto-repairs legacy databases on first startup.
 
-### New required env vars
+### Required authentication env vars
 
-`MICROSOFT_TENANT_ID`, `MICROSOFT_CLIENT_ID`, and `ONSITE_LOGIN_CLIENT_ID` were previously hardcoded and **must now be set explicitly** in `.env`.
+Set `BASIS_AUTH_ISSUER`, `BASIS_AUTH_CLIENT_ID`, `BASIS_AUTH_CLIENT_SECRET`, and `BASIS_AUTH_RESOURCE` in `.env`. Register `${CURRENT_URL_ORIGIN}/api/auth/basis/callback` with the same basis-auth client.

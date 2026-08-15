@@ -1,21 +1,17 @@
 import type { H3Event, EventHandler } from "h3";
-import { jwtVerify } from "jose";
-import { getUser } from "./database/users";
-import { getOAuth2Issuer } from "./oauth2";
+import { createRemoteJWKSet, jwtVerify } from "jose";
+import { getUserByBasisAuthSubject } from "./database/users";
+import { getBasisAuthConfig } from "./basis-auth";
 
-// ------------------------------------------------------------------
-// Config
-// ------------------------------------------------------------------
+const jwksByIssuer = new Map<string, ReturnType<typeof createRemoteJWKSet>>();
 
-function getJWTSecret(): Uint8Array {
-    const secret = process.env.NUXT_OAUTH2_JWT_SECRET;
-    if (!secret) {
-        throw createError({
-            statusCode: 500,
-            message: "NUXT_OAUTH2_JWT_SECRET is not set",
-        });
+function getBasisAuthJwks(issuer: string) {
+    let jwks = jwksByIssuer.get(issuer);
+    if (!jwks) {
+        jwks = createRemoteJWKSet(new URL("/oauth/jwks", issuer));
+        jwksByIssuer.set(issuer, jwks);
     }
-    return new TextEncoder().encode(secret);
+    return jwks;
 }
 
 // ------------------------------------------------------------------
@@ -24,10 +20,9 @@ function getJWTSecret(): Uint8Array {
 
 export interface OAuth2JWTPayload {
     sub?: string;
-    user_id?: number;
     client_id?: string;
-    redirect_uri?: string;
     scope?: string;
+    permissions?: string[];
     [key: string]: any;
 }
 
@@ -44,11 +39,21 @@ export async function verifyAccessToken(token: string): Promise<OAuth2JWTPayload
         });
     }
 
-    const secret = getJWTSecret();
+    const config = getBasisAuthConfig();
     try {
-        const { payload } = await jwtVerify(token, getJWTSecret(), {
-            issuer: getOAuth2Issuer(),
+        const { payload } = await jwtVerify(token, getBasisAuthJwks(config.issuer), {
+            algorithms: ["RS256"],
+            issuer: config.issuer,
+            audience: config.resource,
+            typ: "at+jwt",
         });
+        if (
+            !payload.sub ||
+            typeof payload.client_id !== "string" ||
+            typeof payload.scope !== "string"
+        ) {
+            throw new Error("Access token claims are invalid");
+        }
         return payload as OAuth2JWTPayload;
     } catch {
         throw createError({
@@ -133,12 +138,10 @@ export function requireScopes(grantedScopes: string[], requiredScopes: string[])
 // ------------------------------------------------------------------
 
 /**
- * Resolve user_id from a JWT payload, then fetch the user from the DB.
- * Throws 401 if the payload has no valid user id, 404 if user not found.
+ * Resolve the stable basis-auth subject, then fetch its linked local user.
  */
 export async function resolveOAuth2User(event: H3Event, payload: OAuth2JWTPayload) {
-    const userId = Number(payload.user_id ?? payload.sub);
-    if (!userId || Number.isNaN(userId)) {
+    if (!payload.sub) {
         throw createError({
             statusCode: 401,
             statusMessage: "invalid_token",
@@ -146,7 +149,7 @@ export async function resolveOAuth2User(event: H3Event, payload: OAuth2JWTPayloa
         });
     }
 
-    const user = await getUser(event, userId);
+    const user = await getUserByBasisAuthSubject(event, getBasisAuthConfig().issuer, payload.sub);
     if (!user) {
         throw createError({
             statusCode: 404,

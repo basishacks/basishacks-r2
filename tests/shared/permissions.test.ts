@@ -200,13 +200,6 @@ describe("DevPermissions", () => {
         expect(DevPermissions.PORTAL_DEBUG_VIEW).toBe("portal.debug.view");
         expect(DevPermissions.PORTAL_TEAMS_VIEW).toBe("portal.teams.view");
         expect(DevPermissions.PORTAL_DEEPSEEK_VIEW).toBe("portal.deepseek.view");
-        expect(DevPermissions.PORTAL_APPLICATIONS_VIEW).toBe("portal.applications.view");
-        expect(DevPermissions.PORTAL_APPLICATIONS_CREATE).toBe("portal.applications.create");
-        expect(DevPermissions.PORTAL_APPLICATIONS_CREATE_FIRST_PARTY).toBe(
-            "portal.applications.create.firstparty",
-        );
-        expect(DevPermissions.PORTAL_APPLICATIONS_DELETE).toBe("portal.applications.delete");
-        expect(DevPermissions.PORTAL_APPLICATIONS_VIEW_ALL).toBe("portal.applications.view.all");
         expect(DevPermissions.PORTAL_SEASONS_VIEW).toBe("portal.seasons.view");
         expect(DevPermissions.PORTAL_SEASONS_EDIT).toBe("portal.seasons.edit");
     });
