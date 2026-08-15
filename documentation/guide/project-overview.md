@@ -54,23 +54,11 @@ The following tables are generated automatically from the root `package.json` du
 
 ## Authentication
 
-Two authentication methods are supported:
+Authentication is delegated to one provider:
 
-### 1. Microsoft OAuth2
+### basis-auth
 
-Authentication is delegated to Microsoft Entra ID (tenant configured via the `MICROSOFT_TENANT_ID` environment variable). Users click the Microsoft login button and are redirected to the Microsoft consent screen. On success, they are redirected back with an authorization code that is exchanged for a basishacks session. This is the only login method for the hackathon registry.
-
-### 2. basishacks connect
-
-A custom OAuth2 integration with **PKCE (Proof Key for Code Exchange)** support. External applications redirect users to `/api/oauth2/authorize` with standard OAuth2 parameters (`client_id`, `scope`, `redirect_uri`, `state`, `code_challenge`, `code_challenge_method`). After the user authenticates and consents, the application receives an authorization code that can be exchanged for a JWT access token at `/api/oauth2/token`.
-
-The OAuth2 flow supports:
-
-- Authorization Code Grant with PKCE (protocol 2.1).
-- Legacy Authorization Code Grant without PKCE (protocol 2.0).
-- JWT access tokens (HS256, 1-hour expiry) signed with `NUXT_OAUTH2_JWT_SECRET`.
-- Eight defined scopes with admin-only and sensitive classifications.
-- Microsoft proxy mode: applications can skip the basishacks login and redirect directly to Microsoft.
+The browser uses basis-auth discovery and authorization code with S256 PKCE, state, nonce, a confidential client secret, validated ID tokens, and UserInfo. The first verified login can attach to an existing user by normalized email; repeat logins resolve by stable issuer and subject. Microsoft credentials are retained only for independent Graph features.
 
 ## Roles & Permissions
 
@@ -154,12 +142,10 @@ basishacks-r2/
 ├── server/                     # Nitro backend
 │   ├── api/                    # API route handlers (file-based)
 │   │   ├── admin/              # Admin endpoints (scores, teams)
-│   │   ├── applications/       # OAuth2 application CRUD, secrets, scopes, redirect URIs
-│   │   ├── auth/               # Authentication endpoints (impersonate; /api/auth alias for Microsoft OAuth2 callback)
+│   │   ├── auth/               # basis-auth callback and admin impersonation
 │   │   ├── ballot/             # Ballot and peer voting endpoints
 │   │   ├── chatbot/            # AI chatbot endpoints (Microsoft Teams integration)
 │   │   ├── debug/              # Debug endpoints (DeepSeek sessions, file upload)
-│   │   ├── oauth2/             # OAuth2 protocol endpoints (authorize, token, userinfo, callbacks)
 │   │   ├── seasons/            # Season management endpoints
 │   │   ├── teams/              # Team CRUD, member management, scoring, submission
 │   │   ├── users/              # User CRUD and profile pictures
@@ -167,7 +153,6 @@ basishacks-r2/
 │   ├── middleware/             # Server middleware
 │   │   ├── security-headers.ts # HTTP security headers (6 headers, CSP, HSTS, etc.)
 │   │   ├── debug-lockdown.ts   # Disables debug routes in production via DISABLE_DEBUG_ROUTES
-│   │   └── oauth2-authorize.ts # OAuth2 authorize session validation
 │   ├── database/               # Drizzle ORM schema, migration runner, and DB wrapper
 │   │   ├── schema.ts           # Drizzle table definitions
 │   │   ├── migrate.ts          # Custom migration runner, legacy schema repair, seeding
@@ -175,8 +160,7 @@ basishacks-r2/
 │   ├── plugins/                # Nitro plugins
 │   │   ├── init-database.ts    # Database initialization and attach Drizzle to event context
 │   │   ├── microsoft.ts        # MS Graph API token initialization and centralized API calls
-│   │   ├── validate-environment.ts     # Startup guard for NUXT_SESSION_PASSWORD and NUXT_OAUTH2_JWT_SECRET
-│   │   └── validate-oauth2-jwt-secret.ts # Startup guard for NUXT_OAUTH2_JWT_SECRET (also exposed as testable utility)
+│   │   └── validate-environment.ts # Session and basis-auth configuration guard
 │   ├── types/                  # Type augmentations (H3EventContext, OAuth2 JWT)
 │   └── utils/                  # Server utilities
 │       ├── database/           # Per-table DB helpers
@@ -184,7 +168,6 @@ basishacks-r2/
 │       │   ├── ballots.ts
 │       │   ├── hackathon.ts
 │       │   ├── members.ts
-│       │   ├── oauth2_applications.ts
 │       │   ├── peer-voting.ts
 │       │   ├── scores.ts
 │       │   ├── seasons.ts
@@ -193,13 +176,12 @@ basishacks-r2/
 │       ├── auth.ts             # requireUser, requireJudge, requireAdmin, requirePermission
 │       ├── convert.ts          # DB row to public API object transformers
 │       ├── rateLimit.ts        # In-memory rate limiter (4 tiers: general/auth/vote/upload)
-│       ├── oauth2.ts           # Microsoft OAuth2 configuration and link generation
-│       ├── oauth2-jwt.ts       # JWT verification and withOAuth2JWT() wrapper for API routes
-│       ├── oauth2-validate.ts  # OAuth2 authorization request validation and consent flow
+│       ├── basis-auth.ts       # OIDC discovery, PKCE login, callback and UserInfo
+│       ├── oauth2.ts           # Public-origin helper
+│       ├── oauth2-jwt.ts       # basis-auth resource-token validation
 │       ├── profile.ts          # Profile picture helpers
 │       ├── assets.ts           # Asset helpers
 │       ├── url-validation.ts   # SSRF protection — validates external URLs, blocks private IPs
-│       ├── validate-oauth2-jwt-secret.ts # Dev-only fallback for NUXT_OAUTH2_JWT_SECRET
 │       └── deepseek-store.ts   # DeepSeek AI chat session store (in-memory)
 │
 ├── shared/                     # Code shared between client and server

@@ -5,11 +5,9 @@ import { join } from "node:path";
 import { createTestDatabase } from "~~/tests/setup";
 import {
     migrateDatabase,
-    seedOAuth2ApplicationRedirectUri,
     columnExists,
     createAndMigrateDatabase,
 } from "~~/server/database/migrate";
-import { buildOnsiteRedirectUri } from "~~/server/utils/oauth2";
 
 describe("migrateDatabase", () => {
     it("applies an ALTER-only migration instead of skipping it", async () => {
@@ -44,80 +42,6 @@ describe("migrateDatabase", () => {
     });
 });
 
-describe("seedOAuth2ApplicationRedirectUri", () => {
-    it("adds the onsite redirect URI when it is not already allowed", async () => {
-        const wrapper = await createTestDatabase();
-        const rawDb = wrapper.getRawDb();
-        const originalClientId = process.env.ONSITE_LOGIN_CLIENT_ID;
-
-        process.env.ONSITE_LOGIN_CLIENT_ID = "onsite-client-id";
-        rawDb
-            .prepare(
-                "INSERT INTO oauth2_applications (client_id, client_secret, name, redirect_uris) VALUES (?, ?, ?, ?)",
-            )
-            .run(
-                "onsite-client-id",
-                "secret",
-                "Onsite App",
-                "https://existing.example.com/callback",
-            );
-
-        try {
-            seedOAuth2ApplicationRedirectUri(rawDb);
-
-            const app = rawDb
-                .prepare("SELECT redirect_uris FROM oauth2_applications WHERE client_id = ?")
-                .get<{ redirect_uris: string }>("onsite-client-id");
-            expect(app!.redirect_uris).toContain("http://localhost:3000/api/oauth2/dccallback");
-            expect(app!.redirect_uris).toContain("https://existing.example.com/callback");
-        } finally {
-            process.env.ONSITE_LOGIN_CLIENT_ID = originalClientId;
-            wrapper.close();
-        }
-    });
-
-    it("does nothing when the redirect URI is already allowed", async () => {
-        const wrapper = await createTestDatabase();
-        const rawDb = wrapper.getRawDb();
-        const originalClientId = process.env.ONSITE_LOGIN_CLIENT_ID;
-
-        process.env.ONSITE_LOGIN_CLIENT_ID = "onsite-client-id";
-        const redirectUri = buildOnsiteRedirectUri();
-        rawDb
-            .prepare(
-                "INSERT INTO oauth2_applications (client_id, client_secret, name, redirect_uris) VALUES (?, ?, ?, ?)",
-            )
-            .run("onsite-client-id", "secret", "Onsite App", redirectUri);
-
-        try {
-            seedOAuth2ApplicationRedirectUri(rawDb);
-
-            const app = rawDb
-                .prepare("SELECT redirect_uris FROM oauth2_applications WHERE client_id = ?")
-                .get<{ redirect_uris: string }>("onsite-client-id");
-            expect(app!.redirect_uris).toBe(redirectUri);
-        } finally {
-            process.env.ONSITE_LOGIN_CLIENT_ID = originalClientId;
-            wrapper.close();
-        }
-    });
-
-    it("does nothing when the onsite application does not exist", async () => {
-        const wrapper = await createTestDatabase();
-        const rawDb = wrapper.getRawDb();
-        const originalClientId = process.env.ONSITE_LOGIN_CLIENT_ID;
-
-        process.env.ONSITE_LOGIN_CLIENT_ID = "missing-client-id";
-
-        try {
-            expect(() => seedOAuth2ApplicationRedirectUri(rawDb)).not.toThrow();
-        } finally {
-            process.env.ONSITE_LOGIN_CLIENT_ID = originalClientId;
-            wrapper.close();
-        }
-    });
-});
-
 describe("columnExists", () => {
     it("returns false when PRAGMA table_info throws", async () => {
         const wrapper = await createTestDatabase();
@@ -135,33 +59,6 @@ describe("columnExists", () => {
 
         expect(columnExists(throwingDb, "hackathon", "status")).toBe(false);
         wrapper.close();
-    });
-});
-
-describe("seedOAuth2ApplicationRedirectUri — null redirect_uris branch", () => {
-    it("adds the redirect URI when redirect_uris is null", async () => {
-        const wrapper = await createTestDatabase();
-        const rawDb = wrapper.getRawDb();
-        const originalClientId = process.env.ONSITE_LOGIN_CLIENT_ID;
-
-        process.env.ONSITE_LOGIN_CLIENT_ID = "onsite-client-id";
-        rawDb
-            .prepare(
-                "INSERT INTO oauth2_applications (client_id, client_secret, name, redirect_uris) VALUES (?, ?, ?, ?)",
-            )
-            .run("onsite-client-id", "secret", "Onsite App", null);
-
-        try {
-            seedOAuth2ApplicationRedirectUri(rawDb);
-
-            const app = rawDb
-                .prepare("SELECT redirect_uris FROM oauth2_applications WHERE client_id = ?")
-                .get<{ redirect_uris: string }>("onsite-client-id");
-            expect(app!.redirect_uris).toBe("http://localhost:3000/api/oauth2/dccallback");
-        } finally {
-            process.env.ONSITE_LOGIN_CLIENT_ID = originalClientId;
-            wrapper.close();
-        }
     });
 });
 
@@ -481,23 +378,6 @@ describe("seedHackathon", () => {
     });
 });
 
-describe("seedOAuth2ApplicationRedirectUri", () => {
-    it("does nothing when ONSITE_LOGIN_CLIENT_ID is not set", async () => {
-        const wrapper = await createTestDatabase();
-        const rawDb = wrapper.getRawDb();
-        const originalClientId = process.env.ONSITE_LOGIN_CLIENT_ID;
-
-        delete process.env.ONSITE_LOGIN_CLIENT_ID;
-
-        try {
-            expect(() => seedOAuth2ApplicationRedirectUri(rawDb)).not.toThrow();
-        } finally {
-            process.env.ONSITE_LOGIN_CLIENT_ID = originalClientId;
-            wrapper.close();
-        }
-    });
-});
-
 describe("migrateDatabase — non-.sql files ignored", () => {
     it("ignores non-.sql files in the migrations directory", async () => {
         const wrapper = await createTestDatabase();
@@ -525,7 +405,7 @@ describe("migrateDatabase — non-.sql files ignored", () => {
 });
 
 describe("createAndMigrateDatabase", () => {
-    it("runs migrateLegacySchema, migrateDatabase, seedHackathon, and seedOAuth2 without throwing", async () => {
+    it("runs migrations and seeds the hackathon row without throwing", async () => {
         const wrapper = await createTestDatabase();
         const rawDb = wrapper.getRawDb();
 

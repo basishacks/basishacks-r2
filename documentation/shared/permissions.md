@@ -31,15 +31,10 @@ The `DevPermissions` object defines all recognized permission strings:
 | `PORTAL_DEBUG_VIEW` | `portal.debug.view` | Portal: view debug panel |
 | `PORTAL_TEAMS_VIEW` | `portal.teams.view` | Portal: view/manage teams (used for all team access) |
 | `PORTAL_DEEPSEEK_VIEW` | `portal.deepseek.view` | Portal: view DeepSeek panel |
-| `PORTAL_APPLICATIONS_VIEW` | `portal.applications.view` | Portal: view own applications |
-| `PORTAL_APPLICATIONS_CREATE` | `portal.applications.create` | Portal: create applications |
-| `PORTAL_APPLICATIONS_CREATE_FIRST_PARTY` | `portal.applications.create.firstparty` | Portal: create first-party applications |
-| `PORTAL_APPLICATIONS_DELETE` | `portal.applications.delete` | Portal: delete applications |
-| `PORTAL_APPLICATIONS_VIEW_ALL` | `portal.applications.view.all` | Portal: view all applications (not just own) |
 | `PORTAL_SEASONS_VIEW` | `portal.seasons.view` | Portal: view seasons |
 | `PORTAL_SEASONS_EDIT` | `portal.seasons.edit` | Portal: edit seasons |
 
-**Total: 15 permissions**
+**Total: 10 permissions**
 
 ## Storage Format
 
@@ -153,7 +148,7 @@ import { hasPermission, DevPermissions } from "~~/shared/permissions";
 
 const user = await requireUser(event);
 
-if (!hasPermission(user.role, DevPermissions.PORTAL_APPLICATIONS_VIEW_ALL)) {
+if (!hasPermission(user.role, DevPermissions.PORTAL_TEAMS_VIEW)) {
     throw createError({ status: 403, message: "Insufficient permissions" });
 }
 ```

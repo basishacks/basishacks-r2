@@ -38,126 +38,27 @@ Admin-only: log in as another user.
 
 ### GET `/api/login`
 
-Redirects to the OAuth2 authorize page for basishacks connect (the built-in first-party app).
+Starts basis-auth discovery and authorization code with S256 PKCE, state, nonce, and the configured resource.
 
-| Field        | Details                                                           |
-| ------------ | ----------------------------------------------------------------- |
-| **Auth**     | None                                                              |
-| **Query**    | `redirect` (optional, post-login redirect path)                   |
-| **Response** | 302 redirect to `/api/oauth2/authorize?client_id=...`             |
-| **Cookies**  | Sets `pkce_verifier` (10-minute, HTTP-only, Secure, SameSite=Lax) |
+| Field        | Details                                                          |
+| ------------ | ---------------------------------------------------------------- |
+| **Auth**     | None                                                             |
+| **Query**    | `redirect` (optional safe relative post-login path)              |
+| **Response** | 302 redirect to the discovered basis-auth authorization endpoint |
+| **Session**  | Separate encrypted HTTP-only transaction, maximum age 10 minutes |
 
-### GET `/api/auth`
+### GET `/api/auth/basis/callback`
 
-Alias for the Microsoft OAuth2 callback handler (`/api/oauth2/mscallback`). Registered to match Azure App Registration redirect URIs that point to `/api/auth`.
-
-| Field        | Details                                          |
-| ------------ | ------------------------------------------------ |
-| **Auth**     | None                                             |
-| **Response** | 302 redirect after Microsoft callback processing |
-
----
-
-## OAuth2
-
-### GET `/.well-known/openid-configuration`
-
-OpenID Connect Discovery metadata for this authorization server.
+Validates the stored transaction and provider response, exchanges the code using `client_secret_basic`, validates the ID token, loads UserInfo, links the verified identity, creates the local session, and discards provider tokens.
 
 | Field | Details |
 | --- | --- |
 | **Auth** | None |
-| **Response** | Standard OIDC discovery JSON (`issuer`, `authorization_endpoint`, `token_endpoint`, `userinfo_endpoint`, supported grants/scopes/PKCE methods, etc.) |
-| **Headers** | `Cache-Control: public, max-age=3600` |
-| **Notes** | `issuer` is `CURRENT_URL_ORIGIN` (no trailing slash). No `jwks_uri` — access tokens are HS256 JWTs signed with `NUXT_OAUTH2_JWT_SECRET`. No ID tokens, refresh tokens, introspection, or revocation. |
+| **Query** | OIDC callback parameters (`code`, `state`, or provider error) |
+| **Response** | 302 to the stored safe redirect or `/dashboard` |
+| **Errors** | 401 for missing/expired transaction, state/nonce/PKCE failure, token/UserInfo failure, or identity conflict |
 
-### POST `/api/oauth2/session`
-
-Create a new OAuth2 authorization session. Rate-limited to 20 requests per minute.
-
-| Field | Details |
-| --- | --- |
-| **Auth** | None |
-| **Body** | `{ client_id, response_type, scope, state, redirect_uri, code_challenge, code_challenge_method, post_login_redirect? }` |
-| **Response** | `{ client_id, name, description, type, session }` |
-| **Cookies** | Sets `bridge_id` (10-minute, HTTP-only, Secure, SameSite=Lax) |
-
-### GET `/api/oauth2/session`
-
-Retrieve the current OAuth2 session (identified by the `bridge_id` cookie).
-
-| Field        | Details                                                                       |
-| ------------ | ----------------------------------------------------------------------------- |
-| **Auth**     | None (uses `bridge_id` cookie)                                                |
-| **Response** | `{ client_id, name, description, type, session, login_state, user_id, user }` |
-
-### DELETE `/api/oauth2/session`
-
-Complete or cancel an OAuth2 session. Redirects to the application's redirect URI.
-
-| Field | Details |
-| --- | --- |
-| **Auth** | None (uses `bridge_id` cookie) |
-| **Body** | `{ action: 'cancel' \| 'consent' \| 'deny' \| 'assume_consent' }` |
-| **Response** | `{ redirect_to: string }` |
-| **Actions** | `cancel`/`deny` redirect with `error=access_denied`; `consent`/`assume_consent` complete the flow |
-
-### POST `/api/oauth2/token`
-
-Exchange an authorization code for an access token (JWT).
-
-| Field        | Details                                                                       |
-| ------------ | ----------------------------------------------------------------------------- |
-| **Auth**     | None (requires client authentication via `client_id` + `client_secret`)       |
-| **Body**     | `{ grant_type, code, redirect_uri, client_id, client_secret, code_verifier }` |
-| **Response** | `{ access_token, token_type: 'Bearer', expires_in: 3600 }`                    |
-
-### POST `/api/oauth2/to_microsoft`
-
-Initiate Microsoft OAuth2 login flow.
-
-| Field        | Details                                         |
-| ------------ | ----------------------------------------------- |
-| **Auth**     | None (requires `bridge_id` cookie)              |
-| **Response** | `{ redirect_to: string }` — Microsoft login URL |
-
-### GET `/api/oauth2/mscallback`
-
-Microsoft OAuth2 callback. Validates the returned `state` and PKCE verifier, exchanges the authorization code for a Microsoft token, creates or updates the user from the Microsoft profile, and continues the OAuth2 flow.
-
-| Field | Details |
-| --- | --- |
-| **Auth** | None |
-| **Query** | `code`, `state`, `session_state` |
-| **Cookies** | `bridge_id` (required, binds to authorize session) |
-| **Validation** | Requires matching `state` and a valid PKCE `code_verifier` stored in the authorize session |
-| **Response** | 302 redirect to consent page or application redirect URI |
-
-### GET `/api/oauth2/dccallback`
-
-basishacks connect OAuth2 callback (first-party onsite app). Mirrors an external OIDC client **in-process**: redeem code via `redeemAuthorizationCodeForToken`, resolve identity via `resolveUserInfoFromAccessToken`, then `setUserSession`.
-
-| Field | Details |
-| --- | --- |
-| **Auth** | None |
-| **Query** | `code`, `state` |
-| **Cookies** | `bridge_id` (required, binds to authorize session), `pkce_verifier` (required, PKCE code verifier set by `/api/login`) |
-| **Response** | 302 redirect to `session.post_login_redirect`, else `redirect` query, else `/dashboard` |
-| **Errors** | `400` if `bridge_id` cookie missing, authorize session not found, `state` mismatch, `pkce_verifier` cookie missing, or code exchange fails |
-
-External third-party apps must still use `POST /api/oauth2/token` + `GET /api/oauth2/userinfo` over HTTP; those handlers share the same server utilities.
-
-::: tip PKCE verifier The `pkce_verifier` cookie is set by `constructOnSiteLoginURL` in `server/api/login.get.ts` and contains the `code_verifier` for the basishacks OAuth2 flow (client → basishacks). It is distinct from `session.ms_verifier`, which is the verifier for the Microsoft proxy flow (basishacks → Microsoft). The cookie is cleared immediately after the code exchange. :::
-
-### GET `/api/oauth2/userinfo`
-
-OAuth2 UserInfo endpoint. Returns user profile data based on the Bearer token scopes.
-
-| Field | Details |
-| --- | --- |
-| **Auth** | OAuth2 JWT Bearer token |
-| **Required scopes** | `openid` (always), `profile` for name/picture, `email` for email/email_verified |
-| **Response** | `{ sub, name?, picture?, email?, email_verified? }` |
+::: info Retired endpoints The native `/.well-known/openid-configuration`, `/api/oauth2/*`, and `/api/applications/*` surfaces have been removed. Register and manage clients in basis-auth. :::
 
 ---
 
@@ -504,82 +405,6 @@ Download a full snapshot of the database in SQLite or CSV format.
 | **Auth** | Admin |
 | **Query** | `format` — `sqlite` (default) or `csv` |
 | **Response** | SQLite: `application/x-sqlite3` binary file. CSV: `text/csv` with per-table sections |
-
----
-
-## Applications
-
-### GET `/api/applications`
-
-List all OAuth2 applications.
-
-| Field        | Details                                                  |
-| ------------ | -------------------------------------------------------- |
-| **Auth**     | User with `portal.applications.view` permission or admin |
-| **Response** | `OAuth2Application[]` (excludes `client_secret`)         |
-
-### POST `/api/applications`
-
-Create a new OAuth2 application.
-
-| Field | Details |
-| --- | --- |
-| **Auth** | User with `portal.applications.create` permission or admin |
-| **Validation** | `CreateApplicationRequest` — `{ name, description?, proxy_microsoft, type? }` |
-| **Constraint** | Max 2 applications per user; `type: 'first'` requires `portal.applications.create.firstparty` permission |
-| **Response** | `OAuth2Application` (excludes `client_secret`) |
-
-### DELETE `/api/applications`
-
-Delete OAuth2 applications by client ID.
-
-| Field        | Details                                                    |
-| ------------ | ---------------------------------------------------------- |
-| **Auth**     | User with `portal.applications.delete` permission or admin |
-| **Body**     | `{ ids: string[] }` (client IDs)                           |
-| **Response** | `{ message: string }`                                      |
-
-### GET `/api/applications/:id`
-
-Get a single OAuth2 application.
-
-| Field        | Details                                                                          |
-| ------------ | -------------------------------------------------------------------------------- |
-| **Auth**     | Application owner, user with `portal.applications.view.all` permission, or admin |
-| **Response** | `OAuth2Application` (excludes `client_secret`)                                   |
-
-### GET `/api/applications/:id/profile_picture`
-
-Get an application's profile picture.
-
-| Field        | Details    |
-| ------------ | ---------- |
-| **Auth**     | None       |
-| **Response** | Image file |
-
-### Secrets
-
-| Method | Path | Auth | Description |
-| --- | --- | --- | --- |
-| GET | `/api/applications/:id/secrets` | Owner, `portal.applications.view.all`, or admin | List abbreviated secret hashes |
-| POST | `/api/applications/:id/secrets` | Owner, `portal.applications.view.all`, or admin | Create a new secret (returns plain text once) |
-| DELETE | `/api/applications/:id/secrets` | Owner, `portal.applications.view.all`, or admin | Delete a secret by abbreviated hash |
-
-### Scopes
-
-| Method | Path | Auth | Description |
-| --- | --- | --- | --- |
-| GET | `/api/applications/:id/scopes` | Owner, `portal.applications.view.all`, or admin | List configured scopes with descriptions |
-| POST | `/api/applications/:id/scopes` | Owner, `portal.applications.view.all`, or admin | Add scopes `{ scopes: string[] }` |
-| DELETE | `/api/applications/:id/scopes` | Owner, `portal.applications.view.all`, or admin | Remove a scope `{ scope: string }` |
-
-### Redirect URIs
-
-| Method | Path | Auth | Description |
-| --- | --- | --- | --- |
-| GET | `/api/applications/:id/redirect_uris` | Owner, `portal.applications.view.all`, or admin | List redirect URIs |
-| POST | `/api/applications/:id/redirect_uris` | Owner, `portal.applications.view.all`, or admin | Add a redirect URI `{ uri: string }` |
-| DELETE | `/api/applications/:id/redirect_uris` | Owner, `portal.applications.view.all`, or admin | Remove a redirect URI `{ uri: string }` |
 
 ---
 

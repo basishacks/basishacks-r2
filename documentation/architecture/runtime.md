@@ -38,6 +38,8 @@ The production build is generated with:
 bun run build
 ```
 
+Nitro leaves runtime dependencies external so its generated bundles resolve them from the deployed `node_modules` directory. This avoids incomplete dependency copies in the development server. The GitHub release workflow runs this build when a `v*` tag is pushed; deploy the resulting `.output/` alongside production dependencies. Before starting a release, create a writable `database/` directory next to `.output/`; the SQLite database is not part of the artifact.
+
 ::: warning The in-memory rate limiter is per-process. Under high concurrency or with multiple server instances, consider using a shared store (e.g., Redis) for consistent rate limiting. :::
 
 ## Drizzle ORM
@@ -68,14 +70,9 @@ export default defineNitroPlugin(async (nitroApp) => {
 });
 ```
 
-### `validate-oauth2-jwt-secret.ts`
+### `validate-environment.ts`
 
-**File:** `server/plugins/validate-oauth2-jwt-secret.ts`
-
-**Purpose**: Ensures `NUXT_OAUTH2_JWT_SECRET` is configured and at least 32 bytes long.
-
-- In production (`NODE_ENV=production`): logs a fatal error and exits immediately if the secret is missing or too short.
-- In development/test: logs a prominent warning and applies a documented dev-only fallback.
+**Purpose**: Validates the encrypted-session password and the four required basis-auth client variables. Missing basis-auth configuration is fatal in production and produces a warning in development.
 
 ### `microsoft.ts`
 

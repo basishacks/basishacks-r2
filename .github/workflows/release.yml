@@ -43,6 +43,14 @@ jobs:
             - name: Build Nuxt Application
               run: bun run build
 
+            - name: Verify self-contained server output
+              run: |
+                  test -f .output/server/node_modules/drizzle-orm/index.js
+                  if rg --fixed-strings "$GITHUB_WORKSPACE/node_modules" .output/server; then
+                    echo "Nitro output contains imports from the build workspace."
+                    exit 1
+                  fi
+
             # 6. Create the tarball using your exact custom naming format
             - name: Create Tarball
               run: |

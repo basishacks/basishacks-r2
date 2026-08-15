@@ -124,14 +124,14 @@ At minimum, set the following:
 # REQUIRED - Session encryption key. Must be at least 32 bytes.
 NUXT_SESSION_PASSWORD=your_random_string_at_least_32_bytes_long
 
-# REQUIRED - OAuth2 JWT signing secret. Must be at least 32 bytes.
-NUXT_OAUTH2_JWT_SECRET=your_oauth2_jwt_secret_here
-
-# REQUIRED for the onsite login flow
-ONSITE_LOGIN_CLIENT_ID=your_onsite_login_client_id_here
+# REQUIRED - basis-auth confidential client configuration
+BASIS_AUTH_ISSUER=http://localhost:3000
+BASIS_AUTH_CLIENT_ID=your_client_id
+BASIS_AUTH_CLIENT_SECRET=your_client_secret
+BASIS_AUTH_RESOURCE=urn:basis:api:basishacks
 ```
 
-To log in through Microsoft Entra ID, also set `MICROSOFT_TENANT_ID` and `MICROSOFT_CLIENT_ID`. See [Environment Setup](/guide/environment-setup) for the full list.
+Set `CURRENT_URL_ORIGIN` to the basishacks origin and register `${CURRENT_URL_ORIGIN}/api/auth/basis/callback` with basis-auth. Microsoft variables are optional and used only for Graph features. See [Environment Setup](/guide/environment-setup) for the full list.
 
 ## Run the Development Server
 
@@ -202,13 +202,9 @@ Bun's native test runner (`bun test`) cannot resolve Nuxt's `~~/` and `~/` path 
 
 To avoid confusion, `bunfig.toml` scopes `bun test` to a single shim (`bun-shim/shim.test.ts`) that prints guidance directing you to run `bun run test` instead. The shim exits successfully so `bun test` never appears to fail.
 
-### OAuth2 token-flow integration test
+### Authentication integration tests
 
-`tests/api/oauth2/token-flow.test.ts` simulates a completed authorize session (user attached in-test only), exchanges the code through `POST /api/oauth2/token`, and checks UserInfo. It does not add a runtime Microsoft-login bypass — see the security note in that file.
-
-```bash
-bun run test -- tests/api/oauth2/token-flow.test.ts
-```
+The active Vitest suite covers the basis-auth authorization request, callback transaction validation, verified identity linking, and protected-resource token validation.
 
 ### Legacy test script
 

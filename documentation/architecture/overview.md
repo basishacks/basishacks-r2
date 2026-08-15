@@ -187,19 +187,18 @@ Three Nitro server middleware files run on every request:
 
 - **`security-headers.ts`** — Applies CSP, HSTS, `X-Frame-Options: DENY`, and other security headers to every response (pages and API).
 - **`debug-lockdown.ts`** — Returns 404 for `/api/debug/*` and `/debug*` routes when `DISABLE_DEBUG_ROUTES` is set.
-- **`oauth2-authorize.ts`** — Validates and manages OAuth2 authorization sessions.
 
 ### Startup environment validation
 
 The `validate-environment.ts` Nitro plugin performs mandatory checks at server startup:
 
 - `NUXT_SESSION_PASSWORD` must be >= 32 bytes (fatal in production, warning in dev).
-- `NUXT_OAUTH2_JWT_SECRET` must be >= 32 bytes (fatal in all environments; process exits).
-- Microsoft OAuth2 config (`MICROSOFT_TENANT_ID`, `MICROSOFT_CLIENT_ID`, `MICROSOFT_CLIENT_SECRET`) warns if any are missing when others are set.
+- All four `BASIS_AUTH_*` client values are required (fatal in production, warning in development).
+- Microsoft configuration is optional and affects Graph integration only.
 
 ### OAuth2 JWT utilities
 
-The `oauth2-jwt.ts` utility provides JWT verification, Bearer token extraction, scope checking, and a `withOAuth2JWT()` handler wrapper. All protected OAuth2 endpoints use this wrapper to verify tokens signed with `NUXT_OAUTH2_JWT_SECRET`.
+The `basis-auth.ts` utility implements discovery and the browser login flow. `oauth2-jwt.ts` verifies protected-resource tokens against basis-auth JWKS with exact issuer, audience, algorithm, type, expiry, and scope checks.
 
 ### Comprehensive test suite
 

@@ -118,15 +118,12 @@ cp .env.example .env
 | Variable | Description | Example |
 | --- | --- | --- |
 | `NUXT_SESSION_PASSWORD` | Session encryption key. **Must be at least 32 bytes.** | Output of `openssl rand -base64 32` |
-| `NUXT_OAUTH2_JWT_SECRET` | JWT signing secret for OAuth2 token exchange. **Must be at least 32 bytes.** Used by `jose` to sign and verify access tokens (HS256). | Output of `openssl rand -base64 32` |
+| `BASIS_AUTH_ISSUER` | Exact basis-auth issuer URL | `http://localhost:3000` |
+| `BASIS_AUTH_CLIENT_ID` | Registered confidential basishacks client ID | Provider-generated value |
+| `BASIS_AUTH_CLIENT_SECRET` | Server-only basishacks client secret | Provider-generated value |
+| `BASIS_AUTH_RESOURCE` | Resource audience registered for basishacks | `urn:basis:api:basishacks` |
 
-#### Required for Onsite Login
-
-| Variable | Description | Example |
-| --- | --- | --- |
-| `ONSITE_LOGIN_CLIENT_ID` | OAuth2 `client_id` of the basishacks app used by the onsite login flow. The server auto-adds `${CURRENT_URL_ORIGIN}${REDIRECT_URI}` to this app's allowed redirect URIs on startup. | `your_onsite_login_client_id_here` |
-
-::: tip The legacy email-verification-code login flow has been removed. The only login method for the hackathon registry is Microsoft OAuth2. :::
+::: tip Login is delegated to basis-auth. Register `${CURRENT_URL_ORIGIN}/api/auth/basis/callback` for each environment. :::
 
 #### Generating a Session Password
 
@@ -140,19 +137,17 @@ Copy the output and paste it as the value for `NUXT_SESSION_PASSWORD`.
 
 #### Microsoft Entra ID
 
+| Variable                  | Description                                                | Default |
+| ------------------------- | ---------------------------------------------------------- | ------- |
+| `MICROSOFT_TENANT_ID`     | Microsoft Entra ID tenant used by optional Graph features. | —       |
+| `MICROSOFT_CLIENT_ID`     | Microsoft Entra ID client used by optional Graph features. | —       |
+| `MICROSOFT_CLIENT_SECRET` | Microsoft Entra ID client secret for Graph features.       | —       |
+
+#### Public origin
+
 | Variable | Description | Default |
 | --- | --- | --- |
-| `MICROSOFT_TENANT_ID` | Microsoft Entra ID tenant (directory) ID. Required together with `MICROSOFT_CLIENT_ID` for MS OAuth2 login and MS Graph features. If unset, Microsoft features are disabled gracefully. | — |
-| `MICROSOFT_CLIENT_ID` | Microsoft Entra ID application (client) ID. Required together with `MICROSOFT_TENANT_ID` for MS OAuth2 login and MS Graph features. If unset, Microsoft features are disabled gracefully. | — |
-| `MICROSOFT_CLIENT_SECRET` | Microsoft Entra ID client secret for Graph API integration. Enables MS OAuth2 login and MS Graph features (meeting scheduling, Teams chat). | — |
-
-#### OAuth2 Redirects
-
-| Variable | Description | Default |
-| --- | --- | --- |
-| `CURRENT_URL_ORIGIN` | Public base origin (no trailing slash). Used for OAuth2 redirect callbacks, JWT `iss`, and `/.well-known/openid-configuration`. Must match the redirect URI registered in Azure Portal. | `http://localhost:3000` |
-| `MICROSOFT_REDIRECT_URI` | Microsoft OAuth2 redirect URI path (must start with `/`). Must exactly match the redirect URI registered in Azure Portal. | `/api/oauth2/mscallback` |
-| `REDIRECT_URI` | Onsite OAuth2 redirect URI path used by `/api/login`. The server auto-registers `${CURRENT_URL_ORIGIN}${REDIRECT_URI}` for `ONSITE_LOGIN_CLIENT_ID`. | `/api/oauth2/dccallback` |
+| `CURRENT_URL_ORIGIN` | Public base origin used to derive `/api/auth/basis/callback`. | `http://localhost:3000` |
 
 #### Integrations & Server
 
@@ -187,9 +182,11 @@ Copy the output and paste it as the value for `NUXT_SESSION_PASSWORD`.
 # REQUIRED - Session encryption key, must be at least 32 bytes
 NUXT_SESSION_PASSWORD=your_random_string_at_least_32_bytes_long
 
-# REQUIRED - JWT signing secret for OAuth2 token exchange
-NUXT_OAUTH2_JWT_SECRET=your_oauth2_jwt_secret_here
-
+# REQUIRED - basis-auth confidential client configuration
+BASIS_AUTH_ISSUER=http://localhost:3000
+BASIS_AUTH_CLIENT_ID=your_basis_auth_client_id
+BASIS_AUTH_CLIENT_SECRET=your_basis_auth_client_secret
+BASIS_AUTH_RESOURCE=urn:basis:api:basishacks
 
 # OPTIONAL - Microsoft Entra ID tenant ID (directory ID)
 MICROSOFT_TENANT_ID=your_microsoft_tenant_id_here
@@ -200,21 +197,8 @@ MICROSOFT_CLIENT_ID=your_microsoft_client_id_here
 # OPTIONAL - Microsoft Entra ID client secret for MS Graph API integration
 MICROSOFT_CLIENT_SECRET=your_microsoft_client_secret_here
 
-# OPTIONAL - Base origin URL for OAuth2 redirect callbacks
+# OPTIONAL - Public basishacks origin; callback is /api/auth/basis/callback
 CURRENT_URL_ORIGIN=http://localhost:3000
-
-# OPTIONAL - Microsoft OAuth2 redirect URI path
-# Must match the redirect URI registered in Azure Portal
-MICROSOFT_REDIRECT_URI=/api/oauth2/mscallback
-
-
-# OPTIONAL - OAuth2 redirect URI path for the onsite basishacks login flow
-REDIRECT_URI=/api/oauth2/dccallback
-
-# REQUIRED for onsite login - OAuth2 client_id of the basishacks app
-# The server auto-adds ${CURRENT_URL_ORIGIN}${REDIRECT_URI} to its allowed
-# redirect URIs on startup if missing.
-ONSITE_LOGIN_CLIENT_ID=your_onsite_login_client_id_here
 
 
 # OPTIONAL - DeepSeek API key for AI chat features (debug routes only)
@@ -423,23 +407,13 @@ And update `NUXT_SESSION_PASSWORD` in your `.env` file.
 
 ### Microsoft Graph API Unavailable
 
-If the server logs `[MS Graph] MS Token Endpoint returned 401` or similar, the `MICROSOFT_CLIENT_SECRET` is either missing or invalid. If the server logs `[MSGraph] MICROSOFT_TENANT_ID or MICROSOFT_CLIENT_ID not set - Microsoft Graph features will be unavailable`, set `MICROSOFT_TENANT_ID` and `MICROSOFT_CLIENT_ID` (the Azure app's tenant and client IDs). Microsoft OAuth2 login and Graph API features will be unavailable until these are configured, but the rest of the application will work normally.
+If the server logs `[MS Graph] MS Token Endpoint returned 401` or similar, the `MICROSOFT_CLIENT_SECRET` is either missing or invalid. Microsoft configuration affects Graph features only and does not control login.
 
-### OAuth2 JWT Secret Missing
+### basis-auth Configuration Missing
 
-The server validates `NUXT_OAUTH2_JWT_SECRET` at startup:
+The server validates `BASIS_AUTH_ISSUER`, `BASIS_AUTH_CLIENT_ID`, `BASIS_AUTH_CLIENT_SECRET`, and `BASIS_AUTH_RESOURCE` at startup:
 
-- **Production (`NODE_ENV=production`):** if the secret is missing or shorter than 32 bytes, the server logs a fatal error and exits immediately so the application can never return `invalid_grant: NUXT_OAUTH2_JWT_SECRET is not set`.
-- **Development/test:** if the secret is missing or too short, a prominent warning is logged and a documented dev-only fallback is applied automatically. Do not rely on this fallback in production.
+- **Production:** any missing value is fatal.
+- **Development/test:** missing values produce a warning; login remains unavailable until configured.
 
-Generate a proper secret with:
-
-```bash
-openssl rand -base64 32
-```
-
-Add it to your `.env`:
-
-```bash
-NUXT_OAUTH2_JWT_SECRET=<generated-secret>
-```
+The client ID and secret come from basis-auth registration. The callback registered there must exactly match `${CURRENT_URL_ORIGIN}/api/auth/basis/callback`.

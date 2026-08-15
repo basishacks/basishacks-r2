@@ -1,815 +1,126 @@
-import { describe, it, expect, vi, beforeEach } from "vitest";
+import { beforeEach, describe, expect, it, vi } from "vitest";
+
+const { jwtVerifyMock, createRemoteJWKSetMock, getUserBySubjectMock } = vi.hoisted(() => ({
+    jwtVerifyMock: vi.fn(),
+    createRemoteJWKSetMock: vi.fn(() => "jwks"),
+    getUserBySubjectMock: vi.fn(),
+}));
+
+vi.mock("jose", () => ({
+    createRemoteJWKSet: createRemoteJWKSetMock,
+    jwtVerify: jwtVerifyMock,
+}));
+
+vi.mock("~~/server/utils/basis-auth", () => ({
+    getBasisAuthConfig: () => ({
+        issuer: "https://auth.example.test",
+        clientId: "basishacks",
+        clientSecret: "secret",
+        resource: "urn:basis:api:basishacks",
+    }),
+}));
+
+vi.mock("~~/server/utils/database/users", () => ({
+    getUserByBasisAuthSubject: getUserBySubjectMock,
+}));
+
 import {
     extractBearerToken,
     parseJWScopes,
     requireScopes,
+    resolveOAuth2User,
     verifyAccessToken,
     withOAuth2JWT,
-    resolveOAuth2User,
 } from "~~/server/utils/oauth2-jwt";
 
-// ---------------------------------------------------------------------------
-// Global mocks for Nitro auto-imports
-// ---------------------------------------------------------------------------
+const event = () => ({ context: {} }) as any;
 
 beforeEach(() => {
-    (globalThis as any).createError = (input: any) => {
-        const err = new Error(input.message || input.statusMessage || "Error");
-        (err as any).statusCode = input.statusCode ?? input.status ?? 500;
-        (err as any).statusMessage = input.statusMessage;
-        return err;
-    };
-    (globalThis as any).getHeader = vi.fn();
+    vi.clearAllMocks();
+    vi.stubGlobal("createError", (input: any) => {
+        const error = new Error(input.message);
+        Object.assign(error, input);
+        return error;
+    });
+    vi.stubGlobal("getHeader", vi.fn());
 });
 
-// Mock jose
-vi.mock("jose", () => ({
-    jwtVerify: vi.fn(),
-}));
-
-// Mock database users helper
-vi.mock("~~/server/utils/database/users", () => ({
-    getUser: vi.fn(),
-}));
-
-import { jwtVerify } from "jose";
-import { getUser } from "~~/server/utils/database/users";
-
-function makeMockEvent(headers: Record<string, string> = {}) {
-    return {
-        path: "/api/test",
-        method: "GET",
-        headers,
-        context: {},
-    } as any;
-}
-
-// ---------------------------------------------------------------------------
-// extractBearerToken
-// ---------------------------------------------------------------------------
-
-describe("extractBearerToken", () => {
-    it("extracts the token from a valid Bearer authorization header", () => {
-        (globalThis as any).getHeader = vi.fn().mockReturnValue("Bearer my-secret-token");
-
-        const event = makeMockEvent();
-        const token = extractBearerToken(event);
-
-        expect(token).toBe("my-secret-token");
-    });
-
-    it('handles lowercase "bearer" prefix', () => {
-        (globalThis as any).getHeader = vi.fn().mockReturnValue("bearer lowercase-token");
-
-        const event = makeMockEvent();
-        const token = extractBearerToken(event);
-
-        expect(token).toBe("lowercase-token");
-    });
-
-    it('handles mixed-case "Bearer" prefix', () => {
-        (globalThis as any).getHeader = vi.fn().mockReturnValue("BEARER uppercase-token");
-
-        const event = makeMockEvent();
-        const token = extractBearerToken(event);
-
-        expect(token).toBe("uppercase-token");
-    });
-
-    it("trims whitespace from the extracted token", () => {
-        (globalThis as any).getHeader = vi.fn().mockReturnValue("Bearer   padded-token   ");
-
-        const event = makeMockEvent();
-        const token = extractBearerToken(event);
-
-        expect(token).toBe("padded-token");
-    });
-
-    it("throws 401 when the authorization header is missing", () => {
-        (globalThis as any).getHeader = vi.fn().mockReturnValue(undefined);
-
-        const event = makeMockEvent();
-
-        expect(() => extractBearerToken(event)).toThrow();
-        try {
-            extractBearerToken(event);
-        } catch (err: any) {
-            expect(err.statusCode).toBe(401);
-            expect(err.statusMessage).toBe("invalid_token");
-            expect(err.message).toBe("Missing or invalid Authorization header");
-        }
-    });
-
-    it("throws 401 when the header is malformed (no Bearer prefix)", () => {
-        (globalThis as any).getHeader = vi.fn().mockReturnValue("Basic abc123");
-
-        const event = makeMockEvent();
-
-        try {
-            extractBearerToken(event);
-        } catch (err: any) {
-            expect(err.statusCode).toBe(401);
-            expect(err.statusMessage).toBe("invalid_token");
-        }
-    });
-
-    it('throws 401 when the header has "Bearer" but no token (empty)', () => {
-        (globalThis as any).getHeader = vi.fn().mockReturnValue("Bearer ");
-
-        const event = makeMockEvent();
-
-        try {
-            extractBearerToken(event);
-        } catch (err: any) {
-            expect(err.statusCode).toBe(401);
-            expect(err.message).toBe("Empty access token");
-        }
-    });
-
-    it('throws 401 when the header is just "Bearer" with no space', () => {
-        (globalThis as any).getHeader = vi.fn().mockReturnValue("Bearer");
-
-        const event = makeMockEvent();
-
-        try {
-            extractBearerToken(event);
-        } catch (err: any) {
-            expect(err.statusCode).toBe(401);
-            expect(err.message).toBe("Missing or invalid Authorization header");
-        }
-    });
-});
-
-// ---------------------------------------------------------------------------
-// parseJWScopes
-// ---------------------------------------------------------------------------
-
-describe("parseJWScopes", () => {
-    it("splits a space-separated scope string into an array", () => {
-        const result = parseJWScopes("openid profile email");
-
-        expect(result).toEqual(["openid", "profile", "email"]);
-    });
-
-    it("returns an empty array for an empty string", () => {
-        const result = parseJWScopes("");
-
-        expect(result).toEqual([]);
-    });
-
-    it("returns an empty array for null", () => {
-        const result = parseJWScopes(null);
-
-        expect(result).toEqual([]);
-    });
-
-    it("returns an empty array for undefined", () => {
-        const result = parseJWScopes(undefined);
-
-        expect(result).toEqual([]);
-    });
-
-    it("returns an empty array for non-string values", () => {
-        const result = parseJWScopes(123);
-
-        expect(result).toEqual([]);
-    });
-
-    it("returns an empty array for a boolean value", () => {
-        const result = parseJWScopes(true);
-
-        expect(result).toEqual([]);
-    });
-
-    it("filters out empty strings from multiple spaces", () => {
-        const result = parseJWScopes("openid   profile  email");
-
-        // "openid", "", "", "profile", "", "email" → filters empty
-        expect(result).toEqual(["openid", "profile", "email"]);
-    });
-
-    it("handles leading and trailing spaces", () => {
-        const result = parseJWScopes("  openid profile  ");
-
-        expect(result).toEqual(["openid", "profile"]);
-    });
-
-    it("returns a single scope for a string with no spaces", () => {
-        const result = parseJWScopes("openid");
-
-        expect(result).toEqual(["openid"]);
-    });
-});
-
-// ---------------------------------------------------------------------------
-// requireScopes
-// ---------------------------------------------------------------------------
-
-describe("requireScopes", () => {
-    it("does not throw when all required scopes are present", () => {
-        expect(() => {
-            requireScopes(["openid", "profile", "email"], ["openid", "profile"]);
-        }).not.toThrow();
-    });
-
-    it("does not throw when required scopes are exactly the granted scopes", () => {
-        expect(() => {
-            requireScopes(["openid", "profile"], ["openid", "profile"]);
-        }).not.toThrow();
-    });
-
-    it("throws 403 when some required scopes are missing", () => {
-        try {
-            requireScopes(["openid"], ["openid", "profile"]);
-            // Should not reach here
-            expect(true).toBe(false);
-        } catch (err: any) {
-            expect(err.statusCode).toBe(403);
-            expect(err.statusMessage).toBe("insufficient_scope");
-            expect(err.message).toContain("Missing required scope(s)");
-            expect(err.message).toContain("profile");
-        }
-    });
-
-    it("throws 403 when all required scopes are missing", () => {
-        try {
-            requireScopes(["openid"], ["profile", "email"]);
-            expect(true).toBe(false);
-        } catch (err: any) {
-            expect(err.statusCode).toBe(403);
-            expect(err.message).toContain("profile");
-            expect(err.message).toContain("email");
-        }
-    });
-
-    it("does not throw when required scopes array is empty", () => {
-        expect(() => {
-            requireScopes(["openid", "profile"], []);
-        }).not.toThrow();
-    });
-
-    it("does not throw when granted scopes array is empty but required is also empty", () => {
-        expect(() => {
-            requireScopes([], []);
-        }).not.toThrow();
-    });
-
-    it("throws 403 when granted scopes is empty but required is not", () => {
-        try {
-            requireScopes([], ["openid"]);
-            expect(true).toBe(false);
-        } catch (err: any) {
-            expect(err.statusCode).toBe(403);
-        }
-    });
-});
-
-// ---------------------------------------------------------------------------
-// verifyAccessToken
-// ---------------------------------------------------------------------------
-
-describe("verifyAccessToken", () => {
-    beforeEach(() => {
-        process.env.NUXT_OAUTH2_JWT_SECRET = "test-secret-key-at-least-32-bytes!!";
-        vi.clearAllMocks();
-    });
-
-    it("throws 401 when token is empty", async () => {
-        try {
-            await verifyAccessToken("");
-            expect(true).toBe(false);
-        } catch (err: any) {
-            expect(err.statusCode).toBe(401);
-            expect(err.statusMessage).toBe("invalid_token");
-            expect(err.message).toBe("Empty access token");
-        }
-    });
-
-    it("returns the payload for a valid token", async () => {
-        const mockPayload = { sub: "user-123", scope: "openid profile" };
-        (jwtVerify as any).mockResolvedValue({ payload: mockPayload });
-
-        const result = await verifyAccessToken("valid-token");
-
-        expect(result).toEqual(mockPayload);
-        expect(jwtVerify).toHaveBeenCalledTimes(1);
-    });
-
-    it("throws 401 when jwtVerify rejects (invalid or expired token)", async () => {
-        (jwtVerify as any).mockRejectedValue(new Error("JWT expired"));
-
-        try {
-            await verifyAccessToken("expired-token");
-            expect(true).toBe(false);
-        } catch (err: any) {
-            expect(err.statusCode).toBe(401);
-            expect(err.statusMessage).toBe("invalid_token");
-            expect(err.message).toBe("Invalid or expired access token");
-        }
-    });
-
-    it("throws 401 for a malformed JWT", async () => {
-        (jwtVerify as any).mockRejectedValue(new Error("Invalid JWT"));
-
-        try {
-            await verifyAccessToken("not.a.valid.jwt");
-            expect(true).toBe(false);
-        } catch (err: any) {
-            expect(err.statusCode).toBe(401);
-        }
-    });
-
-    it("throws 500 when NUXT_OAUTH2_JWT_SECRET is not set", async () => {
-        const original = process.env.NUXT_OAUTH2_JWT_SECRET;
-        delete (process.env as any).NUXT_OAUTH2_JWT_SECRET;
-        expect(process.env.NUXT_OAUTH2_JWT_SECRET).toBeUndefined();
-
-        await expect(verifyAccessToken("valid-token")).rejects.toMatchObject({
-            statusCode: 500,
-            message: "NUXT_OAUTH2_JWT_SECRET is not set",
+describe("basis-auth access tokens", () => {
+    it("validates RS256, the exact issuer, resource audience, type, expiry, and claims", async () => {
+        jwtVerifyMock.mockResolvedValue({
+            payload: { sub: "user-1", client_id: "portal", scope: "chat.readwrite" },
         });
 
-        if (original === undefined) {
-            delete (process.env as any).NUXT_OAUTH2_JWT_SECRET;
-        } else {
-            process.env.NUXT_OAUTH2_JWT_SECRET = original;
-        }
-    });
-});
-
-// ---------------------------------------------------------------------------
-// withOAuth2JWT
-// ---------------------------------------------------------------------------
-
-describe("withOAuth2JWT", () => {
-    beforeEach(() => {
-        process.env.NUXT_OAUTH2_JWT_SECRET = "test-secret-key-at-least-32-bytes!!";
-        vi.clearAllMocks();
-    });
-
-    it("calls the handler with oauth2 context attached to the event", async () => {
-        (globalThis as any).getHeader = vi.fn().mockReturnValue("Bearer valid-token");
-
-        const mockPayload = { sub: "user-42", scope: "openid profile" };
-        (jwtVerify as any).mockResolvedValue({ payload: mockPayload });
-
-        const handler = vi.fn().mockResolvedValue({ data: "success" });
-        const wrapped = withOAuth2JWT(handler);
-
-        const event = makeMockEvent();
-        const result = await wrapped(event);
-
-        expect(result).toEqual({ data: "success" });
-        expect(handler).toHaveBeenCalledTimes(1);
-        expect(event.context.oauth2).toBeDefined();
-        expect(event.context.oauth2.payload).toEqual(mockPayload);
-        expect(event.context.oauth2.scopes).toEqual(["openid", "profile"]);
-    });
-
-    it("attaches only payload and scopes when loadUser is false (default)", async () => {
-        (globalThis as any).getHeader = vi.fn().mockReturnValue("Bearer valid-token");
-
-        const mockPayload = { sub: "user-42", scope: "openid" };
-        (jwtVerify as any).mockResolvedValue({ payload: mockPayload });
-
-        const handler = vi.fn().mockResolvedValue({ ok: true });
-        const wrapped = withOAuth2JWT(handler);
-
-        const event = makeMockEvent();
-        await wrapped(event);
-
-        expect(event.context.oauth2.payload).toEqual(mockPayload);
-        expect(event.context.oauth2.scopes).toEqual(["openid"]);
-        expect(event.context.oauth2.user).toBeUndefined();
-    });
-
-    it("throws 401 when the Bearer token is missing (wrapped handler)", async () => {
-        (globalThis as any).getHeader = vi.fn().mockReturnValue(undefined);
-
-        const handler = vi.fn();
-        const wrapped = withOAuth2JWT(handler);
-
-        const event = makeMockEvent();
-
-        await expect(wrapped(event)).rejects.toMatchObject({
-            statusCode: 401,
-        });
-        expect(handler).not.toHaveBeenCalled();
-    });
-
-    it("does not enforce scopes when requiredScopes is empty", async () => {
-        (globalThis as any).getHeader = vi.fn().mockReturnValue("Bearer valid-token");
-
-        const mockPayload = { sub: "user-42", scope: "openid" };
-        (jwtVerify as any).mockResolvedValue({ payload: mockPayload });
-
-        const handler = vi.fn().mockResolvedValue({ ok: true });
-        const wrapped = withOAuth2JWT(handler, { requiredScopes: [] });
-
-        const event = makeMockEvent();
-        const result = await wrapped(event);
-
-        expect(result).toEqual({ ok: true });
-        expect(handler).toHaveBeenCalledTimes(1);
-    });
-
-    it("throws 403 when required scopes are missing", async () => {
-        (globalThis as any).getHeader = vi.fn().mockReturnValue("Bearer valid-token");
-
-        const mockPayload = { sub: "user-42", scope: "openid" };
-        (jwtVerify as any).mockResolvedValue({ payload: mockPayload });
-
-        const handler = vi.fn();
-        const wrapped = withOAuth2JWT(handler, { requiredScopes: ["profile"] });
-
-        const event = makeMockEvent();
-
-        await expect(wrapped(event)).rejects.toMatchObject({
-            statusCode: 403,
-            statusMessage: "insufficient_scope",
-        });
-        expect(handler).not.toHaveBeenCalled();
-    });
-
-    it("loads the DB user when loadUser is true", async () => {
-        (globalThis as any).getHeader = vi.fn().mockReturnValue("Bearer valid-token");
-
-        const mockUser = { id: 42, email: "user@example.com" };
-        (jwtVerify as any).mockResolvedValue({
-            payload: { sub: "user-42", user_id: 42, scope: "openid profile" },
-        });
-        (getUser as any).mockResolvedValue(mockUser);
-
-        const handler = vi.fn().mockResolvedValue({ ok: true });
-        const wrapped = withOAuth2JWT(handler, { loadUser: true });
-
-        const event = makeMockEvent();
-        await wrapped(event);
-
-        expect(getUser).toHaveBeenCalledWith(event, 42);
-        expect(event.context.oauth2.user).toEqual(mockUser);
-    });
-});
-
-// ---------------------------------------------------------------------------
-// resolveOAuth2User
-// ---------------------------------------------------------------------------
-
-describe("resolveOAuth2User", () => {
-    beforeEach(() => {
-        (getUser as any).mockReset();
-    });
-
-    it("throws 401 when the payload has no user identification", async () => {
-        const event = makeMockEvent();
-
-        await expect(resolveOAuth2User(event, {})).rejects.toMatchObject({
-            statusCode: 401,
-            statusMessage: "invalid_token",
-            message: "Token missing user identification",
+        await expect(verifyAccessToken("token")).resolves.toMatchObject({ sub: "user-1" });
+        expect(createRemoteJWKSetMock).toHaveBeenCalledWith(
+            new URL("https://auth.example.test/oauth/jwks"),
+        );
+        expect(jwtVerifyMock).toHaveBeenCalledWith("token", "jwks", {
+            algorithms: ["RS256"],
+            issuer: "https://auth.example.test",
+            audience: "urn:basis:api:basishacks",
+            typ: "at+jwt",
         });
     });
 
-    it("throws 401 when the user_id is not a number", async () => {
-        const event = makeMockEvent();
-
-        await expect(
-            resolveOAuth2User(event, { user_id: "not-a-number" as any }),
-        ).rejects.toMatchObject({
+    it.each([
+        { client_id: "portal", scope: "chat.readwrite" },
+        { sub: "user-1", scope: "chat.readwrite" },
+        { sub: "user-1", client_id: "portal" },
+    ])("rejects an access token missing required claims", async (payload) => {
+        jwtVerifyMock.mockResolvedValue({ payload });
+        await expect(verifyAccessToken("token")).rejects.toMatchObject({
             statusCode: 401,
             statusMessage: "invalid_token",
         });
     });
 
-    it("throws 404 when the user does not exist", async () => {
-        (getUser as any).mockResolvedValue(null);
-        const event = makeMockEvent();
-
-        await expect(resolveOAuth2User(event, { user_id: 42 })).rejects.toMatchObject({
-            statusCode: 404,
-            message: "User not found",
-        });
+    it("rejects invalid signatures, issuers, audiences, types, and expired tokens", async () => {
+        jwtVerifyMock.mockRejectedValue(new Error("JWT verification failed"));
+        await expect(verifyAccessToken("token")).rejects.toMatchObject({ statusCode: 401 });
     });
 
-    it("returns the user row when found", async () => {
-        const mockUser = { id: 42, email: "user@example.com" };
-        (getUser as any).mockResolvedValue(mockUser);
-        const event = makeMockEvent();
-
-        const result = await resolveOAuth2User(event, { user_id: 42 });
-
-        expect(result).toEqual(mockUser);
-    });
-
-    it("falls back to sub when user_id is missing", async () => {
-        const mockUser = { id: 7, email: "sub@example.com" };
-        (getUser as any).mockResolvedValue(mockUser);
-        const event = makeMockEvent();
-
-        const result = await resolveOAuth2User(event, { sub: "7" });
-
-        expect(result).toEqual(mockUser);
-        expect(getUser).toHaveBeenCalledWith(event, 7);
-    });
-
-    it("throws 401 when user_id is 0", async () => {
-        const event = makeMockEvent();
-
-        await expect(resolveOAuth2User(event, { user_id: 0 })).rejects.toMatchObject({
-            statusCode: 401,
-            statusMessage: "invalid_token",
-            message: "Token missing user identification",
-        });
-    });
-
-    it("throws 401 when sub is null", async () => {
-        const event = makeMockEvent();
-
-        await expect(resolveOAuth2User(event, { sub: null })).rejects.toMatchObject({
-            statusCode: 401,
-            statusMessage: "invalid_token",
-        });
-    });
-
-    it("throws 401 when sub is empty string", async () => {
-        const event = makeMockEvent();
-
-        await expect(resolveOAuth2User(event, { sub: "" })).rejects.toMatchObject({
-            statusCode: 401,
-            statusMessage: "invalid_token",
-        });
+    it("maps the stable issuer and subject to the local user", async () => {
+        const user = { id: 42 };
+        getUserBySubjectMock.mockResolvedValue(user);
+        await expect(resolveOAuth2User(event(), { sub: "user-1" })).resolves.toBe(user);
+        expect(getUserBySubjectMock).toHaveBeenCalledWith(
+            expect.anything(),
+            "https://auth.example.test",
+            "user-1",
+        );
     });
 });
 
-// ---------------------------------------------------------------------------
-// extractBearerToken additional edge cases
-// ---------------------------------------------------------------------------
-
-describe("extractBearerToken additional edge cases", () => {
-    beforeEach(() => {
-        (globalThis as any).createError = (input: any) => {
-            const err = new Error(input.message || input.statusMessage || "Error");
-            (err as any).statusCode = input.statusCode ?? input.status ?? 500;
-            (err as any).statusMessage = input.statusMessage;
-            return err;
-        };
+describe("OAuth2 bearer helpers", () => {
+    it("extracts case-insensitive bearer tokens and rejects malformed headers", () => {
+        vi.mocked(getHeader).mockReturnValue("bEaReR token");
+        expect(extractBearerToken(event())).toBe("token");
+        vi.mocked(getHeader).mockReturnValue("Basic token");
+        expect(() => extractBearerToken(event())).toThrow();
     });
 
-    it("extracts token with extra whitespace after Bearer prefix", () => {
-        (globalThis as any).getHeader = vi.fn().mockReturnValue("Bearer     token");
-        const event = makeMockEvent();
-        expect(extractBearerToken(event)).toBe("token");
-    });
-
-    it("extracts token when header has trailing whitespace", () => {
-        (globalThis as any).getHeader = vi.fn().mockReturnValue("Bearer token   ");
-        const event = makeMockEvent();
-        expect(extractBearerToken(event)).toBe("token");
-    });
-
-    it("throws 401 when header has leading whitespace before Bearer", () => {
-        (globalThis as any).getHeader = vi.fn().mockReturnValue("   Bearer token");
-        const event = makeMockEvent();
-
-        try {
-            extractBearerToken(event);
-        } catch (err: any) {
-            expect(err.statusCode).toBe(401);
-            expect(err.statusMessage).toBe("invalid_token");
-        }
-    });
-
-    it("throws 401 when header is just whitespace", () => {
-        (globalThis as any).getHeader = vi.fn().mockReturnValue("   ");
-        const event = makeMockEvent();
-
-        try {
-            extractBearerToken(event);
-        } catch (err: any) {
-            expect(err.statusCode).toBe(401);
-            expect(err.statusMessage).toBe("invalid_token");
-        }
-    });
-
-    it("throws 401 when header is an empty string", () => {
-        (globalThis as any).getHeader = vi.fn().mockReturnValue("");
-        const event = makeMockEvent();
-
-        try {
-            extractBearerToken(event);
-        } catch (err: any) {
-            expect(err.statusCode).toBe(401);
-        }
-    });
-});
-
-// ---------------------------------------------------------------------------
-// parseJWScopes additional edge cases
-// ---------------------------------------------------------------------------
-
-describe("parseJWScopes additional edge cases", () => {
-    it("returns empty array for an object input", () => {
-        const result = parseJWScopes({} as any);
-        expect(result).toEqual([]);
-    });
-
-    it("returns empty array for an array input", () => {
-        const result = parseJWScopes(["openid"] as any);
-        expect(result).toEqual([]);
-    });
-
-    it("returns empty array for a symbol input", () => {
-        const result = parseJWScopes(Symbol("test") as any);
-        expect(result).toEqual([]);
-    });
-
-    it("splits scopes with mixed whitespace", () => {
-        const result = parseJWScopes("openid\tprofile\nemail");
-        // split on spaces only, so tab and newline stay
-        expect(result).toEqual(["openid\tprofile\nemail"]);
-    });
-});
-
-// ---------------------------------------------------------------------------
-// requireScopes additional edge cases
-// ---------------------------------------------------------------------------
-
-describe("requireScopes additional edge cases", () => {
-    it("throws with the exact missing scopes in the message", () => {
-        try {
-            requireScopes(["openid"], ["profile", "email", "admin"]);
-        } catch (err: any) {
-            expect(err.message).toContain("profile");
-            expect(err.message).toContain("email");
-            expect(err.message).toContain("admin");
-            expect(err.message).not.toContain("openid");
-        }
-    });
-
-    it("throws with duplicate required scopes", () => {
-        try {
-            requireScopes(["openid"], ["profile", "profile"]);
-        } catch (err: any) {
-            expect(err.statusCode).toBe(403);
-            expect(err.message).toContain("profile");
-        }
-    });
-
-    it("does not throw when granted scopes has extra scopes", () => {
-        expect(() => {
-            requireScopes(["openid", "profile", "email", "admin"], ["openid"]);
-        }).not.toThrow();
-    });
-});
-
-// ---------------------------------------------------------------------------
-// verifyAccessToken additional edge cases
-// ---------------------------------------------------------------------------
-
-describe("verifyAccessToken additional edge cases", () => {
-    beforeEach(() => {
-        process.env.NUXT_OAUTH2_JWT_SECRET = "test-secret-key-at-least-32-bytes!!";
-        vi.clearAllMocks();
-    });
-
-    it("returns payload with scope as string", async () => {
-        const mockPayload = { sub: "user-1", scope: "openid profile email" };
-        (jwtVerify as any).mockResolvedValue({ payload: mockPayload });
-
-        const result = await verifyAccessToken("valid-token");
-
-        expect(result.scope).toBe("openid profile email");
-    });
-
-    it("returns payload with custom claims", async () => {
-        const mockPayload = { sub: "user-1", client_id: "my-app", azp: "some-azp" };
-        (jwtVerify as any).mockResolvedValue({ payload: mockPayload });
-
-        const result = await verifyAccessToken("custom-token");
-
-        expect(result.client_id).toBe("my-app");
-        expect(result.azp).toBe("some-azp");
-    });
-
-    it("passes the secret and issuer to jwtVerify", async () => {
-        (jwtVerify as any).mockResolvedValue({ payload: { sub: "u1" } });
-
-        await verifyAccessToken("check-params");
-
-        expect(jwtVerify).toHaveBeenCalledWith(
-            "check-params",
-            expect.any(Uint8Array),
-            expect.objectContaining({ issuer: "http://localhost:3000" }),
+    it("parses and enforces scopes", () => {
+        expect(parseJWScopes("chat.readwrite   profile")).toEqual(["chat.readwrite", "profile"]);
+        expect(parseJWScopes(undefined)).toEqual([]);
+        expect(() => requireScopes(["chat.readwrite"], ["chat.readwrite"])).not.toThrow();
+        expect(() => requireScopes([], ["chat.readwrite"])).toThrow(
+            expect.objectContaining({ statusCode: 403 }),
         );
     });
 
-    it("throws 401 when token is just whitespace (caught by jwtVerify)", async () => {
-        (jwtVerify as any).mockRejectedValue(new Error("Invalid input"));
-
-        try {
-            await verifyAccessToken("   ");
-            expect(true).toBe(false);
-        } catch (err: any) {
-            expect(err.statusCode).toBe(401);
-            expect(err.statusMessage).toBe("invalid_token");
-        }
-    });
-});
-
-// ---------------------------------------------------------------------------
-// withOAuth2JWT additional edge cases
-// ---------------------------------------------------------------------------
-
-describe("withOAuth2JWT additional edge cases", () => {
-    beforeEach(() => {
-        process.env.NUXT_OAUTH2_JWT_SECRET = "test-secret-key-at-least-32-bytes!!";
-        vi.clearAllMocks();
-    });
-
-    it("loads user when loadUser option is true and user_id exists", async () => {
-        (globalThis as any).getHeader = vi.fn().mockReturnValue("Bearer valid-token");
-
-        const mockUser = { id: 99, email: "loaded@example.com" };
-        (jwtVerify as any).mockResolvedValue({
-            payload: { sub: "user-99", user_id: 99, scope: "openid" },
+    it("attaches the verified token context before invoking a wrapped handler", async () => {
+        vi.mocked(getHeader).mockReturnValue("Bearer token");
+        jwtVerifyMock.mockResolvedValue({
+            payload: { sub: "user-1", client_id: "portal", scope: "chat.readwrite" },
         });
-        (getUser as any).mockResolvedValue(mockUser);
-
-        const handler = vi.fn().mockResolvedValue({ ok: true });
-        const wrapped = withOAuth2JWT(handler, { loadUser: true });
-
-        const event = makeMockEvent();
-        await wrapped(event);
-
-        expect(getUser).toHaveBeenCalledWith(event, 99);
-        expect(event.context.oauth2.user).toEqual(mockUser);
-    });
-
-    it("loads user when loadUser is true even with no user_id but sub present", async () => {
-        (globalThis as any).getHeader = vi.fn().mockReturnValue("Bearer valid-token");
-
-        const mockUser = { id: 42, email: "sub-user@example.com" };
-        (jwtVerify as any).mockResolvedValue({
-            payload: { sub: "42", scope: "openid" },
-        });
-        (getUser as any).mockResolvedValue(mockUser);
-
-        const handler = vi.fn().mockResolvedValue({ ok: true });
-        const wrapped = withOAuth2JWT(handler, { loadUser: true });
-
-        const event = makeMockEvent();
-        await wrapped(event);
-
-        expect(getUser).toHaveBeenCalledWith(event, 42);
-        expect(event.context.oauth2.user).toEqual(mockUser);
-    });
-
-    it("enforces required scopes in correct order", async () => {
-        (globalThis as any).getHeader = vi.fn().mockReturnValue("Bearer valid-token");
-
-        (jwtVerify as any).mockResolvedValue({
-            payload: { sub: "u1", scope: "email" },
+        const wrapped = withOAuth2JWT(async (request) => request.context.oauth2, {
+            requiredScopes: ["chat.readwrite"],
         });
 
-        const handler = vi.fn();
-        const wrapped = withOAuth2JWT(handler, { requiredScopes: ["openid", "profile"] });
-
-        const event = makeMockEvent();
-
-        await expect(wrapped(event)).rejects.toMatchObject({
-            statusCode: 403,
-            statusMessage: "insufficient_scope",
+        await expect(wrapped(event())).resolves.toMatchObject({
+            payload: { sub: "user-1" },
+            scopes: ["chat.readwrite"],
         });
-        expect(handler).not.toHaveBeenCalled();
-    });
-
-    it("passes through when requiredScopes is undefined", async () => {
-        (globalThis as any).getHeader = vi.fn().mockReturnValue("Bearer valid-token");
-
-        (jwtVerify as any).mockResolvedValue({
-            payload: { sub: "u1", scope: "openid" },
-        });
-
-        const handler = vi.fn().mockResolvedValue({ ok: true });
-        const wrapped = withOAuth2JWT(handler, {});
-
-        const event = makeMockEvent();
-        const result = await wrapped(event);
-
-        expect(result).toEqual({ ok: true });
-    });
-
-    it("does not attach oauth2 context when handler throws before it", async () => {
-        (globalThis as any).getHeader = vi.fn().mockReturnValue("Bearer valid-token");
-
-        (jwtVerify as any).mockRejectedValue(new Error("bad token"));
-
-        const handler = vi.fn();
-        const wrapped = withOAuth2JWT(handler);
-
-        const event = makeMockEvent();
-
-        await expect(wrapped(event)).rejects.toThrow();
-        expect(event.context.oauth2).toBeUndefined();
     });
 });

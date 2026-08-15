@@ -16,7 +16,7 @@ The rate limiter defines **4 independent tiers**, each with its own request coun
 | Tier | Env Variable | Default Limit | Routes Protected |
 | --- | --- | :-: | --- |
 | **General** | `RATE_LIMIT_GENERAL_MAX` | 6000/min | All non-sensitive API routes |
-| **Authentication** | `RATE_LIMIT_AUTH_MAX` | 600/min | `/api/login`, `/api/oauth2/*` |
+| **Authentication** | `RATE_LIMIT_AUTH_MAX` | 600/min | `/api/login`, `/api/auth/basis/callback` |
 | **Vote / Score** | `RATE_LIMIT_VOTE_MAX` | 600/min | `/api/ballot`, `/api/teams/:id/scores` |
 | **File Upload** | `RATE_LIMIT_UPLOAD_MAX` | 600/min | `/api/debug/upload` |
 

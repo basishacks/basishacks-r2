@@ -296,46 +296,6 @@ The table includes a **Members** column that renders a `UserAvatarGroup` (with `
 
 **Layout:** `developers-dashboard`
 
-### `/developers/applications`
-
-**File:** `app/pages/developers/applications/index.vue`
-
-OAuth2 application listing page.
-
-**Layout:** `developers-dashboard`
-
-### `/developers/applications/create`
-
-**File:** `app/pages/developers/applications/create.vue`
-
-OAuth2 application creation form.
-
-**Layout:** `developers-dashboard`
-
-### `/developers/applications/[id]`
-
-**File:** `app/pages/developers/applications/[id].vue`
-
-OAuth2 application editor with two tabs: **General details** and **Authorization (DevConnect)**.
-
-**General tab:**
-
-- Application name, client ID, description
-- Type badge (first-party / third-party)
-- Proxy Microsoft badge
-- Redirect URIs list
-
-**Authorization tab:**
-
-| Section | Description |
-| --- | --- |
-| Client Secrets | Create/delete secrets. New secrets shown once in a modal with copy button. Abbreviated versions stored. |
-| Redirect URIs | Add/remove URIs with `ManageRedirectUriRequest` validation. Must start with `http://localhost` or `https://`. |
-| Scope Permissions | Add scopes from `OAuth2Scopes` registry. Admin-only scopes require elevated permissions. Sensitive scopes show "User Consent" badge. |
-| OAuth2 URL Generator | Select scopes and redirect URI to generate an authorization URL. Includes PKCE requirement notice. |
-
-**Layout:** `developers-dashboard`
-
 ### `/developers/deepseek`
 
 **File:** `app/pages/developers/deepseek.vue`
@@ -365,39 +325,9 @@ Hackathon Administration page (admin-only, hard 403 for non-admins). Contains:
 
 **Layout:** `developers-dashboard`
 
-## OAuth2 Flow
+## Login Flow
 
-### `/api/oauth2/authorize`
-
-**File:** `app/pages/api/oauth2/authorize.vue`
-
-Full OAuth2 authorization page with login + consent flow. Uses **no layout** (`layout: false`).
-
-**Background:** Canvas-based matrix rain animation (green characters on black background).
-
-**Flow states:**
-
-| State | Description |
-| --- | --- |
-| `load` | Initial loading state |
-| `login` | Microsoft OAuth2 sign-in button |
-| `sensitive_consent` | Consent screen showing scope descriptions, user avatar, and app avatar with preloaded images |
-| `error` | Error display with optional "Try Again" button |
-
-**Login methods:**
-
-1. **Microsoft OAuth2** — Redirects to Microsoft login via `/api/oauth2/to_microsoft`
-
-**Consent screen:**
-
-- Shows user avatar and app avatar connection
-- Lists scope descriptions with sensitive/non-sensitive indicators
-- "Consent" or "Deny" buttons
-- Displays logged-in user name with `UserPopover`
-
-**Session management:** Uses `/api/oauth2/session` (GET/POST/DELETE) to manage the OAuth2 authorization session state.
-
-::: warning This page handles the complete OAuth2 authorization code flow. The `bridge_error` cookie is used to pass error states from server middleware to the client page. :::
+`/api/login` redirects directly to basis-auth, so basishacks no longer renders a native authorization or consent page. basis-auth owns provider login and consent UI; basishacks handles only its callback and local session.
 
 ## User Profile
 

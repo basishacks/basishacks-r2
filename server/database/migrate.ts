@@ -1,6 +1,5 @@
 import { readFileSync, readdirSync } from "node:fs";
 import { resolve } from "node:path";
-import { buildOnsiteRedirectUri } from "~~/server/utils/oauth2";
 
 const MIGRATIONS_DIR = resolve(process.cwd(), "drizzle");
 
@@ -46,6 +45,30 @@ function extractCreatedTables(sql: string): string[] {
     return tables;
 }
 
+function extractAddedColumns(sql: string): Array<{ table: string; column: string }> {
+    const columns: Array<{ table: string; column: string }> = [];
+    const regex = /ALTER\s+TABLE\s+`?([^`\s]+)`?\s+ADD\s+`?([^`\s]+)`?/gi;
+    let match: RegExpExecArray | null;
+    while ((match = regex.exec(sql)) !== null) {
+        columns.push({ table: match[1], column: match[2] });
+    }
+    return columns;
+}
+
+function extractCreatedIndexes(sql: string): string[] {
+    const indexes: string[] = [];
+    const regex = /CREATE\s+(?:UNIQUE\s+)?INDEX\s+(?:IF\s+NOT\s+EXISTS\s+)?`?([^`\s]+)`?/gi;
+    let match: RegExpExecArray | null;
+    while ((match = regex.exec(sql)) !== null) indexes.push(match[1]);
+    return indexes;
+}
+
+function indexExists(sqlite: PortableSqlite, index: string): boolean {
+    return Boolean(
+        sqlite.prepare("SELECT 1 FROM sqlite_master WHERE type = 'index' AND name = ?").get(index),
+    );
+}
+
 export function migrateDatabase(sqlite: PortableSqlite, migrationsDir: string = MIGRATIONS_DIR) {
     sqlite.exec(`
     CREATE TABLE IF NOT EXISTS _drizzle_migrations (
@@ -75,11 +98,17 @@ export function migrateDatabase(sqlite: PortableSqlite, migrationsDir: string = 
         // If the migration would create tables that already exist, assume it was
         // applied before migration tracking was in place and just record it.
         const createdTables = extractCreatedTables(sql);
+        const addedColumns = extractAddedColumns(sql);
+        const createdIndexes = extractCreatedIndexes(sql);
+        const hasStructuralChanges =
+            createdTables.length + addedColumns.length + createdIndexes.length > 0;
         const alreadyApplied =
-            createdTables.length > 0 &&
+            hasStructuralChanges &&
             createdTables.every(
                 (table) => table === "_drizzle_migrations" || existingTables.has(table),
-            );
+            ) &&
+            addedColumns.every(({ table, column }) => columnExists(sqlite, table, column)) &&
+            createdIndexes.every((index) => indexExists(sqlite, index));
 
         if (!alreadyApplied) {
             const statements = sql
@@ -137,40 +166,6 @@ export function seedHackathon(sqlite: PortableSqlite) {
         );
         console.log("[Nitro] Seeded default hackathon row");
     }
-}
-
-/**
- * Ensures the onsite-login OAuth2 application allows the redirect URI used by
- * /api/login. This prevents "Application does not allow redirect_uri" errors
- * after fresh checkouts or when the configured origin changes.
- *
- * @param sqlite - SQLite database instance (bun:sqlite or better-sqlite3)
- */
-export function seedOAuth2ApplicationRedirectUri(sqlite: PortableSqlite) {
-    const clientId = process.env.ONSITE_LOGIN_CLIENT_ID;
-    if (!clientId) return;
-
-    const redirectUri = buildOnsiteRedirectUri();
-
-    const app = sqlite
-        .prepare("SELECT redirect_uris FROM oauth2_applications WHERE client_id = ?")
-        .get<{ redirect_uris: string | null }>(clientId);
-
-    if (!app) {
-        console.log(
-            `[Nitro] Onsite login application ${clientId} not found; skipping redirect URI seed`,
-        );
-        return;
-    }
-
-    const existing = app.redirect_uris ? app.redirect_uris.split(" ").filter((u) => u) : [];
-    if (existing.includes(redirectUri)) return;
-
-    const updated = [...existing, redirectUri].join(" ");
-    sqlite
-        .prepare("UPDATE oauth2_applications SET redirect_uris = ? WHERE client_id = ?")
-        .run(updated, clientId);
-    console.log(`[Nitro] Added redirect URI to onsite login application: ${redirectUri}`);
 }
 
 function tableExists(sqlite: PortableSqlite, table: string): boolean {
@@ -409,6 +404,16 @@ function migrateLegacySchema(sqlite: PortableSqlite) {
         sqlite.exec("ALTER TABLE oauth2_applications ADD COLUMN owner_id INTEGER");
         console.log("[Nitro] Added legacy-missing column: oauth2_applications.owner_id");
     }
+
+    for (const column of ["auth_issuer", "auth_subject"]) {
+        if (!columnExists(sqlite, "users", column)) {
+            sqlite.exec(`ALTER TABLE users ADD COLUMN ${column} TEXT`);
+            console.log(`[Nitro] Added legacy-missing column: users.${column}`);
+        }
+    }
+    sqlite.exec(
+        "CREATE UNIQUE INDEX IF NOT EXISTS idx_users_auth_identity ON users(auth_issuer, auth_subject)",
+    );
 }
 
 /**
@@ -422,7 +427,6 @@ export function createAndMigrateDatabase(sqlite: PortableSqlite) {
     migrateLegacySchema(sqlite);
     migrateDatabase(sqlite);
     seedHackathon(sqlite);
-    seedOAuth2ApplicationRedirectUri(sqlite);
 
     return sqlite;
 }

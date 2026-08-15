@@ -3,14 +3,13 @@ import { readFileSync } from "node:fs";
 import { resolve } from "node:path";
 
 describe("developer portal access guard", () => {
-    it("enforces granular access for applications and admin access elsewhere", () => {
+    it("requires admin access for the developer dashboard", () => {
         const source = readFileSync(
             resolve(import.meta.dirname, "..", "..", "app", "layouts", "developers-dashboard.vue"),
             "utf-8",
         );
         expect(source).toContain("throw createError");
-        expect(source).toContain("DevPermissions.PORTAL_APPLICATIONS_VIEW");
-        expect(source).toContain("DevPermissions.PORTAL_APPLICATIONS_CREATE");
+        expect(source).not.toContain("/developers/applications");
         expect(source).toContain("statusCode: 403");
         expect(source).toContain('id: "pages"');
     });
