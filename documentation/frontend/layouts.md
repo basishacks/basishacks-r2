@@ -161,17 +161,13 @@ Mod portal layout using `UDashboardGroup` with a collapsible, resizable sidebar.
 
 **Navigation and access rules:**
 
-| Item | Route | Permission Required |
-| --- | --- | --- |
-| Home, Users, Teams, DeepSeek, Files, Season | `/developers/*` | Admin |
-| Applications | `/developers/applications/` | `PORTAL_APPLICATIONS_VIEW`, `PORTAL_APPLICATIONS_VIEW_ALL`, or admin |
-| ↳ Create New | `/developers/applications/create` | `PORTAL_APPLICATIONS_CREATE` or admin |
+| Item                                        | Route           | Permission Required |
+| ------------------------------------------- | --------------- | ------------------- |
+| Home, Users, Teams, DeepSeek, Files, Season | `/developers/*` | Admin               |
 
-Within Applications, the list is limited to the caller's applications with `PORTAL_APPLICATIONS_VIEW`; `PORTAL_APPLICATIONS_VIEW_ALL` returns every application. Creating and deleting are gated by `PORTAL_APPLICATIONS_CREATE` and `PORTAL_APPLICATIONS_DELETE`, respectively (or admin).
+The retired application-management navigation is no longer present. All remaining developer routes require admin access.
 
-Non-admin users see only the application navigation they can access. Permission checks use `hasPermission()` from `~~/shared/permissions` with `DevPermissions` constants.
-
-**Used by:** `/developers`, `/developers/users`, `/developers/teams`, `/developers/applications`, `/developers/applications/create`, `/developers/applications/[id]`, `/developers/deepseek`, `/developers/debug`, `/developers/season`
+**Used by:** `/developers`, `/developers/users`, `/developers/teams`, `/developers/deepseek`, `/developers/debug`, `/developers/season`
 
 ## Layout Comparison
 

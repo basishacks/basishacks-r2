@@ -9,6 +9,8 @@ import {
     updateUserProfilePicture,
     updateUserRole,
     deleteUsers,
+    findOrLinkBasisAuthUser,
+    getUserByBasisAuthSubject,
 } from "~~/server/utils/database/users";
 
 describe("users database helpers", () => {
@@ -116,6 +118,82 @@ describe("users database helpers", () => {
             const fetched = await getUserByEmail(event, "UPPER@EXAMPLE.COM");
             expect(fetched).not.toBeNull();
             expect(fetched!.email).toBe("upper@example.com");
+        });
+    });
+
+    describe("basis-auth identity linking", () => {
+        const identity = {
+            issuer: "https://auth.example.test",
+            subject: "subject-1",
+            email: "USER@EXAMPLE.COM",
+            emailVerified: true,
+            name: "Updated Name",
+        };
+
+        it("links the first verified login by normalized email without changing local ownership", async () => {
+            event.context.drizzle
+                .prepare(
+                    "INSERT INTO users(id, email, name, role) VALUES(17, 'user@example.com', 'Old Name', 'judge')",
+                )
+                .run();
+            event.context.drizzle
+                .prepare("INSERT INTO seasons(id, name, is_active) VALUES(1, 'S1', 1)")
+                .run();
+            event.context.drizzle
+                .prepare("INSERT INTO teams(id, name, season_id) VALUES(5, 'Team', 1)")
+                .run();
+            event.context.drizzle.prepare("UPDATE users SET team_id = 5 WHERE id = 17").run();
+
+            const user = await findOrLinkBasisAuthUser(event, identity);
+
+            expect(user).toMatchObject({
+                id: 17,
+                role: "judge",
+                team_id: 5,
+                auth_issuer: identity.issuer,
+                auth_subject: identity.subject,
+            });
+        });
+
+        it("uses issuer and subject on repeat login and permits a verified email update", async () => {
+            const linked = await findOrLinkBasisAuthUser(event, identity);
+            const repeated = await findOrLinkBasisAuthUser(event, {
+                ...identity,
+                email: "new@example.com",
+            });
+
+            expect(repeated.id).toBe(linked.id);
+            expect(repeated.email).toBe("new@example.com");
+            await expect(
+                getUserByBasisAuthSubject(event, identity.issuer, identity.subject),
+            ).resolves.toMatchObject({ id: linked.id });
+        });
+
+        it("rejects unverified email linking", async () => {
+            await expect(
+                findOrLinkBasisAuthUser(event, { ...identity, emailVerified: false }),
+            ).rejects.toMatchObject({ statusCode: 403 });
+        });
+
+        it("rejects identities or verified emails already linked to another account", async () => {
+            await findOrLinkBasisAuthUser(event, identity);
+            event.context.drizzle
+                .prepare("INSERT INTO users(email) VALUES('other@example.com')")
+                .run();
+
+            await expect(
+                findOrLinkBasisAuthUser(event, {
+                    ...identity,
+                    subject: "subject-2",
+                }),
+            ).rejects.toMatchObject({ statusCode: 409 });
+            await expect(
+                findOrLinkBasisAuthUser(event, {
+                    ...identity,
+                    subject: "subject-1",
+                    email: "other@example.com",
+                }),
+            ).rejects.toMatchObject({ statusCode: 409 });
         });
     });
 
@@ -318,9 +396,10 @@ describe("users database helpers", () => {
             expect(peerVotes.results).toHaveLength(0);
 
             const apps = event.context.drizzle
-                .prepare("SELECT * FROM oauth2_applications WHERE owner_id = 1")
+                .prepare("SELECT * FROM oauth2_applications WHERE client_id = 'client-1'")
                 .all() as { results: any[] };
-            expect(apps.results).toHaveLength(0);
+            expect(apps.results).toHaveLength(1);
+            expect(apps.results[0].owner_id).toBeNull();
         });
     });
 });

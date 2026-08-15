@@ -95,7 +95,8 @@ export default defineNuxtConfig({
         // Reject request bodies larger than 10 MiB before buffering into memory.
         maxRequestSize: 10 * 1024 * 1024,
         externals: {
-            // trace: true
+            // Node's production export condition needs Vue's production CJS
+            // files, which Nitro's tracer currently omits in dev bundles.
             trace: false,
         },
         rollupConfig: {

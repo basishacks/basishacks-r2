@@ -29,17 +29,21 @@ export default defineNitroPlugin(() => {
     const msConfigValues = [msTenantId, msClientId, msClientSecret];
     const msConfigSetCount = msConfigValues.filter(Boolean).length;
 
-    const jwtSecret = process.env.NUXT_OAUTH2_JWT_SECRET;
-    const jwtSecretLength = jwtSecret ? new TextEncoder().encode(jwtSecret).length : 0;
-    if (!jwtSecret || jwtSecretLength < 32) {
-        const reason = jwtSecret
-            ? `only ${jwtSecretLength} bytes (must be at least 32 bytes)`
-            : "not set";
-        console.error(
-            `[FATAL] NUXT_OAUTH2_JWT_SECRET is ${reason}. ` +
-                "Set it to a strong secret (e.g. openssl rand -base64 32) and restart the server.",
-        );
-        process.exit(1);
+    const basisAuthVariables = [
+        "BASIS_AUTH_ISSUER",
+        "BASIS_AUTH_CLIENT_ID",
+        "BASIS_AUTH_CLIENT_SECRET",
+        "BASIS_AUTH_RESOURCE",
+    ] as const;
+    const missingBasisAuthVariables = basisAuthVariables.filter((name) => !process.env[name]);
+    if (missingBasisAuthVariables.length > 0) {
+        const message = `Missing basis-auth configuration: ${missingBasisAuthVariables.join(", ")}`;
+        if (isProduction) {
+            console.error(`[FATAL] ${message}`);
+            process.exit(1);
+        } else {
+            console.warn(`[WARNING] ${message}`);
+        }
     }
 
     if (msConfigSetCount > 0 && msConfigSetCount < 3) {

@@ -100,10 +100,13 @@ export const users = sqliteTable(
         team_id: integer("team_id"),
         profile_theme: text("profile_theme"),
         profile_picture: text("profile_picture"),
+        auth_issuer: text("auth_issuer"),
+        auth_subject: text("auth_subject"),
     },
     (table) => [
         index("idx_users_email").on(table.email),
         uniqueIndex("idx_users_lower_email").on(sql`lower(${table.email})`),
+        uniqueIndex("idx_users_auth_identity").on(table.auth_issuer, table.auth_subject),
         index("idx_users_team_id").on(table.team_id),
         check("users_role_check", sql`${table.role} IN ('participant', 'judge', 'admin')`),
     ],

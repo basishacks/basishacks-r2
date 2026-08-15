@@ -150,7 +150,7 @@ In-memory rate limiting middleware with four pre-configured tiers.
 | Config Constant | Default Limit | Environment Variable | Prefix | Used By |
 | --- | --- | --- | --- | --- |
 | `DEFAULT_RATE_LIMIT_CONFIG` | 6,000 req/min | `RATE_LIMIT_GENERAL_MAX` | (none) | General API handlers |
-| `AUTH_RATE_LIMIT_CONFIG` | 600 req/min | `RATE_LIMIT_AUTH_MAX` | `auth` | `/api/login`, `/api/oauth2/token` |
+| `AUTH_RATE_LIMIT_CONFIG` | 600 req/min | `RATE_LIMIT_AUTH_MAX` | `auth` | `/api/login`, `/api/auth/basis/callback` |
 | `VOTE_RATE_LIMIT_CONFIG` | 600 req/min | `RATE_LIMIT_VOTE_MAX` | `vote` | `/api/ballot`, `/api/teams/:id/scores` |
 | `UPLOAD_RATE_LIMIT_CONFIG` | 600 req/min | `RATE_LIMIT_UPLOAD_MAX` | `upload` | `/api/debug/upload` |
 
@@ -207,49 +207,26 @@ Clears the in-memory rate limit history. Exposed primarily for tests.
 
 ---
 
-## oauth2.ts
+## basis-auth.ts and oauth2.ts
 
-Microsoft OAuth2 configuration, public origin helpers, and URL construction.
+`basis-auth.ts` owns OIDC discovery, confidential-client configuration, the encrypted transaction session, S256 PKCE requests, callback validation, and UserInfo loading. `oauth2.ts` now contains only the public-origin helper.
 
 ### Public origin / issuer
 
 ```ts
 export function getPublicOrigin(): string;
-export function getOAuth2Issuer(): string;
+export function getBasisAuthCallbackUrl(): string;
 ```
 
-Both return `CURRENT_URL_ORIGIN` with trailing slashes stripped (default `http://localhost:3000`). `getOAuth2Issuer()` is the OIDC issuer used for JWT `iss` claims and OpenID Discovery.
-
-### Configuration helpers
-
-```ts
-export function getMicrosoftRedirectUri(): string;
-export function getOnsiteRedirectPath(): string;
-export function buildOnsiteRedirectUri(origin?: string): string;
-```
-
-- `getMicrosoftRedirectUri` returns `process.env.MICROSOFT_REDIRECT_URI` or `/api/oauth2/mscallback`.
-- `getOnsiteRedirectPath` returns `process.env.REDIRECT_URI` or `/api/oauth2/dccallback`.
-- `buildOnsiteRedirectUri` builds a full URL using `CURRENT_URL_ORIGIN` or `http://localhost:3000`.
-
-The Microsoft OAuth2 config object reads `MICROSOFT_TENANT_ID`, `MICROSOFT_CLIENT_ID`, and `MICROSOFT_REDIRECT_URI`. If the tenant or client ID is unset, Microsoft OAuth2 / Graph features are disabled gracefully. The redirect URI defaults to `/api/oauth2/mscallback`; an alias handler is also exposed at `/api/auth` for convenience.
-
-### `structureLink`
-
-```ts
-export function structureLink(
-    state: string,
-    code_challenge: string,
-    scope?: string,
-    redirect_uri?: string,
-): string;
-```
-
-Constructs a Microsoft OAuth2 authorization URL with PKCE parameters.
+`getPublicOrigin()` normalizes `CURRENT_URL_ORIGIN`; `getBasisAuthCallbackUrl()` appends `/api/auth/basis/callback`. Microsoft URL construction is no longer part of login.
 
 ---
 
-## openid-configuration.ts
+## Retired provider utilities
+
+The former `openid-configuration.ts`, `oauth2-validate.ts`, `oauth2-token.ts`, and `oauth2-userinfo.ts` modules were removed with the native provider. Their protocols and client registration now live in basis-auth.
+
+## openid-configuration.ts (retired)
 
 Builds the OpenID Connect Discovery document served at `/.well-known/openid-configuration`.
 
@@ -343,7 +320,7 @@ export async function issueOAuth2AccessToken(
 ): Promise<OAuth2AccessTokenResponse>;
 ```
 
-Full confidential-client path used by `POST /api/oauth2/token`: validates `client_id`, `client_secret`, and optional `redirect_uri`, then redeems the code. External clients must use the HTTP endpoint; they do not import this module.
+This former confidential-client token-issuance path has been removed.
 
 ---
 
@@ -368,7 +345,7 @@ export async function resolveUserInfoFromAccessToken(
 ): Promise<OAuth2UserInfoClaims>;
 ```
 
-Verifies the access token, loads the user, and builds claims. Same result as `GET /api/oauth2/userinfo`. Used in-process by onsite login.
+This former native UserInfo path has been removed.
 
 ---
 
@@ -382,7 +359,7 @@ JWT verification and OAuth2 Bearer token handling using the `jose` library.
 export async function verifyAccessToken(token: string): Promise<OAuth2JWTPayload>;
 ```
 
-Verifies a JWT access token against `NUXT_OAUTH2_JWT_SECRET`. Throws 401 for invalid or expired tokens.
+Verifies a basis-auth access token against its remote JWKS, requiring RS256, exact issuer and resource audience, `typ=at+jwt`, expiry, and required claims. Throws 401 for invalid or expired tokens.
 
 ### `extractBearerToken`
 
@@ -592,33 +569,6 @@ The function blocks the following address ranges:
 | `::1/128`        | IPv6 loopback     |
 | `fc00::/7`       | IPv6 unique local |
 | `localhost`      | Hostname          |
-
----
-
-## validate-oauth2-jwt-secret.ts
-
-**File:** `server/utils/validate-oauth2-jwt-secret.ts`
-
-Shared guard used by the `validate-oauth2-jwt-secret.ts` Nitro plugin and tests.
-
-```ts
-export const DEV_OAUTH2_JWT_SECRET_FALLBACK: string;
-```
-
-The documented dev-only fallback (exactly 32 bytes).
-
-```ts
-export interface ValidateOAuth2JWTSecretOptions {
-    env?: Record<string, string | undefined>;
-    exit?: (code: number) => never;
-    logError?: (...args: unknown[]) => void;
-    logWarn?: (...args: unknown[]) => void;
-}
-
-export function validateOAuth2JWTSecret(options?: ValidateOAuth2JWTSecretOptions): void;
-```
-
-Validates `NUXT_OAUTH2_JWT_SECRET` length and either exits (production) or applies the fallback (development/test). The fallback is written back to the provided `env` object.
 
 ---
 

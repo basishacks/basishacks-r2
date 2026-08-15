@@ -1,6 +1,5 @@
-import { createHash, randomBytes } from "node:crypto";
+import { randomBytes } from "node:crypto";
 import { env } from "node:process";
-import { structureLink } from "~~/server/utils/oauth2";
 
 const metadata = {
     access_token: null as string | null,
@@ -198,17 +197,7 @@ export async function initializeDummyUserAccessToken() {
     console.log("[MS Graph] Response from Dummy User Token Endpoint: " + res.status);
 
     if (res.status == 400) {
-        const state = randomBytes(77).toString("base64url");
-        const code_verif = randomBytes(75).toString("base64url");
-        const code_challenge = createHash("sha256").update(code_verif).digest("base64url");
-        const link = structureLink(
-            state,
-            code_challenge,
-            "Chat.Create Chat.ReadWrite Presence.ReadWrite",
-        );
-
         console.log("[MS Graph] Dummy user error: " + data.error_description);
-        console.log("[MS Graph] Consent first with DevClub User: " + link);
     }
 
     metadata.user_access_token = data.access_token as string | undefined;

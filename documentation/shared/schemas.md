@@ -176,7 +176,7 @@ Coerces string route params to positive integers. Used by:
 | ------- | -------- | ------------------- |
 | `token` | `string` | Required, non-empty |
 
-**API endpoint:** `POST /api/oauth2/to_microsoft`
+::: info Legacy schema This symbol remains for source compatibility but no active route consumes it. :::
 
 ---
 
@@ -306,7 +306,9 @@ Coerces string route params to positive integers. Used by:
 
 ---
 
-## OAuth2 Application Schemas
+## Retained Legacy OAuth2 Schemas
+
+These exported schemas remain for rollback and source compatibility. The native provider and `/api/applications/*` routes have been retired; new client registration belongs in basis-auth.
 
 ### `CreateApplicationRequest`
 
@@ -317,15 +319,11 @@ Coerces string route params to positive integers. Used by:
 | `proxy_microsoft` | `boolean`            | Required, enables Microsoft Graph proxy |
 | `type`            | `'first' \| 'third'` | Optional, defaults to third-party       |
 
-**API endpoint:** `POST /api/applications`
-
 ### `DeleteApplicationsRequest`
 
 | Field | Type       | Constraints                                            |
 | ----- | ---------- | ------------------------------------------------------ |
 | `ids` | `string[]` | Required, 1–100 non-empty client IDs to delete at once |
-
-**API endpoint:** `DELETE /api/applications`
 
 ### `ManageRedirectUriRequest`
 
@@ -334,8 +332,6 @@ Coerces string route params to positive integers. Used by:
 | `uri` | `string` | Required. Must start with `https://` or match `http://localhost(/:\|$)` pattern |
 
 The refinement uses a custom function: `(u) => u.startsWith("https://") || /^http:\/\/localhost(\/|:|$)/.test(u)`. This allows any `https://` URL or `http://localhost` with any port or path.
-
-**API endpoint:** `POST /api/applications/:id/redirect_uris`
 
 ---
 
@@ -352,15 +348,11 @@ The refinement uses a custom function: `(u) => u.startsWith("https://") || /^htt
 | `redirect_uri` | `string` | Optional, max 2048 characters, or empty string |
 | `code_verifier` | `string` | Optional, max 128 characters, used for PKCE |
 
-**API endpoint:** `POST /api/oauth2/token`
-
 ### `OAuth2SessionActionRequest`
 
 | Field | Type | Constraints |
 | --- | --- | --- |
 | `action` | `'cancel' \| 'consent' \| 'assume_consent' \| 'deny'` | Required, must be one of the four actions |
-
-**API endpoint:** `DELETE /api/oauth2/session`
 
 ---
 

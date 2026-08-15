@@ -18,7 +18,6 @@ import { eq, and } from "drizzle-orm";
 import {
     teams,
     users,
-    oauth2Applications,
     teamScores,
     peerVotingScores,
     teamAwards,
@@ -50,7 +49,6 @@ let ctx: TestContext;
 let createTeamHandler: any;
 let updateTeamHandler: any;
 let updateUserHandler: any;
-let createApplicationHandler: any;
 let submitTeamHandler: any;
 let getTeamHandler: any;
 let listTeamsHandler: any;
@@ -84,10 +82,6 @@ beforeAll(async () => {
     vi.stubGlobal("getActiveSeason", seasonsDb.getActiveSeason);
     vi.stubGlobal("getScoreRankVisibilityResolver", seasonsDb.getScoreRankVisibilityResolver);
 
-    const oauth2Db = await import("~~/server/utils/database/oauth2_applications");
-    vi.stubGlobal("getOAuth2ApplicationCountByOwner", oauth2Db.getOAuth2ApplicationCountByOwner);
-    vi.stubGlobal("createOAuth2Application", oauth2Db.createOAuth2Application);
-
     const convert = await import("~~/server/utils/convert");
     vi.stubGlobal("convertTeamToPublic", convert.convertTeamToPublic);
     vi.stubGlobal("convertUserToPublic", convert.convertUserToPublic);
@@ -111,7 +105,6 @@ beforeAll(async () => {
     createTeamHandler = (await import("~~/server/api/teams/index.post")).default;
     updateTeamHandler = (await import("~~/server/api/teams/[id]/index.patch")).default;
     updateUserHandler = (await import("~~/server/api/users/[id]/index.patch")).default;
-    createApplicationHandler = (await import("~~/server/api/applications/index.post")).default;
     submitTeamHandler = (await import("~~/server/api/teams/[id]/submit.post")).default;
     getTeamHandler = (await import("~~/server/api/teams/[id]/index.get")).default;
     listTeamsHandler = (await import("~~/server/api/teams/index.get")).default;
@@ -234,55 +227,6 @@ describe("SQL injection hardening", () => {
             const allUsers = ctx.drizzle.select().from(users).all();
             expect(allUsers).toHaveLength(1);
         });
-    });
-
-    describe("POST /api/applications", () => {
-        it.each(SQL_METACHARACTERS)(
-            "stores application name %j as a literal string",
-            async (name) => {
-                seedUser(ctx, { email: "dev@basischina.com" });
-                vi.mocked(globalThis.requirePermission).mockResolvedValue({
-                    id: 1,
-                    role: "participant",
-                });
-                mockBody.value = { name, proxy_microsoft: false };
-
-                const result = await createApplicationHandler(createEvent());
-
-                expect(result).toHaveProperty("name", name);
-
-                const row = ctx.drizzle
-                    .select()
-                    .from(oauth2Applications)
-                    .where(eq(oauth2Applications.name, name))
-                    .get();
-                expect(row).toBeDefined();
-                expect(row!.name).toBe(name);
-            },
-        );
-
-        it.each(SQL_METACHARACTERS)(
-            "stores application description %j as a literal string",
-            async (description) => {
-                seedUser(ctx, { email: "dev@basischina.com" });
-                vi.mocked(globalThis.requirePermission).mockResolvedValue({
-                    id: 1,
-                    role: "participant",
-                });
-                mockBody.value = { name: "App", description, proxy_microsoft: false };
-
-                const result = await createApplicationHandler(createEvent());
-
-                expect(result).toHaveProperty("description", description);
-
-                const row = ctx.drizzle
-                    .select()
-                    .from(oauth2Applications)
-                    .where(eq(oauth2Applications.client_id, result.client_id))
-                    .get();
-                expect(row!.description).toBe(description);
-            },
-        );
     });
 });
 
@@ -438,56 +382,6 @@ describe("SQL injection in team project fields (POST submit)", () => {
         const row = ctx.drizzle.select().from(teams).where(eq(teams.id, team.id)).get();
         expect(row!.project_name).toBe(sqlName);
     });
-});
-
-describe("advanced SQL injection in application fields", () => {
-    it.each(["' UNION SELECT * FROM users --", "' oR 1=1 --", "'/**/OR/**/1=1/**/--"])(
-        "stores application name %j as literal string",
-        async (name) => {
-            seedUser(ctx, { email: "dev2@basischina.com" });
-            vi.mocked(globalThis.requirePermission).mockResolvedValue({
-                id: 1,
-                role: "participant",
-            });
-            mockBody.value = { name, proxy_microsoft: false };
-
-            const result = await createApplicationHandler(createEvent());
-
-            expect(result).toHaveProperty("name", name);
-
-            const row = ctx.drizzle
-                .select()
-                .from(oauth2Applications)
-                .where(eq(oauth2Applications.name, name))
-                .get();
-            expect(row).toBeDefined();
-            expect(row!.name).toBe(name);
-        },
-    );
-
-    it.each(["' OR 1=1 --", "' OR 'a'='a", "' UNION SELECT * FROM users --"])(
-        "stores application description %j as literal",
-        async (description) => {
-            seedUser(ctx, { email: "dev3@basischina.com" });
-            vi.mocked(globalThis.requirePermission).mockResolvedValue({
-                id: 1,
-                role: "participant",
-            });
-            const name = "App_" + Date.now();
-            mockBody.value = { name, description, proxy_microsoft: false };
-
-            const result = await createApplicationHandler(createEvent());
-
-            expect(result).toHaveProperty("description", description);
-
-            const row = ctx.drizzle
-                .select()
-                .from(oauth2Applications)
-                .where(eq(oauth2Applications.client_id, result.client_id))
-                .get();
-            expect(row!.description).toBe(description);
-        },
-    );
 });
 
 describe("SQL injection in peer voting reasoning (direct DB helper)", () => {

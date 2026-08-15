@@ -44,6 +44,10 @@ const migrationSQL = `
 
   ALTER TABLE oauth2_applications ADD COLUMN owner_id INTEGER REFERENCES users(id);
 
+  ALTER TABLE users ADD COLUMN auth_issuer TEXT;
+  ALTER TABLE users ADD COLUMN auth_subject TEXT;
+  CREATE UNIQUE INDEX idx_users_auth_identity ON users(auth_issuer, auth_subject);
+
   ALTER TABLE team_scores ADD COLUMN season_id INTEGER;
 
   CREATE UNIQUE INDEX IF NOT EXISTS sc_votes_user_id_unique ON sc_votes(user_id);

@@ -58,17 +58,16 @@ No manual SQL intervention is required.
 
 ## New required environment variables
 
-The following credentials were previously hardcoded and are now read from environment variables. Add them to your `.env`:
+Login is now delegated to basis-auth. Add the registered confidential-client values to `.env`:
 
-| Variable | Purpose | Previously hardcoded as |
-| --- | --- | --- |
-| `MICROSOFT_TENANT_ID` | Microsoft Entra ID tenant ID | `cbc6e1e2-a6bb-4002-bbdc-6da892a051a7` |
-| `MICROSOFT_CLIENT_ID` | Microsoft Entra ID application (client) ID | `868b989e-6574-4795-bcfb-8db37bee1c37` |
-| `ONSITE_LOGIN_CLIENT_ID` | OAuth2 client_id used for the onsite login flow | `97e435f4-17e8-42ef-9b12-9684fd656de9` |
+| Variable                   | Purpose                         | Previously hardcoded as    |
+| -------------------------- | ------------------------------- | -------------------------- |
+| `BASIS_AUTH_ISSUER`        | Exact basis-auth issuer         | Provider deployment URL    |
+| `BASIS_AUTH_CLIENT_ID`     | Registered basishacks client ID | Provider-generated value   |
+| `BASIS_AUTH_CLIENT_SECRET` | Confidential client secret      | Provider-generated value   |
+| `BASIS_AUTH_RESOURCE`      | basishacks resource audience    | `urn:basis:api:basishacks` |
 
-Find these values in the [Azure Portal](https://portal.azure.com) under **App Registrations** → your basishacks app → **Overview**.
-
-The server automatically adds `${CURRENT_URL_ORIGIN}${REDIRECT_URI}` (default `http://localhost:3000/api/oauth2/dccallback`) to the `ONSITE_LOGIN_CLIENT_ID` application's allowed redirect URIs on startup, so no manual SQL update is needed for local development.
+Register `${CURRENT_URL_ORIGIN}/api/auth/basis/callback` in basis-auth. Microsoft credentials, when configured, are now used only for Graph integration.
 
 See [Environment Setup](/guide/environment-setup) for the complete list.
 
