@@ -67,7 +67,7 @@ Login is now delegated to basis-auth. Add the registered confidential-client val
 | `BASIS_AUTH_CLIENT_SECRET` | Confidential client secret      | Provider-generated value   |
 | `BASIS_AUTH_RESOURCE`      | basishacks resource audience    | `urn:basis:api:basishacks` |
 
-Register `${CURRENT_URL_ORIGIN}/api/auth/basis/callback` in basis-auth. Microsoft credentials, when configured, are now used only for Graph integration.
+Register `${CURRENT_URL_ORIGIN}/api/auth/basis/callback` in basis-auth.
 
 See [Environment Setup](/guide/environment-setup) for the complete list.
 

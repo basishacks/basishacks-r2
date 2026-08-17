@@ -218,134 +218,7 @@ export function getPublicOrigin(): string;
 export function getBasisAuthCallbackUrl(): string;
 ```
 
-`getPublicOrigin()` normalizes `CURRENT_URL_ORIGIN`; `getBasisAuthCallbackUrl()` appends `/api/auth/basis/callback`. Microsoft URL construction is no longer part of login.
-
----
-
-## Retired provider utilities
-
-The former `openid-configuration.ts`, `oauth2-validate.ts`, `oauth2-token.ts`, and `oauth2-userinfo.ts` modules were removed with the native provider. Their protocols and client registration now live in basis-auth.
-
-## openid-configuration.ts (retired)
-
-Builds the OpenID Connect Discovery document served at `/.well-known/openid-configuration`.
-
-### `buildOpenIdConfiguration`
-
-```ts
-export function buildOpenIdConfiguration(issuer?: string): OpenIdConfiguration;
-```
-
-Returns metadata matching implemented endpoints only: authorization code + PKCE, `client_secret_post`, UserInfo, scopes from `shared/oauth2-scopes.ts`. Does not include `jwks_uri`, introspection, or revocation.
-
----
-
-## oauth2-validate.ts
-
-OAuth2 authorization request validation logic.
-
-### `validateOAuth2AuthorizationRequest`
-
-```ts
-export async function validateOAuth2AuthorizationRequest(
-    event: H3Event,
-    clientId: string,
-    scope: string,
-    redirectUri: string,
-    state: string,
-    responseType: string,
-    codeChallenge: string,
-    codeChallengeType: string,
-): Promise<ValidatedRequest>;
-```
-
-Validates all parameters of an OAuth2 authorization request:
-
-1. **Required parameters** — `client_id`, `scope`, `state`, `redirect_uri`.
-2. **PKCE** — `code_challenge` and `code_challenge_method` are required; `code_challenge_method` must be `S256` or `plain`.
-3. **Scope parsing** — Decodes and splits space-separated scopes.
-4. **Application validation** — Verifies the client application exists.
-5. **Scope authorization** — Checks that requested scopes are allowed for the application.
-6. **Redirect URI validation** — Ensures the redirect URI is registered for the application.
-
-### `usedSensitiveScopes`
-
-```ts
-export function usedSensitiveScopes(session: AuthorizeSession): boolean;
-```
-
-Returns `true` if any requested scope is marked as sensitive in `OAuth2Scopes`.
-
-### `determinePostMicrosoft`
-
-```ts
-export function determinePostMicrosoft(event: H3Event, session: AuthorizeSession): string;
-```
-
-Determines the redirect URL after successful Microsoft login:
-
-- If sensitive scopes are requested, redirects to the consent page.
-- Otherwise, completes the flow immediately.
-
-### `completeConsentFlow`
-
-```ts
-export function completeConsentFlow(event: H3Event, session: AuthorizeSession): string;
-```
-
-Generates an exchange code, marks the session as completed, and returns the redirect URI with `code` and `state` parameters. The `bridge_id` cookie is cleared by the caller.
-
----
-
-## oauth2-token.ts
-
-Shared authorization-code → access-token issuance.
-
-### `redeemAuthorizationCodeForToken`
-
-```ts
-export async function redeemAuthorizationCodeForToken(
-    input: RedeemAuthorizationCodeInput,
-): Promise<OAuth2AccessTokenResponse>;
-```
-
-Core code exchange after the caller has authenticated the client. Used in-process by onsite `dccallback` (first-party cookie binding). Returns `{ access_token, token_type: "Bearer", expires_in: 3600 }`.
-
-### `issueOAuth2AccessToken`
-
-```ts
-export async function issueOAuth2AccessToken(
-    event: H3Event,
-    input: IssueOAuth2AccessTokenInput,
-): Promise<OAuth2AccessTokenResponse>;
-```
-
-This former confidential-client token-issuance path has been removed.
-
----
-
-## oauth2-userinfo.ts
-
-Shared OIDC UserInfo claim building.
-
-### `buildUserInfoClaims`
-
-```ts
-export function buildUserInfoClaims(user: User, scopes: string[]): OAuth2UserInfoClaims;
-```
-
-Returns `sub` always; `name`/`picture` with `profile`; `email`/`email_verified` with `email`.
-
-### `resolveUserInfoFromAccessToken`
-
-```ts
-export async function resolveUserInfoFromAccessToken(
-    event: H3Event,
-    accessToken: string,
-): Promise<OAuth2UserInfoClaims>;
-```
-
-This former native UserInfo path has been removed.
+`getPublicOrigin()` normalizes `CURRENT_URL_ORIGIN`; `getBasisAuthCallbackUrl()` appends `/api/auth/basis/callback`.
 
 ---
 
@@ -598,7 +471,8 @@ Per-table database helper modules in `server/utils/database/`.
 | --- | --- |
 | `getUser(event, userID)` | Get user by ID |
 | `getUserByEmail(event, email)` | Get user by email (case-insensitive) |
-| `createUserFromMicrosoftProfile(event, email, name?)` | Find or create a user from a Microsoft profile email/name; updates the existing user's name if a match is found |
+| `findOrLinkBasisAuthUser(event, identity)` | Resolve a user by issuer/subject or link the first verified login by normalized email |
+| `getUserByBasisAuthSubject(event, issuer, subject)` | Resolve a linked user by stable basis-auth identity |
 | `updateUserName(event, user)` | Update user's name |
 | `updateUserProfileTheme(event, user)` | Update user's profile theme |
 | `updateUserProfilePicture(event, user)` | Update user's profile picture |
@@ -700,7 +574,6 @@ Award definitions live in the `awards` SQLite table.
 | Function | Description |
 | --- | --- |
 | `getOAuth2ApplicationCountByOwner(event, ownerId)` | Count applications owned by a user |
-| `createOAuth2Application(event, ownerId, name, description, proxyMicrosoft, type)` | Create a new OAuth2 app |
 | `getOAuth2Application(event, clientID)` | Get an application by client ID |
 | `getAllOAuth2Applications(event)` | List all applications |
 | `deleteOAuth2Applications(event, clientIDs)` | Delete applications by client ID |

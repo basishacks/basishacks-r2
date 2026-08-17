@@ -26,35 +26,6 @@ export const OAuth2Scopes: Record<string, OAuth2ScopeMeta> = {
         adminOnly: false,
         sensitive: false,
     },
-    "meetings.read.application": {
-        description: "Reads meetings that are bound to this application.",
-        adminOnly: false,
-        sensitive: false,
-        tooltip:
-            "This application can only access meetings created by the application itself. Other meetings are inaccessible by this application",
-    },
-    "meetings.read.all": {
-        description: "Reads all meetings of the user",
-        adminOnly: true,
-        sensitive: true,
-    },
-    "meetings.readwrite.application": {
-        description: "Reads and writes meeting applications bound to this application.",
-        adminOnly: false,
-        sensitive: false,
-    },
-    "meetings.readwrite.all": {
-        description: "Reads and writes all meetings",
-        adminOnly: true,
-        sensitive: true,
-    },
-    "chat.read": {
-        description: "Read Microsoft Teams chat",
-        adminOnly: false,
-        sensitive: true,
-        tooltip:
-            "This application can read chats between you and other specified users. It cannot read or recieve group chats or general chat messages from everyone.",
-    },
     // Example admin-only scope:
     // admin: { description: 'Access administrative functions', adminOnly: true },
 };

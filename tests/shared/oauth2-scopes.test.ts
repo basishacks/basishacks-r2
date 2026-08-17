@@ -11,14 +11,6 @@ import {
 } from "~~/shared/oauth2-scopes";
 
 describe("isAdminScope", () => {
-    it("returns true for an admin-only scope", () => {
-        expect(isAdminScope("meetings.read.all")).toBe(true);
-    });
-
-    it("returns true for meetings.readwrite.all", () => {
-        expect(isAdminScope("meetings.readwrite.all")).toBe(true);
-    });
-
     it("returns false for a non-admin scope", () => {
         expect(isAdminScope("openid")).toBe(false);
     });
@@ -167,16 +159,7 @@ describe("removeScope", () => {
 
 describe("OAuth2Scopes", () => {
     it("has all required scope entries", () => {
-        const requiredScopes = [
-            "openid",
-            "profile",
-            "email",
-            "meetings.read.application",
-            "meetings.read.all",
-            "meetings.readwrite.application",
-            "meetings.readwrite.all",
-            "chat.read",
-        ];
+        const requiredScopes = ["openid", "profile", "email"];
         for (const scope of requiredScopes) {
             expect(OAuth2Scopes[scope]).toBeDefined();
         }

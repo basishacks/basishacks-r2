@@ -127,7 +127,7 @@ declare module "h3" {
 2. Nitro request hook (init-database.ts)
      │  └── event.context.drizzle = db
      │
-3. Server middleware (oauth2-authorize.ts)
+3. Server middleware
      │  └── Validates OAuth2 authorize requests if path matches
      │
 4. API route handler

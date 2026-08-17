@@ -26,36 +26,6 @@ export async function getUserByEmail(event: H3Event, email: string): Promise<Use
     return row ?? null;
 }
 
-export async function createUserFromMicrosoftProfile(
-    event: H3Event,
-    email: string,
-    name?: string,
-): Promise<User> {
-    const normalizedEmail = email.toLowerCase();
-    const trimmedName = name?.trim();
-
-    if (trimmedName) {
-        return event.context.drizzle
-            .insert(users)
-            .values({ email: normalizedEmail, name: trimmedName })
-            .onConflictDoUpdate({
-                target: users.email,
-                set: { name: trimmedName },
-            })
-            .returning()
-            .get()!;
-    }
-
-    const inserted = event.context.drizzle
-        .insert(users)
-        .values({ email: normalizedEmail })
-        .onConflictDoNothing({ target: users.email })
-        .returning()
-        .get();
-
-    return inserted ?? (await getUserByEmail(event, normalizedEmail))!;
-}
-
 export interface BasisAuthIdentity {
     issuer: string;
     subject: string;

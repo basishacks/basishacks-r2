@@ -131,7 +131,7 @@ BASIS_AUTH_CLIENT_SECRET=your_client_secret
 BASIS_AUTH_RESOURCE=urn:basis:api:basishacks
 ```
 
-Set `CURRENT_URL_ORIGIN` to the basishacks origin and register `${CURRENT_URL_ORIGIN}/api/auth/basis/callback` with basis-auth. Microsoft variables are optional and used only for Graph features. See [Environment Setup](/guide/environment-setup) for the full list.
+Set `CURRENT_URL_ORIGIN` to the basishacks origin and register `${CURRENT_URL_ORIGIN}/api/auth/basis/callback` with basis-auth. See [Environment Setup](/guide/environment-setup) for the full list.
 
 ## Run the Development Server
 
@@ -153,7 +153,7 @@ The server starts on **port 24598** with HTTPS. Open your browser to:
 https://localhost:24598
 ```
 
-:::: warning Use the `--https` flag because Microsoft OAuth2 and secure session cookies require a trusted context. You may see a self-signed certificate warning in your browser; accept it to proceed. ::::
+:::: warning Use the `--https` flag because secure session cookies require a trusted context. You may see a self-signed certificate warning in your browser; accept it to proceed. ::::
 
 ## Production Build
 
@@ -194,7 +194,7 @@ bun run test:watch
 bun run test:coverage
 ```
 
-These invoke `vitest run --pool=forks`, which resolves Nuxt's `~~/` and `~/` path aliases via `vitest.config.ts` and runs `tests/setup.ts` as a setup file to populate in-memory SQLite databases and Microsoft OAuth2 environment variables. See the [Testing guide](/guide/testing) for more details on the coverage policy and excluded files.
+These invoke `vitest run --pool=forks`, which resolves Nuxt's `~~/` and `~/` path aliases via `vitest.config.ts` and runs `tests/setup.ts` to populate in-memory SQLite databases. See the [Testing guide](/guide/testing) for more details on the coverage policy and excluded files.
 
 ### About `bun test`
 
@@ -208,19 +208,17 @@ The active Vitest suite covers the basis-auth authorization request, callback tr
 
 ### Legacy test script
 
-`tests/index.js`, `tests/test.oauth2.js`, `tests/test.microsoft.ts`, and `tests/test.deepseek.ts` are legacy manual test runners kept for reference. They are not part of the active Vitest suite.
+`tests/index.js`, `tests/test.oauth2.js`, and `tests/test.deepseek.ts` are legacy manual test runners kept for reference. They are not part of the active Vitest suite.
 
 ## First Login Flow
 
 Once the server is running, follow these steps to log in for the first time:
 
 1. **Navigate to the login page** — Click the login button or go to `/login`.
-2. **Sign in with Microsoft** — Click the Microsoft login button. This redirects to Microsoft Entra ID (the tenant configured via `MICROSOFT_TENANT_ID`) for authentication.
+2. **Sign in with basis-auth** — Start login from basishacks and complete authentication at the configured basis-auth issuer.
 3. **Access the dashboard** — After successful authentication, you are redirected to the dashboard.
 
 ### Alternative Login Methods
-
-- **basishacks connect** — A custom OAuth2 integration with PKCE support for connected applications.
 
 ### Gaining Admin Access
 

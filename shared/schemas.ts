@@ -14,7 +14,6 @@ export const MAX_CODE_VERIFIER_LENGTH = 128;
 export const MAX_REDIRECT_URI_LENGTH = 2048;
 export const MAX_SCOPE_LENGTH = 128;
 export const MAX_SECRET_ABBREVIATED_LENGTH = 16;
-export const MAX_SESSION_TOKEN_LENGTH = 2048;
 export const MAX_REASONING_LENGTH = 2147483647;
 export const MAX_VOTE_SCORES = 50;
 export const MAX_ELECTION_POSITIONS = 20;
@@ -80,14 +79,6 @@ export const DeepSeekSessionIdParams = z.object({ id: PositiveIntParam });
 export const ApplicationIdParams = z.object({
     id: z.string().min(1).max(MAX_CLIENT_ID_LENGTH, "Invalid client_id"),
 });
-
-export const MicrosoftRedirectRequest = z.object({
-    token: z
-        .string()
-        .min(1, "Token must not be empty")
-        .max(MAX_SESSION_TOKEN_LENGTH, "Token is too long"),
-});
-export type MicrosoftRedirectRequest = z.infer<typeof MicrosoftRedirectRequest>;
 
 export const CreateTeamQuery = z.object({
     add: BooleanString.optional(),
@@ -210,20 +201,6 @@ export const SubmitVoteRequest = z
     })
     .refine(({ scores }) => scores.reduce((a, b) => a + b, 0) === 10, "Stars must sum to 10");
 export type SubmitVoteRequest = z.infer<typeof SubmitVoteRequest>;
-
-export const CreateApplicationRequest = z.object({
-    name: z
-        .string("Application name is required")
-        .min(1, "Application name is required")
-        .max(64, "Application name cannot exceed 64 characters"),
-    description: z
-        .string()
-        .max(1024, "Application description cannot exceed 1024 characters")
-        .optional(),
-    proxy_microsoft: z.boolean(),
-    type: z.enum(["first", "third"]).optional(),
-});
-export type CreateApplicationRequest = z.infer<typeof CreateApplicationRequest>;
 
 export const DeleteApplicationsRequest = z.object({
     ids: z

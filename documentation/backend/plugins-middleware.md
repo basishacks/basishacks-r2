@@ -199,7 +199,7 @@ script-src 'self' 'unsafe-inline';
 style-src 'self' 'unsafe-inline';
 font-src 'self';
 img-src 'self' blob: data:;
-connect-src 'self' https://login.microsoftonline.com;
+connect-src 'self';
 object-src 'none';
 base-uri 'self';
 form-action 'self';
@@ -209,7 +209,6 @@ frame-ancestors 'none'
 - `'unsafe-inline'` for `script-src` is required for Nuxt SSR hydration (`window.__NUXT__`).
 - `'unsafe-inline'` for `style-src` is required for inline style bindings used by Vue / Nuxt UI components.
 - `'unsafe-eval'` is intentionally omitted.
-- `https://login.microsoftonline.com` is included in `connect-src` for Microsoft OAuth2 flows.
 
 ### debug-lockdown.ts
 

@@ -48,10 +48,10 @@ export default defineNitroPlugin(() => {
 
     if (msConfigSetCount > 0 && msConfigSetCount < 3) {
         console.warn(
-            "[WARNING] Microsoft OAuth2 configuration is incomplete. " +
+            "[WARNING] Graph configuration is incomplete. " +
                 `Configured: ${msConfigSetCount}/3 ` +
                 "(MICROSOFT_TENANT_ID, MICROSOFT_CLIENT_ID, MICROSOFT_CLIENT_SECRET). " +
-                "Microsoft OAuth2 login and Graph features will be unavailable until all three are configured.",
+                "Graph features will be unavailable until all three are configured.",
         );
     }
 });

@@ -52,4 +52,4 @@ APIs wrapped with `withOAuth2JWT()` trust basis-auth access tokens only. Validat
 
 ## Retired provider surface
 
-basishacks no longer exposes its native authorization, token, UserInfo, authorization-session, or application-management routes and pages. The legacy `oauth2_applications` table and existing rows remain untouched for audit and rollback. Microsoft Graph integration is separate from login and continues to use its own Microsoft credentials.
+basishacks no longer exposes its native authorization, token, UserInfo, authorization-session, or application-management routes and pages. The legacy `oauth2_applications` table and existing rows remain untouched for audit and rollback. Graph integration is separate and cannot authenticate a basishacks session.

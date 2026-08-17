@@ -3,7 +3,6 @@ import { createMockEvent } from "./helpers";
 import {
     getUser,
     getUserByEmail,
-    createUserFromMicrosoftProfile,
     updateUserName,
     updateUserProfileTheme,
     updateUserProfilePicture,
@@ -52,72 +51,6 @@ describe("users database helpers", () => {
         it("returns null when no user has the given email", async () => {
             const user = await getUserByEmail(event, "nobody@example.com");
             expect(user).toBeNull();
-        });
-    });
-
-    describe("createUserFromMicrosoftProfile", () => {
-        it("creates a new user with email and name", async () => {
-            const user = await createUserFromMicrosoftProfile(event, "new@example.com", "New User");
-
-            expect(user).not.toBeNull();
-            expect(user.email).toBe("new@example.com");
-            expect(user.name).toBe("New User");
-        });
-
-        it("creates a new user with email only", async () => {
-            const user = await createUserFromMicrosoftProfile(event, "emailonly@example.com");
-
-            expect(user).not.toBeNull();
-            expect(user.email).toBe("emailonly@example.com");
-            expect(user.name).toBeNull();
-        });
-
-        it("updates the name of an existing user when a new name is provided", async () => {
-            event.context.drizzle
-                .prepare(
-                    "INSERT INTO users(email, name) VALUES('existing@example.com', 'Old Name')",
-                )
-                .run();
-
-            const user = await createUserFromMicrosoftProfile(
-                event,
-                "existing@example.com",
-                "New Name",
-            );
-
-            expect(user.name).toBe("New Name");
-
-            const fetched = await getUserByEmail(event, "existing@example.com");
-            expect(fetched!.name).toBe("New Name");
-        });
-
-        it("leaves the name unchanged when no name is provided for an existing user", async () => {
-            event.context.drizzle
-                .prepare(
-                    "INSERT INTO users(email, name) VALUES('existing@example.com', 'Existing Name')",
-                )
-                .run();
-
-            const user = await createUserFromMicrosoftProfile(event, "existing@example.com");
-
-            expect(user.name).toBe("Existing Name");
-
-            const fetched = await getUserByEmail(event, "existing@example.com");
-            expect(fetched!.name).toBe("Existing Name");
-        });
-
-        it("normalizes the email to lowercase", async () => {
-            const user = await createUserFromMicrosoftProfile(
-                event,
-                "UPPER@EXAMPLE.COM",
-                "Upper User",
-            );
-
-            expect(user.email).toBe("upper@example.com");
-
-            const fetched = await getUserByEmail(event, "UPPER@EXAMPLE.COM");
-            expect(fetched).not.toBeNull();
-            expect(fetched!.email).toBe("upper@example.com");
         });
     });
 

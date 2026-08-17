@@ -45,7 +45,7 @@ const terminalCommands = [
     { type: "output", text: "Season 2 — 2025/26" },
     { type: "output", text: "" },
     { type: "output", text: "Stack: Nuxt 4 + Nitro + Vue 3 + SQLite" },
-    { type: "output", text: "Auth: Microsoft OAuth2, basishacks connect" },
+    { type: "output", text: "Auth: basis-auth OpenID Connect" },
     { type: "output", text: "Features: teams, submissions, peer voting, judge rubrics" },
     { type: "output", text: "" },
     { type: "prompt", text: "$ _" },
@@ -150,8 +150,8 @@ onMounted(() => {
                     <div class="node-desc">Vue 3 + Nitro + TypeScript + SQLite</div>
                 </div>
                 <div class="network-node">
-                    <div class="node-title">Multi-Auth</div>
-                    <div class="node-desc">Microsoft OAuth2, DevConnect PKCE</div>
+                    <div class="node-title">Authentication</div>
+                    <div class="node-desc">basis-auth, PKCE, state, nonce</div>
                 </div>
                 <div class="network-node">
                     <div class="node-title">Hackathon Engine</div>
@@ -159,11 +159,11 @@ onMounted(() => {
                 </div>
                 <div class="network-node">
                     <div class="node-title">Dev Portal</div>
-                    <div class="node-desc">OAuth2 apps, secrets, scopes, URL generator</div>
+                    <div class="node-desc">Users, teams, seasons, debug tools</div>
                 </div>
                 <div class="network-node">
-                    <div class="node-title">MS Graph</div>
-                    <div class="node-desc">Meetings, Teams chat, webhooks, DeepSeek AI</div>
+                    <div class="node-title">Graph Integration</div>
+                    <div class="node-desc">Meetings, Teams chat, webhooks</div>
                 </div>
                 <div class="network-node">
                     <div class="node-title">VPS</div>
