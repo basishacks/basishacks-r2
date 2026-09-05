@@ -40,11 +40,11 @@ The following environment variables override the default limits:
 | `RATE_LIMIT_VOTE_MAX` | `600` | Voting/scoring endpoint rate limit, submissions per window |
 | `RATE_LIMIT_UPLOAD_MAX` | `600` | File upload endpoint rate limit, uploads per window |
 | `RATE_LIMIT_WINDOW_MS` | `60000` | Rate limit window in milliseconds |
-| `TRUST_PROXY` | unset | Set to any truthy value when behind a trusted reverse proxy so `x-forwarded-for` is used for client IP resolution |
+| `TRUST_PROXY` | unset | Set to any truthy value when behind a trusted reverse proxy so proxy headers (`cf-connecting-ip`, `x-forwarded-for`, `x-real-ip`) are preferred over the socket peer address for client IP resolution |
 
 These values are read at process startup via `parseEnvInt()` in `server/utils/rateLimit.ts`. If an environment variable is unset or contains a non-numeric value, the default is used instead.
 
-::: tip `TRUST_PROXY` must be explicitly set. Without it, the rate limiter uses only the direct socket peer address and the `x-real-ip` header, ignoring `x-forwarded-for` entirely. Set it to any truthy value (e.g. `1` or `true`) when the app is behind a trusted reverse proxy like nginx or Cloudflare. :::
+::: tip `TRUST_PROXY` must be explicitly set. Without it, the rate limiter uses only the direct socket peer address and the `x-real-ip` header — behind a proxy the socket is the proxy itself, so every client shares one bucket. Set it to any truthy value (e.g. `1` or `true`) when the app is behind a trusted reverse proxy like nginx or Cloudflare. :::
 
 ## Configuration Interface
 
@@ -106,36 +106,40 @@ If no session is found, the request is identified by IP address:
 ip:{ip}
 ```
 
-The IP address is resolved in the following priority order:
+When `TRUST_PROXY` is set, proxy headers take priority (the socket is the proxy, not the client):
 
 | Priority | Source | Notes |
 | :-: | --- | --- |
-| 1 | Direct socket peer address | `event.node.req.socket.remoteAddress`; used when available |
-| 2 | `x-real-ip` header | Fallback when no socket address is present |
-| 3 | `x-forwarded-for` header | Used only when `TRUST_PROXY` is set; the rightmost value is used to avoid spoofed leftmost hops |
-| 4 | `unknown` | Fallback when no address can be determined |
+| 1 | `cf-connecting-ip` header | Authoritative client IP from Cloudflare; `TRUST_PROXY` only |
+| 2 | `x-forwarded-for` header | `TRUST_PROXY` only; the rightmost value is used to avoid spoofed leftmost hops |
+| 3 | `x-real-ip` header | `TRUST_PROXY` only, when the above are absent |
+| 4 | Direct socket peer address | `event.node.req.socket.remoteAddress`; used when `TRUST_PROXY` is unset or no proxy header is present |
+| 5 | `x-real-ip` header | Fallback when no socket address is present |
+| 6 | `unknown` | Fallback when no address can be determined |
 
 ```ts
-const socketAddress = event.node.req.socket?.remoteAddress;
-let ip = socketAddress || getHeader(event, "x-real-ip") || "unknown";
-
-if (!socketAddress && process.env.TRUST_PROXY) {
+if (process.env.TRUST_PROXY) {
+    const connectingIp = getHeader(event, "cf-connecting-ip");
+    if (connectingIp?.trim()) return `ip:${connectingIp.trim()}`;
     const forwarded = getHeader(event, "x-forwarded-for");
     if (forwarded) {
         const parts = forwarded
             .split(",")
             .map((value) => value.trim())
             .filter(Boolean);
-        if (parts.length > 0) {
-            ip = parts[parts.length - 1];
-        }
+        if (parts.length > 0) return `ip:${parts[parts.length - 1]}`;
     }
+    const realIp = getHeader(event, "x-real-ip");
+    if (realIp?.trim()) return `ip:${realIp.trim()}`;
 }
+
+const socketAddress = event.node.req.socket?.remoteAddress;
+const ip = socketAddress || getHeader(event, "x-real-ip") || "unknown";
 
 return `ip:${ip}`;
 ```
 
-::: tip Set `TRUST_PROXY` only when the application runs behind a trusted reverse proxy. Without this variable, the rate limiter ignores `x-forwarded-for` entirely. :::
+::: tip Set `TRUST_PROXY` only when the application runs behind a trusted reverse proxy. Without this variable, the rate limiter ignores proxy headers entirely. :::
 
 ## Rate Limit Response
 
@@ -244,4 +248,4 @@ Since the rate limit state is in-memory:
 
 ### IP Spoofing
 
-The rate limiter prioritizes the direct socket peer address, which cannot be spoofed by the client. When a reverse proxy is in use, set `TRUST_PROXY` so the limiter consults `x-forwarded-for`. In that mode, the rightmost value is used because the leftmost values can be spoofed by the client. The `x-real-ip` header is used only as a fallback when no socket address is present.
+Without `TRUST_PROXY`, the rate limiter prioritizes the direct socket peer address, which cannot be spoofed by the client. When a reverse proxy is in use, set `TRUST_PROXY` so the limiter prefers proxy headers instead: `cf-connecting-ip` first (authoritative from Cloudflare), then the rightmost `x-forwarded-for` value (leftmost values can be spoofed by the client), then `x-real-ip`. Only enable `TRUST_PROXY` when the proxy overwrites these headers, otherwise clients could spoof their IP.

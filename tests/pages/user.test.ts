@@ -9,7 +9,7 @@ const source = readFileSync(
 
 describe("User index page", () => {
     it("redirects unauthenticated users to login and throws navigation", () => {
-        expect(source).toContain('throw await navigateTo("/login")');
+        expect(source).toContain('throw await navigateTo("/api/login")');
         expect(source).toContain('throw await navigateTo("/user/" + userID.value)');
     });
 });

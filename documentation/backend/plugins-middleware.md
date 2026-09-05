@@ -195,11 +195,11 @@ The CSP is strict but functional for the Nuxt 4 + `@nuxt/ui` stack:
 
 ```
 default-src 'self';
-script-src 'self' 'unsafe-inline';
+script-src 'self' 'unsafe-inline' https://static.cloudflareinsights.com;
 style-src 'self' 'unsafe-inline';
 font-src 'self';
 img-src 'self' blob: data:;
-connect-src 'self';
+connect-src 'self' https://static.cloudflareinsights.com;
 object-src 'none';
 base-uri 'self';
 form-action 'self';
@@ -208,6 +208,7 @@ frame-ancestors 'none'
 
 - `'unsafe-inline'` for `script-src` is required for Nuxt SSR hydration (`window.__NUXT__`).
 - `'unsafe-inline'` for `style-src` is required for inline style bindings used by Vue / Nuxt UI components.
+- `https://static.cloudflareinsights.com` is allowed in `script-src` / `connect-src` for the Cloudflare Web Analytics beacon injected by the proxy.
 - `'unsafe-eval'` is intentionally omitted.
 
 ### debug-lockdown.ts

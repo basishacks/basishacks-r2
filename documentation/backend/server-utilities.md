@@ -174,7 +174,7 @@ export async function getClientIdentifier(event: H3Event): Promise<string>;
 Returns a unique identifier for the client using a two-tier strategy:
 
 1. **Authenticated requests**: `user:{id}` — extracted from the session cookie via `getUserSession(event)`.
-2. **Unauthenticated requests**: `ip:{address}` — prefers the direct socket peer address (`event.node.req.socket.remoteAddress`), falling back to `x-real-ip` header, or `unknown`. When `TRUST_PROXY` is set, the rightmost untrusted hop from `x-forwarded-for` is used.
+2. **Unauthenticated requests**: `ip:{address}` — prefers the direct socket peer address (`event.node.req.socket.remoteAddress`), falling back to `x-real-ip` header, or `unknown`. When `TRUST_PROXY` is set, proxy headers take priority instead (`cf-connecting-ip`, then the rightmost hop from `x-forwarded-for`, then `x-real-ip`), because behind a proxy the socket address is the proxy itself.
 
 This ensures authenticated users are not rate-limited by other users' activity behind a shared NAT, while unauthenticated users are still protected at the IP level.
 

@@ -26,33 +26,41 @@ export default async function initializeMSAccessToken() {
         return metadata.access_token;
     }
 
-    const req = await fetch(
-        `https://login.microsoftonline.com/${process.env.MICROSOFT_TENANT_ID}/oauth2/v2.0/token`,
-        {
-            method: "POST",
-            headers: {
-                "Content-Type": "application/x-www-form-urlencoded",
+    // ponytail: silent null on network failure. Nitro runs this plugin
+    // without awaiting it, so any throw becomes an unhandledRejection ERROR
+    // at startup. Graph is optional; callers already fail clearly via
+    // getMSAccessToken() when a Graph feature is actually used.
+    try {
+        const req = await fetch(
+            `https://login.microsoftonline.com/${process.env.MICROSOFT_TENANT_ID}/oauth2/v2.0/token`,
+            {
+                method: "POST",
+                headers: {
+                    "Content-Type": "application/x-www-form-urlencoded",
+                },
+                body: new URLSearchParams({
+                    client_id: process.env.MICROSOFT_CLIENT_ID || "",
+                    scope: "https://graph.microsoft.com/.default",
+                    client_secret: env.MICROSOFT_CLIENT_SECRET ?? "",
+                    grant_type: "client_credentials",
+                }).toString(),
             },
-            body: new URLSearchParams({
-                client_id: process.env.MICROSOFT_CLIENT_ID || "",
-                scope: "https://graph.microsoft.com/.default",
-                client_secret: env.MICROSOFT_CLIENT_SECRET ?? "",
-                grant_type: "client_credentials",
-            }).toString(),
-        },
-    );
-
-    const code = req.status;
-    if (code !== 200) {
-        console.warn(
-            `[MS Graph] MS Token Endpoint returned ${code} - Microsoft Graph features will be unavailable`,
         );
+
+        const code = req.status;
+        if (code !== 200) {
+            console.warn(
+                `[MS Graph] MS Token Endpoint returned ${code} - Microsoft Graph features will be unavailable`,
+            );
+            return null;
+        } else {
+            console.log("[MSGraph] API Endpoint response: " + code);
+        }
+        const data: any = await req.json();
+        return (metadata.access_token = data.access_token);
+    } catch {
         return null;
-    } else {
-        console.log("[MSGraph] API Endpoint response: " + code);
     }
-    const data: any = await req.json();
-    return (metadata.access_token = data.access_token);
 }
 
 export async function getMSAccessToken() {
@@ -174,36 +182,42 @@ export async function initializeDummyUserAccessToken() {
         return null;
     }
 
-    const res = await fetch(
-        `https://login.microsoftonline.com/${process.env.MICROSOFT_TENANT_ID}/oauth2/v2.0/token`,
-        {
-            method: "POST",
-            headers: {
-                "Content-Type": "application/x-www-form-urlencoded",
+    // ponytail: same silent-null contract as initializeMSAccessToken.
+    // Callers surface a clear "not initialized" error only if Graph is used.
+    try {
+        const res = await fetch(
+            `https://login.microsoftonline.com/${process.env.MICROSOFT_TENANT_ID}/oauth2/v2.0/token`,
+            {
+                method: "POST",
+                headers: {
+                    "Content-Type": "application/x-www-form-urlencoded",
+                },
+                body: new URLSearchParams({
+                    client_id: process.env.MICROSOFT_CLIENT_ID || "",
+                    scope: "https://graph.microsoft.com/Chat.ReadWrite openid profile offline_access",
+                    username: env.MICROSOFT_DUMMY_USER_NAME ?? "",
+                    password: env.MICROSOFT_DUMMY_USER_PASSWORD ?? "",
+                    grant_type: "password",
+                    client_secret: env.MICROSOFT_CLIENT_SECRET ?? "",
+                }).toString(),
             },
-            body: new URLSearchParams({
-                client_id: process.env.MICROSOFT_CLIENT_ID || "",
-                scope: "https://graph.microsoft.com/Chat.ReadWrite openid profile offline_access",
-                username: env.MICROSOFT_DUMMY_USER_NAME ?? "",
-                password: env.MICROSOFT_DUMMY_USER_PASSWORD ?? "",
-                grant_type: "password",
-                client_secret: env.MICROSOFT_CLIENT_SECRET ?? "",
-            }).toString(),
-        },
-    );
+        );
 
-    const data: any = await res.json();
+        const data: any = await res.json();
 
-    console.log("[MS Graph] Response from Dummy User Token Endpoint: " + res.status);
+        console.log("[MS Graph] Response from Dummy User Token Endpoint: " + res.status);
 
-    if (res.status == 400) {
-        console.log("[MS Graph] Dummy user error: " + data.error_description);
+        if (res.status == 400) {
+            console.log("[MS Graph] Dummy user error: " + data.error_description);
+        }
+
+        metadata.user_access_token = data.access_token as string | undefined;
+        metadata.user_refresh_token = data.refresh_token as string | undefined;
+
+        return data.access_token;
+    } catch {
+        return null;
     }
-
-    metadata.user_access_token = data.access_token as string | undefined;
-    metadata.user_refresh_token = data.refresh_token as string | undefined;
-
-    return data.access_token;
 }
 
 // In-memory cache: target user id -> chat id

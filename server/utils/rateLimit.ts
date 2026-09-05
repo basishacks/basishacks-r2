@@ -92,23 +92,25 @@ export async function getClientIdentifier(event: H3Event): Promise<string> {
     }
 
     // Fall back to IP address for unauthenticated requests.
-    // Prefer the direct socket peer address; only consult x-forwarded-for when
-    // explicitly trusting a proxy, and then use the rightmost untrusted hop.
-    const socketAddress = event.node.req.socket?.remoteAddress;
-    let ip = socketAddress || getHeader(event, "x-real-ip") || "unknown";
-
-    if (!socketAddress && process.env.TRUST_PROXY) {
+    // ponytail: behind a proxy the socket is the proxy, not the client,
+    // so with TRUST_PROXY prefer proxy headers over the socket address.
+    if (process.env.TRUST_PROXY) {
+        const connectingIp = getHeader(event, "cf-connecting-ip");
+        if (connectingIp?.trim()) return `ip:${connectingIp.trim()}`;
         const forwarded = getHeader(event, "x-forwarded-for");
         if (forwarded) {
             const parts = forwarded
                 .split(",")
                 .map((value) => value.trim())
                 .filter(Boolean);
-            if (parts.length > 0) {
-                ip = parts[parts.length - 1];
-            }
+            if (parts.length > 0) return `ip:${parts[parts.length - 1]}`;
         }
+        const realIp = getHeader(event, "x-real-ip");
+        if (realIp?.trim()) return `ip:${realIp.trim()}`;
     }
+
+    const socketAddress = event.node.req.socket?.remoteAddress;
+    const ip = socketAddress || getHeader(event, "x-real-ip") || "unknown";
 
     return `ip:${ip}`;
 }

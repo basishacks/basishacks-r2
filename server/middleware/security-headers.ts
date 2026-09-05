@@ -32,16 +32,19 @@ export default defineEventHandler(async (event) => {
     // Content Security Policy
     //
     // default-src 'self'            Fallback for any unspecified fetch directive.
-    // script-src 'self' 'unsafe-inline'
+    // script-src 'self' 'unsafe-inline' https://static.cloudflareinsights.com
     //                               Self-hosted JS plus inline scripts required by
-    //                               Nuxt SSR hydration (window.__NUXT__). 'unsafe-eval'
-    //                               is intentionally omitted.
+    //                               Nuxt SSR hydration (window.__NUXT__), plus the
+    //                               Cloudflare Web Analytics beacon injected by the
+    //                               proxy. 'unsafe-eval' is intentionally omitted.
     // style-src 'self' 'unsafe-inline'
     //                               Self-hosted CSS plus inline styles used by Vue/
     //                               Nuxt UI components (e.g. :style bindings).
     // font-src 'self'               Fonts are self-hosted via @nuxt/fonts local provider.
     // img-src 'self' blob: data:    Self-hosted images, avatar blob previews, and data URIs.
-    // connect-src 'self'           API calls to the same origin.
+    // connect-src 'self' https://static.cloudflareinsights.com
+    //                               API calls to the same origin, plus beacon
+    //                               reporting for Cloudflare Web Analytics.
     // object-src 'none'             No Flash / plugin objects.
     // base-uri 'self'               Prevent injected <base> tags from rewriting origins.
     // form-action 'self'            Restrict form submissions to same origin.
@@ -49,6 +52,6 @@ export default defineEventHandler(async (event) => {
     setHeader(
         event,
         "Content-Security-Policy",
-        "default-src 'self'; script-src 'self' 'unsafe-inline'; style-src 'self' 'unsafe-inline'; font-src 'self'; img-src 'self' blob: data:; connect-src 'self'; object-src 'none'; base-uri 'self'; form-action 'self'; frame-ancestors 'none'",
+        "default-src 'self'; script-src 'self' 'unsafe-inline' https://static.cloudflareinsights.com; style-src 'self' 'unsafe-inline'; font-src 'self'; img-src 'self' blob: data:; connect-src 'self' https://static.cloudflareinsights.com; object-src 'none'; base-uri 'self'; form-action 'self'; frame-ancestors 'none'",
     );
 });

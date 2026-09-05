@@ -23,16 +23,20 @@ vi.mock("~~/server/utils/basis-auth", () => ({
 
 let handler: any;
 const sendRedirectMock = vi.fn();
+const getRequestURLMock = vi.fn(() => new URL("http://localhost:3000/api/login"));
 
 beforeAll(async () => {
     setupNitroGlobals();
     vi.stubGlobal("sendRedirect", sendRedirectMock);
+    vi.stubGlobal("getRequestURL", getRequestURLMock);
     handler = (await import("~~/server/api/login.get")).default;
 });
 
 beforeEach(() => {
     resetMockState();
     vi.clearAllMocks();
+    getRequestURLMock.mockReturnValue(new URL("http://localhost:3000/api/login"));
+    process.env.CURRENT_URL_ORIGIN = "http://localhost:3000";
     getFlowMock.mockResolvedValue({ update: updateMock });
     beginFlowMock.mockResolvedValue({
         url: new URL("https://auth.example.test/oauth/authorize?state=state"),
@@ -67,4 +71,27 @@ describe("GET /api/login", () => {
             expect(beginFlowMock).toHaveBeenCalledWith(undefined);
         },
     );
+
+    it("bounces non-canonical hosts to the canonical login URL to keep the flow cookie", async () => {
+        process.env.CURRENT_URL_ORIGIN = "https://hacks.example.test";
+        getRequestURLMock.mockReturnValue(new URL("https://stale.example.test/api/login"));
+        mockQueryState.value = { redirect: "/dashboard" };
+        await handler({ context: {} });
+
+        expect(beginFlowMock).not.toHaveBeenCalled();
+        expect(sendRedirectMock).toHaveBeenCalledWith(
+            expect.anything(),
+            "https://hacks.example.test/api/login?redirect=%2Fdashboard",
+            302,
+        );
+    });
+
+    it("ignores port-only differences when checking the canonical host", async () => {
+        process.env.CURRENT_URL_ORIGIN = "http://localhost:3000";
+        getRequestURLMock.mockReturnValue(new URL("http://localhost:24598/api/login"));
+        mockQueryState.value = { redirect: "/dashboard" };
+        await handler({ context: {} });
+
+        expect(beginFlowMock).toHaveBeenCalledWith("/dashboard");
+    });
 });

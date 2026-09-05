@@ -1,5 +1,5 @@
 import { beforeAll, beforeEach, describe, expect, it, vi } from "vitest";
-import { setupNitroGlobals } from "../helpers";
+import { mockQueryState, setupNitroGlobals } from "../helpers";
 
 const mocks = vi.hoisted(() => ({
     complete: vi.fn(),
@@ -37,6 +37,7 @@ beforeAll(async () => {
 
 beforeEach(() => {
     vi.clearAllMocks();
+    mockQueryState.value = {};
     vi.spyOn(console, "error").mockImplementation(() => undefined);
     mocks.getFlow.mockResolvedValue({
         data: {
@@ -79,5 +80,25 @@ describe("GET /api/auth/basis/callback", () => {
         await expect(handler({ context: {} })).rejects.toMatchObject({ statusCode: 401 });
         expect(mocks.clear).toHaveBeenCalledOnce();
         expect(replaceUserSessionMock).not.toHaveBeenCalled();
+    });
+
+    it("preserves conflict statuses from account linking instead of masking them as 401", async () => {
+        const conflict = Object.assign(new Error("linked to another identity"), {
+            statusCode: 409,
+        });
+        mocks.linkUser.mockRejectedValue(conflict);
+
+        await expect(handler({ context: {} })).rejects.toMatchObject({ statusCode: 409 });
+        expect(replaceUserSessionMock).not.toHaveBeenCalled();
+    });
+
+    it("redirects home when the provider returns an error instead of throwing 401", async () => {
+        mockQueryState.value = { error: "access_denied" };
+
+        await handler({ context: {} });
+
+        expect(mocks.clear).toHaveBeenCalledOnce();
+        expect(mocks.complete).not.toHaveBeenCalled();
+        expect(sendRedirectMock).toHaveBeenCalledWith(expect.anything(), "/teams", 302);
     });
 });

@@ -202,7 +202,7 @@ describe("getClientIdentifier", () => {
         expect(id).toBe("ip:unknown");
     });
 
-    it("uses socket address over x-forwarded-for when both available and TRUST_PROXY is set", async () => {
+    it("prefers proxy headers over the socket address when TRUST_PROXY is set", async () => {
         (globalThis as any).getUserSession = vi.fn().mockResolvedValue({});
         (globalThis as any).getHeader = vi.fn((_event: any, name: string) => {
             if (name === "x-forwarded-for") return "10.0.0.1, 10.0.0.2";
@@ -215,7 +215,42 @@ describe("getClientIdentifier", () => {
         });
         const id = await getClientIdentifier(event);
 
-        expect(id).toBe("ip:192.168.1.100");
+        expect(id).toBe("ip:10.0.0.2");
+    });
+
+    it("prefers cf-connecting-ip over other headers when TRUST_PROXY is set", async () => {
+        (globalThis as any).getUserSession = vi.fn().mockResolvedValue({});
+        (globalThis as any).getHeader = vi.fn((_event: any, name: string) => {
+            if (name === "cf-connecting-ip") return "203.0.113.7";
+            if (name === "x-forwarded-for") return "10.0.0.1, 10.0.0.2";
+            if (name === "x-real-ip") return "5.6.7.8";
+            return undefined;
+        });
+        process.env.TRUST_PROXY = "true";
+
+        const event = makeMockEvent({
+            node: { req: { socket: { remoteAddress: "192.168.1.100" } } },
+        });
+        const id = await getClientIdentifier(event);
+
+        expect(id).toBe("ip:203.0.113.7");
+    });
+
+    it("ignores proxy headers without TRUST_PROXY even when the socket is a proxy", async () => {
+        (globalThis as any).getUserSession = vi.fn().mockResolvedValue({});
+        (globalThis as any).getHeader = vi.fn((_event: any, name: string) => {
+            if (name === "cf-connecting-ip") return "203.0.113.7";
+            if (name === "x-forwarded-for") return "10.0.0.1, 10.0.0.2";
+            return undefined;
+        });
+        delete process.env.TRUST_PROXY;
+
+        const event = makeMockEvent({
+            node: { req: { socket: { remoteAddress: "127.0.0.1" } } },
+        });
+        const id = await getClientIdentifier(event);
+
+        expect(id).toBe("ip:127.0.0.1");
     });
 
     it("falls back to x-real-ip when x-forwarded-for is empty and TRUST_PROXY is set", async () => {
