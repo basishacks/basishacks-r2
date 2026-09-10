@@ -11,26 +11,26 @@ All server utilities live in `server/utils/`. They provide shared functionality 
 
 ## auth.ts
 
-Authentication and authorization helpers for enforcing role-based and permission-based access control. All functions are async and return the full DB user row on success.
+Authentication and authorization helpers for enforcing delegated basis-auth scopes plus local role-based access control. All functions are async and return the bearer-linked DB user row on success.
 
 ### `requireUser`
 
 ```ts
-export async function requireUser(event: H3Event): Promise<User>;
+export async function requireUser(event: H3Event, scopes?: PermissionRequirement): Promise<User>;
 ```
 
-Ensures the request is from an authenticated user. Returns the full DB user row or throws 401.
+Requires `Authorization: Bearer …`, validates the basis-auth access token, optionally enforces delegated scopes with `DelegatedPermissionSet`, and resolves the stable `sub` to the linked local user. The Nuxt cookie is not consulted for API authorization.
 
 **Flow:**
 
-1. Calls `getUserSession(event)` from `nuxt-auth-utils` to get the session user ID.
-2. Fetches the user from the database via `getUser(event, userID)`.
-3. Throws 401 if the user is not found in the database.
+1. Verify RS256, issuer, `devconnect://nethack.bisz.dev` audience, expiry, token type, and basis-schema claims.
+2. Evaluate delegated access from the JWT `scope` claim; identity-level `permissions` are separate.
+3. Resolve issuer and `sub` to a linked local user.
 
 ### `requireJudge`
 
 ```ts
-export async function requireJudge(event: H3Event): Promise<User>;
+export async function requireJudge(event: H3Event, scopes?: PermissionRequirement): Promise<User>;
 ```
 
 Ensures the user has the `admin` or `judge` permission. Throws 403 if permissions are insufficient. Uses `hasPermission` from `shared/permissions`.
@@ -38,7 +38,7 @@ Ensures the user has the `admin` or `judge` permission. Throws 403 if permission
 ### `requireAdmin`
 
 ```ts
-export async function requireAdmin(event: H3Event): Promise<User>;
+export async function requireAdmin(event: H3Event, scopes?: PermissionRequirement): Promise<User>;
 ```
 
 Ensures the user has the `admin` permission. Throws 403 if permissions are insufficient. Uses `hasPermission` from `shared/permissions`.
@@ -46,7 +46,11 @@ Ensures the user has the `admin` permission. Throws 403 if permissions are insuf
 ### `requirePermission`
 
 ```ts
-export async function requirePermission(event: H3Event, permission: string): Promise<User>;
+export async function requirePermission(
+    event: H3Event,
+    permission: string,
+    scopes?: PermissionRequirement,
+): Promise<User>;
 ```
 
 Ensures the user has a specific permission (or the `admin` role always passes). Uses `hasPermission` from `shared/permissions`.
@@ -209,7 +213,7 @@ Clears the in-memory rate limit history. Exposed primarily for tests.
 
 ## basis-auth.ts and oauth2.ts
 
-`basis-auth.ts` owns OIDC discovery, confidential-client configuration, the encrypted transaction session, S256 PKCE requests, callback validation, and UserInfo loading. `oauth2.ts` now contains only the public-origin helper.
+`basis-auth.ts` owns OIDC discovery, confidential-client configuration, the encrypted transaction session, S256 PKCE requests, callback validation, UserInfo loading, token refresh rotation, and revocation. `oauth2.ts` now contains only the public-origin helper.
 
 ### Public origin / issuer
 
@@ -232,7 +236,7 @@ JWT verification and OAuth2 Bearer token handling using the `jose` library.
 export async function verifyAccessToken(token: string): Promise<OAuth2JWTPayload>;
 ```
 
-Verifies a basis-auth access token against its remote JWKS, requiring RS256, exact issuer and resource audience, `typ=at+jwt`, expiry, and required claims. Throws 401 for invalid or expired tokens.
+Verifies a basis-auth access token against its remote JWKS, requiring RS256, exact issuer and resource audience, `typ=at+jwt`, expiry, and the shared `@basis/schema` claims contract. The wrapper can enforce OAuth scopes and shared delegated permissions independently. Throws 401 for invalid or expired tokens.
 
 ### `extractBearerToken`
 

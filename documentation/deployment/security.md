@@ -147,20 +147,14 @@ if (!app || !isSecretValid) {
 }
 ```
 
-## Audit Logging for Admin Impersonation
+## Token custody
 
-Admin impersonation events (`api/auth/impersonate.post.ts`) are logged with a structured `[AUDIT]` prefix for monitoring and forensic analysis:
-
-```
-[AUDIT] Admin 42 (admin@example.com) impersonated user 17 (target@basischina.com)
-```
-
-The log line includes both the admin's ID/email and the target user's ID/email. The log output can be captured by standard server logging infrastructure (journald, systemd, log files) for SIEM integration.
+Refresh tokens remain only in the encrypted HTTP-only Nuxt session. Browser JavaScript receives short-lived access tokens through `POST /api/auth/token` and keeps them only in memory. Protected APIs reject cookie-only requests and validate signature, issuer, audience, expiry, token type, delegated scope, and local RBAC. Admin impersonation is not supported.
 
 ## Role-Based Access Control (RBAC)
 
 - RBAC is enforced **server-side**; the frontend never performs permission checks for authorization.
-- Three helper functions enforce access:
+- Three helper functions validate the bearer identity and then enforce access:
     - `requireUser(event)` — returns the full database user row or `401 Unauthorized`.
     - `requireJudge(event)` — returns `403 Forbidden` if the caller is not a judge or administrator.
     - `requireAdmin(event)` — returns `403 Forbidden` if the caller is not an administrator.

@@ -7,6 +7,8 @@ description: Complete reference for all API endpoints in the basishacks backend
 
 All API routes live in `server/api/` and use Nitro's file-based routing.
 
+JSON success responses use `{ status, code, data }`; JSON failures use `{ status, code, error, error_description }`. Both shapes come from `@basis/schema`, and the HTTP status always matches the envelope `status`. Arrays are returned inside `data`. Redirects, image/file streams, database downloads, and webhook validation challenges remain native responses.
+
 ### Security measures applied to all endpoints
 
 Every API endpoint in the system enforces the following security measures:
@@ -16,8 +18,8 @@ Every API endpoint in the system enforces the following security measures:
 | **Rate limiting** | All endpoints are wrapped with `applyRateLimit()` using one of four tier configs (`DEFAULT`, `AUTH`, `VOTE`, `UPLOAD`). Returns 429 with `Retry-After` header when exceeded. |
 | **Input validation** | `readValidatedBody(event, Schema.parse)` or `getValidatedQuery(event, Schema.parse)` with shared Zod schemas from `shared/schemas.ts`. |
 | **Length-bounded inputs** | All string fields in Zod schemas have explicit `min()`/`max()` bounds to prevent resource exhaustion. Example: `name: z.string().min(1).max(50)`. |
-| **Authentication** | `requireUser()`, `requireAdmin()`, `requirePermission()` from `server/utils/auth.ts` provide RBAC enforcement. |
-| **OAuth2 JWT** | `withOAuth2JWT()` wrapper for Bearer token endpoints with scope verification. |
+| **Authentication** | Protected APIs require a basis-auth bearer token. `requireUser()`, `requireAdmin()`, and `requirePermission()` then apply delegated scopes and local RBAC. A session cookie alone is not authorization. |
+| **OAuth2 JWT** | RS256 tokens require the exact issuer and `devconnect://nethack.bisz.dev` audience. Scope hierarchy comes from `@basis/schema`. |
 | **HTTP headers** | Security headers (CSP, HSTS, X-Frame-Options, etc.) applied by `security-headers.ts` middleware on every response. |
 
 <AnimatedCounter :target="54" suffix="endpoints" />
@@ -25,16 +27,6 @@ Every API endpoint in the system enforces the following security measures:
 ---
 
 ## Auth
-
-### POST `/api/auth/impersonate`
-
-Admin-only: log in as another user.
-
-| Field          | Details                                     |
-| -------------- | ------------------------------------------- |
-| **Auth**       | Admin                                       |
-| **Validation** | `{ userId: number }`                        |
-| **Response**   | `{ success: true }` and sets session cookie |
 
 ### GET `/api/login`
 
@@ -49,7 +41,7 @@ Starts basis-auth discovery and authorization code with S256 PKCE, state, nonce,
 
 ### GET `/api/auth/basis/callback`
 
-Validates the stored transaction and provider response, exchanges the code using `client_secret_basic`, validates the ID token, loads UserInfo, links the verified identity, creates the local session, and discards provider tokens.
+Validates the stored transaction and provider response, exchanges the code using `client_secret_basic`, validates the ID token, loads UserInfo, links the verified identity, and stores token custody in the encrypted session.
 
 | Field | Details |
 | --- | --- |
@@ -57,6 +49,14 @@ Validates the stored transaction and provider response, exchanges the code using
 | **Query** | OIDC callback parameters (`code`, `state`, or provider error) |
 | **Response** | 302 to the stored safe redirect or `/dashboard` |
 | **Errors** | 401 for missing/expired transaction, state/nonce/PKCE failure, token/UserInfo failure, or identity conflict |
+
+### POST `/api/auth/token`
+
+Cookie-authenticated access-token bootstrap and refresh. Returns `data: { accessToken, expiresAt }`; the refresh token remains in encrypted server custody. Refresh rotation is serialized per session.
+
+### POST `/api/auth/logout`
+
+Attempts to revoke the stored refresh-token family, always clears the local session, and returns the canonical success envelope.
 
 ::: info Retired endpoints The native `/.well-known/openid-configuration`, `/api/oauth2/*`, and `/api/applications/*` surfaces have been removed. Register and manage clients in basis-auth. :::
 
@@ -71,7 +71,7 @@ List all users (mod portal).
 | Field        | Details                                           |
 | ------------ | ------------------------------------------------- |
 | **Auth**     | User with `portal.users.view` permission or admin |
-| **Response** | `APIUser[]`                                       |
+| **Response** | `data: APIUser[]`                                 |
 
 ### DELETE `/api/users`
 
@@ -90,7 +90,7 @@ Get a single user's profile.
 
 | Field | Details |
 | --- | --- |
-| **Auth** | Any authenticated user |
+| **Auth** | Anonymous for the public profile; a valid bearer token reveals the caller's own extended profile |
 | **Response** | Self: `GetUserResponse` — full user with team and past teams; Others: `APIUser` — public profile only. For participants, each team's `score`/`rank` (current and past teams alike) are only included when the `show_scores`/`show_ranking` toggles of that team's own season are enabled; users with `portal.teams.view` or admin always see them |
 
 ### PATCH `/api/users/:id`

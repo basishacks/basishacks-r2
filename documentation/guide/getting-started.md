@@ -128,7 +128,7 @@ NUXT_SESSION_PASSWORD=your_random_string_at_least_32_bytes_long
 BASIS_AUTH_ISSUER=http://localhost:3000
 BASIS_AUTH_CLIENT_ID=your_client_id
 BASIS_AUTH_CLIENT_SECRET=your_client_secret
-BASIS_AUTH_RESOURCE=urn:basis:api:basishacks
+BASIS_AUTH_RESOURCE=devconnect://nethack.bisz.dev
 ```
 
 Set `CURRENT_URL_ORIGIN` to the basishacks origin and register `${CURRENT_URL_ORIGIN}/api/auth/basis/callback` with basis-auth. See [Environment Setup](/guide/environment-setup) for the full list.

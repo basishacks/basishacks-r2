@@ -2,7 +2,7 @@ import { DevPermissions } from "~~/shared/permissions";
 import { users } from "~~/server/database/schema";
 
 export default defineEventHandler(async (event) => {
-    await requirePermission(event, DevPermissions.PORTAL_USERS_VIEW);
+    await requirePermission(event, DevPermissions.PORTAL_USERS_VIEW, "Profile.read");
 
     const results = event.context.drizzle
         .select({

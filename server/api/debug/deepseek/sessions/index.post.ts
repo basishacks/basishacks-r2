@@ -10,7 +10,7 @@ const CreateDeepSeekSessionRequest = z.object({
 
 export default defineEventHandler(
     applyRateLimit(async (event) => {
-        await requirePermission(event, DevPermissions.DEEPSEEK);
+        await requirePermission(event, DevPermissions.DEEPSEEK, "Chatbot.use");
 
         const { sessionName } = await readValidatedBody(event, CreateDeepSeekSessionRequest.parse);
 

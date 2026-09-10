@@ -9,6 +9,12 @@ The basishacks platform uses a fine-grained permission system stored in the `rol
 
 ::: info Source `shared/permissions.ts` :::
 
+## Delegated API scopes
+
+`NethackScopes` uses `definePermissionTree` from `@basis/schema` and contains only concrete leaves: `Profile.read`, `Profile.write`; project and team self/others reads and writes; self voting; assigned judging; season create/update/delete/activate; debug file read/write; `Chatbot.use`; and `Database.export`.
+
+The authorization request may ask for `.all` wildcard grants such as `Profile.all`, `Projects.read.all`, and `Teams.all`. The shared `DelegatedPermissionSet` matcher expands those grants hierarchically when checking a concrete leaf. There are no `.all` leaves in the tree and `.*` is not accepted. These delegated claims are read from JWT `scope` and remain separate from both the identity-level JWT `permissions` claim and the local `role` column described below.
+
 ## VotePermissions Constants
 
 The `VotePermissions` object defines the standalone permission used for peer voting:

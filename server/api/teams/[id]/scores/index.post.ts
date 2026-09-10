@@ -6,7 +6,7 @@ export default defineEventHandler(
     applyRateLimit(async (event) => {
         const { id: teamID } = await getValidatedRouterParams(event, TeamIdParams.parse);
 
-        const { id: userID } = await requireJudge(event);
+        const { id: userID } = await requireJudge(event, "Judging.write.assigned");
 
         const hackathon = await getHackathon(event);
         if (hackathon?.status !== "voting") {

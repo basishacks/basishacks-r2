@@ -12,7 +12,6 @@ const UserPopover = resolveComponent("UserPopover");
 const UButton = resolveComponent("UButton");
 const UBadge = resolveComponent("UBadge");
 const UCheckbox = resolveComponent("UCheckbox");
-const UDropdownMenu = resolveComponent("UDropdownMenu");
 
 const toast = useToast();
 const table = useTemplateRef<any>("table");
@@ -30,6 +29,7 @@ const rowSelection = ref<Record<string, boolean>>({});
 type AdminUser = User & { past_team_ids: string | null };
 
 const { data, status, refresh } = await useFetch<AdminUser[]>("/api/users", {
+    server: false,
     lazy: true,
     default: () => [],
 });
@@ -176,54 +176,6 @@ const columns: TableColumn<AdminUser>[] = [
                     ),
                 ),
             );
-        },
-    },
-    {
-        id: "actions",
-        header: "",
-        cell: ({ row }) => {
-            const userId = row.original.id;
-            return h("div", { class: "text-right" }, [
-                h(
-                    UDropdownMenu,
-                    {
-                        items: [
-                            {
-                                label: "Log in as user",
-                                icon: "i-lucide-log-in",
-                                onSelect: async () => {
-                                    try {
-                                        await $fetch("/api/auth/impersonate", {
-                                            method: "POST",
-                                            body: { userId },
-                                        });
-                                        window.location.href = "/";
-                                    } catch (e: any) {
-                                        useToast().add({
-                                            title: "Error",
-                                            description:
-                                                e?.data?.message ||
-                                                e?.message ||
-                                                "Failed to log in as user.",
-                                            color: "error",
-                                        });
-                                    }
-                                },
-                            },
-                        ],
-                        content: { align: "end" },
-                    },
-                    {
-                        default: () =>
-                            h(UButton, {
-                                icon: "i-lucide-ellipsis-vertical",
-                                color: "neutral",
-                                variant: "ghost",
-                                ariaLabel: "Actions",
-                            }),
-                    },
-                ),
-            ]);
         },
     },
 ];

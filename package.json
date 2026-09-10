@@ -25,6 +25,7 @@
         "db:studio": "drizzle-kit studio"
     },
     "dependencies": {
+        "@basis/schema": "file:../basis-schema",
         "@comark/nuxt": "^0.5.1",
         "@iconify/utils": "^3.1.4",
         "@nuxt/eslint": "^1.16.0",

@@ -16,10 +16,10 @@ import { users } from "~~/server/database/schema";
 import { eq } from "drizzle-orm";
 
 vi.mock("~~/server/utils/auth", () => ({
-    requireUser: vi.fn(),
-    requireJudge: vi.fn(),
-    requireAdmin: vi.fn(),
-    requirePermission: vi.fn(),
+    requireUser: vi.fn((...args: any[]) => (globalThis as any).requireUser(...args)),
+    requireJudge: vi.fn((...args: any[]) => (globalThis as any).requireJudge(...args)),
+    requireAdmin: vi.fn((...args: any[]) => (globalThis as any).requireAdmin(...args)),
+    requirePermission: vi.fn((...args: any[]) => (globalThis as any).requirePermission(...args)),
 }));
 
 vi.mock("~~/server/utils/rateLimit", () => ({

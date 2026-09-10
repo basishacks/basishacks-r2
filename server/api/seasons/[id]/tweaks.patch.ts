@@ -5,7 +5,7 @@ const booleanFields = ["show_scores", "show_ranking"] as const;
 
 export default defineEventHandler(
     applyRateLimit(async (event) => {
-        await requirePermission(event, DevPermissions.PORTAL_SEASONS_EDIT);
+        await requirePermission(event, DevPermissions.PORTAL_SEASONS_EDIT, "Seasons.update");
 
         const id = parseInt(getRouterParam(event, "id")!);
         const body = await readValidatedBody(event, UpdateSeasonTweaksRequest.parse);

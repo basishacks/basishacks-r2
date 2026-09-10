@@ -8,7 +8,7 @@ const SeasonIdParams = z.object({ id: PositiveIntParam });
 
 export default defineEventHandler(
     applyRateLimit(async (event) => {
-        await requireAdmin(event);
+        await requireAdmin(event, "Seasons.delete");
 
         const { id } = await getValidatedRouterParams(event, SeasonIdParams.parse);
 

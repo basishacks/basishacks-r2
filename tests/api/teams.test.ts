@@ -18,10 +18,10 @@ import { eq } from "drizzle-orm";
 import { teams, users, hackathon, userPastTeams, seasons } from "~~/server/database/schema";
 
 vi.mock("~~/server/utils/auth", () => ({
-    requireUser: vi.fn(),
-    requireJudge: vi.fn(),
-    requireAdmin: vi.fn(),
-    requirePermission: vi.fn(),
+    requireUser: vi.fn((...args: any[]) => (globalThis as any).requireUser(...args)),
+    requireJudge: vi.fn((...args: any[]) => (globalThis as any).requireJudge(...args)),
+    requireAdmin: vi.fn((...args: any[]) => (globalThis as any).requireAdmin(...args)),
+    requirePermission: vi.fn((...args: any[]) => (globalThis as any).requirePermission(...args)),
 }));
 
 vi.mock("~~/server/utils/rateLimit", () => ({
@@ -136,8 +136,7 @@ describe("GET /api/teams", () => {
     });
 
     it("returns unjudged teams for judges with judging query", async () => {
-        const { requireJudge } = await import("~~/server/utils/auth");
-        (requireJudge as any).mockResolvedValue({ id: 1, role: "judge" });
+        (globalThis as any).requireJudge.mockResolvedValue({ id: 1, role: "judge" });
 
         seedTeam(ctx, { name: "Submitted Team", project_submitted: 1, pathway: "junior" });
 
@@ -276,7 +275,7 @@ describe("GET /api/teams/:id", () => {
     it("hides score and rank for a member when hackathon toggles are off", async () => {
         const team = seedTeam(ctx, { name: "My Team" });
         ctx.drizzle.update(teams).set({ score: 95, rank: 1 }).where(eq(teams.id, team.id)).run();
-        (globalThis as any).requireUser.mockResolvedValue({
+        (globalThis as any).optionalUser.mockResolvedValue({
             id: 1,
             team_id: team.id,
             role: "participant",
@@ -297,7 +296,7 @@ describe("GET /api/teams/:id", () => {
 
         const team = seedTeam(ctx, { name: "My Team", season_id: season.id });
         ctx.drizzle.update(teams).set({ score: 95, rank: 1 }).where(eq(teams.id, team.id)).run();
-        (globalThis as any).requireUser.mockResolvedValue({
+        (globalThis as any).optionalUser.mockResolvedValue({
             id: 1,
             team_id: team.id,
             role: "participant",
@@ -314,7 +313,7 @@ describe("GET /api/teams/:id", () => {
     it("shows score and rank for privileged roles regardless of toggles", async () => {
         const team = seedTeam(ctx, { name: "My Team" });
         ctx.drizzle.update(teams).set({ score: 95, rank: 1 }).where(eq(teams.id, team.id)).run();
-        (globalThis as any).requireUser.mockResolvedValue({
+        (globalThis as any).optionalUser.mockResolvedValue({
             id: 1,
             team_id: null,
             role: "admin",
@@ -550,7 +549,7 @@ describe("POST /api/teams/:id/submit", () => {
 });
 
 describe("GET /api/teams/:id/users", () => {
-    it("returns 401 when not authenticated", async () => {
+    it("allows anonymous public member reads", async () => {
         (globalThis as any).requireUser.mockRejectedValue({
             statusCode: 401,
             message: "Unauthorized",
@@ -559,9 +558,7 @@ describe("GET /api/teams/:id/users", () => {
         const team = seedTeam(ctx, { name: "Team" });
         mockParams.values["id"] = String(team.id);
 
-        await expect(membersHandler(createEvent())).rejects.toMatchObject({
-            statusCode: 401,
-        });
+        await expect(membersHandler(createEvent())).resolves.toEqual([]);
     });
 
     it("returns team members", async () => {

@@ -4,7 +4,7 @@ import { seasons, teams, teamScores } from "~~/server/database/schema";
 import { eq, and, sql } from "drizzle-orm";
 
 export default defineEventHandler(async (event) => {
-    const user = await requireUser(event);
+    const user = await requireUser(event, "Judging.read.assigned");
 
     const results = event.context.drizzle
         .select({

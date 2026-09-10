@@ -7,7 +7,7 @@ const DeleteTeamsRequest = z.object({
 
 export default defineEventHandler(
     applyRateLimit(async (event) => {
-        await requirePermission(event, DevPermissions.TEAMS);
+        await requirePermission(event, DevPermissions.TEAMS, "Teams.write.others");
 
         const body = await readValidatedBody(event, DeleteTeamsRequest.parse);
         await deleteTeams(event, body.ids);

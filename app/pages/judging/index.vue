@@ -22,13 +22,17 @@ if (
     throw await navigateTo("/");
 }
 
-const { data, error, refresh } = await useFetch<APITeam[]>("/api/teams?judging=true");
+const { data, error, refresh } = await useFetch<APITeam[]>("/api/teams?judging=true", {
+    server: false,
+});
 if (error.value) {
     throw error.value;
 }
 
-const { data: summary, refresh: refreshSummary } =
-    await useFetch<GetBallotSummaryResponse>("/api/ballot/summary");
+const { data: summary, refresh: refreshSummary } = await useFetch<GetBallotSummaryResponse>(
+    "/api/ballot/summary",
+    { server: false },
+);
 
 const currentSummary = computed(() => summary.value?.current ?? null);
 

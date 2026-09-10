@@ -158,9 +158,9 @@ Microsoft Graph change notifications are received at:
 
 Both endpoints first check for a `validationToken` query parameter; when present they respond with `200 OK` and echo the token as `text/plain`. They then validate the `clientState` against `getMicrosoftWebhookState()` and return `403 Forbidden` if it does not match.
 
-`/api/_webhooks/update` returns `200 OK` with `{ message: "Received" }` after logging the change type and resource.
+`/api/_webhooks/update` returns `200 OK` with the canonical envelope containing `data: { message: "Received" }` after logging the change type and resource.
 
-`/api/_webhooks/lifecycle` returns `202 Accepted` with `{ message: "Received" }`. When the lifecycle event is `reauthorizationRequired`, it calls `refreshChatbotWebhook()` to extend the subscription.
+`/api/_webhooks/lifecycle` returns `202 Accepted` with the canonical envelope containing `data: { message: "Received" }`. When the lifecycle event is `reauthorizationRequired`, it calls `refreshChatbotWebhook()` to extend the subscription.
 
 See [Plugins & Middleware](./plugins-middleware) for subscription creation and refresh details.
 

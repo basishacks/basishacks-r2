@@ -135,7 +135,7 @@ basishacks-r2/
 ├── server/                     # Nitro backend
 │   ├── api/                    # API route handlers (file-based)
 │   │   ├── admin/              # Admin endpoints (scores, teams)
-│   │   ├── auth/               # basis-auth callback and admin impersonation
+│   │   ├── auth/               # basis-auth callback, token refresh, and logout
 │   │   ├── ballot/             # Ballot and peer voting endpoints
 │   │   ├── chatbot/            # AI chatbot endpoints (Microsoft Teams integration)
 │   │   ├── debug/              # Debug endpoints (DeepSeek sessions, file upload)

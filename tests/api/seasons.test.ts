@@ -50,12 +50,13 @@ function createEvent(overrides: Record<string, unknown> = {}) {
 }
 
 describe("GET /api/seasons", () => {
-    it("requires PORTAL_SEASONS_VIEW permission", async () => {
+    it("allows anonymous public season reads", async () => {
         vi.mocked(globalThis.requirePermission).mockRejectedValue(
             Object.assign(new Error("Insufficient permissions"), { statusCode: 403 }),
         );
 
-        await expect(listHandler(createEvent())).rejects.toMatchObject({ statusCode: 403 });
+        await expect(listHandler(createEvent())).resolves.toHaveLength(1);
+        expect(globalThis.requirePermission).not.toHaveBeenCalled();
     });
 
     it("returns all seasons", async () => {

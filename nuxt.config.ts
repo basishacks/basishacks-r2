@@ -1,5 +1,17 @@
+import { resolve } from "node:path";
+import { fileURLToPath } from "node:url";
+
+const projectRoot = fileURLToPath(new URL(".", import.meta.url));
+const basisSchemaRoot = resolve(projectRoot, "../basis-schema/src");
+
 // https://nuxt.com/docs/api/configuration/nuxt-config
 export default defineNuxtConfig({
+    alias: {
+        "@basis/schema/api": resolve(basisSchemaRoot, "api.ts"),
+        "@basis/schema/auth": resolve(basisSchemaRoot, "auth.ts"),
+        "@basis/schema/client": resolve(basisSchemaRoot, "client.ts"),
+        "@basis/schema/permissions": resolve(basisSchemaRoot, "permissions.ts"),
+    },
     compatibilityDate: "2025-07-15",
     devtools: { enabled: false }, // keeps crasing
     modules: ["@nuxt/eslint", "@nuxt/ui", "nuxt-auth-utils", "@comark/nuxt"],
@@ -88,6 +100,7 @@ export default defineNuxtConfig({
         },
     },
     nitro: {
+        errorHandler: resolve(projectRoot, "server/error.ts"),
         // Bun dev uses the bun preset implicitly; production defaults to node-server
         // so the same build runs under Node.js (better-sqlite3) or Bun (bun:sqlite).
         preset: process.env.NITRO_PRESET ?? "node-server",

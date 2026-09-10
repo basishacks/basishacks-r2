@@ -18,6 +18,7 @@ export async function useApiUser(options?: { lazy?: boolean }): Promise<UseApiUs
 
     const fetchResult = await useFetch<ApiUser>(() => `/api/users/${userID.value}`, {
         lazy: options?.lazy ?? false,
+        server: false,
         immediate: !!userID.value,
         watch: [userID],
         default: () => null,

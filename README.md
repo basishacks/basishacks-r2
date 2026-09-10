@@ -54,7 +54,7 @@ The canonical list of variables lives in `.env.example`. The table below summari
 | `BASIS_AUTH_ISSUER` | Required | Exact basis-auth issuer URL used for discovery and token validation |
 | `BASIS_AUTH_CLIENT_ID` | Required | Confidential client ID registered for basishacks |
 | `BASIS_AUTH_CLIENT_SECRET` | Required | Confidential client secret; keep it server-side |
-| `BASIS_AUTH_RESOURCE` | Required | Resource audience for basishacks access tokens (normally `urn:basis:api:basishacks`) |
+| `BASIS_AUTH_RESOURCE` | Required | Resource audience for basishacks access tokens (`devconnect://nethack.bisz.dev`) |
 | `MICROSOFT_TENANT_ID` | Optional | Tenant used only by Graph features |
 | `MICROSOFT_CLIENT_ID` | Optional | Application ID used only by Graph features |
 | `MICROSOFT_CLIENT_SECRET` | Optional | Application secret used only by Graph features |
@@ -71,9 +71,11 @@ The canonical list of variables lives in `.env.example`. The table below summari
 
 ## Authentication
 
-The only login method is the separately deployed **basis-auth** service. `/api/login` discovers the issuer and starts an authorization-code flow with S256 PKCE, state, and nonce. The callback URL is always `${CURRENT_URL_ORIGIN}/api/auth/basis/callback`; it must be registered exactly for each environment.
+The only login method is the separately deployed **basis-auth** service. `/api/login` discovers the issuer and starts an authorization-code flow with S256 PKCE, state, and nonce. The callback URL is always `${CURRENT_URL_ORIGIN}/api/auth/basis/callback`; it must be registered exactly for each environment. Resource-token claims and delegated permissions use the shared `@basis/schema` package; hackathon participant, judge, and administrator roles remain local.
 
-The short-lived login transaction is stored in a separate encrypted HTTP-only session. After the callback validates the ID token and loads UserInfo, basishacks links the first verified login to the existing local user by normalized email. Later logins resolve by the stable issuer and subject, preserving local user IDs, roles, teams, votes, and submissions. Provider tokens are not stored. Logout remains local to basishacks.
+The authorization request targets `devconnect://nethack.bisz.dev` and requests OIDC identity scopes, `offline_access`, and the delegated application scopes documented under `shared/permissions.ts`. After validating the ID token and UserInfo, basishacks links the identity and keeps the access token, expiry, rotated refresh token, and granted scopes in the encrypted HTTP-only session. `POST /api/auth/token` exposes only the short-lived access token to client memory; refresh tokens never reach browser JavaScript. `POST /api/auth/logout` attempts refresh-family revocation and always clears the local session.
+
+Protected application APIs require `Authorization: Bearer …`; possession of the Nuxt session cookie alone is insufficient. Tokens must be RS256 access tokens issued by basis-auth for the exact resource audience, and delegated scopes are checked separately from local participant, judge, and administrator RBAC. JSON APIs use the `@basis/schema` envelopes: successful results are `{ status, code, data }`, while failures are `{ status, code, error, error_description }` with matching HTTP and envelope status values.
 
 The former basishacks OAuth provider and application-management UI/API have been retired. The legacy `oauth2_applications` table and records remain for audit and rollback. Graph integration is independent and is never used to authenticate a basishacks session.
 

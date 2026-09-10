@@ -16,7 +16,7 @@ vi.mock("~~/server/utils/basis-auth", () => ({
         issuer: "https://auth.example.test",
         clientId: "basishacks",
         clientSecret: "secret",
-        resource: "urn:basis:api:basishacks",
+        resource: "devconnect://nethack.bisz.dev",
     }),
 }));
 
@@ -34,6 +34,17 @@ import {
 } from "~~/server/utils/oauth2-jwt";
 
 const event = () => ({ context: {} }) as any;
+const claims = {
+    sub: "user-1",
+    client_id: "portal",
+    scope: "chat.readwrite",
+    permissions: ["Users.read"],
+    jti: "token-id",
+    iat: 100,
+    exp: 200,
+    iss: "https://auth.example.test",
+    aud: "devconnect://nethack.bisz.dev",
+};
 
 beforeEach(() => {
     vi.clearAllMocks();
@@ -48,7 +59,7 @@ beforeEach(() => {
 describe("basis-auth access tokens", () => {
     it("validates RS256, the exact issuer, resource audience, type, expiry, and claims", async () => {
         jwtVerifyMock.mockResolvedValue({
-            payload: { sub: "user-1", client_id: "portal", scope: "chat.readwrite" },
+            payload: claims,
         });
 
         await expect(verifyAccessToken("token")).resolves.toMatchObject({ sub: "user-1" });
@@ -58,7 +69,7 @@ describe("basis-auth access tokens", () => {
         expect(jwtVerifyMock).toHaveBeenCalledWith("token", "jwks", {
             algorithms: ["RS256"],
             issuer: "https://auth.example.test",
-            audience: "urn:basis:api:basishacks",
+            audience: "devconnect://nethack.bisz.dev",
             typ: "at+jwt",
         });
     });
@@ -111,9 +122,7 @@ describe("OAuth2 bearer helpers", () => {
 
     it("attaches the verified token context before invoking a wrapped handler", async () => {
         vi.mocked(getHeader).mockReturnValue("Bearer token");
-        jwtVerifyMock.mockResolvedValue({
-            payload: { sub: "user-1", client_id: "portal", scope: "chat.readwrite" },
-        });
+        jwtVerifyMock.mockResolvedValue({ payload: claims });
         const wrapped = withOAuth2JWT(async (request) => request.context.oauth2, {
             requiredScopes: ["chat.readwrite"],
         });
@@ -121,6 +130,23 @@ describe("OAuth2 bearer helpers", () => {
         await expect(wrapped(event())).resolves.toMatchObject({
             payload: { sub: "user-1" },
             scopes: ["chat.readwrite"],
+        });
+    });
+
+    it("checks delegated permissions separately from OAuth scopes", async () => {
+        vi.mocked(getHeader).mockReturnValue("Bearer token");
+        jwtVerifyMock.mockResolvedValue({ payload: claims });
+        const allowed = withOAuth2JWT(async () => "ok", {
+            requiredPermissions: "users.READ",
+        });
+        await expect(allowed(event())).resolves.toBe("ok");
+
+        const denied = withOAuth2JWT(async () => "no", {
+            requiredPermissions: "Users.write",
+        });
+        await expect(denied(event())).rejects.toMatchObject({
+            statusCode: 403,
+            statusMessage: "insufficient_permission",
         });
     });
 });

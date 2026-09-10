@@ -11,7 +11,7 @@ const UpdateQuerySchema = z.object({
 
 export default defineEventHandler(
     applyRateLimit(async (event) => {
-        await requireAdmin(event);
+        await requireAdmin(event, "Judging.read.assigned");
 
         const query = await getValidatedQuery(event, UpdateQuerySchema.parse);
         const shouldUpdate = query.update ?? false;

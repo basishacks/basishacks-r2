@@ -1,6 +1,7 @@
 import { readFileSync } from "node:fs";
 import { resolve } from "node:path";
 import type { BaseSQLiteDatabase } from "drizzle-orm/sqlite-core";
+import { eq } from "drizzle-orm";
 import * as schema from "~~/server/database/schema";
 
 const schemaPath = resolve(import.meta.dirname, "..", "..", "sql", "archive", "init.sql");
@@ -315,6 +316,49 @@ function requireUserSessionMock(_event: any) {
     return Promise.resolve(s);
 }
 
+async function requireUserMock(event: any) {
+    const id = mockSession.value?.user?.id;
+    if (!id) {
+        const error = new Error("Unauthorized") as any;
+        error.statusCode = 401;
+        throw error;
+    }
+    const user =
+        typeof (globalThis as any).getUser === "function"
+            ? await (globalThis as any).getUser(event, id)
+            : await event.context.drizzle
+                  .select()
+                  .from(schema.users)
+                  .where(eq(schema.users.id, id))
+                  .get();
+    if (!user) {
+        const error = new Error("Logged in user not found") as any;
+        error.statusCode = 401;
+        throw error;
+    }
+    return user;
+}
+
+async function requireJudgeMock(event: any) {
+    const user = await requireUserMock(event);
+    if (user.role !== "judge" && user.role !== "admin") {
+        const error = new Error("Insufficient permissions") as any;
+        error.statusCode = 403;
+        throw error;
+    }
+    return user;
+}
+
+async function requireAdminMock(event: any) {
+    const user = await requireUserMock(event);
+    if (user.role !== "admin") {
+        const error = new Error("Insufficient permissions") as any;
+        error.statusCode = 403;
+        throw error;
+    }
+    return user;
+}
+
 function setUserSessionMock(_event: any, data: any) {
     mockSession.value = { user: data.user };
     return Promise.resolve();
@@ -342,13 +386,17 @@ export function setupNitroGlobals() {
     vi.stubGlobal("requireUserSession", requireUserSessionMock);
     vi.stubGlobal("setUserSession", setUserSessionMock);
     vi.stubGlobal("clearUserSession", clearUserSessionMock);
+    vi.stubGlobal("requireUser", vi.fn(requireUserMock));
     vi.stubGlobal(
-        "requireUser",
-        vi.fn().mockResolvedValue({ id: 1, team_id: null, role: "participant" }),
+        "optionalUser",
+        vi.fn((event: any) => {
+            if (!mockSession.value?.user?.id) return undefined;
+            return requireUserMock(event);
+        }),
     );
-    vi.stubGlobal("requireJudge", vi.fn().mockResolvedValue({ id: 1, role: "judge" }));
-    vi.stubGlobal("requireAdmin", vi.fn().mockResolvedValue({ id: 1, role: "admin" }));
-    vi.stubGlobal("requirePermission", vi.fn().mockResolvedValue(undefined));
+    vi.stubGlobal("requireJudge", vi.fn(requireJudgeMock));
+    vi.stubGlobal("requireAdmin", vi.fn(requireAdminMock));
+    vi.stubGlobal("requirePermission", vi.fn(requireUserMock));
     vi.stubGlobal("applyRateLimit", (fn: any) => fn);
 }
 
@@ -360,18 +408,20 @@ export function resetMockState() {
     mockSession.value = undefined;
     mockConfig.value = {};
 
-    // Reset auto-imported auth mocks to their default resolved values so a
-    // previous rejected-value test does not leak into the next one.
+    // Reset auto-imported auth mocks so a previous rejected-value test does
+    // not leak into the next one. These mirror bearer helpers by returning the
+    // local user represented by the test's authenticated session fixture.
     (globalThis as any).requireUser?.mockReset?.();
-    (globalThis as any).requireUser?.mockResolvedValue({
-        id: 1,
-        team_id: null,
-        role: "participant",
+    (globalThis as any).requireUser?.mockImplementation?.(requireUserMock);
+    (globalThis as any).optionalUser?.mockReset?.();
+    (globalThis as any).optionalUser?.mockImplementation?.((event: any) => {
+        if (!mockSession.value?.user?.id) return undefined;
+        return requireUserMock(event);
     });
     (globalThis as any).requireJudge?.mockReset?.();
-    (globalThis as any).requireJudge?.mockResolvedValue({ id: 1, role: "judge" });
+    (globalThis as any).requireJudge?.mockImplementation?.(requireJudgeMock);
     (globalThis as any).requireAdmin?.mockReset?.();
-    (globalThis as any).requireAdmin?.mockResolvedValue({ id: 1, role: "admin" });
+    (globalThis as any).requireAdmin?.mockImplementation?.(requireAdminMock);
     (globalThis as any).requirePermission?.mockReset?.();
-    (globalThis as any).requirePermission?.mockResolvedValue(undefined);
+    (globalThis as any).requirePermission?.mockImplementation?.(requireUserMock);
 }

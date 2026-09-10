@@ -5,11 +5,7 @@ export default defineEventHandler(
     applyRateLimit(async (event) => {
         const { id: teamID } = await getValidatedRouterParams(event, TeamIdParams.parse);
 
-        const {
-            user: { id: currentUserID },
-        } = await requireUserSession(event);
-
-        const currentUser = await getUser(event, currentUserID);
+        const currentUser = await requireUser(event, "Teams.write.self");
         if (currentUser?.team_id !== teamID) {
             throw createError({
                 status: 403,

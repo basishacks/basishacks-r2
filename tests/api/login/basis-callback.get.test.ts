@@ -48,10 +48,18 @@ beforeEach(() => {
         clear: mocks.clear,
     });
     mocks.complete.mockResolvedValue({
-        issuer: "https://auth.example.test",
-        subject: "subject-1",
-        email: "user@example.com",
-        emailVerified: true,
+        identity: {
+            issuer: "https://auth.example.test",
+            subject: "subject-1",
+            email: "user@example.com",
+            emailVerified: true,
+        },
+        tokens: {
+            accessToken: "access-token",
+            expiresAt: 123456,
+            refreshToken: "refresh-token",
+            scopes: ["Profile.all"],
+        },
     });
     mocks.linkUser.mockResolvedValue({ id: 17 });
 });
@@ -69,6 +77,12 @@ describe("GET /api/auth/basis/callback", () => {
         });
         expect(replaceUserSessionMock).toHaveBeenCalledWith(expect.anything(), {
             user: { id: 17 },
+            secure: {
+                accessToken: "access-token",
+                accessTokenExpiresAt: 123456,
+                refreshToken: "refresh-token",
+                scopes: ["Profile.all"],
+            },
         });
         expect(sendRedirectMock).toHaveBeenCalledWith(expect.anything(), "/teams", 302);
     });

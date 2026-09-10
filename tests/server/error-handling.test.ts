@@ -11,7 +11,6 @@ const files = [
 ];
 
 const allApiFiles = [
-    "server/api/auth/impersonate.post.ts",
     "server/api/login.get.ts",
     "server/api/users/index.get.ts",
     "server/api/users/index.delete.ts",
@@ -143,9 +142,9 @@ describe("Failed request error responses", () => {
             resolve(import.meta.dirname, "..", "..", "server", "api", "teams", "index.post.ts"),
             "utf-8",
         );
-        // All three error cases use throw
+        // Both domain error cases use throw; database cleanup rethrows its original error.
         const throwCount = (source.match(/throw createError/g) || []).length;
-        expect(throwCount).toBe(3);
+        expect(throwCount).toBe(2);
         // Should not return createError
         expect(source).not.toMatch(/return createError/);
     });

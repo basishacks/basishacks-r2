@@ -11,6 +11,8 @@ const oidc = vi.hoisted(() => ({
     buildAuthorizationUrl: vi.fn(() => new URL("https://auth.example.test/oauth/authorize")),
     authorizationCodeGrant: vi.fn(),
     fetchUserInfo: vi.fn(),
+    refreshTokenGrant: vi.fn(),
+    tokenRevocation: vi.fn(),
 }));
 
 vi.mock("openid-client", () => oidc);
@@ -30,7 +32,7 @@ beforeEach(() => {
     process.env.BASIS_AUTH_ISSUER = "https://auth.example.test/";
     process.env.BASIS_AUTH_CLIENT_ID = "basishacks";
     process.env.BASIS_AUTH_CLIENT_SECRET = "secret";
-    process.env.BASIS_AUTH_RESOURCE = "urn:basis:api:basishacks";
+    process.env.BASIS_AUTH_RESOURCE = "devconnect://nethack.bisz.dev";
     vi.stubGlobal("createError", (input: any) => Object.assign(new Error(input.message), input));
     oidc.discovery.mockResolvedValue("configuration");
 });
@@ -52,8 +54,8 @@ describe("basis-auth authorization-code flow", () => {
         expect(oidc.buildAuthorizationUrl).toHaveBeenCalledWith("configuration", {
             redirect_uri: "https://hacks.example.test/api/auth/basis/callback",
             response_type: "code",
-            scope: "openid profile email",
-            resource: "urn:basis:api:basishacks",
+            scope: "openid profile email offline_access Profile.all Projects.read.all Projects.write.self Teams.all Voting.all Judging.all Seasons.all Files.all Chatbot.use Database.export",
+            resource: "devconnect://nethack.bisz.dev",
             state: "state",
             nonce: "nonce",
             code_challenge: "challenge",
@@ -70,6 +72,9 @@ describe("basis-auth authorization-code flow", () => {
     it("validates the stored transaction and builds identity from ID token plus UserInfo", async () => {
         oidc.authorizationCodeGrant.mockResolvedValue({
             access_token: "access-token",
+            refresh_token: "refresh-token",
+            expires_in: 300,
+            scope: "openid Profile.read",
             claims: () => ({ sub: "subject-1" }),
         });
         oidc.fetchUserInfo.mockResolvedValue({
@@ -84,11 +89,19 @@ describe("basis-auth authorization-code flow", () => {
                 { state: "state", nonce: "nonce", codeVerifier: "verifier" },
             ),
         ).resolves.toEqual({
-            issuer: "https://auth.example.test",
-            subject: "subject-1",
-            email: "user@example.com",
-            emailVerified: true,
-            name: "User",
+            identity: {
+                issuer: "https://auth.example.test",
+                subject: "subject-1",
+                email: "user@example.com",
+                emailVerified: true,
+                name: "User",
+            },
+            tokens: {
+                accessToken: "access-token",
+                expiresAt: expect.any(Number),
+                refreshToken: "refresh-token",
+                scopes: ["openid", "Profile.read"],
+            },
         });
         expect(oidc.authorizationCodeGrant).toHaveBeenCalledWith(
             "configuration",

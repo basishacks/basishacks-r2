@@ -5,6 +5,7 @@
     "": {
       "name": "basishacks",
       "dependencies": {
+        "@basis/schema": "file:../basis-schema",
         "@comark/nuxt": "^0.5.1",
         "@iconify/utils": "^3.1.4",
         "@nuxt/eslint": "^1.16.0",
@@ -58,6 +59,8 @@
     "vite": "^8.0.16",
   },
   "packages": {
+    "@basis/schema": ["@basis/schema@file:../basis-schema", { "dependencies": { "zod": "^4.4.3" }, "devDependencies": { "@types/bun": "latest", "typescript": "^6.0.3" } }],
+
     "@adonisjs/hash": ["@adonisjs/hash@9.1.1", "", { "dependencies": { "@phc/format": "^1.0.0", "@poppinss/utils": "^6.9.3" }, "peerDependencies": { "argon2": "^0.31.2 || ^0.41.0 || ^0.43.0", "bcrypt": "^5.1.1 || ^6.0.0" }, "optionalPeers": ["argon2", "bcrypt"] }, "sha512-ZkRguwjAp4skKvKDdRAfdJ2oqQ0N7p9l3sioyXO1E8o0WcsyDgEpsTQtuVNoIdMiw4sn4gJlmL3nyF4BcK1ZDQ=="],
 
     "@alloc/quick-lru": ["@alloc/quick-lru@5.2.0", "", {}, "sha512-UrcABB+4bUrFABwbluTIBErXwvbsU/V7TZWfmbgJfbkwiBuziS9gxdODUyuiecfdGQ85jglMW6juS3+z5TsKLw=="],

@@ -9,10 +9,18 @@ export default defineEventHandler(
         await flow.clear();
 
         try {
-            const identity = await completeBasisAuthFlow(getRequestURL(event), transaction);
-            const user = await findOrLinkBasisAuthUser(event, identity);
+            const result = await completeBasisAuthFlow(getRequestURL(event), transaction);
+            const user = await findOrLinkBasisAuthUser(event, result.identity);
 
-            await replaceUserSession(event, { user: { id: user.id } });
+            await replaceUserSession(event, {
+                user: { id: user.id },
+                secure: {
+                    accessToken: result.tokens.accessToken,
+                    accessTokenExpiresAt: result.tokens.expiresAt,
+                    refreshToken: result.tokens.refreshToken,
+                    scopes: result.tokens.scopes,
+                },
+            });
             return await sendRedirect(event, transaction.postLoginRedirect || "/dashboard", 302);
         } catch (error) {
             console.error("basis-auth callback failed", error);

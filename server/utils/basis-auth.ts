@@ -3,6 +3,7 @@ import { useSession } from "h3";
 import * as oidc from "openid-client";
 import { getPublicOrigin } from "~~/server/utils/oauth2";
 import type { BasisAuthIdentity } from "~~/server/utils/database/users";
+import { NETHACK_REQUESTED_SCOPES } from "~~/shared/permissions";
 
 export const BASIS_AUTH_CALLBACK_PATH = "/api/auth/basis/callback";
 const FLOW_MAX_AGE_SECONDS = 10 * 60;
@@ -26,7 +27,7 @@ export function getBasisAuthConfig(): BasisAuthConfig {
         issuer: process.env.BASIS_AUTH_ISSUER?.replace(/\/+$/, "") || "",
         clientId: process.env.BASIS_AUTH_CLIENT_ID || "",
         clientSecret: process.env.BASIS_AUTH_CLIENT_SECRET || "",
-        resource: process.env.BASIS_AUTH_RESOURCE || "urn:basis:api:basishacks",
+        resource: process.env.BASIS_AUTH_RESOURCE || "devconnect://nethack.bisz.dev",
     };
     const missing = Object.entries(config)
         .filter(([, value]) => !value)
@@ -104,7 +105,7 @@ export async function beginBasisAuthFlow(postLoginRedirect?: string) {
     const url = oidc.buildAuthorizationUrl(oidcConfiguration, {
         redirect_uri: getBasisAuthCallbackUrl(),
         response_type: "code",
-        scope: "openid profile email",
+        scope: NETHACK_REQUESTED_SCOPES.join(" "),
         resource: config.resource,
         state,
         nonce,
@@ -121,7 +122,10 @@ export async function beginBasisAuthFlow(postLoginRedirect?: string) {
 export async function completeBasisAuthFlow(
     callbackUrl: URL,
     transaction: Partial<BasisAuthFlowTransaction>,
-): Promise<BasisAuthIdentity> {
+): Promise<{
+    identity: BasisAuthIdentity;
+    tokens: { accessToken: string; refreshToken: string; expiresAt: number; scopes: string[] };
+}> {
     if (!transaction.state || !transaction.nonce || !transaction.codeVerifier) {
         throw new Error("Login transaction is missing or expired");
     }
@@ -138,7 +142,7 @@ export async function completeBasisAuthFlow(
         expectedNonce: transaction.nonce,
     });
     const claims = tokens.claims();
-    if (!claims?.sub || !tokens.access_token) {
+    if (!claims?.sub || !tokens.access_token || !tokens.refresh_token) {
         throw new Error("basis-auth did not return a complete token set");
     }
 
@@ -148,10 +152,44 @@ export async function completeBasisAuthFlow(
     }
 
     return {
-        issuer: config.issuer,
-        subject: claims.sub,
-        email: userInfo.email,
-        emailVerified: userInfo.email_verified === true,
-        name: typeof userInfo.name === "string" ? userInfo.name : undefined,
+        identity: {
+            issuer: config.issuer,
+            subject: claims.sub,
+            email: userInfo.email,
+            emailVerified: userInfo.email_verified === true,
+            name: typeof userInfo.name === "string" ? userInfo.name : undefined,
+        },
+        tokens: normalizeTokenSet(tokens),
     };
+}
+
+function normalizeTokenSet(tokens: {
+    access_token?: string;
+    refresh_token?: string;
+    expires_in?: number;
+    scope?: string;
+}) {
+    if (!tokens.access_token || !tokens.refresh_token) {
+        throw new Error("basis-auth did not return a complete token set");
+    }
+    return {
+        accessToken: tokens.access_token,
+        refreshToken: tokens.refresh_token,
+        expiresAt: Date.now() + (tokens.expires_in ?? 600) * 1000,
+        scopes: (tokens.scope ?? NETHACK_REQUESTED_SCOPES.join(" ")).split(" ").filter(Boolean),
+    };
+}
+
+export async function refreshBasisAuthTokens(refreshToken: string) {
+    const config = getBasisAuthConfig();
+    const oidcConfiguration = await getBasisAuthOidcConfiguration(config);
+    return normalizeTokenSet(await oidc.refreshTokenGrant(oidcConfiguration, refreshToken));
+}
+
+export async function revokeBasisAuthToken(refreshToken: string) {
+    const config = getBasisAuthConfig();
+    const oidcConfiguration = await getBasisAuthOidcConfiguration(config);
+    await oidc.tokenRevocation(oidcConfiguration, refreshToken, {
+        token_type_hint: "refresh_token",
+    });
 }

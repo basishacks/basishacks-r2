@@ -109,7 +109,6 @@ describe("GET /api/users", () => {
 describe("GET /api/users/:id", () => {
     it("returns 404 for non-existing user", async () => {
         mockParams.values["id"] = "9999";
-        mockSession.value = { user: { id: 9999 } };
 
         // getUser returns null → 404
         const { requirePermission } = await import("~~/server/utils/auth");
@@ -263,6 +262,7 @@ describe("GET /api/users/:id", () => {
 
 describe("PATCH /api/users/:id", () => {
     it("returns 403 when updating another user", async () => {
+        seedUser(ctx, { email: "viewer@basischina.com" });
         mockParams.values["id"] = "2";
         mockSession.value = { user: { id: 1 } };
 

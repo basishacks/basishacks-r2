@@ -4,7 +4,7 @@ export default defineEventHandler(async (event) => {
     const query = await getValidatedQuery(event, GetTeamsQuery.parse);
 
     if (query.judging) {
-        const { id: userID } = await requireJudge(event);
+        const { id: userID } = await requireJudge(event, "Judging.read.assigned");
 
         const hackathon = await getHackathon(event);
         if (!hackathon || !hackathon.judging_open) {

@@ -15,7 +15,7 @@ const readDirectoryFiles = async (dir: string) => {
 
 export default defineEventHandler(
     applyRateLimit(async (event) => {
-        await requirePermission(event, DevPermissions.PORTAL_DEBUG_VIEW);
+        await requirePermission(event, DevPermissions.PORTAL_DEBUG_VIEW, "Files.read.debug");
 
         const assetsDir = join(process.cwd(), "public", "assets");
         const userAstDir = join(process.cwd(), "public", "userast");

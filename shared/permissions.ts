@@ -46,3 +46,33 @@ export function removePermission(role: string | null | undefined, permission: st
 function serializePermissions(perms: string[]): string {
     return perms.map((p) => encodeURIComponent(p)).join(" ");
 }
+import { definePermissionTree } from "@basis/schema/permissions";
+
+export const NethackScopes = definePermissionTree({
+    Profile: { read: true, write: true },
+    Projects: { read: { self: true, others: true }, write: { self: true } },
+    Teams: { read: { self: true, others: true }, write: { self: true, others: true } },
+    Voting: { read: { self: true }, write: { self: true } },
+    Judging: { read: { assigned: true }, write: { assigned: true } },
+    Seasons: { create: true, update: true, delete: true, activate: true },
+    Files: { read: { debug: true }, write: { debug: true } },
+    Chatbot: { use: true },
+    Database: { export: true },
+});
+
+export const NETHACK_REQUESTED_SCOPES = [
+    "openid",
+    "profile",
+    "email",
+    "offline_access",
+    "Profile.all",
+    "Projects.read.all",
+    NethackScopes.Projects.write.self,
+    "Teams.all",
+    "Voting.all",
+    "Judging.all",
+    "Seasons.all",
+    "Files.all",
+    NethackScopes.Chatbot.use,
+    NethackScopes.Database.export,
+] as const;

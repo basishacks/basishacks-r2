@@ -8,11 +8,7 @@ export default defineEventHandler(
             TeamUserParams.parse,
         );
 
-        const {
-            user: { id: currentUserID },
-        } = await requireUserSession(event);
-
-        const currentUser = await getUser(event, currentUserID);
+        const currentUser = await requireUser(event, "Teams.write.self");
         if (currentUser?.team_id !== teamID) {
             throw createError({
                 status: 403,

@@ -4,10 +4,10 @@ import { UserIdParams } from "~~/shared/schemas";
 import { DevPermissions, hasPermission } from "~~/shared/permissions";
 
 export default defineEventHandler(async (event) => {
-    const currentUser = await getUserSession(event);
+    const currentUser = await optionalUser(event);
 
     const { id } = await getValidatedRouterParams(event, UserIdParams.parse);
-    const isSelf = currentUser.user?.id === id;
+    const isSelf = currentUser?.id === id;
 
     const user = await getUser(event, id);
     if (!user) {

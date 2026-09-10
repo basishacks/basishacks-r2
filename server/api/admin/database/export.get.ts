@@ -6,7 +6,7 @@ import * as schema from "~~/server/database/schema";
 
 export default defineEventHandler(
     applyRateLimit(async (event) => {
-        await requireAdmin(event);
+        await requireAdmin(event, "Database.export");
 
         const format = getQuery(event).format || "sqlite";
 

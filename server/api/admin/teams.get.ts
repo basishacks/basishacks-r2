@@ -5,7 +5,7 @@ import { applyRateLimit, DEFAULT_RATE_LIMIT_CONFIG } from "~~/server/utils/rateL
 
 export default defineEventHandler(
     applyRateLimit(async (event) => {
-        await requirePermission(event, DevPermissions.TEAMS);
+        await requirePermission(event, DevPermissions.TEAMS, "Teams.read.others");
 
         const results = event.context.drizzle
             .select({

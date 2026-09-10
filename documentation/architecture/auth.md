@@ -13,8 +13,8 @@ basishacks delegates user authentication to the separately deployed **basis-auth
 
 - S256 PKCE
 - unpredictable `state` and `nonce`
-- scopes `openid profile email`
-- the configured `BASIS_AUTH_RESOURCE`
+- scopes `openid profile email offline_access` plus the delegated scope union in `shared/permissions.ts`
+- resource `devconnect://nethack.bisz.dev`
 - confidential-client authentication with `client_secret_basic`
 
 The callback is derived rather than configured independently:
@@ -23,9 +23,9 @@ The callback is derived rather than configured independently:
 ${CURRENT_URL_ORIGIN}/api/auth/basis/callback
 ```
 
-The PKCE verifier, state, nonce, and optional safe relative redirect are kept for at most ten minutes in a dedicated encrypted, HTTP-only, SameSite=Lax session. The callback clears that transaction before exchanging the code, validates the ID token, and loads UserInfo. Provider tokens are discarded after the existing `{ user: { id } }` basishacks session is created.
+The PKCE verifier, state, nonce, and optional safe relative redirect are kept for at most ten minutes in a dedicated encrypted, HTTP-only, SameSite=Lax session. The callback clears that transaction before exchanging the code, validates the ID token, loads UserInfo, links the local user, and stores the access token, expiry, refresh token, and granted scopes in encrypted secure session data.
 
-Logout clears only the basishacks session; it does not sign the user out of basis-auth globally.
+`POST /api/auth/token` is the only browser bootstrap/refresh endpoint. It returns an access token and expiry, never a refresh token, reuses sufficiently fresh access tokens, and serializes refresh rotation per session. `POST /api/auth/logout` attempts refresh-family revocation and clears the local session even when revocation is unavailable.
 
 ## Identity linking
 
@@ -38,7 +38,7 @@ The `users` table contains nullable `auth_issuer` and `auth_subject` columns wit
 
 ## Roles and sessions
 
-`nuxt-auth-utils` encrypts the local session cookie. Server-side helpers remain the authorization boundary:
+`nuxt-auth-utils` encrypts the local session cookie, but that cookie does not authorize application APIs. Protected routes require a basis-auth bearer token before applying local authorization:
 
 - `requireUser(event)` loads the local user.
 - `requireJudge(event)` permits judges and admins.
@@ -48,7 +48,9 @@ The frontend middleware is a convenience redirect and is never the only authoriz
 
 ## Resource-server tokens
 
-APIs wrapped with `withOAuth2JWT()` trust basis-auth access tokens only. Validation requires the basis-auth JWKS signature, RS256, the exact configured issuer, the exact `BASIS_AUTH_RESOURCE` audience, `typ=at+jwt`, a valid expiry, and string `sub`, `client_id`, and `scope` claims. The subject maps to a local user through the same issuer-and-subject link.
+Protected APIs trust basis-auth access tokens only. Validation requires the basis-auth JWKS signature, RS256, the exact configured issuer, audience `devconnect://nethack.bisz.dev`, `typ=at+jwt`, a valid expiry, and basis-schema access-token claims. The subject maps to a local user through the same issuer-and-subject link. Delegated access is evaluated from the JWT `scope` claim with `DelegatedPermissionSet`; the identity-level `permissions` claim is not used as an API scope.
+
+The client keeps access tokens only in memory, adds the bearer header to protected requests, unwraps `APIResponse.data`, converts failed envelopes with `APIError.from`, and performs one single-flight refresh-and-retry on an expired-token response.
 
 ## Retired provider surface
 

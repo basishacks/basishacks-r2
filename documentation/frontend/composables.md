@@ -5,7 +5,7 @@ description: Shared composables, middleware, constants, error handling, and cros
 
 # Composables & Utilities
 
-The basishacks frontend organizes shared logic into composables (`app/composables/`), route middleware (`app/middleware/`), utility functions (`app/utils/`), and app configuration (`app/app.config.ts`).
+The basishacks frontend organizes shared logic into composables (`app/composables/`), route middleware (`app/middleware/`), utility functions (`app/utils/`), and app configuration (`app/app.config.ts`). `app/plugins/api.client.ts` bootstraps the basis-auth access token into memory, injects bearer headers, unwraps `APIResponse.data`, parses `APIError` envelopes, and performs one single-flight refresh-and-retry after an expired-token response. A failed refresh clears local authentication and restarts login.
 
 ## Composables
 
@@ -24,6 +24,7 @@ export async function useApiUser(options?: { lazy?: boolean }): Promise<UseApiUs
         lazy: options?.lazy ?? false,
         immediate: !!userID.value,
         watch: [userID],
+        server: false,
         default: () => null,
     });
 

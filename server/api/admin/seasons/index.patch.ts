@@ -5,7 +5,7 @@ import { applyRateLimit, DEFAULT_RATE_LIMIT_CONFIG } from "~~/server/utils/rateL
 
 export default defineEventHandler(
     applyRateLimit(async (event) => {
-        await requireAdmin(event);
+        await requireAdmin(event, "Seasons.update");
 
         const body = await readValidatedBody(event, UpdateSeasonRequest.parse);
 

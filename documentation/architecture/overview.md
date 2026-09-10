@@ -163,7 +163,7 @@ The `users.role` column stores space-separated permission strings (e.g., `"parti
 2. Nuxt checks whether the route needs authentication.
 3. Nitro applies server middleware (OAuth2 bridge, rate limiting).
 4. The API handler validates input with Zod, checks permissions, and talks to SQLite.
-5. The response is stripped of internal fields and returned as JSON.
+5. The domain result is stripped of internal fields and wrapped as `{ status, code, data }`; failures use the canonical `APIError` envelope.
 
 </CollapsibleDetails>
 

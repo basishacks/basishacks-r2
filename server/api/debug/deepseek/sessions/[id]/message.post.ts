@@ -252,9 +252,7 @@ async function processToolCalls(
 
 export default defineEventHandler(
     applyRateLimit(async (event) => {
-        await requirePermission(event, DevPermissions.DEEPSEEK);
-
-        const user = await requireUser(event);
+        const user = await requirePermission(event, DevPermissions.DEEPSEEK, "Chatbot.use");
 
         const { id: sessionId } = await getValidatedRouterParams(
             event,

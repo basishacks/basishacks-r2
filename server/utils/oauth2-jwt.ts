@@ -1,4 +1,6 @@
 import type { H3Event, EventHandler } from "h3";
+import { accessTokenClaimsSchema, type AccessTokenClaims } from "@basis/schema/auth";
+import { DelegatedPermissionSet, type PermissionRequirement } from "@basis/schema/permissions";
 import { createRemoteJWKSet, jwtVerify } from "jose";
 import { getUserByBasisAuthSubject } from "./database/users";
 import { getBasisAuthConfig } from "./basis-auth";
@@ -18,13 +20,7 @@ function getBasisAuthJwks(issuer: string) {
 // Low-level: verify a raw JWT string
 // ------------------------------------------------------------------
 
-export interface OAuth2JWTPayload {
-    sub?: string;
-    client_id?: string;
-    scope?: string;
-    permissions?: string[];
-    [key: string]: any;
-}
+export type OAuth2JWTPayload = AccessTokenClaims;
 
 /**
  * Verify a raw JWT access token and return its payload.
@@ -47,14 +43,7 @@ export async function verifyAccessToken(token: string): Promise<OAuth2JWTPayload
             audience: config.resource,
             typ: "at+jwt",
         });
-        if (
-            !payload.sub ||
-            typeof payload.client_id !== "string" ||
-            typeof payload.scope !== "string"
-        ) {
-            throw new Error("Access token claims are invalid");
-        }
-        return payload as OAuth2JWTPayload;
+        return accessTokenClaimsSchema.parse(payload);
     } catch {
         throw createError({
             statusCode: 401,
@@ -133,6 +122,19 @@ export function requireScopes(grantedScopes: string[], requiredScopes: string[])
     }
 }
 
+export function requireDelegatedScopes(
+    grantedScope: string,
+    requirement: PermissionRequirement,
+): void {
+    if (!new DelegatedPermissionSet(parseJWScopes(grantedScope)).satisfies(requirement)) {
+        throw createError({
+            statusCode: 403,
+            statusMessage: "insufficient_scope",
+            message: "The access token lacks a required delegated scope",
+        });
+    }
+}
+
 // ------------------------------------------------------------------
 // User helper
 // ------------------------------------------------------------------
@@ -140,7 +142,7 @@ export function requireScopes(grantedScopes: string[], requiredScopes: string[])
 /**
  * Resolve the stable basis-auth subject, then fetch its linked local user.
  */
-export async function resolveOAuth2User(event: H3Event, payload: OAuth2JWTPayload) {
+export async function resolveOAuth2User(event: H3Event, payload: Pick<OAuth2JWTPayload, "sub">) {
     if (!payload.sub) {
         throw createError({
             statusCode: 401,
@@ -170,6 +172,9 @@ export interface OAuth2JWTWrapperOptions {
      * If empty, no scope check is performed.
      */
     requiredScopes?: string[];
+
+    /** Delegated API permissions, evaluated separately from OAuth scopes. */
+    requiredPermissions?: PermissionRequirement;
 
     /**
      * Whether to load the user from the database and attach it to event.context.
@@ -213,7 +218,17 @@ export function withOAuth2JWT(
         const scopes = parseJWScopes(payload.scope);
 
         if (options.requiredScopes && options.requiredScopes.length > 0) {
-            requireScopes(scopes, options.requiredScopes);
+            requireDelegatedScopes(payload.scope, { allOf: options.requiredScopes });
+        }
+        if (
+            options.requiredPermissions &&
+            !new DelegatedPermissionSet(payload.permissions).satisfies(options.requiredPermissions)
+        ) {
+            throw createError({
+                statusCode: 403,
+                statusMessage: "insufficient_permission",
+                message: "The access token lacks a required delegated permission",
+            });
         }
 
         const ctx: OAuth2JWTContext = { payload, scopes };

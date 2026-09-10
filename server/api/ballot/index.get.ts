@@ -7,7 +7,7 @@ export default defineEventHandler(async (event) => {
         });
     }
 
-    const user = await requireUser(event);
+    const user = await requireUser(event, "Voting.read.self");
     if (!user.team_id) {
         throw createError({
             status: 403,

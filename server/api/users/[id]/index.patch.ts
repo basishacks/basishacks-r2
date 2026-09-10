@@ -71,9 +71,7 @@ export default defineEventHandler(
         async (event) => {
             const { id } = await getValidatedRouterParams(event, UserIdParams.parse);
 
-            const {
-                user: { id: userID },
-            } = await requireUserSession(event);
+            const { id: userID } = await requireUser(event, "Profile.write");
 
             if (id !== userID) {
                 throw createError({

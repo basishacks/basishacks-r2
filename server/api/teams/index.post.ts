@@ -4,17 +4,8 @@ import { applyRateLimit, DEFAULT_RATE_LIMIT_CONFIG } from "~~/server/utils/rateL
 
 export default defineEventHandler(
     applyRateLimit(async (event) => {
-        const {
-            user: { id: userID },
-        } = await requireUserSession(event);
-
-        const user = await getUser(event, userID);
-        if (!user) {
-            throw createError({
-                status: 401,
-                message: "Logged in user not found",
-            });
-        }
+        const user = await requireUser(event, "Teams.write.self");
+        const userID = user.id;
         if (user?.team_id) {
             throw createError({
                 status: 403,

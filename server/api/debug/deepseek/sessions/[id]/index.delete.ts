@@ -6,7 +6,7 @@ import { applyRateLimit, DEFAULT_RATE_LIMIT_CONFIG } from "~~/server/utils/rateL
 
 export default defineEventHandler(
     applyRateLimit(async (event) => {
-        await requirePermission(event, DevPermissions.DEEPSEEK);
+        await requirePermission(event, DevPermissions.DEEPSEEK, "Chatbot.use");
 
         const { id: sessionId } = await getValidatedRouterParams(
             event,

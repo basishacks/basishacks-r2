@@ -26,10 +26,10 @@ import {
 } from "~~/server/database/schema";
 
 vi.mock("~~/server/utils/auth", () => ({
-    requireUser: vi.fn(),
-    requireJudge: vi.fn(),
-    requireAdmin: vi.fn(),
-    requirePermission: vi.fn(),
+    requireUser: vi.fn((...args: any[]) => (globalThis as any).requireUser(...args)),
+    requireJudge: vi.fn((...args: any[]) => (globalThis as any).requireJudge(...args)),
+    requireAdmin: vi.fn((...args: any[]) => (globalThis as any).requireAdmin(...args)),
+    requirePermission: vi.fn((...args: any[]) => (globalThis as any).requirePermission(...args)),
 }));
 
 vi.mock("~~/server/utils/rateLimit", () => ({
@@ -597,8 +597,7 @@ describe("query parameter injection - GET /api/teams", () => {
         ctx.drizzle.update(hackathon).set({ judging_open: 1 }).where(eq(hackathon.id, 1)).run();
         mockQueryState.value = { judging: "1 OR 1=1 --" };
 
-        const result = await listTeamsHandler(createEvent());
-        expect(Array.isArray(result)).toBe(true);
+        await expect(listTeamsHandler(createEvent())).rejects.toMatchObject({ statusCode: 401 });
     });
 });
 

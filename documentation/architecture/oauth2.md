@@ -16,7 +16,7 @@ http://localhost:24598/api/auth/basis/callback
 https://nethack.biszweb.club/api/auth/basis/callback
 ```
 
-Register `urn:basis:api:basishacks` as a resource and use the same value for `BASIS_AUTH_RESOURCE`.
+Register `devconnect://nethack.bisz.dev` as a resource and use the same value for `BASIS_AUTH_RESOURCE`. Register the complete requested union: `openid profile email offline_access Profile.all Projects.read.all Projects.write.self Teams.all Voting.all Judging.all Seasons.all Files.all Chatbot.use Database.export`.
 
 ## Client configuration
 
@@ -28,11 +28,11 @@ Register `urn:basis:api:basishacks` as a resource and use the same value for `BA
 | `BASIS_AUTH_RESOURCE`      | Expected resource audience                     |
 | `CURRENT_URL_ORIGIN`       | Origin from which the callback URL is derived  |
 
-The client uses discovery, authorization code, S256 PKCE, state, nonce, `client_secret_basic`, ID-token validation, and UserInfo. Secrets and provider tokens are never exposed to the browser.
+The client uses discovery, authorization code, S256 PKCE, state, nonce, `client_secret_basic`, ID-token validation, and UserInfo. Client and refresh-token secrets remain server-only. The access token is exposed through `/api/auth/token` only and retained in client memory.
 
 ## Protected API validation
 
-`server/utils/oauth2-jwt.ts` loads the provider JWKS and validates access tokens with exact issuer and audience checks, RS256, access-token type, expiry, scope, and stable subject mapping. It deliberately does not accept legacy basishacks HS256 tokens.
+`server/utils/oauth2-jwt.ts` loads the provider JWKS and validates access tokens with exact issuer and audience checks, RS256, access-token type, expiry, basis-schema claims, and stable subject mapping. Delegated scopes use the shared hierarchy matcher: `.all` grants descendant leaves, while `.*` is unsupported. Hackathon roles remain application-local. The verifier deliberately does not accept legacy basishacks HS256 tokens.
 
 ## Legacy data
 
