@@ -36,7 +36,7 @@ export interface BasisAuthIdentity {
 
 /**
  * Links a verified basis-auth identity to a local user without changing the
- * local integer id that owns teams, votes, roles, and submissions.
+ * local integer id that owns teams, votes, and submissions.
  */
 export async function findOrLinkBasisAuthUser(
     event: H3Event,
@@ -173,21 +173,6 @@ export async function updateUserProfilePicture(event: H3Event, user: User) {
         .update(users)
         .set({ profile_picture: user.profile_picture })
         .where(eq(users.id, user.id))
-        .run();
-
-    if (result.changes === 0) {
-        throw createError({
-            status: 404,
-            message: "User not found",
-        });
-    }
-}
-
-export async function updateUserRole(event: H3Event, userID: number, role: string) {
-    const result = event.context.drizzle
-        .update(users)
-        .set({ role })
-        .where(eq(users.id, userID))
         .run();
 
     if (result.changes === 0) {

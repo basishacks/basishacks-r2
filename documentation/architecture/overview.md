@@ -149,11 +149,11 @@ The database layer uses Drizzle ORM with a runtime-agnostic SQLite driver (`bun:
 
 ### Session-based auth
 
-Authentication uses `nuxt-auth-utils` with session cookies. The session stores only `{ user: { id: number } }` — the full user record is fetched from the database on each request. Sessions have a 30-day max age with `httpOnly`, `secure`, and `sameSite: "lax"` cookie flags.
+Authentication uses `nuxt-auth-utils` with session cookies. The browser session stores only `{ user: { id: number } }`; encrypted basis-auth token bundles are held in SQLite under the session ID, and the full user record is fetched from the database on each request. Sessions have a 30-day max age with `httpOnly`, `secure`, and `sameSite: "lax"` cookie flags.
 
-### RBAC with fine-grained permissions
+### JWT permissions
 
-The `users.role` column stores space-separated permission strings (e.g., `"participant portal.users.view portal.teams.view"`). The `admin` permission always passes all checks. Permission helpers in `shared/permissions.ts` provide `hasPermission()`, `addPermission()`, and `removePermission()` utilities.
+basis-auth access tokens carry the authoritative `permissions` array. Protected routes require the smallest applicable `nethack.*` permission; local user records do not store authorization roles. `nethack.all` is the explicit administrative permission and satisfies the nethack permission hierarchy.
 
 ::: tip See [Authentication & Authorization](./auth) for full details on the auth flow and permission system. :::
 
@@ -195,7 +195,7 @@ The `validate-environment.ts` Nitro plugin performs mandatory checks at server s
 
 ### OAuth2 JWT utilities
 
-The `basis-auth.ts` utility implements discovery and the browser login flow. `oauth2-jwt.ts` verifies protected-resource tokens against basis-auth JWKS with exact issuer, audience, algorithm, type, expiry, and scope checks.
+The `basis-auth.ts` utility implements discovery and the browser login flow. `oauth2-jwt.ts` verifies protected-resource tokens against basis-auth JWKS with exact issuer, audience, algorithm, type, expiry, and permission-claim checks.
 
 `server/plugins/microsoft.ts` provides independent Graph features and is never used for login.
 

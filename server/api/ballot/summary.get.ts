@@ -1,10 +1,11 @@
+import { NethackPermissions } from "~~/shared/permissions";
 import { getActiveSeason } from "~~/server/utils/database/seasons";
 import { requireUser } from "~~/server/utils/auth";
 import { seasons, teams, teamScores } from "~~/server/database/schema";
 import { eq, and, sql } from "drizzle-orm";
 
 export default defineEventHandler(async (event) => {
-    const user = await requireUser(event, "Judging.read.assigned");
+    const user = await requireUser(event, NethackPermissions.Judging.assignmentsRead);
 
     const results = event.context.drizzle
         .select({

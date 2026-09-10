@@ -1,162 +1,18 @@
----
-title: Permissions System
-description: Fine-grained permission system replacing the old role CHECK constraint
----
+# Nethack JWT Permissions
 
-# Permissions System
+basishacks authorizes protected actions from the verified basis-auth access-token `permissions` array. OAuth is used only to obtain the resource token: login requests `openid profile email offline_access nethack.access`; feature permissions are never requested as OAuth scopes.
 
-The basishacks platform uses a fine-grained permission system stored in the `role` column of the `users` table. This replaced the old `CHECK` constraint approach, allowing for flexible role composition.
+`shared/permissions.ts` defines the canonical `NethackPermissions` values. Protected routes require the least-privilege leaf for their action, while ownership and event-state rules remain route-specific.
 
-::: info Source `shared/permissions.ts` :::
+| Area | Permissions |
+| --- | --- |
+| Global administration | `nethack.all` |
+| Profile | `nethack.Profile.updateSelf` |
+| Teams and projects | `nethack.Teams.*`, `nethack.Projects.*` leaves |
+| Voting and judging | `nethack.Voting.*`, `nethack.Judging.*` leaves |
+| Event administration | `nethack.Seasons.*`, `nethack.Hackathon.*` leaves |
+| Operations | `nethack.Users.*`, `nethack.Debug.*`, `nethack.Chatbot.use`, `nethack.Database.export` |
 
-## Delegated API scopes
+`nethack.all` is an explicit basis-auth assignment. The shared permission matcher recognizes its `.all` hierarchy and lets it satisfy any `nethack.*` requirement. There is no wildcard `.*` syntax and no local role fallback.
 
-`NethackScopes` uses `definePermissionTree` from `@basis/schema` and contains only concrete leaves: `Profile.read`, `Profile.write`; project and team self/others reads and writes; self voting; assigned judging; season create/update/delete/activate; debug file read/write; `Chatbot.use`; and `Database.export`.
-
-The authorization request may ask for `.all` wildcard grants such as `Profile.all`, `Projects.read.all`, and `Teams.all`. The shared `DelegatedPermissionSet` matcher expands those grants hierarchically when checking a concrete leaf. There are no `.all` leaves in the tree and `.*` is not accepted. These delegated claims are read from JWT `scope` and remain separate from both the identity-level JWT `permissions` claim and the local `role` column described below.
-
-## VotePermissions Constants
-
-The `VotePermissions` object defines the standalone permission used for peer voting:
-
-| Constant | Permission String | Description                 |
-| -------- | ----------------- | --------------------------- |
-| `VOTE`   | `sc.vote`         | Submit a peer-voting ballot |
-
-## DevPermissions Constants
-
-The `DevPermissions` object defines all recognized permission strings:
-
-| Constant | Permission String | Description |
-| --- | --- | --- |
-| `USERS` | `dev_users` | Dev: manage users |
-| `TEAMS` | `dev_teams` | Dev: manage teams |
-| `DEBUG` | `dev_debug` | Dev: access debug routes |
-| `DEEPSEEK` | `dev_deepseek` | Dev: access DeepSeek features |
-| `PORTAL_USERS_VIEW` | `portal.users.view` | Portal: view user list |
-| `PORTAL_DEBUG_VIEW` | `portal.debug.view` | Portal: view debug panel |
-| `PORTAL_TEAMS_VIEW` | `portal.teams.view` | Portal: view/manage teams (used for all team access) |
-| `PORTAL_DEEPSEEK_VIEW` | `portal.deepseek.view` | Portal: view DeepSeek panel |
-| `PORTAL_SEASONS_VIEW` | `portal.seasons.view` | Portal: view seasons |
-| `PORTAL_SEASONS_EDIT` | `portal.seasons.edit` | Portal: edit seasons |
-
-**Total: 10 permissions**
-
-## Storage Format
-
-Permissions are stored in the `role` column of the `users` table as **space-separated URI-encoded strings**:
-
-```
-portal.users.view%20portal.teams.view%20portal.debug.view
-```
-
-When decoded, this becomes:
-
-```
-portal.users.view portal.teams.view portal.debug.view
-```
-
-This format was chosen because:
-
-- Permission strings contain dots (`.`) which are safe in URI encoding
-- Space separation allows simple `split(' ')` parsing
-- URI encoding prevents ambiguity with special characters
-
-### Why This Replaced CHECK Constraints
-
-Previously, the `role` column used a SQL `CHECK` constraint limiting values to `'participant'`, `'judge'`, `'admin'`. This was too rigid — it could not express fine-grained permissions such as "can view debug panel but not manage users." The new system allows any combination of permissions to be assigned.
-
-## Helper Functions
-
-### `parsePermissions(role)`
-
-```ts
-function parsePermissions(role: string | null | undefined): string[];
-```
-
-Parses the space-separated, URI-encoded `role` string into an array of decoded permission strings. Returns an empty array for nullish input. If the input contains a malformed URI sequence, the function falls back to parsing the raw string.
-
-**Example:**
-
-```ts
-parsePermissions("portal.users.view%20portal.teams.view");
-// → ['portal.users.view', 'portal.teams.view']
-
-parsePermissions(null);
-// → []
-```
-
-### `hasPermission(role, permission)`
-
-```ts
-function hasPermission(role: string | null | undefined, permission: string): boolean;
-```
-
-Checks whether the given role string includes the specified permission.
-
-**Example:**
-
-```ts
-hasPermission("portal.users.view%20portal.teams.view", "portal.users.view");
-// → true
-
-hasPermission("portal.users.view", "portal.debug.view");
-// → false
-```
-
-### `addPermission(role, permission)`
-
-```ts
-function addPermission(role: string | null | undefined, permission: string): string;
-```
-
-Adds a permission to the role string. If the permission already exists, returns the original string unchanged. Returns a URI-encoded, space-separated string suitable for storing back in the database.
-
-**Example:**
-
-```ts
-addPermission("portal.users.view", "portal.teams.view");
-// → 'portal.users.view%20portal.teams.view'
-
-addPermission("portal.users.view%20portal.teams.view", "portal.users.view");
-// → 'portal.users.view%20portal.teams.view' (no duplicate)
-```
-
-### `removePermission(role, permission)`
-
-```ts
-function removePermission(role: string | null | undefined, permission: string): string;
-```
-
-Removes a permission from the role string. Returns a URI-encoded, space-separated string.
-
-**Example:**
-
-```ts
-removePermission("portal.users.view%20portal.teams.view", "portal.users.view");
-// → 'portal.teams.view'
-```
-
-## Internal: `serializePermissions(perms)`
-
-```ts
-function serializePermissions(perms: string[]): string;
-```
-
-Private helper that maps each permission through `encodeURIComponent` and joins with spaces. Used by `addPermission` and `removePermission`.
-
-## Usage in Server Code
-
-Permission checks are used throughout the server to control access:
-
-```ts
-import { hasPermission, DevPermissions } from "~~/shared/permissions";
-
-const user = await requireUser(event);
-
-if (!hasPermission(user.role, DevPermissions.PORTAL_TEAMS_VIEW)) {
-    throw createError({ status: 403, message: "Insufficient permissions" });
-}
-```
-
-The special `'admin'` permission string is also checked in some places as a legacy superuser override.
+The browser receives the current permission list with `/api/auth/token` only to hide unavailable UI. Every API request independently verifies the JWT and enforces its permission server-side.

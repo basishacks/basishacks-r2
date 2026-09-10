@@ -1,19 +1,28 @@
 <script setup lang="ts">
-const { date } = defineProps<{
-    date: Date;
+import { toValidDate, type DateInput } from "~/utils/datetime";
+
+const props = defineProps<{
+    date: DateInput;
 }>();
 
-const text = computed(() =>
-    date.toLocaleString("en-CA", {
+const normalizedDate = computed(() => toValidDate(props.date));
+
+const text = computed(() => {
+    const date = normalizedDate.value;
+    if (!date) return "Date unavailable";
+
+    return date.toLocaleString("en-CA", {
         dateStyle: "medium",
         timeStyle: "short",
         timeZone: "Asia/Shanghai",
-    }),
-);
+    });
+});
+
+const dateTime = computed(() => normalizedDate.value?.toISOString());
 </script>
 
 <template>
-    <time :datetime="date.toISOString()">
+    <time :datetime="dateTime">
         <ClientOnly>{{ text }}</ClientOnly>
     </time>
 </template>

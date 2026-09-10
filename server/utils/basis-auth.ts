@@ -3,10 +3,16 @@ import { useSession } from "h3";
 import * as oidc from "openid-client";
 import { getPublicOrigin } from "~~/server/utils/oauth2";
 import type { BasisAuthIdentity } from "~~/server/utils/database/users";
-import { NETHACK_REQUESTED_SCOPES } from "~~/shared/permissions";
 
 export const BASIS_AUTH_CALLBACK_PATH = "/api/auth/basis/callback";
 const FLOW_MAX_AGE_SECONDS = 10 * 60;
+export const BASIS_AUTH_REQUESTED_SCOPES = [
+    "openid",
+    "profile",
+    "email",
+    "offline_access",
+    "nethack.access",
+] as const;
 
 export interface BasisAuthFlowTransaction {
     state: string;
@@ -105,7 +111,7 @@ export async function beginBasisAuthFlow(postLoginRedirect?: string) {
     const url = oidc.buildAuthorizationUrl(oidcConfiguration, {
         redirect_uri: getBasisAuthCallbackUrl(),
         response_type: "code",
-        scope: NETHACK_REQUESTED_SCOPES.join(" "),
+        scope: BASIS_AUTH_REQUESTED_SCOPES.join(" "),
         resource: config.resource,
         state,
         nonce,
@@ -124,7 +130,7 @@ export async function completeBasisAuthFlow(
     transaction: Partial<BasisAuthFlowTransaction>,
 ): Promise<{
     identity: BasisAuthIdentity;
-    tokens: { accessToken: string; refreshToken: string; expiresAt: number; scopes: string[] };
+    tokens: { accessToken: string; refreshToken: string; expiresAt: number };
 }> {
     if (!transaction.state || !transaction.nonce || !transaction.codeVerifier) {
         throw new Error("Login transaction is missing or expired");
@@ -167,7 +173,6 @@ function normalizeTokenSet(tokens: {
     access_token?: string;
     refresh_token?: string;
     expires_in?: number;
-    scope?: string;
 }) {
     if (!tokens.access_token || !tokens.refresh_token) {
         throw new Error("basis-auth did not return a complete token set");
@@ -176,7 +181,6 @@ function normalizeTokenSet(tokens: {
         accessToken: tokens.access_token,
         refreshToken: tokens.refresh_token,
         expiresAt: Date.now() + (tokens.expires_in ?? 600) * 1000,
-        scopes: (tokens.scope ?? NETHACK_REQUESTED_SCOPES.join(" ")).split(" ").filter(Boolean),
     };
 }
 

@@ -236,14 +236,15 @@
 
 <script setup lang="ts">
 import { onMounted } from "vue";
-import { hasPermission } from "~~/shared/permissions";
+import { NethackPermissions } from "~~/shared/permissions";
 
 definePageMeta({
     middleware: ["auth"],
 });
 
 const { user: me } = await useApiUser();
-if (!hasPermission(me.value?.role, "admin")) {
+const { can } = useNethackPermissions();
+if (!can(NethackPermissions.all)) {
     throw await navigateTo("/");
 }
 

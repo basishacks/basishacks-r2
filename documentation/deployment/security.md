@@ -149,7 +149,7 @@ if (!app || !isSecretValid) {
 
 ## Token custody
 
-Refresh tokens remain only in the encrypted HTTP-only Nuxt session. Browser JavaScript receives short-lived access tokens through `POST /api/auth/token` and keeps them only in memory. Protected APIs reject cookie-only requests and validate signature, issuer, audience, expiry, token type, delegated scope, and local RBAC. Admin impersonation is not supported.
+Refresh tokens remain server-side in the encrypted `basis_auth_sessions` SQLite payload; the HTTP-only Nuxt cookie contains only the local user ID and its session identifier. Browser JavaScript receives short-lived access tokens and their display-only permission list through `POST /api/auth/token`. Protected APIs reject cookie-only requests and validate signature, issuer, audience, expiry, token type, and the JWT permissions array. Admin impersonation is not supported.
 
 ## Role-Based Access Control (RBAC)
 
@@ -158,8 +158,8 @@ Refresh tokens remain only in the encrypted HTTP-only Nuxt session. Browser Java
     - `requireUser(event)` — returns the full database user row or `401 Unauthorized`.
     - `requireJudge(event)` — returns `403 Forbidden` if the caller is not a judge or administrator.
     - `requireAdmin(event)` — returns `403 Forbidden` if the caller is not an administrator.
-- Fine-grained permissions are checked using `hasPermission(user.role, permission)` from `shared/permissions.ts`.
-- The `role` column stores space-separated, URI-encoded permission strings.
+- Fine-grained permissions are checked against the verified basis-auth JWT `permissions` array using `NethackPermissions` from `shared/permissions.ts`.
+- The local user table contains no authorization role; `nethack.all` is the explicit administrative grant.
 
 ::: danger Never trust the frontend for permission checks. Always validate on the server. :::
 

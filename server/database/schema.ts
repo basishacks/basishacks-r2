@@ -95,7 +95,6 @@ export const users = sqliteTable(
     {
         id: integer("id").primaryKey({ autoIncrement: true }),
         email: text("email").notNull().unique(),
-        role: text("role").notNull().default("participant"),
         name: text("name"),
         team_id: integer("team_id"),
         profile_theme: text("profile_theme"),
@@ -108,8 +107,24 @@ export const users = sqliteTable(
         uniqueIndex("idx_users_lower_email").on(sql`lower(${table.email})`),
         uniqueIndex("idx_users_auth_identity").on(table.auth_issuer, table.auth_subject),
         index("idx_users_team_id").on(table.team_id),
-        check("users_role_check", sql`${table.role} IN ('participant', 'judge', 'admin')`),
     ],
+);
+
+// ---------------------------------------------------------------------------
+// basis-auth token sessions. The browser-facing Nuxt session contains only a
+// local user ID; the substantially larger OAuth token set remains server-side.
+// ---------------------------------------------------------------------------
+export const basisAuthSessions = sqliteTable(
+    "basis_auth_sessions",
+    {
+        session_id: text("session_id").primaryKey(),
+        user_id: integer("user_id")
+            .notNull()
+            .references(() => users.id, { onDelete: "cascade" }),
+        encrypted_tokens: text("encrypted_tokens").notNull(),
+        expires_at: integer("expires_at").notNull(),
+    },
+    (table) => [index("idx_basis_auth_sessions_user_id").on(table.user_id)],
 );
 
 // ---------------------------------------------------------------------------

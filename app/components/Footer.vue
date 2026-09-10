@@ -241,12 +241,14 @@
 
 <script setup lang="ts">
 import type { NavigationMenuItem } from "@nuxt/ui";
+import { NethackPermissions } from "~~/shared/permissions";
 
 const { data: user, status } = await useApiUser({ lazy: true });
+const { can } = useNethackPermissions();
 
 const isAdmin = computed(() => {
     if (status.value === "idle" || status.value === "pending") return false;
-    return user.value?.role === "admin";
+    return can(NethackPermissions.all);
 });
 
 const items: NavigationMenuItem[] = [

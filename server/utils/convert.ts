@@ -19,7 +19,6 @@ export function convertUserToPublic(user: User): APIUser {
     return {
         id: user.id,
         email: user.email,
-        role: user.role,
         name: user.name,
         team_id: user.team_id,
         profile_theme: parseProfileTheme(user.profile_theme ?? undefined),

@@ -1,8 +1,8 @@
 import { SetActiveSeasonRequest } from "~~/shared/schemas";
-import { DevPermissions } from "~~/shared/permissions";
+import { NethackPermissions } from "~~/shared/permissions";
 
 export default defineEventHandler(async (event) => {
-    await requirePermission(event, DevPermissions.PORTAL_SEASONS_EDIT, "Seasons.activate");
+    await requireUser(event, NethackPermissions.Seasons.activate);
     const body = await readValidatedBody(event, SetActiveSeasonRequest.parse);
     await setActiveSeason(event, body.season_id);
     return { message: "Active season updated" };

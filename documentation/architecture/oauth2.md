@@ -16,7 +16,7 @@ http://localhost:24598/api/auth/basis/callback
 https://nethack.biszweb.club/api/auth/basis/callback
 ```
 
-Register `devconnect://nethack.bisz.dev` as a resource and use the same value for `BASIS_AUTH_RESOURCE`. Register the complete requested union: `openid profile email offline_access Profile.all Projects.read.all Projects.write.self Teams.all Voting.all Judging.all Seasons.all Files.all Chatbot.use Database.export`.
+Register `devconnect://nethack.bisz.dev` as a resource and use the same value for `BASIS_AUTH_RESOURCE`. The login request is `openid profile email offline_access nethack.access`; basis-auth supplies feature authorization in the access-token `permissions` array.
 
 ## Client configuration
 
@@ -28,7 +28,7 @@ Register `devconnect://nethack.bisz.dev` as a resource and use the same value fo
 | `BASIS_AUTH_RESOURCE`      | Expected resource audience                     |
 | `CURRENT_URL_ORIGIN`       | Origin from which the callback URL is derived  |
 
-The client uses discovery, authorization code, S256 PKCE, state, nonce, `client_secret_basic`, ID-token validation, and UserInfo. Client and refresh-token secrets remain server-only. The access token is exposed through `/api/auth/token` only and retained in client memory.
+The client uses discovery, authorization code, S256 PKCE, state, nonce, `client_secret_basic`, ID-token validation, and UserInfo. Client and refresh-token secrets remain server-only, with token bundles encrypted in SQLite rather than placed in the browser session cookie. The access token is exposed through `/api/auth/token` only and retained in client memory.
 
 ## Protected API validation
 

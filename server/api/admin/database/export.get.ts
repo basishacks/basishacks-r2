@@ -1,3 +1,4 @@
+import { NethackPermissions } from "~~/shared/permissions";
 import { readFileSync } from "node:fs";
 import { resolve } from "node:path";
 import { applyRateLimit, DEFAULT_RATE_LIMIT_CONFIG } from "~~/server/utils/rateLimit";
@@ -6,7 +7,7 @@ import * as schema from "~~/server/database/schema";
 
 export default defineEventHandler(
     applyRateLimit(async (event) => {
-        await requireAdmin(event, "Database.export");
+        await requireUser(event, NethackPermissions.Database.export);
 
         const format = getQuery(event).format || "sqlite";
 

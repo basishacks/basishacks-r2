@@ -1,4 +1,4 @@
-import { DevPermissions, hasPermission } from "~~/shared/permissions";
+import { hasNethackPermission, NethackPermissions } from "~~/shared/permissions";
 import { TeamIdParams } from "~~/shared/schemas";
 
 export default defineEventHandler(async (event) => {
@@ -19,9 +19,10 @@ export default defineEventHandler(async (event) => {
     // participants only see them when the team's own season toggles are enabled.
     const resolveVisibility = await getScoreRankVisibilityResolver(event);
     const visibility = resolveVisibility(team.season_id);
-    const privileged =
-        hasPermission(user?.role, DevPermissions.PORTAL_TEAMS_VIEW) ||
-        hasPermission(user?.role, "admin");
+    const privileged = hasNethackPermission(
+        event.context.oauth2?.permissions,
+        NethackPermissions.Judging.resultsRead,
+    );
     const withScore = privileged || (isMember && visibility.showScores);
     const withRank = privileged || visibility.showRanking;
     const awards = await getAwards(event, id);

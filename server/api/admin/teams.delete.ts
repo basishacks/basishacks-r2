@@ -1,5 +1,5 @@
 import { z } from "zod";
-import { DevPermissions } from "~~/shared/permissions";
+import { NethackPermissions } from "~~/shared/permissions";
 
 const DeleteTeamsRequest = z.object({
     ids: z.array(z.number().int().positive()),
@@ -7,7 +7,7 @@ const DeleteTeamsRequest = z.object({
 
 export default defineEventHandler(
     applyRateLimit(async (event) => {
-        await requirePermission(event, DevPermissions.TEAMS, "Teams.write.others");
+        await requireUser(event, NethackPermissions.Teams.delete);
 
         const body = await readValidatedBody(event, DeleteTeamsRequest.parse);
         await deleteTeams(event, body.ids);

@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import JudgeProgressCard from "~/components/JudgeProgressCard.vue";
-import { hasPermission } from "~~/shared/permissions";
+import { NethackPermissions } from "~~/shared/permissions";
 
 definePageMeta({
     middleware: ["auth"],
@@ -12,13 +12,11 @@ if (hackathon.value?.status !== "voting") {
 }
 
 const { user: userData, error: userError } = await useApiUser();
+const { can } = useNethackPermissions();
 if (userError.value) {
     throw userError.value;
 }
-if (
-    !hasPermission(userData.value?.role, "admin") &&
-    !hasPermission(userData.value?.role, "judge")
-) {
+if (!can(NethackPermissions.Judging.assignmentsRead)) {
     throw await navigateTo("/");
 }
 

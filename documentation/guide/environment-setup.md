@@ -356,6 +356,10 @@ If the page loads without errors, your environment is correctly configured.
 
 ## Troubleshooting
 
+### Nitro Legacy Octal Escape on Windows
+
+The custom Nitro error-handler path is normalized in `nuxt.config.ts` before Nitro writes it into a virtual module. If an older checkout reports `Legacy octal escape is not permitted in strict mode` from `virtual:#nitro-internal-virtual/error-handler`, update to the current configuration and restart the dev server. The error is caused by an unescaped Windows backslash followed by digits in the absolute project path, not by `server/error.ts` itself.
+
 ### Port Already in Use
 
 If port 24598 is already in use:

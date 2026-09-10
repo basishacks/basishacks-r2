@@ -18,7 +18,7 @@ Every API endpoint in the system enforces the following security measures:
 | **Rate limiting** | All endpoints are wrapped with `applyRateLimit()` using one of four tier configs (`DEFAULT`, `AUTH`, `VOTE`, `UPLOAD`). Returns 429 with `Retry-After` header when exceeded. |
 | **Input validation** | `readValidatedBody(event, Schema.parse)` or `getValidatedQuery(event, Schema.parse)` with shared Zod schemas from `shared/schemas.ts`. |
 | **Length-bounded inputs** | All string fields in Zod schemas have explicit `min()`/`max()` bounds to prevent resource exhaustion. Example: `name: z.string().min(1).max(50)`. |
-| **Authentication** | Protected APIs require a basis-auth bearer token. `requireUser()`, `requireAdmin()`, and `requirePermission()` then apply delegated scopes and local RBAC. A session cookie alone is not authorization. |
+| **Authentication** | Protected APIs require a basis-auth bearer token. `requireUser()` applies the required JWT permission; a session cookie alone is not authorization. |
 | **OAuth2 JWT** | RS256 tokens require the exact issuer and `devconnect://nethack.bisz.dev` audience. Scope hierarchy comes from `@basis/schema`. |
 | **HTTP headers** | Security headers (CSP, HSTS, X-Frame-Options, etc.) applied by `security-headers.ts` middleware on every response. |
 
@@ -41,7 +41,7 @@ Starts basis-auth discovery and authorization code with S256 PKCE, state, nonce,
 
 ### GET `/api/auth/basis/callback`
 
-Validates the stored transaction and provider response, exchanges the code using `client_secret_basic`, validates the ID token, loads UserInfo, links the verified identity, and stores token custody in the encrypted session.
+Validates the stored transaction and provider response, exchanges the code using `client_secret_basic`, validates the ID token, loads UserInfo, links the verified identity, writes the small browser session, and stores the encrypted token bundle in `basis_auth_sessions`.
 
 | Field | Details |
 | --- | --- |
@@ -52,7 +52,7 @@ Validates the stored transaction and provider response, exchanges the code using
 
 ### POST `/api/auth/token`
 
-Cookie-authenticated access-token bootstrap and refresh. Returns `data: { accessToken, expiresAt }`; the refresh token remains in encrypted server custody. Refresh rotation is serialized per session.
+Cookie-authenticated access-token bootstrap and refresh. Returns `data: { accessToken, expiresAt, permissions }`; the refresh token remains in encrypted server-side SQLite custody. Refresh rotation is serialized per session.
 
 ### POST `/api/auth/logout`
 

@@ -1,3 +1,4 @@
+import { NethackPermissions } from "~~/shared/permissions";
 import { AdminUpdateHackathonRequest } from "~~/shared/schemas";
 import { hackathon, seasons } from "~~/server/database/schema";
 import { eq } from "drizzle-orm";
@@ -6,7 +7,7 @@ import { applyRateLimit, DEFAULT_RATE_LIMIT_CONFIG } from "~~/server/utils/rateL
 
 export default defineEventHandler(
     applyRateLimit(async (event) => {
-        await requireAdmin(event, "Seasons.update");
+        await requireUser(event, NethackPermissions.Hackathon.update);
 
         const body = await readValidatedBody(event, AdminUpdateHackathonRequest.parse);
 

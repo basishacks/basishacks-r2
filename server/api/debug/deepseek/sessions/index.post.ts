@@ -1,6 +1,6 @@
 import { createSession } from "~~/server/utils/deepseek-store";
-import { requirePermission } from "~~/server/utils/auth";
-import { DevPermissions } from "~~/shared/permissions";
+import { requireUser } from "~~/server/utils/auth";
+import { NethackPermissions } from "~~/shared/permissions";
 import z from "zod";
 import { applyRateLimit, DEFAULT_RATE_LIMIT_CONFIG } from "~~/server/utils/rateLimit";
 
@@ -10,7 +10,7 @@ const CreateDeepSeekSessionRequest = z.object({
 
 export default defineEventHandler(
     applyRateLimit(async (event) => {
-        await requirePermission(event, DevPermissions.DEEPSEEK, "Chatbot.use");
+        await requireUser(event, NethackPermissions.Debug.deepseekWrite);
 
         const { sessionName } = await readValidatedBody(event, CreateDeepSeekSessionRequest.parse);
 

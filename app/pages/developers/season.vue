@@ -1,4 +1,5 @@
 <script setup lang="ts">
+import { NethackPermissions } from "~~/shared/permissions";
 definePageMeta({
     layout: "developers-dashboard",
     middleware: ["auth"],
@@ -10,9 +11,10 @@ useHead({
 
 const toast = useToast();
 const { data: user, status } = await useApiUser();
+const { can } = useNethackPermissions();
 
 if (status.value !== "pending" && status.value !== "idle") {
-    if (!user.value || user.value.role !== "admin") {
+    if (!user.value || !can(NethackPermissions.all)) {
         throw createError({ statusCode: 403, statusMessage: "Access Denied" });
     }
 }

@@ -16,7 +16,6 @@ interface APIAward {
 interface APIUser {
     id: number;
     email: string;
-    role: string;
     name: string | null;
     team_id: number | null;
     profile_theme: ProfileTheme | null;

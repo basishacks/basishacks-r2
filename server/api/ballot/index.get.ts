@@ -1,3 +1,5 @@
+import { NethackPermissions } from "~~/shared/permissions";
+
 export default defineEventHandler(async (event) => {
     const hackathon = await getHackathon(event);
     if (hackathon?.status !== "voting") {
@@ -7,7 +9,7 @@ export default defineEventHandler(async (event) => {
         });
     }
 
-    const user = await requireUser(event, "Voting.read.self");
+    const user = await requireUser(event, NethackPermissions.Voting.readOwn);
     if (!user.team_id) {
         throw createError({
             status: 403,

@@ -1,3 +1,4 @@
+import { NethackPermissions } from "~~/shared/permissions";
 import { CreateTeamScoresRequest, TeamIdParams } from "~~/shared/schemas";
 import { getTeam } from "~~/server/utils/database/teams";
 import { applyRateLimit, VOTE_RATE_LIMIT_CONFIG } from "~~/server/utils/rateLimit";
@@ -6,7 +7,10 @@ export default defineEventHandler(
     applyRateLimit(async (event) => {
         const { id: teamID } = await getValidatedRouterParams(event, TeamIdParams.parse);
 
-        const { id: userID } = await requireJudge(event, "Judging.write.assigned");
+        const { id: userID } = await requireUser(
+            event,
+            NethackPermissions.Judging.scoresWriteAssigned,
+        );
 
         const hackathon = await getHackathon(event);
         if (hackathon?.status !== "voting") {

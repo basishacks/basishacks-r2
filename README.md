@@ -73,9 +73,9 @@ The canonical list of variables lives in `.env.example`. The table below summari
 
 The only login method is the separately deployed **basis-auth** service. `/api/login` discovers the issuer and starts an authorization-code flow with S256 PKCE, state, and nonce. The callback URL is always `${CURRENT_URL_ORIGIN}/api/auth/basis/callback`; it must be registered exactly for each environment. Resource-token claims and delegated permissions use the shared `@basis/schema` package; hackathon participant, judge, and administrator roles remain local.
 
-The authorization request targets `devconnect://nethack.bisz.dev` and requests OIDC identity scopes, `offline_access`, and the delegated application scopes documented under `shared/permissions.ts`. After validating the ID token and UserInfo, basishacks links the identity and keeps the access token, expiry, rotated refresh token, and granted scopes in the encrypted HTTP-only session. `POST /api/auth/token` exposes only the short-lived access token to client memory; refresh tokens never reach browser JavaScript. `POST /api/auth/logout` attempts refresh-family revocation and always clears the local session.
+The authorization request targets `devconnect://nethack.bisz.dev` and requests `openid profile email offline_access nethack.access`. Feature authorization is not represented by OAuth scopes: basis-auth supplies a JWT `permissions` array, and basishacks checks the least-privilege `nethack.*` permission required by each protected route. `nethack.all` is the explicit administrative grant. After validating the ID token and UserInfo, basishacks links the identity and stores only the local user ID in the encrypted HTTP-only Nuxt session cookie. The encrypted access/refresh token set is stored server-side in SQLite, keyed by the Nuxt session ID, so large permission-bearing JWTs cannot overflow the browser cookie limit. `POST /api/auth/token` exposes the short-lived access token and its permissions to client memory for display-only UI gating; refresh tokens never reach browser JavaScript. `POST /api/auth/logout` attempts refresh-family revocation and always clears both session records.
 
-Protected application APIs require `Authorization: Bearer …`; possession of the Nuxt session cookie alone is insufficient. Tokens must be RS256 access tokens issued by basis-auth for the exact resource audience, and delegated scopes are checked separately from local participant, judge, and administrator RBAC. JSON APIs use the `@basis/schema` envelopes: successful results are `{ status, code, data }`, while failures are `{ status, code, error, error_description }` with matching HTTP and envelope status values.
+Protected application APIs require `Authorization: Bearer …`; possession of the Nuxt session cookie alone is insufficient. Tokens must be RS256 access tokens issued by basis-auth for the exact resource audience, and their JWT permissions are the sole authorization source. JSON APIs use the `@basis/schema` envelopes: successful results are `{ status, code, data }`, while failures are `{ status, code, error, error_description }` with matching HTTP and envelope status values.
 
 The former basishacks OAuth provider and application-management UI/API have been retired. The legacy `oauth2_applications` table and records remain for audit and rollback. Graph integration is independent and is never used to authenticate a basishacks session.
 
@@ -111,6 +111,8 @@ npm run dev -- --https # or with npm
 ```
 
 For HTTP (not recommended — OAuth2 requires secure context): `bun dev`
+
+The custom Nitro error-handler path is normalized to forward slashes in `nuxt.config.ts`. This keeps the generated virtual module valid on Windows, including when the absolute project path contains digit-leading username segments that JavaScript could otherwise parse as legacy octal escapes.
 
 ## Testing
 

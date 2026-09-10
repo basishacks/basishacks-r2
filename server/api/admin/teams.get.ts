@@ -1,11 +1,11 @@
-import { DevPermissions } from "~~/shared/permissions";
+import { NethackPermissions } from "~~/shared/permissions";
 import { teams, seasons, users } from "~~/server/database/schema";
 import { eq, isNotNull, sql } from "drizzle-orm";
 import { applyRateLimit, DEFAULT_RATE_LIMIT_CONFIG } from "~~/server/utils/rateLimit";
 
 export default defineEventHandler(
     applyRateLimit(async (event) => {
-        await requirePermission(event, DevPermissions.TEAMS, "Teams.read.others");
+        await requireUser(event, NethackPermissions.Teams.list);
 
         const results = event.context.drizzle
             .select({

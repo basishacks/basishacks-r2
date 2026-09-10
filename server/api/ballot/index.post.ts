@@ -1,3 +1,4 @@
+import { NethackPermissions } from "~~/shared/permissions";
 import { SubmitVoteRequest } from "~~/shared/schemas";
 import { applyRateLimit, VOTE_RATE_LIMIT_CONFIG } from "~~/server/utils/rateLimit";
 
@@ -11,7 +12,7 @@ export default defineEventHandler(
             });
         }
 
-        const user = await requireUser(event, "Voting.write.self");
+        const user = await requireUser(event, NethackPermissions.Voting.submitOwn);
         if (!user.team_id) {
             throw createError({
                 status: 403,

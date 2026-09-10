@@ -86,7 +86,7 @@ const { user, sessionUser, refresh, clear } = await useApiUser({ lazy: true });
 
 **File:** `app/middleware/auth.ts`
 
-Global route middleware that redirects unauthenticated users to the login endpoint, preserving the originally requested URL.
+Global route middleware that verifies the server session before redirecting unauthenticated users to the login endpoint, preserving the originally requested URL and avoiding a post-OIDC hydration redirect loop.
 
 ```ts
 export default defineNuxtRouteMiddleware((to) => {
@@ -315,14 +315,14 @@ try {
 Role-based access control is enforced at two levels:
 
 1. **Server-side** — `requireUser`, `requireJudge`, `requireAdmin` in `server/utils/auth.ts`
-2. **Client-side** — `hasPermission()` from `~~/shared/permissions` for UI conditionals
+2. **Client-side** — `useNethackPermissions()` for display-only UI conditionals
 
 ```vue
 <script setup>
-import { hasPermission } from "~~/shared/permissions";
+import { NethackPermissions } from "~~/shared/permissions";
 
-const showJudging = computed(
-    () => hasPermission(user.value?.role, "judge") || hasPermission(user.value?.role, "admin"),
+const showJudging = computed(() =>
+    useNethackPermissions().can(NethackPermissions.Judging.assignmentsRead),
 );
 </script>
 

@@ -1,7 +1,7 @@
 import { randomUUID } from "crypto";
 import { createAsset, createUserAsset } from "~~/server/utils/assets";
-import { DevPermissions } from "~~/shared/permissions";
-import { requirePermission } from "~~/server/utils/auth";
+import { NethackPermissions } from "~~/shared/permissions";
+import { requireUser } from "~~/server/utils/auth";
 import { applyRateLimit, UPLOAD_RATE_LIMIT_CONFIG } from "~~/server/utils/rateLimit";
 
 // Reject uploads larger than 10 MiB at the handler layer (Nitro maxRequestSize is the backstop).
@@ -26,7 +26,7 @@ export default defineEventHandler(
     applyRateLimit(async (event) => {
         const query = getQuery(event);
 
-        await requirePermission(event, DevPermissions.DEBUG, "Files.write.debug");
+        await requireUser(event, NethackPermissions.Debug.filesWrite);
 
         const formData = await readMultipartFormData(event);
         if (!formData || !formData[0]) {

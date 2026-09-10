@@ -13,7 +13,7 @@ basishacks delegates user authentication to the separately deployed **basis-auth
 
 - S256 PKCE
 - unpredictable `state` and `nonce`
-- scopes `openid profile email offline_access` plus the delegated scope union in `shared/permissions.ts`
+- OAuth scopes `openid profile email offline_access nethack.access`; feature access comes from JWT permissions
 - resource `devconnect://nethack.bisz.dev`
 - confidential-client authentication with `client_secret_basic`
 
@@ -23,9 +23,9 @@ The callback is derived rather than configured independently:
 ${CURRENT_URL_ORIGIN}/api/auth/basis/callback
 ```
 
-The PKCE verifier, state, nonce, and optional safe relative redirect are kept for at most ten minutes in a dedicated encrypted, HTTP-only, SameSite=Lax session. The callback clears that transaction before exchanging the code, validates the ID token, loads UserInfo, links the local user, and stores the access token, expiry, refresh token, and granted scopes in encrypted secure session data.
+The PKCE verifier, state, nonce, and optional safe relative redirect are kept for at most ten minutes in a dedicated encrypted, HTTP-only, SameSite=Lax session. The callback clears that transaction before exchanging the code, validates the ID token, loads UserInfo, and links the local user. It then writes a deliberately small Nuxt session cookie containing only `{ user: { id } }` and stores the encrypted access/refresh token set in the server-side `basis_auth_sessions` table under that session ID. Keeping permission-rich JWTs out of the cookie prevents browsers from silently dropping an oversized session after the callback.
 
-`POST /api/auth/token` is the only browser bootstrap/refresh endpoint. It returns an access token and expiry, never a refresh token, reuses sufficiently fresh access tokens, and serializes refresh rotation per session. `POST /api/auth/logout` attempts refresh-family revocation and clears the local session even when revocation is unavailable.
+`POST /api/auth/token` is the only browser bootstrap/refresh endpoint. It resolves the token set from `basis_auth_sessions`, returns an access token, expiry, and a display-only permission list, never a refresh token; it reuses sufficiently fresh access tokens and serializes refresh rotation per session. Rotated tokens are encrypted before being persisted. API routes independently verify bearer tokens. `POST /api/auth/logout` attempts refresh-family revocation and clears both the token row and browser session even when revocation is unavailable.
 
 ## Identity linking
 
@@ -48,7 +48,7 @@ The frontend middleware is a convenience redirect and is never the only authoriz
 
 ## Resource-server tokens
 
-Protected APIs trust basis-auth access tokens only. Validation requires the basis-auth JWKS signature, RS256, the exact configured issuer, audience `devconnect://nethack.bisz.dev`, `typ=at+jwt`, a valid expiry, and basis-schema access-token claims. The subject maps to a local user through the same issuer-and-subject link. Delegated access is evaluated from the JWT `scope` claim with `DelegatedPermissionSet`; the identity-level `permissions` claim is not used as an API scope.
+Protected APIs trust basis-auth access tokens only. Validation requires the basis-auth JWKS signature, RS256, the exact configured issuer, audience `devconnect://nethack.bisz.dev`, `typ=at+jwt`, a valid expiry, and basis-schema access-token claims. The subject maps to a local user through the same issuer-and-subject link. Route access is evaluated from the JWT `permissions` array with the shared nethack permission hierarchy.
 
 The client keeps access tokens only in memory, adds the bearer header to protected requests, unwraps `APIResponse.data`, converts failed envelopes with `APIError.from`, and performs one single-flight refresh-and-retry on an expired-token response.
 

@@ -2,7 +2,6 @@
 import type { TableColumn } from "@nuxt/ui";
 import { upperFirst } from "scule";
 import { getPaginationRowModel } from "@tanstack/table-core";
-import { parsePermissions } from "~~/shared/permissions";
 definePageMeta({
     layout: "developers-dashboard",
 });
@@ -131,25 +130,6 @@ const columns: TableColumn<AdminUser>[] = [
                 class: "-mx-2.5",
                 onClick: () => column.toggleSorting(column.getIsSorted() === "asc"),
             });
-        },
-    },
-    {
-        accessorKey: "role",
-        header: "Permissions",
-        cell: ({ row }) => {
-            const perms = parsePermissions(row.original.role);
-            return h(
-                "div",
-                { class: "flex flex-wrap gap-1" },
-                perms.map((p) => {
-                    const color = p === "admin" ? "error" : p === "judge" ? "warning" : "primary";
-                    return h(
-                        UBadge,
-                        { class: "capitalize", variant: "subtle", color, size: "sm" },
-                        () => p,
-                    );
-                }),
-            );
         },
     },
     {

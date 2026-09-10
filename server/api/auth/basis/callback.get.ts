@@ -1,5 +1,9 @@
 import { applyRateLimit, AUTH_RATE_LIMIT_CONFIG } from "~~/server/utils/rateLimit";
 import { completeBasisAuthFlow, getBasisAuthFlowSession } from "~~/server/utils/basis-auth";
+import {
+    deleteBasisAuthSession,
+    saveBasisAuthSession,
+} from "~~/server/utils/database/basis-auth-sessions";
 import { findOrLinkBasisAuthUser } from "~~/server/utils/database/users";
 
 export default defineEventHandler(
@@ -8,21 +12,29 @@ export default defineEventHandler(
         const transaction = { ...flow.data };
         await flow.clear();
 
+        let createdSessionId: string | undefined;
         try {
             const result = await completeBasisAuthFlow(getRequestURL(event), transaction);
             const user = await findOrLinkBasisAuthUser(event, result.identity);
 
-            await replaceUserSession(event, {
-                user: { id: user.id },
-                secure: {
-                    accessToken: result.tokens.accessToken,
-                    accessTokenExpiresAt: result.tokens.expiresAt,
-                    refreshToken: result.tokens.refreshToken,
-                    scopes: result.tokens.scopes,
-                },
+            await replaceUserSession(event, { user: { id: user.id } });
+            const session = await getUserSession(event);
+            createdSessionId = session.id;
+            saveBasisAuthSession(event, session.id, user.id, {
+                accessToken: result.tokens.accessToken,
+                accessTokenExpiresAt: result.tokens.expiresAt,
+                refreshToken: result.tokens.refreshToken,
             });
             return await sendRedirect(event, transaction.postLoginRedirect || "/dashboard", 302);
         } catch (error) {
+            if (createdSessionId) {
+                await clearUserSession(event);
+                try {
+                    deleteBasisAuthSession(event, createdSessionId);
+                } catch (cleanupError) {
+                    console.warn("Failed to remove incomplete basis-auth session", cleanupError);
+                }
+            }
             console.error("basis-auth callback failed", error);
             throw createError({
                 statusCode: 401,

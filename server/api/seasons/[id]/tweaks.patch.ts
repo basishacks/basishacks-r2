@@ -1,11 +1,11 @@
 import { UpdateSeasonTweaksRequest } from "~~/shared/schemas";
-import { DevPermissions } from "~~/shared/permissions";
+import { NethackPermissions } from "~~/shared/permissions";
 
 const booleanFields = ["show_scores", "show_ranking"] as const;
 
 export default defineEventHandler(
     applyRateLimit(async (event) => {
-        await requirePermission(event, DevPermissions.PORTAL_SEASONS_EDIT, "Seasons.update");
+        await requireUser(event, NethackPermissions.Seasons.update);
 
         const id = parseInt(getRouterParam(event, "id")!);
         const body = await readValidatedBody(event, UpdateSeasonTweaksRequest.parse);

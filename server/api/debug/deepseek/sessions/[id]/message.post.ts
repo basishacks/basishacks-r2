@@ -1,6 +1,6 @@
 import { getDeepSeekSession, addMessage, getMessages } from "~~/server/utils/deepseek-store";
-import { requirePermission } from "~~/server/utils/auth";
-import { DevPermissions } from "~~/shared/permissions";
+import { requireUser } from "~~/server/utils/auth";
+import { NethackPermissions } from "~~/shared/permissions";
 import { DeepSeekSessionIdParams } from "~~/shared/schemas";
 import { fetchExternalHtml } from "~~/server/utils/url-validation";
 import OpenAI from "openai";
@@ -252,7 +252,7 @@ async function processToolCalls(
 
 export default defineEventHandler(
     applyRateLimit(async (event) => {
-        const user = await requirePermission(event, DevPermissions.DEEPSEEK, "Chatbot.use");
+        const user = await requireUser(event, NethackPermissions.Debug.deepseekWrite);
 
         const { id: sessionId } = await getValidatedRouterParams(
             event,

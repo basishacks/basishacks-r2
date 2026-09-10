@@ -11,51 +11,24 @@ All server utilities live in `server/utils/`. They provide shared functionality 
 
 ## auth.ts
 
-Authentication and authorization helpers for enforcing delegated basis-auth scopes plus local role-based access control. All functions are async and return the bearer-linked DB user row on success.
+Authentication and authorization helpers enforce verified basis-auth JWT permissions. All functions are async and return the bearer-linked DB user row on success.
 
 ### `requireUser`
 
 ```ts
-export async function requireUser(event: H3Event, scopes?: PermissionRequirement): Promise<User>;
+export async function requireUser(
+    event: H3Event,
+    permissions?: PermissionRequirement,
+): Promise<User>;
 ```
 
-Requires `Authorization: Bearer …`, validates the basis-auth access token, optionally enforces delegated scopes with `DelegatedPermissionSet`, and resolves the stable `sub` to the linked local user. The Nuxt cookie is not consulted for API authorization.
+Requires `Authorization: Bearer …`, validates the basis-auth access token, optionally enforces the required `nethack.*` JWT permission, and resolves the stable `sub` to the linked local user. The Nuxt cookie is not consulted for API authorization.
 
 **Flow:**
 
 1. Verify RS256, issuer, `devconnect://nethack.bisz.dev` audience, expiry, token type, and basis-schema claims.
-2. Evaluate delegated access from the JWT `scope` claim; identity-level `permissions` are separate.
+2. Evaluate the required access from the JWT `permissions` array.
 3. Resolve issuer and `sub` to a linked local user.
-
-### `requireJudge`
-
-```ts
-export async function requireJudge(event: H3Event, scopes?: PermissionRequirement): Promise<User>;
-```
-
-Ensures the user has the `admin` or `judge` permission. Throws 403 if permissions are insufficient. Uses `hasPermission` from `shared/permissions`.
-
-### `requireAdmin`
-
-```ts
-export async function requireAdmin(event: H3Event, scopes?: PermissionRequirement): Promise<User>;
-```
-
-Ensures the user has the `admin` permission. Throws 403 if permissions are insufficient. Uses `hasPermission` from `shared/permissions`.
-
-### `requirePermission`
-
-```ts
-export async function requirePermission(
-    event: H3Event,
-    permission: string,
-    scopes?: PermissionRequirement,
-): Promise<User>;
-```
-
-Ensures the user has a specific permission (or the `admin` role always passes). Uses `hasPermission` from `shared/permissions`.
-
-**Note:** The `admin` role always passes all permission checks. Throws 403 with `"Insufficient permissions"` on failure.
 
 ---
 
@@ -213,7 +186,7 @@ Clears the in-memory rate limit history. Exposed primarily for tests.
 
 ## basis-auth.ts and oauth2.ts
 
-`basis-auth.ts` owns OIDC discovery, confidential-client configuration, the encrypted transaction session, S256 PKCE requests, callback validation, UserInfo loading, token refresh rotation, and revocation. `oauth2.ts` now contains only the public-origin helper.
+`basis-auth.ts` owns OIDC discovery, confidential-client configuration, the encrypted transaction session, S256 PKCE requests, callback validation, UserInfo loading, token refresh rotation, and revocation. `database/basis-auth-sessions.ts` encrypts token bundles with AES-256-GCM and persists them by Nuxt session ID, keeping large access JWTs out of browser cookies. `oauth2.ts` now contains only the public-origin helper.
 
 ### Public origin / issuer
 
@@ -254,22 +227,6 @@ export async function verifyOAuth2JWT(event: H3Event): Promise<OAuth2JWTPayload>
 
 Combines `extractBearerToken` and `verifyAccessToken` into a single call.
 
-### `parseJWScopes`
-
-```ts
-export function parseJWScopes(scope: unknown): string[];
-```
-
-Parses a space-separated scope string into an array. Returns an empty array for non-string input.
-
-### `requireScopes`
-
-```ts
-export function requireScopes(grantedScopes: string[], requiredScopes: string[]): void;
-```
-
-Throws 403 with `insufficient_scope` if any required scope is missing.
-
 ### `resolveOAuth2User`
 
 ```ts
@@ -278,31 +235,13 @@ export async function resolveOAuth2User(event: H3Event, payload: OAuth2JWTPayloa
 
 Resolves a user from the JWT payload's `user_id` or `sub` field. Throws 401 if the payload has no valid user ID, or 404 if the user is not found.
 
-### `withOAuth2JWT`
-
-```ts
-export function withOAuth2JWT(
-    handler: (event: H3Event) => any,
-    options?: OAuth2JWTWrapperOptions,
-): EventHandler;
-```
-
-High-level wrapper that handles the full OAuth2 JWT authentication flow.
-
-**Options:**
-
-| Option | Type | Default | Description |
-| --- | --- | --- | --- |
-| `requiredScopes` | `string[]` | `[]` | Scopes the token must include |
-| `loadUser` | `boolean` | `false` | Fetch the DB user and attach to `event.context.oauth2.user` |
-
 **Context attached to `event.context.oauth2`:**
 
-| Field     | Type               | Description                            |
-| --------- | ------------------ | -------------------------------------- |
-| `payload` | `OAuth2JWTPayload` | Decoded JWT payload                    |
-| `scopes`  | `string[]`         | Parsed scopes from the token           |
-| `user`    | `User`             | DB user row (only if `loadUser: true`) |
+| Field         | Type               | Description               |
+| ------------- | ------------------ | ------------------------- |
+| `payload`     | `OAuth2JWTPayload` | Verified JWT payload      |
+| `permissions` | `string[]`         | JWT permission array      |
+| `user`        | `User`             | Bearer-linked DB user row |
 
 ---
 

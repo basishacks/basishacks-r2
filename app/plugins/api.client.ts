@@ -7,6 +7,7 @@ const nativeFetch = globalThis.$fetch;
 export default defineNuxtPlugin(() => {
     const accessToken = useState<string | null>("basis-access-token", () => null);
     const accessTokenExpiresAt = useState<number>("basis-access-token-expiry", () => 0);
+    const permissions = useState<string[]>("basis-permissions", () => []);
     const { loggedIn, clear } = useUserSession();
     let bootstrap: Promise<void> | undefined;
 
@@ -18,10 +19,15 @@ export default defineNuxtPlugin(() => {
                 .then((value) => {
                     const response = responseSchema.parse(value);
                     const data = z
-                        .object({ accessToken: z.string(), expiresAt: z.number() })
+                        .object({
+                            accessToken: z.string(),
+                            expiresAt: z.number(),
+                            permissions: z.array(z.string()),
+                        })
                         .parse(response.data);
                     accessToken.value = data.accessToken;
                     accessTokenExpiresAt.value = data.expiresAt;
+                    permissions.value = data.permissions;
                 })
                 .finally(() => {
                     bootstrap = undefined;
@@ -58,6 +64,7 @@ export default defineNuxtPlugin(() => {
             if (path === "/api/auth/logout") {
                 accessToken.value = null;
                 accessTokenExpiresAt.value = 0;
+                permissions.value = [];
             }
             return data;
         } catch (cause: any) {
@@ -67,6 +74,7 @@ export default defineNuxtPlugin(() => {
             );
             if (retry && error.status === 401 && !isTokenRoute) {
                 accessToken.value = null;
+                permissions.value = [];
                 try {
                     await ensureAccessToken(true);
                     return await request<T>(input, options, false);

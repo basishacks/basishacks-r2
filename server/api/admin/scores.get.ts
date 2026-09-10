@@ -1,3 +1,4 @@
+import { NethackPermissions } from "~~/shared/permissions";
 import rubrics from "~~/shared/rubric";
 import { applyRateLimit, DEFAULT_RATE_LIMIT_CONFIG } from "~~/server/utils/rateLimit";
 import z from "zod";
@@ -11,10 +12,13 @@ const UpdateQuerySchema = z.object({
 
 export default defineEventHandler(
     applyRateLimit(async (event) => {
-        await requireAdmin(event, "Judging.read.assigned");
+        await requireUser(event, NethackPermissions.Judging.resultsRead);
 
         const query = await getValidatedQuery(event, UpdateQuerySchema.parse);
         const shouldUpdate = query.update ?? false;
+        if (shouldUpdate) {
+            await requireUser(event, NethackPermissions.Judging.resultsCompute);
+        }
 
         const teams = (await getAllTeams(event)).filter((t) => t.project_submitted);
 

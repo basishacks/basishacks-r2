@@ -161,6 +161,14 @@ export async function createTestDatabase(): Promise<SQLiteDatabase> {
     ALTER TABLE users ADD COLUMN auth_subject TEXT;
     CREATE UNIQUE INDEX idx_users_auth_identity ON users(auth_issuer, auth_subject);
 
+    CREATE TABLE IF NOT EXISTS basis_auth_sessions (
+      session_id TEXT PRIMARY KEY,
+      user_id INTEGER NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+      encrypted_tokens TEXT NOT NULL,
+      expires_at INTEGER NOT NULL
+    );
+    CREATE INDEX IF NOT EXISTS idx_basis_auth_sessions_user_id ON basis_auth_sessions(user_id);
+
     ALTER TABLE team_scores ADD COLUMN season_id INTEGER;
 
     CREATE UNIQUE INDEX IF NOT EXISTS sc_votes_user_id_unique ON sc_votes(user_id);
@@ -217,6 +225,7 @@ export function resetTestDatabase(wrapper: SQLiteDatabase): void {
     DELETE FROM awards;
     DELETE FROM peer_voting_scores;
     DELETE FROM user_past_teams;
+    DELETE FROM basis_auth_sessions;
     DELETE FROM users;
     DELETE FROM oauth2_applications;
     DELETE FROM teams;

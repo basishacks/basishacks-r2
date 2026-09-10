@@ -1,3 +1,4 @@
+import { NethackPermissions } from "~~/shared/permissions";
 import { PositiveIntParam } from "~~/shared/schemas";
 import { seasons } from "~~/server/database/schema";
 import { eq } from "drizzle-orm";
@@ -8,7 +9,7 @@ const SeasonIdParams = z.object({ id: PositiveIntParam });
 
 export default defineEventHandler(
     applyRateLimit(async (event) => {
-        await requireAdmin(event, "Seasons.delete");
+        await requireUser(event, NethackPermissions.Seasons.delete);
 
         const { id } = await getValidatedRouterParams(event, SeasonIdParams.parse);
 

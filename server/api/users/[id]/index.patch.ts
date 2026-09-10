@@ -1,3 +1,4 @@
+import { NethackPermissions } from "~~/shared/permissions";
 import { randomUUID } from "node:crypto";
 import { createUserAsset, removeUserAsset } from "~~/server/utils/assets";
 import { updateUserProfilePicture } from "~~/server/utils/database/users";
@@ -71,7 +72,7 @@ export default defineEventHandler(
         async (event) => {
             const { id } = await getValidatedRouterParams(event, UserIdParams.parse);
 
-            const { id: userID } = await requireUser(event, "Profile.write");
+            const { id: userID } = await requireUser(event, NethackPermissions.Profile.updateSelf);
 
             if (id !== userID) {
                 throw createError({

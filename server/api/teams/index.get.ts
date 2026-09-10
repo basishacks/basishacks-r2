@@ -1,10 +1,11 @@
+import { NethackPermissions } from "~~/shared/permissions";
 import { GetTeamsQuery } from "~~/shared/schemas";
 
 export default defineEventHandler(async (event) => {
     const query = await getValidatedQuery(event, GetTeamsQuery.parse);
 
     if (query.judging) {
-        const { id: userID } = await requireJudge(event, "Judging.read.assigned");
+        const { id: userID } = await requireUser(event, NethackPermissions.Judging.assignmentsRead);
 
         const hackathon = await getHackathon(event);
         if (!hackathon || !hackathon.judging_open) {

@@ -2,7 +2,7 @@ import { APIError } from "@basis/schema/api";
 import { send, setResponseHeader, setResponseStatus } from "h3";
 
 const errorNameForStatus = (status: number, statusMessage?: string) => {
-    if (statusMessage === "invalid_token" || statusMessage === "insufficient_scope") {
+    if (statusMessage === "invalid_token" || statusMessage === "insufficient_permission") {
         return statusMessage;
     }
     if (status === 400) return "invalid_request";

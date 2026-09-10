@@ -1,12 +1,12 @@
 import { getDeepSeekSession, deleteSession } from "~~/server/utils/deepseek-store";
-import { requirePermission } from "~~/server/utils/auth";
-import { DevPermissions } from "~~/shared/permissions";
+import { requireUser } from "~~/server/utils/auth";
+import { NethackPermissions } from "~~/shared/permissions";
 import { DeepSeekSessionIdParams } from "~~/shared/schemas";
 import { applyRateLimit, DEFAULT_RATE_LIMIT_CONFIG } from "~~/server/utils/rateLimit";
 
 export default defineEventHandler(
     applyRateLimit(async (event) => {
-        await requirePermission(event, DevPermissions.DEEPSEEK, "Chatbot.use");
+        await requireUser(event, NethackPermissions.Debug.deepseekWrite);
 
         const { id: sessionId } = await getValidatedRouterParams(
             event,

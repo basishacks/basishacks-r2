@@ -1,10 +1,11 @@
+import { NethackPermissions } from "~~/shared/permissions";
 import { CreateTeamQuery, CreateTeamRequest } from "~~/shared/schemas";
 import { deleteTeams } from "~~/server/utils/database/teams";
 import { applyRateLimit, DEFAULT_RATE_LIMIT_CONFIG } from "~~/server/utils/rateLimit";
 
 export default defineEventHandler(
     applyRateLimit(async (event) => {
-        const user = await requireUser(event, "Teams.write.self");
+        const user = await requireUser(event, NethackPermissions.Teams.create);
         const userID = user.id;
         if (user?.team_id) {
             throw createError({

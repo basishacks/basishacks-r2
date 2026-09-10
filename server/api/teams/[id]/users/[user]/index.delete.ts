@@ -1,3 +1,4 @@
+import { NethackPermissions } from "~~/shared/permissions";
 import { TeamUserParams } from "~~/shared/schemas";
 import { applyRateLimit, DEFAULT_RATE_LIMIT_CONFIG } from "~~/server/utils/rateLimit";
 
@@ -8,7 +9,7 @@ export default defineEventHandler(
             TeamUserParams.parse,
         );
 
-        const currentUser = await requireUser(event, "Teams.write.self");
+        const currentUser = await requireUser(event, NethackPermissions.Teams.membersRemoveOwn);
         if (currentUser?.team_id !== teamID) {
             throw createError({
                 status: 403,

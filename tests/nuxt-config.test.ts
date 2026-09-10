@@ -15,6 +15,11 @@ describe("nuxt production performance defaults", () => {
         expect(config.nitro?.compressPublicAssets).toBe(true);
     });
 
+    it("uses an import-safe path for the custom Nitro error handler", () => {
+        expect(config.nitro?.errorHandler).toMatch(/\/server\/error\.ts$/);
+        expect(config.nitro?.errorHandler).not.toContain("\\");
+    });
+
     it("sets long-lived cache headers on static assets", () => {
         expect(config.routeRules).toBeDefined();
         const oneYear = "public, max-age=31536000, immutable";

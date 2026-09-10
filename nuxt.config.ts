@@ -3,6 +3,10 @@ import { fileURLToPath } from "node:url";
 
 const projectRoot = fileURLToPath(new URL(".", import.meta.url));
 const basisSchemaRoot = resolve(projectRoot, "../basis-schema/src");
+// Nitro interpolates custom handler paths into a virtual ES module. Windows
+// backslashes must be normalized so username segments such as `\34648` are not
+// parsed as legacy octal escapes by Rollup.
+const nitroErrorHandler = resolve(projectRoot, "server/error.ts").replaceAll("\\", "/");
 
 // https://nuxt.com/docs/api/configuration/nuxt-config
 export default defineNuxtConfig({
@@ -100,7 +104,7 @@ export default defineNuxtConfig({
         },
     },
     nitro: {
-        errorHandler: resolve(projectRoot, "server/error.ts"),
+        errorHandler: nitroErrorHandler,
         // Bun dev uses the bun preset implicitly; production defaults to node-server
         // so the same build runs under Node.js (better-sqlite3) or Bun (bun:sqlite).
         preset: process.env.NITRO_PRESET ?? "node-server",

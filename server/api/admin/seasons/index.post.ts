@@ -1,10 +1,11 @@
+import { NethackPermissions } from "~~/shared/permissions";
 import { CreateSeasonRequest } from "~~/shared/schemas";
 import { seasons } from "~~/server/database/schema";
 import { applyRateLimit, DEFAULT_RATE_LIMIT_CONFIG } from "~~/server/utils/rateLimit";
 
 export default defineEventHandler(
     applyRateLimit(async (event) => {
-        await requireAdmin(event, "Seasons.create");
+        await requireUser(event, NethackPermissions.Seasons.create);
 
         const body = await readValidatedBody(event, CreateSeasonRequest.parse);
 

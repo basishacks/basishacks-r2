@@ -6,6 +6,8 @@ const mocks = vi.hoisted(() => ({
     getFlow: vi.fn(),
     linkUser: vi.fn(),
     clear: vi.fn(),
+    saveTokenSession: vi.fn(),
+    deleteTokenSession: vi.fn(),
 }));
 
 vi.mock("~~/server/utils/rateLimit", () => ({
@@ -19,14 +21,22 @@ vi.mock("~~/server/utils/basis-auth", () => ({
 vi.mock("~~/server/utils/database/users", () => ({
     findOrLinkBasisAuthUser: mocks.linkUser,
 }));
+vi.mock("~~/server/utils/database/basis-auth-sessions", () => ({
+    saveBasisAuthSession: mocks.saveTokenSession,
+    deleteBasisAuthSession: mocks.deleteTokenSession,
+}));
 
 let handler: any;
 const replaceUserSessionMock = vi.fn();
+const getUserSessionMock = vi.fn();
+const clearUserSessionMock = vi.fn();
 const sendRedirectMock = vi.fn();
 
 beforeAll(async () => {
     setupNitroGlobals();
     vi.stubGlobal("replaceUserSession", replaceUserSessionMock);
+    vi.stubGlobal("getUserSession", getUserSessionMock);
+    vi.stubGlobal("clearUserSession", clearUserSessionMock);
     vi.stubGlobal("sendRedirect", sendRedirectMock);
     vi.stubGlobal(
         "getRequestURL",
@@ -62,6 +72,7 @@ beforeEach(() => {
         },
     });
     mocks.linkUser.mockResolvedValue({ id: 17 });
+    getUserSessionMock.mockResolvedValue({ id: "session-17", user: { id: 17 } });
 });
 
 describe("GET /api/auth/basis/callback", () => {
@@ -77,12 +88,11 @@ describe("GET /api/auth/basis/callback", () => {
         });
         expect(replaceUserSessionMock).toHaveBeenCalledWith(expect.anything(), {
             user: { id: 17 },
-            secure: {
-                accessToken: "access-token",
-                accessTokenExpiresAt: 123456,
-                refreshToken: "refresh-token",
-                scopes: ["Profile.all"],
-            },
+        });
+        expect(mocks.saveTokenSession).toHaveBeenCalledWith(expect.anything(), "session-17", 17, {
+            accessToken: "access-token",
+            accessTokenExpiresAt: 123456,
+            refreshToken: "refresh-token",
         });
         expect(sendRedirectMock).toHaveBeenCalledWith(expect.anything(), "/teams", 302);
     });
@@ -93,5 +103,17 @@ describe("GET /api/auth/basis/callback", () => {
         await expect(handler({ context: {} })).rejects.toMatchObject({ statusCode: 401 });
         expect(mocks.clear).toHaveBeenCalledOnce();
         expect(replaceUserSessionMock).not.toHaveBeenCalled();
+        expect(mocks.saveTokenSession).not.toHaveBeenCalled();
+    });
+
+    it("clears a newly created browser session if server-side token persistence fails", async () => {
+        mocks.saveTokenSession.mockImplementationOnce(() => {
+            throw new Error("database unavailable");
+        });
+
+        await expect(handler({ context: {} })).rejects.toMatchObject({ statusCode: 401 });
+
+        expect(mocks.deleteTokenSession).toHaveBeenCalledWith(expect.anything(), "session-17");
+        expect(clearUserSessionMock).toHaveBeenCalledOnce();
     });
 });

@@ -1,7 +1,7 @@
 import { getUserPastTeams } from "~~/server/utils/database/members";
 import { getTeamById } from "~~/server/utils/database/teams";
 import { UserIdParams } from "~~/shared/schemas";
-import { DevPermissions, hasPermission } from "~~/shared/permissions";
+import { hasNethackPermission, NethackPermissions } from "~~/shared/permissions";
 
 export default defineEventHandler(async (event) => {
     const currentUser = await optionalUser(event);
@@ -32,9 +32,10 @@ export default defineEventHandler(async (event) => {
     // Scores and ranks are only shown to participants when the toggles of
     // each team's own season are enabled; dev-portal users always see them.
     const resolveVisibility = await getScoreRankVisibilityResolver(event);
-    const privileged =
-        hasPermission(user.role, DevPermissions.PORTAL_TEAMS_VIEW) ||
-        hasPermission(user.role, "admin");
+    const privileged = hasNethackPermission(
+        event.context.oauth2?.permissions,
+        NethackPermissions.Judging.resultsRead,
+    );
     const optionsFor = (t: Team) => {
         const visibility = resolveVisibility(t.season_id);
         return {

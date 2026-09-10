@@ -73,7 +73,7 @@ Users are assigned one of three core roles in the database:
 
 ### Fine-Grained Developer Permissions
 
-Beyond the three core roles, the platform supports fine-grained permissions stored as space-separated strings in the `role` column. These are managed through the `DevPermissions` constants in `shared/permissions.ts`:
+The platform uses fine-grained basis-auth JWT permissions defined by `NethackPermissions` in `shared/permissions.ts`.
 
 | Permission             | Description                            |
 | ---------------------- | -------------------------------------- |
@@ -88,7 +88,7 @@ Beyond the three core roles, the platform supports fine-grained permissions stor
 | `portal.seasons.view`  | View season management.                |
 | `portal.seasons.edit`  | Edit seasons.                          |
 
-The `hasPermission()` helper checks both the specific permission and the `admin` permission (admins implicitly have all permissions).
+`nethack.all` is an explicit administrative JWT permission that satisfies nethack permission requirements.
 
 ## Seasons System
 
@@ -183,7 +183,7 @@ basishacks-r2/
 │   ├── responses.d.ts          # API response interface definitions
 │   ├── auth.d.ts               # nuxt-auth-utils session type augmentation
 │   ├── oauth2-scopes.ts        # OAuth2 scope definitions, descriptions, and helpers
-│   ├── permissions.ts          # Permission constants (DevPermissions) and helpers
+│   ├── permissions.ts          # Nethack JWT permission constants and matcher
 │   ├── rubric.ts               # Judging rubric definitions (junior/senior criteria and weights)
 │   └── seasons.ts              # Season metadata (theme, date, docs links)
 │
