@@ -40,9 +40,61 @@ export const NethackPermissions = {
     Database: { export: "nethack.Database.export" },
 } as const;
 
+/**
+ * Temporary compatibility grants for accounts created before nethack moved
+ * from role strings to granular basis-auth permissions.
+ */
+const LEGACY_PARTICIPANT_PERMISSIONS = [
+    NethackPermissions.Profile.updateSelf,
+    NethackPermissions.Teams.create,
+    NethackPermissions.Teams.membersAddOwn,
+    NethackPermissions.Teams.membersRemoveOwn,
+    NethackPermissions.Projects.updateOwn,
+    NethackPermissions.Projects.submitOwn,
+    NethackPermissions.Voting.readOwn,
+    NethackPermissions.Voting.submitOwn,
+    NethackPermissions.Chatbot.use,
+] as const;
+
+const LEGACY_JUDGE_PERMISSIONS = [
+    ...LEGACY_PARTICIPANT_PERMISSIONS,
+    NethackPermissions.Judging.assignmentsRead,
+    NethackPermissions.Judging.scoresWriteAssigned,
+    NethackPermissions.Judging.resultsRead,
+] as const;
+
+export function expandLegacyNethackPermissions(
+    permissions: Iterable<string> | undefined,
+): string[] {
+    const effective = new Map<string, string>();
+    const add = (permission: string) => {
+        const key = permission.toLocaleLowerCase("en-US");
+        if (!effective.has(key)) effective.set(key, permission);
+    };
+
+    for (const permission of permissions ?? []) {
+        add(permission);
+        switch (permission.toLocaleLowerCase("en-US")) {
+            case "participant":
+                LEGACY_PARTICIPANT_PERMISSIONS.forEach(add);
+                break;
+            case "judge":
+                LEGACY_JUDGE_PERMISSIONS.forEach(add);
+                break;
+            case "admin":
+                add(NethackPermissions.all);
+                break;
+        }
+    }
+
+    return [...effective.values()];
+}
+
 export function hasNethackPermission(
     permissions: Iterable<string> | undefined,
     requirement: PermissionRequirement,
 ): boolean {
-    return new DelegatedPermissionSet(permissions ?? []).satisfies(requirement);
+    return new DelegatedPermissionSet(expandLegacyNethackPermissions(permissions)).satisfies(
+        requirement,
+    );
 }

@@ -50,6 +50,8 @@ The frontend middleware is a convenience redirect and is never the only authoriz
 
 Protected APIs trust basis-auth access tokens only. Validation requires the basis-auth JWKS signature, RS256, the exact configured issuer, audience `devconnect://nethack.bisz.dev`, `typ=at+jwt`, a valid expiry, and basis-schema access-token claims. The subject maps to a local user through the same issuer-and-subject link. Route access is evaluated from the JWT `permissions` array with the shared nethack permission hierarchy.
 
+For accounts carrying the former `participant`, `judge`, or `admin` permission, basishacks expands that legacy value into the corresponding granular permission bundle before server checks and frontend display gating. This compatibility bridge does not discard granular permissions already present in the token.
+
 The client keeps access tokens only in memory, adds the bearer header to protected requests, unwraps `APIResponse.data`, converts failed envelopes with `APIError.from`, and performs one single-flight refresh-and-retry on an expired-token response.
 
 ## Retired provider surface

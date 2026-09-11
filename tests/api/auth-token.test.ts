@@ -50,6 +50,9 @@ const tokenSession = (expiresAt: number) => ({
     refreshToken: "old-refresh",
 });
 
+const unsignedToken = (permissions: string[]) =>
+    `eyJhbGciOiJub25lIn0.${Buffer.from(JSON.stringify({ permissions })).toString("base64url")}.`;
+
 describe("POST /api/auth/token", () => {
     it("reuses an access token outside the expiry buffer", async () => {
         const expiresAt = Date.now() + 60_000;
@@ -62,6 +65,25 @@ describe("POST /api/auth/token", () => {
             permissions: [],
         });
         expect(mocks.refresh).not.toHaveBeenCalled();
+    });
+
+    it("returns effective granular permissions for a legacy participant token", async () => {
+        const expiresAt = Date.now() + 60_000;
+        const accessToken = unsignedToken(["participant"]);
+        mocks.getSession.mockResolvedValue(session());
+        mocks.getTokenSession.mockReturnValue({
+            ...tokenSession(expiresAt),
+            accessToken,
+        });
+
+        await expect(tokenHandler({})).resolves.toMatchObject({
+            permissions: expect.arrayContaining([
+                "participant",
+                "nethack.Profile.updateSelf",
+                "nethack.Projects.submitOwn",
+                "nethack.Voting.submitOwn",
+            ]),
+        });
     });
 
     it("serializes concurrent refreshes and persists the rotated refresh token", async () => {

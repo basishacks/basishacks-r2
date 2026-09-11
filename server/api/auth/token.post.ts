@@ -8,6 +8,7 @@ import {
     saveBasisAuthSession,
     type StoredBasisAuthTokens,
 } from "~~/server/utils/database/basis-auth-sessions";
+import { expandLegacyNethackPermissions } from "~~/shared/permissions";
 
 const REFRESH_BUFFER_MS = 30_000;
 const refreshes = new Map<string, Promise<StoredBasisAuthTokens>>();
@@ -84,7 +85,7 @@ function readTokenPermissions(accessToken: string): string[] {
     try {
         const permissions = decodeJwt(accessToken).permissions;
         return Array.isArray(permissions) && permissions.every((value) => typeof value === "string")
-            ? permissions
+            ? expandLegacyNethackPermissions(permissions)
             : [];
     } catch {
         return [];

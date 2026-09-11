@@ -1,6 +1,6 @@
 import type { H3Event } from "h3";
 import type { PermissionRequirement } from "@basis/schema/permissions";
-import { hasNethackPermission } from "~~/shared/permissions";
+import { expandLegacyNethackPermissions, hasNethackPermission } from "~~/shared/permissions";
 import { resolveOAuth2User, verifyOAuth2JWT } from "./oauth2-jwt";
 
 export async function requireUser(event: H3Event, permissions?: PermissionRequirement) {
@@ -13,7 +13,11 @@ export async function requireUser(event: H3Event, permissions?: PermissionRequir
         });
     }
     const user = event.context.oauth2?.user ?? (await resolveOAuth2User(event, payload));
-    event.context.oauth2 = { payload, permissions: payload.permissions, user };
+    event.context.oauth2 = {
+        payload,
+        permissions: expandLegacyNethackPermissions(payload.permissions),
+        user,
+    };
     return user;
 }
 
