@@ -79,20 +79,14 @@ const navItems = computed<NavigationMenuItem[]>(() => {
             icon: "i-lucide-spotlight",
         },
     ];
-    if (
-        hackathon.value?.status === "voting" &&
-        !can(NethackPermissions.Judging.assignmentsRead)
-    ) {
+    if (hackathon.value?.status === "voting" && !can(NethackPermissions.Judging.assignmentsRead)) {
         links.push({
             label: "Voting",
             to: "/voting",
             icon: "i-material-symbols-star-rate",
         });
     }
-    if (
-        can(NethackPermissions.Judging.assignmentsRead) &&
-        hackathon.value?.status === "voting"
-    ) {
+    if (can(NethackPermissions.Judging.assignmentsRead) && hackathon.value?.status === "voting") {
         links.push({
             label: "Judging",
             to: "/judging",

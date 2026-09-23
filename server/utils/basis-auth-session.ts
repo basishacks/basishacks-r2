@@ -64,7 +64,13 @@ function seal(value: unknown, purpose: "tokens" | "flow"): string {
 
 function unseal(value: string, purpose: "tokens" | "flow"): unknown {
     const [version, encodedIv, encodedTag, encodedCiphertext, extra] = value.split(".");
-    if (version !== ENCRYPTION_VERSION || !encodedIv || !encodedTag || !encodedCiphertext || extra) {
+    if (
+        version !== ENCRYPTION_VERSION ||
+        !encodedIv ||
+        !encodedTag ||
+        !encodedCiphertext ||
+        extra
+    ) {
         throw new Error("Invalid basis-auth cookie");
     }
     const decipher = createDecipheriv(
@@ -145,9 +151,7 @@ export function writeBasisAuthFlowTransaction(
     );
 }
 
-export function consumeBasisAuthFlowTransaction(
-    event: H3Event,
-): Partial<BasisAuthFlowTransaction> {
+export function consumeBasisAuthFlowTransaction(event: H3Event): Partial<BasisAuthFlowTransaction> {
     const value = getCookie(event, BASIS_AUTH_FLOW_COOKIE);
     deleteCookie(event, BASIS_AUTH_FLOW_COOKIE, { path: "/" });
     if (!value) return {};

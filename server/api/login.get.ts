@@ -1,9 +1,6 @@
 import { setResponseHeader } from "h3";
 import { applyRateLimit, AUTH_RATE_LIMIT_CONFIG } from "~~/server/utils/rateLimit";
-import {
-    beginBasisAuthFlow,
-    sanitizePostLoginRedirect,
-} from "~~/server/utils/basis-auth";
+import { beginBasisAuthFlow, sanitizePostLoginRedirect } from "~~/server/utils/basis-auth";
 import { writeBasisAuthFlowTransaction } from "~~/server/utils/basis-auth-session";
 
 export default defineEventHandler(
