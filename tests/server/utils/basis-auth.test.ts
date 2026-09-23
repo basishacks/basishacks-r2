@@ -54,7 +54,7 @@ describe("basis-auth authorization-code flow", () => {
         expect(oidc.buildAuthorizationUrl).toHaveBeenCalledWith("configuration", {
             redirect_uri: "https://hacks.example.test/api/auth/basis/callback",
             response_type: "code",
-            scope: "openid profile email offline_access Profile.all Projects.read.all Projects.write.self Teams.all Voting.all Judging.all Seasons.all Files.all Chatbot.use Database.export",
+            scope: "openid profile email offline_access nethack.access",
             resource: "devconnect://nethack.bisz.dev",
             state: "state",
             nonce: "nonce",
@@ -65,6 +65,7 @@ describe("basis-auth authorization-code flow", () => {
             state: "state",
             nonce: "nonce",
             codeVerifier: "verifier",
+            startedAt: expect.any(Number),
             postLoginRedirect: "/dashboard",
         });
     });
@@ -86,7 +87,12 @@ describe("basis-auth authorization-code flow", () => {
         await expect(
             completeBasisAuthFlow(
                 new URL("https://untrusted.example/api/auth/basis/callback?code=code&state=state"),
-                { state: "state", nonce: "nonce", codeVerifier: "verifier" },
+                {
+                    state: "state",
+                    nonce: "nonce",
+                    codeVerifier: "verifier",
+                    startedAt: Date.now(),
+                },
             ),
         ).resolves.toEqual({
             identity: {
@@ -100,7 +106,6 @@ describe("basis-auth authorization-code flow", () => {
                 accessToken: "access-token",
                 expiresAt: expect.any(Number),
                 refreshToken: "refresh-token",
-                scopes: ["openid", "Profile.read"],
             },
         });
         expect(oidc.authorizationCodeGrant).toHaveBeenCalledWith(

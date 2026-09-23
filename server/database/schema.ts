@@ -111,23 +111,6 @@ export const users = sqliteTable(
 );
 
 // ---------------------------------------------------------------------------
-// basis-auth token sessions. The browser-facing Nuxt session contains only a
-// local user ID; the substantially larger OAuth token set remains server-side.
-// ---------------------------------------------------------------------------
-export const basisAuthSessions = sqliteTable(
-    "basis_auth_sessions",
-    {
-        session_id: text("session_id").primaryKey(),
-        user_id: integer("user_id")
-            .notNull()
-            .references(() => users.id, { onDelete: "cascade" }),
-        encrypted_tokens: text("encrypted_tokens").notNull(),
-        expires_at: integer("expires_at").notNull(),
-    },
-    (table) => [index("idx_basis_auth_sessions_user_id").on(table.user_id)],
-);
-
-// ---------------------------------------------------------------------------
 // Ballots – a user's peer-voting ballot. Each user can have at most one
 // ballot (enforced by the unique index below).
 // ---------------------------------------------------------------------------

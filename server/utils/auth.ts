@@ -2,6 +2,7 @@ import type { H3Event } from "h3";
 import type { PermissionRequirement } from "@basis/schema/permissions";
 import { expandLegacyNethackPermissions, hasNethackPermission } from "~~/shared/permissions";
 import { resolveOAuth2User, verifyOAuth2JWT } from "./oauth2-jwt";
+import { readBasisAuthUserSession } from "./basis-auth-session";
 
 export async function requireUser(event: H3Event, permissions?: PermissionRequirement) {
     const payload = event.context.oauth2?.payload ?? (await verifyOAuth2JWT(event));
@@ -22,6 +23,6 @@ export async function requireUser(event: H3Event, permissions?: PermissionRequir
 }
 
 export async function optionalUser(event: H3Event) {
-    if (!getHeader(event, "authorization")) return undefined;
+    if (!getHeader(event, "authorization") && !readBasisAuthUserSession(event)) return undefined;
     return await requireUser(event);
 }

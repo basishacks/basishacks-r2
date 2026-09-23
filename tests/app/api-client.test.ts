@@ -1,20 +1,14 @@
 import { beforeEach, describe, expect, it, vi } from "vitest";
 
-const state = new Map<string, { value: any }>();
-const clear = vi.fn();
+const resetSession = vi.fn();
 
 beforeEach(() => {
     vi.resetModules();
     vi.clearAllMocks();
-    state.clear();
     vi.stubGlobal("defineNuxtPlugin", (plugin: any) => plugin);
-    vi.stubGlobal("useState", (key: string, initial: () => any) => {
-        if (!state.has(key)) state.set(key, { value: initial() });
-        return state.get(key);
-    });
-    vi.stubGlobal("useUserSession", () => ({ loggedIn: { value: true }, clear }));
+    vi.stubGlobal("useBasisAuthSession", () => ({ reset: resetSession }));
     vi.stubGlobal("window", {
-        location: { pathname: "/dashboard", search: "", assign: vi.fn() },
+        location: { pathname: "/dashboard", search: "?tab=team", assign: vi.fn() },
     });
 });
 
@@ -33,49 +27,19 @@ async function loadClient(nativeFetch: ReturnType<typeof vi.fn>) {
 }
 
 describe("browser API client", () => {
-    it("bootstraps in memory, injects bearer auth, and unwraps APIResponse.data", async () => {
-        const nativeFetch = vi.fn(async (path: string, options: any) => {
-            if (path === "/api/auth/token") {
-                return success({ accessToken: "token-1", expiresAt: Date.now() + 60_000 });
-            }
-            expect(new Headers(options.headers).get("authorization")).toBe("Bearer token-1");
+    it("relies on the HTTP-only cookie and unwraps APIResponse.data", async () => {
+        const nativeFetch = vi.fn(async (_path: string, options: any) => {
+            expect(new Headers(options?.headers).has("authorization")).toBe(false);
             return success({ value: 42 });
         });
         const api = await loadClient(nativeFetch);
 
         await expect(api<{ value: number }>("/api/private")).resolves.toEqual({ value: 42 });
+        expect(nativeFetch).toHaveBeenCalledOnce();
     });
 
-    it("parses APIError and performs one refresh-and-retry for a 401", async () => {
-        let tokenNumber = 0;
-        let requests = 0;
-        const nativeFetch = vi.fn(async (path: string) => {
-            if (path === "/api/auth/token") {
-                tokenNumber += 1;
-                return success({
-                    accessToken: `token-${tokenNumber}`,
-                    expiresAt: Date.now() + 60_000,
-                });
-            }
-            requests += 1;
-            if (requests === 1) throw { data: unauthorized, statusCode: 401 };
-            return success("retried");
-        });
-        const api = await loadClient(nativeFetch);
-
-        await expect(api("/api/private")).resolves.toBe("retried");
-        expect(tokenNumber).toBe(2);
-        expect(requests).toBe(2);
-    });
-
-    it("clears auth and restarts login when refresh fails", async () => {
-        let bootstrapped = false;
-        const nativeFetch = vi.fn(async (path: string) => {
-            if (path === "/api/auth/token" && !bootstrapped) {
-                bootstrapped = true;
-                return success({ accessToken: "token-1", expiresAt: Date.now() + 60_000 });
-            }
-            if (path === "/api/auth/token") throw { data: unauthorized, statusCode: 401 };
+    it("clears browser state and restarts login after a protected API 401", async () => {
+        const nativeFetch = vi.fn(async () => {
             throw { data: unauthorized, statusCode: 401 };
         });
         const api = await loadClient(nativeFetch);
@@ -84,7 +48,20 @@ describe("browser API client", () => {
             error: "invalid_token",
             status: 401,
         });
-        expect(clear).toHaveBeenCalledOnce();
-        expect(window.location.assign).toHaveBeenCalledWith("/api/login?redirect=%2Fdashboard");
+        expect(resetSession).toHaveBeenCalledOnce();
+        expect(window.location.assign).toHaveBeenCalledWith(
+            "/api/login?redirect=%2Fdashboard%3Ftab%3Dteam",
+        );
+    });
+
+    it("does not create a redirect loop when the session endpoint returns 401", async () => {
+        const nativeFetch = vi.fn(async () => {
+            throw { data: unauthorized, statusCode: 401 };
+        });
+        const api = await loadClient(nativeFetch);
+
+        await expect(api("/api/auth/session")).rejects.toMatchObject({ status: 401 });
+        expect(resetSession).not.toHaveBeenCalled();
+        expect(window.location.assign).not.toHaveBeenCalled();
     });
 });

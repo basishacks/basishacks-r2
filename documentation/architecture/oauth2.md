@@ -28,7 +28,7 @@ Register `devconnect://nethack.bisz.dev` as a resource and use the same value fo
 | `BASIS_AUTH_RESOURCE`      | Expected resource audience                     |
 | `CURRENT_URL_ORIGIN`       | Origin from which the callback URL is derived  |
 
-The client uses discovery, authorization code, S256 PKCE, state, nonce, `client_secret_basic`, ID-token validation, and UserInfo. Client and refresh-token secrets remain server-only, with token bundles encrypted in SQLite rather than placed in the browser session cookie. The access token is exposed through `/api/auth/token` only and retained in client memory.
+The client uses discovery, authorization code, S256 PKCE, state, nonce, `client_secret_basic`, ID-token validation, and UserInfo. Failed discovery is retryable instead of being cached for the process lifetime. Client and refresh-token secrets remain server-only, with token bundles encrypted in SQLite rather than placed in the browser session cookie. A random opaque handle in the sealed server-only portion of the Nuxt session links the browser login to that token row. The access token is exposed through `/api/auth/token` only and retained in client memory.
 
 ## Protected API validation
 

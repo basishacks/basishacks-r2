@@ -3,52 +3,15 @@ import { z } from "zod";
 
 const responseSchema = apiResponseSchema({ data: z.unknown() });
 const nativeFetch = globalThis.$fetch;
+type ApiInput = Parameters<typeof nativeFetch>[0];
+type ApiOptions = Parameters<typeof nativeFetch>[1];
 
 export default defineNuxtPlugin(() => {
-    const accessToken = useState<string | null>("basis-access-token", () => null);
-    const accessTokenExpiresAt = useState<number>("basis-access-token-expiry", () => 0);
-    const permissions = useState<string[]>("basis-permissions", () => []);
-    const { loggedIn, clear } = useUserSession();
-    let bootstrap: Promise<void> | undefined;
-
-    const ensureAccessToken = async (force = false) => {
-        if (!loggedIn.value) return;
-        if (!force && accessToken.value && accessTokenExpiresAt.value > Date.now() + 30_000) return;
-        if (!bootstrap) {
-            bootstrap = nativeFetch("/api/auth/token", { method: "POST" })
-                .then((value) => {
-                    const response = responseSchema.parse(value);
-                    const data = z
-                        .object({
-                            accessToken: z.string(),
-                            expiresAt: z.number(),
-                            permissions: z.array(z.string()),
-                        })
-                        .parse(response.data);
-                    accessToken.value = data.accessToken;
-                    accessTokenExpiresAt.value = data.expiresAt;
-                    permissions.value = data.permissions;
-                })
-                .finally(() => {
-                    bootstrap = undefined;
-                });
-        }
-        await bootstrap;
-    };
-
-    const request = async <T>(input: any, options: any = {}, retry = true): Promise<T> => {
-        const path = typeof input === "string" ? input : (input?.toString?.() ?? "");
+    const request = async <T>(input: ApiInput, options?: ApiOptions): Promise<T> => {
+        const path = typeof input === "string" ? input : (input?.toString() ?? "");
         const isApi = path.startsWith("/api/");
-        const isTokenRoute = path === "/api/auth/token";
-        if (isApi && !isTokenRoute) await ensureAccessToken();
-
-        const headers = new Headers(options.headers);
-        if (isApi && accessToken.value && !isTokenRoute) {
-            headers.set("authorization", `Bearer ${accessToken.value}`);
-        }
-
         try {
-            const value = await nativeFetch(input, { ...options, headers });
+            const value = await nativeFetch(input, options);
             if (
                 !isApi ||
                 value === undefined ||
@@ -61,28 +24,19 @@ export default defineNuxtPlugin(() => {
                 return value as T;
             }
             const data = responseSchema.parse(value).data as T;
-            if (path === "/api/auth/logout") {
-                accessToken.value = null;
-                accessTokenExpiresAt.value = 0;
-                permissions.value = [];
-            }
+            if (path === "/api/auth/logout") useBasisAuthSession().reset();
             return data;
-        } catch (cause: any) {
+        } catch (cause: unknown) {
+            const failed = cause as { data?: unknown; statusCode?: number };
             const error = APIError.from(
-                cause?.data,
-                new APIError("invalid_response", "API request failed", cause?.statusCode ?? 500),
+                failed.data,
+                new APIError("invalid_response", "API request failed", failed.statusCode ?? 500),
             );
-            if (retry && error.status === 401 && !isTokenRoute) {
-                accessToken.value = null;
-                permissions.value = [];
-                try {
-                    await ensureAccessToken(true);
-                    return await request<T>(input, options, false);
-                } catch {
-                    await clear();
-                    const redirect = `${window.location.pathname}${window.location.search}`;
-                    window.location.assign(`/api/login?redirect=${encodeURIComponent(redirect)}`);
-                }
+            const isAuthEndpoint = path.startsWith("/api/auth/") || path.startsWith("/api/login");
+            if (error.status === 401 && isApi && !isAuthEndpoint && import.meta.client) {
+                useBasisAuthSession().reset();
+                const redirect = `${window.location.pathname}${window.location.search}`;
+                window.location.assign(`/api/login?redirect=${encodeURIComponent(redirect)}`);
             }
             throw error;
         }

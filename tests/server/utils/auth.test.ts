@@ -83,12 +83,9 @@ describe("server/utils/auth bearer authorization", () => {
         await expect(optionalUser(event)).resolves.toBeUndefined();
     });
 
-    it("does not consult the Nuxt session when bearer context is present", async () => {
-        const session = vi.fn(() => Promise.resolve({ user: { id: 999 } }));
-        vi.stubGlobal("getUserSession", session);
+    it("reuses an already verified bearer context", async () => {
         authenticate("participant");
 
-        await requireUser(event, "Profile.read");
-        expect(session).not.toHaveBeenCalled();
+        await expect(requireUser(event, "Profile.read")).resolves.toMatchObject({ id: 1 });
     });
 });

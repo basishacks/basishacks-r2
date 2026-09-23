@@ -33,6 +33,7 @@ export default defineConfig({
             "@basis/schema/api": resolve(rootDir, "../basis-schema/src/api.ts"),
             "@basis/schema/auth": resolve(rootDir, "../basis-schema/src/auth.ts"),
             "@basis/schema/client": resolve(rootDir, "../basis-schema/src/client.ts"),
+            "@basis/schema/error-page": resolve(rootDir, "../basis-schema/src/error-page.ts"),
             "@basis/schema/permissions": resolve(rootDir, "../basis-schema/src/permissions.ts"),
             // Nuxt-style project root aliases so tests can use ~~/ and ~/
             "~~/": `${rootDir}/`,

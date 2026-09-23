@@ -1,17 +1,18 @@
+import { setResponseHeader } from "h3";
 import { applyRateLimit, AUTH_RATE_LIMIT_CONFIG } from "~~/server/utils/rateLimit";
 import {
     beginBasisAuthFlow,
-    getBasisAuthFlowSession,
     sanitizePostLoginRedirect,
 } from "~~/server/utils/basis-auth";
+import { writeBasisAuthFlowTransaction } from "~~/server/utils/basis-auth-session";
 
 export default defineEventHandler(
     applyRateLimit(async (event) => {
+        if (event.node?.res) setResponseHeader(event, "cache-control", "no-store");
         const redirect = sanitizePostLoginRedirect(getQuery(event).redirect as string | undefined);
-        const flow = await getBasisAuthFlowSession(event);
         const authorizationUrl = await beginBasisAuthFlow(redirect);
 
-        await flow.update(authorizationUrl.transaction);
+        writeBasisAuthFlowTransaction(event, authorizationUrl.transaction);
         return await sendRedirect(event, authorizationUrl.url.href, 302);
     }, AUTH_RATE_LIMIT_CONFIG),
 );

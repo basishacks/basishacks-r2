@@ -1,28 +1,23 @@
+import { setResponseHeader } from "h3";
 import { revokeBasisAuthToken } from "~~/server/utils/basis-auth";
-import { applyRateLimit, AUTH_RATE_LIMIT_CONFIG } from "~~/server/utils/rateLimit";
 import {
-    deleteBasisAuthSession,
-    getBasisAuthSession,
-} from "~~/server/utils/database/basis-auth-sessions";
+    clearBasisAuthUserSession,
+    readBasisAuthUserSession,
+} from "~~/server/utils/basis-auth-session";
+import { applyRateLimit, AUTH_RATE_LIMIT_CONFIG } from "~~/server/utils/rateLimit";
 
 export default defineEventHandler(
     applyRateLimit(async (event) => {
-        const session = await getUserSession(event);
+        if (event.node?.res) setResponseHeader(event, "cache-control", "no-store");
         try {
-            const tokens = session.user?.id
-                ? getBasisAuthSession(event, session.id, session.user.id)
-                : undefined;
-            if (tokens?.refreshToken) {
-                await revokeBasisAuthToken(tokens.refreshToken);
+            const session = readBasisAuthUserSession(event);
+            if (session?.tokens.refreshToken) {
+                await revokeBasisAuthToken(session.tokens.refreshToken);
             }
         } catch (error) {
             console.warn("basis-auth token revocation failed", error);
         } finally {
-            try {
-                deleteBasisAuthSession(event, session.id);
-            } finally {
-                await clearUserSession(event);
-            }
+            clearBasisAuthUserSession(event);
         }
         return { loggedOut: true };
     }, AUTH_RATE_LIMIT_CONFIG),

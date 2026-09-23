@@ -2,7 +2,7 @@ import type { H3Event } from "h3";
 import { accessTokenClaimsSchema, type AccessTokenClaims } from "@basis/schema/auth";
 import { createRemoteJWKSet, jwtVerify } from "jose";
 import { getUserByBasisAuthSubject } from "./database/users";
-import { getBasisAuthConfig } from "./basis-auth";
+import { getBasisAuthConfig, getFreshBasisAuthUserSession } from "./basis-auth";
 
 const jwksByIssuer = new Map<string, ReturnType<typeof createRemoteJWKSet>>();
 
@@ -91,7 +91,17 @@ export function extractBearerToken(event: H3Event): string {
  * Returns the decoded JWT payload.
  */
 export async function verifyOAuth2JWT(event: H3Event): Promise<OAuth2JWTPayload> {
-    const token = extractBearerToken(event);
+    const authorization = getHeader(event, "authorization");
+    const token = authorization
+        ? extractBearerToken(event)
+        : (await getFreshBasisAuthUserSession(event))?.tokens.accessToken;
+    if (!token) {
+        throw createError({
+            statusCode: 401,
+            statusMessage: "invalid_token",
+            message: "Missing or expired basis-auth token cookie",
+        });
+    }
     return await verifyAccessToken(token);
 }
 

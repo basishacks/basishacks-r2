@@ -1,5 +1,6 @@
 import { APIError } from "@basis/schema/api";
-import { send, setResponseHeader, setResponseStatus } from "h3";
+import { renderErrorPage } from "@basis/schema/error-page";
+import { getRequestHeader, send, setResponseHeader, setResponseStatus } from "h3";
 
 const errorNameForStatus = (status: number, statusMessage?: string) => {
     if (statusMessage === "invalid_token" || statusMessage === "insufficient_permission") {
@@ -31,7 +32,14 @@ export default defineNitroErrorHandler((input, event) => {
 
     if (!isSafe) console.error("Unhandled API error", input);
     setResponseStatus(event, apiError.status);
-    setResponseHeader(event, "content-type", "application/json; charset=utf-8");
     setResponseHeader(event, "cache-control", "no-store");
+    setResponseHeader(event, "vary", "Accept");
+
+    if ((getRequestHeader(event, "accept") ?? "").includes("text/html")) {
+        setResponseHeader(event, "content-type", "text/html; charset=utf-8");
+        return send(event, renderErrorPage(apiError.toJSON()));
+    }
+
+    setResponseHeader(event, "content-type", "application/json; charset=utf-8");
     return send(event, JSON.stringify(apiError.toJSON()));
 });

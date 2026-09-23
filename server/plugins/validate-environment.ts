@@ -1,5 +1,5 @@
 export default defineNitroPlugin(() => {
-    const sessionPassword = process.env.NUXT_SESSION_PASSWORD;
+    const sessionPassword = process.env.BASIS_AUTH_COOKIE_SECRET;
     const isProduction = process.env.NODE_ENV === "production";
     const sessionPasswordLength = sessionPassword
         ? new TextEncoder().encode(sessionPassword).length
@@ -11,13 +11,13 @@ export default defineNitroPlugin(() => {
             : "not set";
         if (isProduction) {
             console.error(
-                `[FATAL] NUXT_SESSION_PASSWORD is ${reason}. ` +
+                `[FATAL] BASIS_AUTH_COOKIE_SECRET is ${reason}. ` +
                     "Set it to a strong secret (e.g. openssl rand -base64 32) and restart the server.",
             );
             process.exit(1);
         } else {
             console.warn(
-                `[WARNING] NUXT_SESSION_PASSWORD is ${reason}. ` +
+                `[WARNING] BASIS_AUTH_COOKIE_SECRET is ${reason}. ` +
                     "Session encryption will be weak or unavailable until it is configured.",
             );
         }

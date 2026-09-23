@@ -14,24 +14,14 @@ export default defineNuxtConfig({
         "@basis/schema/api": resolve(basisSchemaRoot, "api.ts"),
         "@basis/schema/auth": resolve(basisSchemaRoot, "auth.ts"),
         "@basis/schema/client": resolve(basisSchemaRoot, "client.ts"),
+        "@basis/schema/error-page": resolve(basisSchemaRoot, "error-page.ts"),
         "@basis/schema/permissions": resolve(basisSchemaRoot, "permissions.ts"),
     },
     compatibilityDate: "2025-07-15",
     devtools: { enabled: false }, // keeps crasing
-    modules: ["@nuxt/eslint", "@nuxt/ui", "nuxt-auth-utils", "@comark/nuxt"],
+    modules: ["@nuxt/eslint", "@nuxt/ui", "@comark/nuxt"],
 
     css: ["~/assets/css/main.css"],
-    runtimeConfig: {
-        session: {
-            password: "",
-            maxAge: 30 * 24 * 60 * 60,
-            cookie: {
-                httpOnly: true,
-                secure: process.env.NODE_ENV === "production",
-                sameSite: "lax",
-            },
-        },
-    },
     colorMode: {
         preference: "dark",
     },
@@ -68,6 +58,12 @@ export default defineNuxtConfig({
         ],
     },
     routeRules: {
+        "/api/login": {
+            headers: { "Cache-Control": "no-store" },
+        },
+        "/api/auth/**": {
+            headers: { "Cache-Control": "no-store" },
+        },
         "/_nuxt/**": {
             headers: { "Cache-Control": "public, max-age=31536000, immutable" },
         },

@@ -14,7 +14,7 @@ const { id, name } = team;
 
 const toast = useToast();
 
-const { user: currentUser } = useUserSession();
+const { user: currentUser } = useBasisAuthSession();
 
 const {
     data: users,

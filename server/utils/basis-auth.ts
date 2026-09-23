@@ -1,8 +1,15 @@
-import type { H3Event, SessionManager } from "h3";
-import { useSession } from "h3";
+import type { H3Event } from "h3";
 import * as oidc from "openid-client";
 import { getPublicOrigin } from "~~/server/utils/oauth2";
 import type { BasisAuthIdentity } from "~~/server/utils/database/users";
+import {
+    clearBasisAuthUserSession,
+    establishBasisAuthUserSession,
+    readBasisAuthUserSession,
+    type BasisAuthFlowTransaction,
+    type BasisAuthUserSession,
+    type StoredBasisAuthTokens,
+} from "~~/server/utils/basis-auth-session";
 
 export const BASIS_AUTH_CALLBACK_PATH = "/api/auth/basis/callback";
 const FLOW_MAX_AGE_SECONDS = 10 * 60;
@@ -13,13 +20,6 @@ export const BASIS_AUTH_REQUESTED_SCOPES = [
     "offline_access",
     "nethack.access",
 ] as const;
-
-export interface BasisAuthFlowTransaction {
-    state: string;
-    nonce: string;
-    codeVerifier: string;
-    postLoginRedirect?: string;
-}
 
 export interface BasisAuthConfig {
     issuer: string;
@@ -44,6 +44,18 @@ export function getBasisAuthConfig(): BasisAuthConfig {
             message: `Missing basis-auth configuration: ${missing.join(", ")}`,
         });
     }
+    let issuer: URL;
+    try {
+        issuer = new URL(config.issuer);
+    } catch {
+        throw createError({ statusCode: 500, message: "BASIS_AUTH_ISSUER must be a valid URL" });
+    }
+    if (issuer.search || issuer.hash) {
+        throw createError({
+            statusCode: 500,
+            message: "BASIS_AUTH_ISSUER cannot contain a query string or fragment",
+        });
+    }
     return config;
 }
 
@@ -53,28 +65,14 @@ export function getBasisAuthCallbackUrl(): string {
 
 export function sanitizePostLoginRedirect(value?: string): string | undefined {
     if (!value || !value.startsWith("/") || value.startsWith("//")) return undefined;
-    return value;
-}
-
-export async function getBasisAuthFlowSession(
-    event: H3Event,
-): Promise<SessionManager<BasisAuthFlowTransaction>> {
-    const password = process.env.NUXT_SESSION_PASSWORD;
-    if (!password) {
-        throw createError({ statusCode: 500, message: "NUXT_SESSION_PASSWORD is not set" });
+    try {
+        const parsed = new URL(value, "https://basishacks.invalid");
+        return parsed.origin === "https://basishacks.invalid"
+            ? `${parsed.pathname}${parsed.search}${parsed.hash}`
+            : undefined;
+    } catch {
+        return undefined;
     }
-    return await useSession<BasisAuthFlowTransaction>(event, {
-        password,
-        name: "basis-auth-flow",
-        maxAge: FLOW_MAX_AGE_SECONDS,
-        sessionHeader: false,
-        cookie: {
-            httpOnly: true,
-            secure: process.env.NODE_ENV === "production",
-            sameSite: "lax",
-            path: "/",
-        },
-    });
 }
 
 const discoveredConfigurations = new Map<string, Promise<oidc.Configuration>>();
@@ -83,18 +81,24 @@ export function getBasisAuthOidcConfiguration(config = getBasisAuthConfig()) {
     const cacheKey = `${config.issuer}\0${config.clientId}\0${config.clientSecret}`;
     let discovered = discoveredConfigurations.get(cacheKey);
     if (!discovered) {
-        discovered = oidc.discovery(
-            new URL(config.issuer),
-            config.clientId,
-            {
-                client_secret: config.clientSecret,
-                token_endpoint_auth_method: "client_secret_basic",
-            },
-            oidc.ClientSecretBasic(config.clientSecret),
-            config.issuer.startsWith("http://")
-                ? { execute: [oidc.allowInsecureRequests] }
-                : undefined,
-        );
+        discovered = oidc
+            .discovery(
+                new URL(config.issuer),
+                config.clientId,
+                {
+                    client_secret: config.clientSecret,
+                    token_endpoint_auth_method: "client_secret_basic",
+                },
+                oidc.ClientSecretBasic(config.clientSecret),
+                config.issuer.startsWith("http://")
+                    ? { execute: [oidc.allowInsecureRequests] }
+                    : undefined,
+            )
+            .catch((error) => {
+                // A temporary discovery outage must not poison this process forever.
+                discoveredConfigurations.delete(cacheKey);
+                throw error;
+            });
         discoveredConfigurations.set(cacheKey, discovered);
     }
     return discovered;
@@ -121,7 +125,13 @@ export async function beginBasisAuthFlow(postLoginRedirect?: string) {
 
     return {
         url,
-        transaction: { state, nonce, codeVerifier, postLoginRedirect },
+        transaction: {
+            state,
+            nonce,
+            codeVerifier,
+            startedAt: Date.now(),
+            postLoginRedirect,
+        },
     };
 }
 
@@ -133,6 +143,12 @@ export async function completeBasisAuthFlow(
     tokens: { accessToken: string; refreshToken: string; expiresAt: number };
 }> {
     if (!transaction.state || !transaction.nonce || !transaction.codeVerifier) {
+        throw new Error("Login transaction is missing or expired");
+    }
+    if (
+        typeof transaction.startedAt !== "number" ||
+        Date.now() - transaction.startedAt > FLOW_MAX_AGE_SECONDS * 1000
+    ) {
         throw new Error("Login transaction is missing or expired");
     }
 
@@ -180,7 +196,7 @@ function normalizeTokenSet(tokens: {
     return {
         accessToken: tokens.access_token,
         refreshToken: tokens.refresh_token,
-        expiresAt: Date.now() + (tokens.expires_in ?? 600) * 1000,
+        expiresAt: Date.now() + Math.max(1, tokens.expires_in ?? 600) * 1000,
     };
 }
 
@@ -188,6 +204,39 @@ export async function refreshBasisAuthTokens(refreshToken: string) {
     const config = getBasisAuthConfig();
     const oidcConfiguration = await getBasisAuthOidcConfiguration(config);
     return normalizeTokenSet(await oidc.refreshTokenGrant(oidcConfiguration, refreshToken));
+}
+
+const REFRESH_BUFFER_MS = 30_000;
+const refreshes = new Map<string, Promise<StoredBasisAuthTokens>>();
+
+/** Read the encrypted token cookie and rotate it when its access token is near expiry. */
+export async function getFreshBasisAuthUserSession(
+    event: H3Event,
+): Promise<BasisAuthUserSession | undefined> {
+    const session = readBasisAuthUserSession(event);
+    if (!session) return undefined;
+    if (session.tokens.accessTokenExpiresAt > Date.now() + REFRESH_BUFFER_MS) return session;
+
+    let pending = refreshes.get(session.tokens.refreshToken);
+    if (!pending) {
+        pending = refreshBasisAuthTokens(session.tokens.refreshToken)
+            .then((tokens) => ({
+                accessToken: tokens.accessToken,
+                accessTokenExpiresAt: tokens.expiresAt,
+                refreshToken: tokens.refreshToken,
+            }))
+            .finally(() => refreshes.delete(session.tokens.refreshToken));
+        refreshes.set(session.tokens.refreshToken, pending);
+    }
+
+    try {
+        const tokens = await pending;
+        establishBasisAuthUserSession(event, session.userId, tokens);
+        return { userId: session.userId, tokens };
+    } catch {
+        clearBasisAuthUserSession(event);
+        return undefined;
+    }
 }
 
 export async function revokeBasisAuthToken(refreshToken: string) {

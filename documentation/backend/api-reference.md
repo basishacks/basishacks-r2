@@ -7,7 +7,7 @@ description: Complete reference for all API endpoints in the basishacks backend
 
 All API routes live in `server/api/` and use Nitro's file-based routing.
 
-JSON success responses use `{ status, code, data }`; JSON failures use `{ status, code, error, error_description }`. Both shapes come from `@basis/schema`, and the HTTP status always matches the envelope `status`. Arrays are returned inside `data`. Redirects, image/file streams, database downloads, and webhook validation challenges remain native responses.
+JSON success responses use `{ status, code, data }`; JSON failures use `{ status, code, error, error_description }`. Both shapes come from `@basis/schema`, and the HTTP status always matches the envelope `status`. When a failed request accepts `text/html`, the global error handler instead returns the shared Barry HTML page showing only the canonical error code in parentheses and the same HTTP status. Arrays are returned inside `data`. Redirects, image/file streams, database downloads, and webhook validation challenges remain native responses.
 
 ### Security measures applied to all endpoints
 

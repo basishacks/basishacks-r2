@@ -1,13 +1,12 @@
 import { beforeAll, beforeEach, describe, expect, it, vi } from "vitest";
 import { mockQueryState, resetMockState, setupNitroGlobals } from "../helpers";
 
-const { beginFlowMock, getFlowMock, sanitizeMock, updateMock } = vi.hoisted(() => ({
+const { beginFlowMock, sanitizeMock, writeFlowMock } = vi.hoisted(() => ({
     beginFlowMock: vi.fn(),
-    getFlowMock: vi.fn(),
     sanitizeMock: vi.fn((value?: string) =>
         value?.startsWith("/") && !value.startsWith("//") ? value : undefined,
     ),
-    updateMock: vi.fn(),
+    writeFlowMock: vi.fn(),
 }));
 
 vi.mock("~~/server/utils/rateLimit", () => ({
@@ -17,8 +16,10 @@ vi.mock("~~/server/utils/rateLimit", () => ({
 
 vi.mock("~~/server/utils/basis-auth", () => ({
     beginBasisAuthFlow: beginFlowMock,
-    getBasisAuthFlowSession: getFlowMock,
     sanitizePostLoginRedirect: sanitizeMock,
+}));
+vi.mock("~~/server/utils/basis-auth-session", () => ({
+    writeBasisAuthFlowTransaction: writeFlowMock,
 }));
 
 let handler: any;
@@ -33,10 +34,14 @@ beforeAll(async () => {
 beforeEach(() => {
     resetMockState();
     vi.clearAllMocks();
-    getFlowMock.mockResolvedValue({ update: updateMock });
     beginFlowMock.mockResolvedValue({
         url: new URL("https://auth.example.test/oauth/authorize?state=state"),
-        transaction: { state: "state", nonce: "nonce", codeVerifier: "verifier" },
+        transaction: {
+            state: "state",
+            nonce: "nonce",
+            codeVerifier: "verifier",
+            startedAt: 123,
+        },
     });
 });
 
@@ -47,10 +52,11 @@ describe("GET /api/login", () => {
 
         expect(sanitizeMock).toHaveBeenCalledWith("/dashboard");
         expect(beginFlowMock).toHaveBeenCalledWith("/dashboard");
-        expect(updateMock).toHaveBeenCalledWith({
+        expect(writeFlowMock).toHaveBeenCalledWith(expect.anything(), {
             state: "state",
             nonce: "nonce",
             codeVerifier: "verifier",
+            startedAt: 123,
         });
         expect(sendRedirectMock).toHaveBeenCalledWith(
             expect.anything(),

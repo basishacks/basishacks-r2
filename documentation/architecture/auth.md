@@ -23,9 +23,13 @@ The callback is derived rather than configured independently:
 ${CURRENT_URL_ORIGIN}/api/auth/basis/callback
 ```
 
-The PKCE verifier, state, nonce, and optional safe relative redirect are kept for at most ten minutes in a dedicated encrypted, HTTP-only, SameSite=Lax session. The callback clears that transaction before exchanging the code, validates the ID token, loads UserInfo, and links the local user. It then writes a deliberately small Nuxt session cookie containing only `{ user: { id } }` and stores the encrypted access/refresh token set in the server-side `basis_auth_sessions` table under that session ID. Keeping permission-rich JWTs out of the cookie prevents browsers from silently dropping an oversized session after the callback.
+The PKCE verifier, state, nonce, start time, and optional safe relative redirect are kept for at most ten minutes in a dedicated encrypted, HTTP-only, SameSite=Lax transaction cookie. The callback consumes that transaction before exchanging the single-use code, validates the ID token, loads UserInfo, and links the local user.
 
-`POST /api/auth/token` is the only browser bootstrap/refresh endpoint. It resolves the token set from `basis_auth_sessions`, returns an access token, expiry, and a display-only permission list, never a refresh token; it reuses sufficiently fresh access tokens and serializes refresh rotation per session. Rotated tokens are encrypted before being persisted. API routes independently verify bearer tokens. `POST /api/auth/logout` attempts refresh-family revocation and clears both the token row and browser session even when revocation is unavailable.
+Local session creation is ordered deliberately: basishacks generates an opaque token-session handle and writes the encrypted access/refresh token set to `basis_auth_sessions` first. Only after that succeeds does it publish the sealed Nuxt session containing `{ user: { id }, secure: { basisAuthSessionId } }`. The `secure` object is stripped from `/api/_auth/session`, so browser JavaScript sees the user ID but not the token handle. If cookie sealing fails, the unpublished token row is removed. This avoids partial logins and does not depend on Nuxt's internal cookie session ID.
+
+`POST /api/auth/token` is the only browser bootstrap/refresh endpoint. It resolves the token set using the explicit handle, returns an access token, expiry, and a display-only permission list, never a refresh token; it reuses sufficiently fresh access tokens and serializes refresh rotation per token session. Rotated tokens are encrypted before being persisted. Every concurrent request receives cookie cleanup if rotation fails. API routes independently verify bearer tokens. `POST /api/auth/logout` attempts refresh-family revocation and clears both the token row and browser session even when revocation or database cleanup is unavailable.
+
+After an external redirect, route middleware first reconciles `/api/_auth/session` with the server instead of trusting stale in-memory state. Login, callback, token, logout, and session-bootstrap responses are marked `Cache-Control: no-store`.
 
 ## Identity linking
 

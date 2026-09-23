@@ -24,6 +24,10 @@ The `Content-Security-Policy` header includes **10 directives** that restrict re
 
 The middleware runs for API routes, rendered HTML pages, and static assets. The `'unsafe-inline'` source expression is required for `script-src` because Nuxt SSR hydration injects `window.__NUXT__` as an inline script, and for `style-src` because Vue and Nuxt UI components apply inline style bindings. The `'unsafe-eval'` source expression is intentionally omitted.
 
+## HTML Error Diagnostics
+
+The global Nitro error handler negotiates its response using the request's `Accept` header. Clients accepting `text/html` receive the shared Barry error page showing only the canonical error code in parentheses; error names, descriptions, and stack traces are omitted. Other clients receive the canonical JSON error envelope. HTML error responses set `Cache-Control: no-store` and `Vary: Accept`.
+
 ## Security-Critical Environment Variables
 
 The following environment variables directly affect platform security and must be configured carefully in production:
