@@ -32,11 +32,15 @@ The public `/showcase` page collects the season showcases in one place. The curr
 
 ## Installation
 
+Clone [`@basis/schema`](https://github.com/biszdevelopers/basis-schema) beside this repository, register its Bun link, and then install the application dependencies:
+
 ```bash
+git clone https://github.com/biszdevelopers/basis-schema.git ../basis-schema
+(cd ../basis-schema && bun link)
 bun install
 ```
 
-The `postinstall` script (`nuxt prepare`) runs automatically and generates Nuxt's typed references.
+If both repositories already exist in the same parent directory, only the `bun link` and `bun install` commands are needed. The `postinstall` script (`nuxt prepare`) runs automatically and generates Nuxt's typed references.
 
 ## Environment Setup
 

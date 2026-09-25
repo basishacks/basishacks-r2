@@ -58,9 +58,13 @@ bun --version
 
 ```bash
 git clone <repository-url> basishacks-r2
+git clone https://github.com/biszdevelopers/basis-schema.git basis-schema
 cd basishacks-r2
+(cd ../basis-schema && bun link)
 bun i
 ```
+
+Keep [`@basis/schema`](https://github.com/biszdevelopers/basis-schema) as a sibling checkout. Local builds and tests resolve its source through `../basis-schema`; the CI, lint, and release workflows clone and link the same repository before installing dependencies.
 
 ::: tip Dependency pins `package.json` uses `overrides` to pin two transitive dependencies:
 

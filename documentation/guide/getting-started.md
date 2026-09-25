@@ -52,6 +52,7 @@ If you need to manage multiple Node.js versions, consider using [fnm](https://gi
 
 ```bash
 git clone <repository-url> basishacks-r2
+git clone https://github.com/biszdevelopers/basis-schema.git basis-schema
 cd basishacks-r2
 ```
 
@@ -62,8 +63,11 @@ cd basishacks-r2
 Install all project dependencies using Bun:
 
 ```bash
+(cd ../basis-schema && bun link)
 bun i
 ```
+
+The [`@basis/schema`](https://github.com/biszdevelopers/basis-schema) checkout must remain beside `basishacks-r2`. The Nuxt and Vitest configurations resolve its source from `../basis-schema`, while Bun uses the registered package link.
 
 If you prefer npm:
 

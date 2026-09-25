@@ -35,6 +35,12 @@ jobs:
               with:
                   bun-version: latest # Or specify a version like 1.1.0
 
+            - name: Link @basis/schema
+              run: |
+                  git clone --depth 1 https://github.com/biszdevelopers/basis-schema.git ../basis-schema
+                  cd ../basis-schema
+                  bun link
+
             # 2. Install dependencies cleanly using Bun
             - name: Install dependencies
               run: bun install --frozen-lockfile
