@@ -2,7 +2,6 @@
 import type { TableColumn } from "@nuxt/ui";
 import { upperFirst } from "scule";
 import { getPaginationRowModel } from "@tanstack/table-core";
-import { parsePermissions } from "~~/shared/permissions";
 definePageMeta({
     layout: "developers-dashboard",
 });
@@ -12,7 +11,6 @@ const UserPopover = resolveComponent("UserPopover");
 const UButton = resolveComponent("UButton");
 const UBadge = resolveComponent("UBadge");
 const UCheckbox = resolveComponent("UCheckbox");
-const UDropdownMenu = resolveComponent("UDropdownMenu");
 
 const toast = useToast();
 const table = useTemplateRef<any>("table");
@@ -30,6 +28,7 @@ const rowSelection = ref<Record<string, boolean>>({});
 type AdminUser = User & { past_team_ids: string | null };
 
 const { data, status, refresh } = await useFetch<AdminUser[]>("/api/users", {
+    server: false,
     lazy: true,
     default: () => [],
 });
@@ -134,25 +133,6 @@ const columns: TableColumn<AdminUser>[] = [
         },
     },
     {
-        accessorKey: "role",
-        header: "Permissions",
-        cell: ({ row }) => {
-            const perms = parsePermissions(row.original.role);
-            return h(
-                "div",
-                { class: "flex flex-wrap gap-1" },
-                perms.map((p) => {
-                    const color = p === "admin" ? "error" : p === "judge" ? "warning" : "primary";
-                    return h(
-                        UBadge,
-                        { class: "capitalize", variant: "subtle", color, size: "sm" },
-                        () => p,
-                    );
-                }),
-            );
-        },
-    },
-    {
         accessorKey: "team_id",
         header: "Team ID",
         cell: ({ row }) => row.original.team_id ?? "-",
@@ -176,54 +156,6 @@ const columns: TableColumn<AdminUser>[] = [
                     ),
                 ),
             );
-        },
-    },
-    {
-        id: "actions",
-        header: "",
-        cell: ({ row }) => {
-            const userId = row.original.id;
-            return h("div", { class: "text-right" }, [
-                h(
-                    UDropdownMenu,
-                    {
-                        items: [
-                            {
-                                label: "Log in as user",
-                                icon: "i-lucide-log-in",
-                                onSelect: async () => {
-                                    try {
-                                        await $fetch("/api/auth/impersonate", {
-                                            method: "POST",
-                                            body: { userId },
-                                        });
-                                        window.location.href = "/";
-                                    } catch (e: any) {
-                                        useToast().add({
-                                            title: "Error",
-                                            description:
-                                                e?.data?.message ||
-                                                e?.message ||
-                                                "Failed to log in as user.",
-                                            color: "error",
-                                        });
-                                    }
-                                },
-                            },
-                        ],
-                        content: { align: "end" },
-                    },
-                    {
-                        default: () =>
-                            h(UButton, {
-                                icon: "i-lucide-ellipsis-vertical",
-                                color: "neutral",
-                                variant: "ghost",
-                                ariaLabel: "Actions",
-                            }),
-                    },
-                ),
-            ]);
         },
     },
 ];

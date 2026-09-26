@@ -183,7 +183,7 @@ Per-team assignments are stored in `team_awards`.
 
 ## API Response Interfaces
 
-These types define the shape of data returned by API endpoints. Internal fields are stripped by `convertUserToPublic` and `convertTeamToPublic` in `server/utils/convert.ts`.
+These types define domain values returned inside `APIResponse.data`. Internal fields are stripped by `convertUserToPublic` and `convertTeamToPublic` in `server/utils/convert.ts`; the transport envelope itself comes from `@basis/schema`.
 
 ### `ProfileTheme`
 

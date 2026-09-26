@@ -8,16 +8,17 @@ type UseApiUserFetchResult = Omit<Awaited<AsyncData<ApiUser, FetchError>>, "clea
 
 export type UseApiUserResult = UseApiUserFetchResult & {
     user: Ref<ApiUser>;
-    sessionUser: ReturnType<typeof useUserSession>["user"];
-    clear: ReturnType<typeof useUserSession>["clear"];
+    sessionUser: ReturnType<typeof useBasisAuthSession>["user"];
+    clear: ReturnType<typeof useBasisAuthSession>["clear"];
 };
 
 export async function useApiUser(options?: { lazy?: boolean }): Promise<UseApiUserResult> {
-    const { user: sessionUser, clear: clearSession } = useUserSession();
+    const { user: sessionUser, clear: clearSession } = useBasisAuthSession();
     const userID = computed(() => sessionUser.value?.id);
 
     const fetchResult = await useFetch<ApiUser>(() => `/api/users/${userID.value}`, {
         lazy: options?.lazy ?? false,
+        server: false,
         immediate: !!userID.value,
         watch: [userID],
         default: () => null,

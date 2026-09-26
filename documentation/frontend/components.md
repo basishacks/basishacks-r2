@@ -33,7 +33,7 @@ The main navigation header rendered at the top of every page. Uses `UHeader` fro
 | Voting | Hackathon status is `voting` and user is not a judge or admin |
 | Judging | User is a judge or admin, and hackathon status is `voting` |
 
-Permission checks use `hasPermission()` from `~~/shared/permissions`.
+Display-only permission checks use `useNethackPermissions()`; server APIs enforce verified JWT permissions.
 
 ```vue
 <RoleHeader />
@@ -589,15 +589,15 @@ Modal-based media preview browser wrapping `UModal`.
 
 **File:** `app/components/DateTime.vue`
 
-Formats a `Date` object as a localized string in the `Asia/Shanghai` timezone.
+Formats a date-like input as a localized string in the `Asia/Shanghai` timezone.
 
 **Props:**
 
-| Prop   | Type   | Description        |
-| ------ | ------ | ------------------ |
-| `date` | `Date` | The date to format |
+| Prop   | Type                       | Description                                                |
+| ------ | -------------------------- | ---------------------------------------------------------- |
+| `date` | `Date \| string \| number` | A native date, ISO string, or epoch milliseconds to format |
 
-Uses `date.toLocaleString('en-CA', { dateStyle: 'medium', timeStyle: 'short', timeZone: 'Asia/Shanghai' })`. Wrapped in `<ClientOnly>` to avoid hydration mismatches. Renders a `<time>` element with an ISO `datetime` attribute.
+Accepts a native `Date`, ISO date string, or epoch milliseconds. It normalizes the input before formatting with `toLocaleString('en-CA', { dateStyle: 'medium', timeStyle: 'short', timeZone: 'Asia/Shanghai' })`; invalid or missing input renders `Date unavailable` without an ISO attribute. Wrapped in `<ClientOnly>` to avoid hydration mismatches. Valid values render a `<time>` element with an ISO `datetime` attribute.
 
 ```vue
 <DateTime :date="startDate" />

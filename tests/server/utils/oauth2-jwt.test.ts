@@ -16,8 +16,9 @@ vi.mock("~~/server/utils/basis-auth", () => ({
         issuer: "https://auth.example.test",
         clientId: "basishacks",
         clientSecret: "secret",
-        resource: "urn:basis:api:basishacks",
+        resource: "devconnect://nethack.bisz.dev",
     }),
+    getFreshBasisAuthUserSession: vi.fn(),
 }));
 
 vi.mock("~~/server/utils/database/users", () => ({
@@ -26,14 +27,22 @@ vi.mock("~~/server/utils/database/users", () => ({
 
 import {
     extractBearerToken,
-    parseJWScopes,
-    requireScopes,
     resolveOAuth2User,
     verifyAccessToken,
-    withOAuth2JWT,
 } from "~~/server/utils/oauth2-jwt";
 
 const event = () => ({ context: {} }) as any;
+const claims = {
+    sub: "user-1",
+    client_id: "portal",
+    scope: "chat.readwrite",
+    permissions: ["Users.read"],
+    jti: "token-id",
+    iat: 100,
+    exp: 200,
+    iss: "https://auth.example.test",
+    aud: "devconnect://nethack.bisz.dev",
+};
 
 beforeEach(() => {
     vi.clearAllMocks();
@@ -48,7 +57,7 @@ beforeEach(() => {
 describe("basis-auth access tokens", () => {
     it("validates RS256, the exact issuer, resource audience, type, expiry, and claims", async () => {
         jwtVerifyMock.mockResolvedValue({
-            payload: { sub: "user-1", client_id: "portal", scope: "chat.readwrite" },
+            payload: claims,
         });
 
         await expect(verifyAccessToken("token")).resolves.toMatchObject({ sub: "user-1" });
@@ -58,7 +67,7 @@ describe("basis-auth access tokens", () => {
         expect(jwtVerifyMock).toHaveBeenCalledWith("token", "jwks", {
             algorithms: ["RS256"],
             issuer: "https://auth.example.test",
-            audience: "urn:basis:api:basishacks",
+            audience: "devconnect://nethack.bisz.dev",
             typ: "at+jwt",
         });
     });
@@ -92,35 +101,11 @@ describe("basis-auth access tokens", () => {
     });
 });
 
-describe("OAuth2 bearer helpers", () => {
+describe("OAuth2 bearer parsing", () => {
     it("extracts case-insensitive bearer tokens and rejects malformed headers", () => {
         vi.mocked(getHeader).mockReturnValue("bEaReR token");
         expect(extractBearerToken(event())).toBe("token");
         vi.mocked(getHeader).mockReturnValue("Basic token");
         expect(() => extractBearerToken(event())).toThrow();
-    });
-
-    it("parses and enforces scopes", () => {
-        expect(parseJWScopes("chat.readwrite   profile")).toEqual(["chat.readwrite", "profile"]);
-        expect(parseJWScopes(undefined)).toEqual([]);
-        expect(() => requireScopes(["chat.readwrite"], ["chat.readwrite"])).not.toThrow();
-        expect(() => requireScopes([], ["chat.readwrite"])).toThrow(
-            expect.objectContaining({ statusCode: 403 }),
-        );
-    });
-
-    it("attaches the verified token context before invoking a wrapped handler", async () => {
-        vi.mocked(getHeader).mockReturnValue("Bearer token");
-        jwtVerifyMock.mockResolvedValue({
-            payload: { sub: "user-1", client_id: "portal", scope: "chat.readwrite" },
-        });
-        const wrapped = withOAuth2JWT(async (request) => request.context.oauth2, {
-            requiredScopes: ["chat.readwrite"],
-        });
-
-        await expect(wrapped(event())).resolves.toMatchObject({
-            payload: { sub: "user-1" },
-            scopes: ["chat.readwrite"],
-        });
     });
 });

@@ -3,21 +3,18 @@ import {
     sendChatMessage,
     sendRichChatMessage,
 } from "~~/server/plugins/microsoft";
+import { NethackPermissions } from "~~/shared/permissions";
+import { requireUser } from "~~/server/utils/auth";
 
-export default withOAuth2JWT(
-    async (event) => {
-        const { payload, scopes, user } = event.context.oauth2!;
+export default defineEventHandler(async (event) => {
+    await requireUser(event, NethackPermissions.Chatbot.use);
 
-        const { id } = await createOrGetExistingDirectChat(
-            "ChunPing.Wong12024-bisz@basischina.com",
-        );
+    const { id } = await createOrGetExistingDirectChat("ChunPing.Wong12024-bisz@basischina.com");
 
-        await sendRichChatMessage(
-            id,
-            "<h1>Hello from DevClub Hackathon Portal!</h1><p>This is a test message sent using Microsoft Graph API.</p>",
-        );
+    await sendRichChatMessage(
+        id,
+        "<h1>Hello from DevClub Hackathon Portal!</h1><p>This is a test message sent using Microsoft Graph API.</p>",
+    );
 
-        return { test: "ok" };
-    },
-    { requiredScopes: ["chat.readwrite"], loadUser: true },
-);
+    return { test: "ok" };
+});

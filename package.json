@@ -25,6 +25,7 @@
         "db:studio": "drizzle-kit studio"
     },
     "dependencies": {
+        "@basis/schema": "link:@basis/schema",
         "@comark/nuxt": "^0.5.1",
         "@iconify/utils": "^3.1.4",
         "@nuxt/eslint": "^1.16.0",
@@ -45,7 +46,6 @@
         "node-fetch": "^3.3.2",
         "node-html-markdown": "^2.0.0",
         "nuxt": "^4.5.1",
-        "nuxt-auth-utils": "^0.5.29",
         "openai": "^7.1.0",
         "openid-client": "^6.8.4",
         "typescript": "^6.0.3",

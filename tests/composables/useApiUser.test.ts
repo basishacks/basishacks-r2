@@ -8,8 +8,8 @@ const source = readFileSync(
 );
 
 describe("useApiUser composable", () => {
-    it("uses useUserSession internally", () => {
-        expect(source).toContain("useUserSession()");
+    it("uses the basis-auth cookie session composable internally", () => {
+        expect(source).toContain("useBasisAuthSession()");
     });
 
     it("types the user API response", () => {

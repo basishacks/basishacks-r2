@@ -13,8 +13,8 @@ basishacks delegates user authentication to the separately deployed **basis-auth
 
 - S256 PKCE
 - unpredictable `state` and `nonce`
-- scopes `openid profile email`
-- the configured `BASIS_AUTH_RESOURCE`
+- OAuth scopes `openid profile email offline_access nethack.access`; feature access comes from JWT permissions
+- resource `devconnect://nethack.bisz.dev`
 - confidential-client authentication with `client_secret_basic`
 
 The callback is derived rather than configured independently:
@@ -23,9 +23,13 @@ The callback is derived rather than configured independently:
 ${CURRENT_URL_ORIGIN}/api/auth/basis/callback
 ```
 
-The PKCE verifier, state, nonce, and optional safe relative redirect are kept for at most ten minutes in a dedicated encrypted, HTTP-only, SameSite=Lax session. The callback clears that transaction before exchanging the code, validates the ID token, and loads UserInfo. Provider tokens are discarded after the existing `{ user: { id } }` basishacks session is created.
+The PKCE verifier, state, nonce, start time, and optional safe relative redirect are kept for at most ten minutes in a dedicated encrypted, HTTP-only, SameSite=Lax transaction cookie. The callback consumes that transaction before exchanging the single-use code, validates the ID token, loads UserInfo, and links the local user.
 
-Logout clears only the basishacks session; it does not sign the user out of basis-auth globally.
+Local session creation is ordered deliberately: basishacks generates an opaque token-session handle and writes the encrypted access/refresh token set to `basis_auth_sessions` first. Only after that succeeds does it publish the sealed Nuxt session containing `{ user: { id }, secure: { basisAuthSessionId } }`. The `secure` object is stripped from `/api/_auth/session`, so browser JavaScript sees the user ID but not the token handle. If cookie sealing fails, the unpublished token row is removed. This avoids partial logins and does not depend on Nuxt's internal cookie session ID.
+
+`POST /api/auth/token` is the only browser bootstrap/refresh endpoint. It resolves the token set using the explicit handle, returns an access token, expiry, and a display-only permission list, never a refresh token; it reuses sufficiently fresh access tokens and serializes refresh rotation per token session. Rotated tokens are encrypted before being persisted. Every concurrent request receives cookie cleanup if rotation fails. API routes independently verify bearer tokens. `POST /api/auth/logout` attempts refresh-family revocation and clears both the token row and browser session even when revocation or database cleanup is unavailable.
+
+After an external redirect, route middleware first reconciles `/api/_auth/session` with the server instead of trusting stale in-memory state. Login, callback, token, logout, and session-bootstrap responses are marked `Cache-Control: no-store`.
 
 ## Identity linking
 
@@ -38,7 +42,7 @@ The `users` table contains nullable `auth_issuer` and `auth_subject` columns wit
 
 ## Roles and sessions
 
-`nuxt-auth-utils` encrypts the local session cookie. Server-side helpers remain the authorization boundary:
+`nuxt-auth-utils` encrypts the local session cookie, but that cookie does not authorize application APIs. Protected routes require a basis-auth bearer token before applying local authorization:
 
 - `requireUser(event)` loads the local user.
 - `requireJudge(event)` permits judges and admins.
@@ -48,7 +52,11 @@ The frontend middleware is a convenience redirect and is never the only authoriz
 
 ## Resource-server tokens
 
-APIs wrapped with `withOAuth2JWT()` trust basis-auth access tokens only. Validation requires the basis-auth JWKS signature, RS256, the exact configured issuer, the exact `BASIS_AUTH_RESOURCE` audience, `typ=at+jwt`, a valid expiry, and string `sub`, `client_id`, and `scope` claims. The subject maps to a local user through the same issuer-and-subject link.
+Protected APIs trust basis-auth access tokens only. Validation requires the basis-auth JWKS signature, RS256, the exact configured issuer, audience `devconnect://nethack.bisz.dev`, `typ=at+jwt`, a valid expiry, and basis-schema access-token claims. The subject maps to a local user through the same issuer-and-subject link. Route access is evaluated from the JWT `permissions` array with the shared nethack permission hierarchy.
+
+For accounts carrying the former `participant`, `judge`, or `admin` permission, basishacks expands that legacy value into the corresponding granular permission bundle before server checks and frontend display gating. This compatibility bridge does not discard granular permissions already present in the token.
+
+The client keeps access tokens only in memory, adds the bearer header to protected requests, unwraps `APIResponse.data`, converts failed envelopes with `APIError.from`, and performs one single-flight refresh-and-retry on an expired-token response.
 
 ## Retired provider surface
 

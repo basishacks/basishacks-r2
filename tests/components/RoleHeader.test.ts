@@ -33,16 +33,14 @@ describe("RoleHeader.vue", () => {
         expect(source).toContain('to: "/showcase"');
     });
 
-    it("conditionally shows Voting link for non-judge/non-admin during voting", () => {
+    it("conditionally shows Voting when judging access is absent during voting", () => {
         expect(source).toContain('hackathon.value?.status === "voting"');
-        expect(source).toContain('!hasPermission(user.value?.role, "judge")');
-        expect(source).toContain('!hasPermission(user.value?.role, "admin")');
+        expect(source).toContain("!can(NethackPermissions.Judging.assignmentsRead)");
         expect(source).toContain('to: "/voting"');
     });
 
-    it("conditionally shows Judging link for judge/admin during voting", () => {
-        expect(source).toContain('hasPermission(user.value?.role, "judge")');
-        expect(source).toContain('hasPermission(user.value?.role, "admin")');
+    it("conditionally shows Judging when judging access is granted during voting", () => {
+        expect(source).toContain("can(NethackPermissions.Judging.assignmentsRead)");
         expect(source).toContain('to: "/judging"');
     });
 
@@ -68,7 +66,8 @@ describe("RoleHeader.vue", () => {
         expect(source).toContain("lazy: true");
     });
 
-    it("imports hasPermission from shared permissions", () => {
-        expect(source).toContain('import { hasPermission } from "~~/shared/permissions"');
+    it("uses the shared nethack permission composable", () => {
+        expect(source).toContain('import { NethackPermissions } from "~~/shared/permissions"');
+        expect(source).toContain("useNethackPermissions()");
     });
 });

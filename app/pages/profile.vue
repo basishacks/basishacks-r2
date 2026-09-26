@@ -7,10 +7,12 @@ definePageMeta({
     middleware: "auth",
 });
 
-const { user: userRef, clear } = useUserSession();
+const { user: userRef, clear } = useBasisAuthSession();
 const userID = computed(() => userRef.value?.id ?? 0);
 
-const { data, error, refresh } = await useFetch(() => `/api/users/${userID.value}`);
+const { data, error, refresh } = await useFetch(() => `/api/users/${userID.value}`, {
+    server: false,
+});
 if (error.value) {
     throw error.value;
 }
@@ -18,8 +20,11 @@ if (error.value) {
 const user = computed(() => data.value);
 
 async function doLogout() {
-    await clear();
-    await navigateTo("/");
+    try {
+        await clear();
+    } finally {
+        await navigateTo("/");
+    }
 }
 
 // edit form

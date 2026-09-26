@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import JudgeProgressCard from "~/components/JudgeProgressCard.vue";
-import { hasPermission } from "~~/shared/permissions";
+import { NethackPermissions } from "~~/shared/permissions";
 
 definePageMeta({
     middleware: ["auth"],
@@ -12,23 +12,25 @@ if (hackathon.value?.status !== "voting") {
 }
 
 const { user: userData, error: userError } = await useApiUser();
+const { can } = useNethackPermissions();
 if (userError.value) {
     throw userError.value;
 }
-if (
-    !hasPermission(userData.value?.role, "admin") &&
-    !hasPermission(userData.value?.role, "judge")
-) {
+if (!can(NethackPermissions.Judging.assignmentsRead)) {
     throw await navigateTo("/");
 }
 
-const { data, error, refresh } = await useFetch<APITeam[]>("/api/teams?judging=true");
+const { data, error, refresh } = await useFetch<APITeam[]>("/api/teams?judging=true", {
+    server: false,
+});
 if (error.value) {
     throw error.value;
 }
 
-const { data: summary, refresh: refreshSummary } =
-    await useFetch<GetBallotSummaryResponse>("/api/ballot/summary");
+const { data: summary, refresh: refreshSummary } = await useFetch<GetBallotSummaryResponse>(
+    "/api/ballot/summary",
+    { server: false },
+);
 
 const currentSummary = computed(() => summary.value?.current ?? null);
 

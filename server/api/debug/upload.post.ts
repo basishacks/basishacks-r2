@@ -1,6 +1,6 @@
 import { randomUUID } from "crypto";
 import { createAsset, createUserAsset } from "~~/server/utils/assets";
-import { DevPermissions } from "~~/shared/permissions";
+import { NethackPermissions } from "~~/shared/permissions";
 import { requireUser } from "~~/server/utils/auth";
 import { applyRateLimit, UPLOAD_RATE_LIMIT_CONFIG } from "~~/server/utils/rateLimit";
 
@@ -26,8 +26,7 @@ export default defineEventHandler(
     applyRateLimit(async (event) => {
         const query = getQuery(event);
 
-        await requireUser(event);
-        await requirePermission(event, DevPermissions.DEBUG);
+        await requireUser(event, NethackPermissions.Debug.filesWrite);
 
         const formData = await readMultipartFormData(event);
         if (!formData || !formData[0]) {

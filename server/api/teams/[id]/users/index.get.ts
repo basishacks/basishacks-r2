@@ -4,8 +4,6 @@ import { getAllTeamMembers, getTeamMembers } from "~~/server/utils/database/memb
 import { TeamIdParams } from "~~/shared/schemas";
 
 export default defineEventHandler(async (event) => {
-    await requireUser(event);
-
     const { id: teamID } = await getValidatedRouterParams(event, TeamIdParams.parse);
 
     const team = await getTeamById(event, teamID);

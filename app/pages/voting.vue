@@ -8,7 +8,9 @@ definePageMeta({
 
 const toast = useToast();
 
-const { data, error, refresh } = await useFetch<GetBallotResponse>("/api/ballot");
+const { data, error, refresh } = await useFetch<GetBallotResponse>("/api/ballot", {
+    server: false,
+});
 
 const fetchError = computed(() => (error.value ? getErrorMessage(error.value) : null));
 

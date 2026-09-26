@@ -76,6 +76,7 @@ function tooLargeBase64(): string {
 
 describe("PATCH /api/users/:id", () => {
     it("returns 403 when updating another user", async () => {
+        seedUser(ctx, { email: "viewer@basischina.com" });
         mockParams.values["id"] = "2";
         mockSession.value = { user: { id: 1 } };
 

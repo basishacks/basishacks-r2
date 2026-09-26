@@ -24,6 +24,8 @@ The local dev server is started with:
 bun dev --https
 ```
 
+The custom server error handler is configured with a forward-slash-normalized absolute path. Nitro embeds this path in a generated virtual ES module, so normalization prevents Windows backslashes from becoming JavaScript escape sequences (for example, an octal-looking sequence in a numeric user profile directory).
+
 ## Production (VPS / Node.js server)
 
 | Setting      | Value                                                                           |
@@ -132,7 +134,7 @@ declare module "h3" {
      │
 4. API route handler
      │  ├── readValidatedBody() / getValidatedQuery() with Zod
-     │  ├── requireUser() / requireAdmin() / requirePermission()
+     │  ├── requireUser() JWT permission enforcement
      │  └── event.context.drizzle.select()/insert()/update()/delete()
      │
 5. Response

@@ -1,6 +1,7 @@
 import { readFileSync } from "node:fs";
 import { resolve } from "node:path";
 import type { BaseSQLiteDatabase } from "drizzle-orm/sqlite-core";
+import { eq } from "drizzle-orm";
 import * as schema from "~~/server/database/schema";
 
 const schemaPath = resolve(import.meta.dirname, "..", "..", "sql", "archive", "init.sql");
@@ -301,31 +302,31 @@ function configMock(_event?: any) {
     return mockConfig.value;
 }
 
-function getUserSessionMock(_event: any) {
-    return Promise.resolve(mockSession.value ?? {});
-}
-
-function requireUserSessionMock(_event: any) {
-    const s = mockSession.value;
-    if (!s?.user?.id) {
+async function requireUserMock(event: any) {
+    const id = mockSession.value?.user?.id;
+    if (!id) {
         const error = new Error("Unauthorized") as any;
         error.statusCode = 401;
         throw error;
     }
-    return Promise.resolve(s);
-}
-
-function setUserSessionMock(_event: any, data: any) {
-    mockSession.value = { user: data.user };
-    return Promise.resolve();
-}
-
-function clearUserSessionMock(_event: any) {
-    mockSession.value = undefined;
-    return Promise.resolve();
+    const user =
+        typeof (globalThis as any).getUser === "function"
+            ? await (globalThis as any).getUser(event, id)
+            : await event.context.drizzle
+                  .select()
+                  .from(schema.users)
+                  .where(eq(schema.users.id, id))
+                  .get();
+    if (!user) {
+        const error = new Error("Logged in user not found") as any;
+        error.statusCode = 401;
+        throw error;
+    }
+    return user;
 }
 
 export function setupNitroGlobals() {
+    const requireAuthorizedUser = vi.fn(requireUserMock);
     vi.stubGlobal("defineEventHandler", (fn: any) => fn);
     vi.stubGlobal("readValidatedBody", readBodyMock);
     vi.stubGlobal("readBody", readRawBodyMock);
@@ -338,17 +339,20 @@ export function setupNitroGlobals() {
     vi.stubGlobal("setHeader", setHeaderMock);
     vi.stubGlobal("createError", createErrMock);
     vi.stubGlobal("useRuntimeConfig", configMock);
-    vi.stubGlobal("getUserSession", getUserSessionMock);
-    vi.stubGlobal("requireUserSession", requireUserSessionMock);
-    vi.stubGlobal("setUserSession", setUserSessionMock);
-    vi.stubGlobal("clearUserSession", clearUserSessionMock);
+    vi.stubGlobal("requireUser", requireAuthorizedUser);
     vi.stubGlobal(
-        "requireUser",
-        vi.fn().mockResolvedValue({ id: 1, team_id: null, role: "participant" }),
+        "optionalUser",
+        vi.fn((event: any) => {
+            if (!mockSession.value?.user?.id) return undefined;
+            return requireUserMock(event);
+        }),
     );
-    vi.stubGlobal("requireJudge", vi.fn().mockResolvedValue({ id: 1, role: "judge" }));
-    vi.stubGlobal("requireAdmin", vi.fn().mockResolvedValue({ id: 1, role: "admin" }));
-    vi.stubGlobal("requirePermission", vi.fn().mockResolvedValue(undefined));
+    // All protected routes now authorize through requireUser(event, permission).
+    // Keep the legacy test-global names as aliases so older route tests can
+    // configure and assert the single authorization boundary while migrating.
+    vi.stubGlobal("requireJudge", requireAuthorizedUser);
+    vi.stubGlobal("requireAdmin", requireAuthorizedUser);
+    vi.stubGlobal("requirePermission", requireAuthorizedUser);
     vi.stubGlobal("applyRateLimit", (fn: any) => fn);
 }
 
@@ -360,18 +364,14 @@ export function resetMockState() {
     mockSession.value = undefined;
     mockConfig.value = {};
 
-    // Reset auto-imported auth mocks to their default resolved values so a
-    // previous rejected-value test does not leak into the next one.
+    // Reset auto-imported auth mocks so a previous rejected-value test does
+    // not leak into the next one. These mirror bearer helpers by returning the
+    // local user represented by the test's authenticated session fixture.
     (globalThis as any).requireUser?.mockReset?.();
-    (globalThis as any).requireUser?.mockResolvedValue({
-        id: 1,
-        team_id: null,
-        role: "participant",
+    (globalThis as any).requireUser?.mockImplementation?.(requireUserMock);
+    (globalThis as any).optionalUser?.mockReset?.();
+    (globalThis as any).optionalUser?.mockImplementation?.((event: any) => {
+        if (!mockSession.value?.user?.id) return undefined;
+        return requireUserMock(event);
     });
-    (globalThis as any).requireJudge?.mockReset?.();
-    (globalThis as any).requireJudge?.mockResolvedValue({ id: 1, role: "judge" });
-    (globalThis as any).requireAdmin?.mockReset?.();
-    (globalThis as any).requireAdmin?.mockResolvedValue({ id: 1, role: "admin" });
-    (globalThis as any).requirePermission?.mockReset?.();
-    (globalThis as any).requirePermission?.mockResolvedValue(undefined);
 }

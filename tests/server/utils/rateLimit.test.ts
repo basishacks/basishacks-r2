@@ -9,12 +9,19 @@ import {
     UPLOAD_RATE_LIMIT_CONFIG,
 } from "~~/server/utils/rateLimit";
 
+const readBasisAuthUserSessionMock = vi.hoisted(() => vi.fn());
+
+vi.mock("~~/server/utils/basis-auth-session", () => ({
+    readBasisAuthUserSession: readBasisAuthUserSessionMock,
+}));
+
 // ---------------------------------------------------------------------------
 // Global mocks for Nitro auto-imports
 // ---------------------------------------------------------------------------
 
 beforeEach(() => {
     vi.restoreAllMocks();
+    readBasisAuthUserSessionMock.mockReset();
 });
 
 function makeMockEvent(overrides: Record<string, any> = {}) {
@@ -40,9 +47,7 @@ function makeMockEvent(overrides: Record<string, any> = {}) {
 
 describe("getClientIdentifier", () => {
     it("returns user-prefixed identifier when session has a user id", async () => {
-        (globalThis as any).getUserSession = vi.fn().mockResolvedValue({
-            user: { id: 42 },
-        });
+        readBasisAuthUserSessionMock.mockReturnValue({ userId: 42 });
 
         const event = makeMockEvent();
         const id = await getClientIdentifier(event);
@@ -481,11 +486,9 @@ describe("applyRateLimit", () => {
         const handler = vi.fn().mockResolvedValue({ ok: true });
         const wrapped = applyRateLimit(handler, { maxRequests: 1, windowMs: 60_000 });
 
-        let callCount = 0;
-        (globalThis as any).getUserSession = vi.fn().mockImplementation(() => {
-            callCount++;
-            return Promise.resolve({ user: { id: callCount } });
-        });
+        readBasisAuthUserSessionMock
+            .mockReturnValueOnce({ userId: 1 })
+            .mockReturnValueOnce({ userId: 2 });
 
         const event1 = makeMockEvent();
         const event2 = makeMockEvent();

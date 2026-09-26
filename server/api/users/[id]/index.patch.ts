@@ -1,8 +1,10 @@
+import { NethackPermissions } from "~~/shared/permissions";
 import { randomUUID } from "node:crypto";
 import { createUserAsset, removeUserAsset } from "~~/server/utils/assets";
 import { updateUserProfilePicture } from "~~/server/utils/database/users";
 import { applyRateLimit } from "~~/server/utils/rateLimit";
 import { UpdateUserRequest, UserIdParams } from "~~/shared/schemas";
+import { clearBasisAuthUserSession } from "~~/server/utils/basis-auth-session";
 
 const ACCEPTED_IMAGE_TYPES = ["image/jpeg", "image/jpg", "image/png", "image/gif", "image/webp"];
 const MAX_FILE_SIZE = 10 * 1024 * 1024; // 10MB
@@ -71,9 +73,7 @@ export default defineEventHandler(
         async (event) => {
             const { id } = await getValidatedRouterParams(event, UserIdParams.parse);
 
-            const {
-                user: { id: userID },
-            } = await requireUserSession(event);
+            const { id: userID } = await requireUser(event, NethackPermissions.Profile.updateSelf);
 
             if (id !== userID) {
                 throw createError({
@@ -89,7 +89,7 @@ export default defineEventHandler(
 
             const user = await getUser(event, id);
             if (!user) {
-                await clearUserSession(event);
+                clearBasisAuthUserSession(event);
                 throw createError({
                     status: 401,
                     message: "Logged in user not found",

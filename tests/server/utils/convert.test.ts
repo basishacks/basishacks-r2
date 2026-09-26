@@ -227,7 +227,7 @@ describe("convert utilities", () => {
         expect(convertUserToPublic(user).email).toBe("preserved@test.com");
     });
 
-    it("convertUserToPublic preserves role participant", () => {
+    it("convertUserToPublic does not expose legacy local roles", () => {
         const user: any = {
             id: 11,
             email: "k@l.com",
@@ -237,33 +237,7 @@ describe("convert utilities", () => {
             profile_theme: null,
             profile_picture: null,
         };
-        expect(convertUserToPublic(user).role).toBe("participant");
-    });
-
-    it("convertUserToPublic preserves role admin", () => {
-        const user: any = {
-            id: 12,
-            email: "m@n.com",
-            role: "admin",
-            name: "Mallory",
-            team_id: 10,
-            profile_theme: null,
-            profile_picture: null,
-        };
-        expect(convertUserToPublic(user).role).toBe("admin");
-    });
-
-    it("convertUserToPublic preserves role judge", () => {
-        const user: any = {
-            id: 13,
-            email: "o@p.com",
-            role: "judge",
-            name: "Oscar",
-            team_id: 11,
-            profile_theme: null,
-            profile_picture: null,
-        };
-        expect(convertUserToPublic(user).role).toBe("judge");
+        expect(convertUserToPublic(user)).not.toHaveProperty("role");
     });
 
     it("convertUserToPublic keeps id as number", () => {
@@ -335,7 +309,7 @@ describe("convert utilities", () => {
         const result = convertUserToPublic(user);
         expect(result).toHaveProperty("id");
         expect(result).toHaveProperty("email");
-        expect(result).toHaveProperty("role");
+        expect(result).not.toHaveProperty("role");
         expect(result).toHaveProperty("name");
         expect(result).toHaveProperty("team_id");
         expect(result).toHaveProperty("profile_theme");

@@ -24,9 +24,10 @@
 
 <script setup lang="ts">
 import type { NavigationMenuItem } from "@nuxt/ui";
-import { hasPermission } from "~~/shared/permissions";
+import { NethackPermissions } from "~~/shared/permissions";
 
 const { user, sessionUser: userRef } = await useApiUser({ lazy: true });
+const { can } = useNethackPermissions();
 const { data: hackathon } = useFetch("/api/seasons/active", { lazy: true });
 
 const profileIconColor = computed(() => {
@@ -78,21 +79,14 @@ const navItems = computed<NavigationMenuItem[]>(() => {
             icon: "i-lucide-spotlight",
         },
     ];
-    if (
-        hackathon.value?.status === "voting" &&
-        !hasPermission(user.value?.role, "judge") &&
-        !hasPermission(user.value?.role, "admin")
-    ) {
+    if (hackathon.value?.status === "voting" && !can(NethackPermissions.Judging.assignmentsRead)) {
         links.push({
             label: "Voting",
             to: "/voting",
             icon: "i-material-symbols-star-rate",
         });
     }
-    if (
-        (hasPermission(user.value?.role, "judge") || hasPermission(user.value?.role, "admin")) &&
-        hackathon.value?.status === "voting"
-    ) {
+    if (can(NethackPermissions.Judging.assignmentsRead) && hackathon.value?.status === "voting") {
         links.push({
             label: "Judging",
             to: "/judging",

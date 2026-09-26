@@ -16,7 +16,7 @@ http://localhost:24598/api/auth/basis/callback
 https://nethack.biszweb.club/api/auth/basis/callback
 ```
 
-Register `urn:basis:api:basishacks` as a resource and use the same value for `BASIS_AUTH_RESOURCE`.
+Register `devconnect://nethack.bisz.dev` as a resource and use the same value for `BASIS_AUTH_RESOURCE`. The login request is `openid profile email offline_access nethack.access`; basis-auth supplies feature authorization in the access-token `permissions` array.
 
 ## Client configuration
 
@@ -28,11 +28,11 @@ Register `urn:basis:api:basishacks` as a resource and use the same value for `BA
 | `BASIS_AUTH_RESOURCE`      | Expected resource audience                     |
 | `CURRENT_URL_ORIGIN`       | Origin from which the callback URL is derived  |
 
-The client uses discovery, authorization code, S256 PKCE, state, nonce, `client_secret_basic`, ID-token validation, and UserInfo. Secrets and provider tokens are never exposed to the browser.
+The client uses discovery, authorization code, S256 PKCE, state, nonce, `client_secret_basic`, ID-token validation, and UserInfo. Failed discovery is retryable instead of being cached for the process lifetime. Client and refresh-token secrets remain server-only, with token bundles encrypted in SQLite rather than placed in the browser session cookie. A random opaque handle in the sealed server-only portion of the Nuxt session links the browser login to that token row. The access token is exposed through `/api/auth/token` only and retained in client memory.
 
 ## Protected API validation
 
-`server/utils/oauth2-jwt.ts` loads the provider JWKS and validates access tokens with exact issuer and audience checks, RS256, access-token type, expiry, scope, and stable subject mapping. It deliberately does not accept legacy basishacks HS256 tokens.
+`server/utils/oauth2-jwt.ts` loads the provider JWKS and validates access tokens with exact issuer and audience checks, RS256, access-token type, expiry, basis-schema claims, and stable subject mapping. Delegated scopes use the shared hierarchy matcher: `.all` grants descendant leaves, while `.*` is unsupported. Hackathon roles remain application-local. The verifier deliberately does not accept legacy basishacks HS256 tokens.
 
 ## Legacy data
 

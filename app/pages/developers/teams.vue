@@ -34,6 +34,7 @@ type AdminTeamMember = {
 type AdminTeam = Team & { season_name: string | null; members: AdminTeamMember[] };
 
 const { data, status, refresh } = await useFetch<AdminTeam[]>("/api/admin/teams", {
+    server: false,
     lazy: true,
     default: () => [],
 });

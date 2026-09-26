@@ -24,6 +24,10 @@ The `Content-Security-Policy` header includes **10 directives** that restrict re
 
 The middleware runs for API routes, rendered HTML pages, and static assets. The `'unsafe-inline'` source expression is required for `script-src` because Nuxt SSR hydration injects `window.__NUXT__` as an inline script, and for `style-src` because Vue and Nuxt UI components apply inline style bindings. The `'unsafe-eval'` source expression is intentionally omitted.
 
+## HTML Error Diagnostics
+
+The global Nitro error handler negotiates its response using the request's `Accept` header. Clients accepting `text/html` receive the shared Barry error page showing only the canonical error code in parentheses; error names, descriptions, and stack traces are omitted. Other clients receive the canonical JSON error envelope. HTML error responses set `Cache-Control: no-store` and `Vary: Accept`.
+
 ## Security-Critical Environment Variables
 
 The following environment variables directly affect platform security and must be configured carefully in production:
@@ -147,25 +151,19 @@ if (!app || !isSecretValid) {
 }
 ```
 
-## Audit Logging for Admin Impersonation
+## Token custody
 
-Admin impersonation events (`api/auth/impersonate.post.ts`) are logged with a structured `[AUDIT]` prefix for monitoring and forensic analysis:
-
-```
-[AUDIT] Admin 42 (admin@example.com) impersonated user 17 (target@basischina.com)
-```
-
-The log line includes both the admin's ID/email and the target user's ID/email. The log output can be captured by standard server logging infrastructure (journald, systemd, log files) for SIEM integration.
+Refresh tokens remain server-side in the encrypted `basis_auth_sessions` SQLite payload; the HTTP-only Nuxt cookie contains only the local user ID and its session identifier. Browser JavaScript receives short-lived access tokens and their display-only permission list through `POST /api/auth/token`. Protected APIs reject cookie-only requests and validate signature, issuer, audience, expiry, token type, and the JWT permissions array. Admin impersonation is not supported.
 
 ## Role-Based Access Control (RBAC)
 
 - RBAC is enforced **server-side**; the frontend never performs permission checks for authorization.
-- Three helper functions enforce access:
+- Three helper functions validate the bearer identity and then enforce access:
     - `requireUser(event)` — returns the full database user row or `401 Unauthorized`.
     - `requireJudge(event)` — returns `403 Forbidden` if the caller is not a judge or administrator.
     - `requireAdmin(event)` — returns `403 Forbidden` if the caller is not an administrator.
-- Fine-grained permissions are checked using `hasPermission(user.role, permission)` from `shared/permissions.ts`.
-- The `role` column stores space-separated, URI-encoded permission strings.
+- Fine-grained permissions are checked against the verified basis-auth JWT `permissions` array using `NethackPermissions` from `shared/permissions.ts`.
+- The local user table contains no authorization role; `nethack.all` is the explicit administrative grant.
 
 ::: danger Never trust the frontend for permission checks. Always validate on the server. :::
 

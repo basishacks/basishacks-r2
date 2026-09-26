@@ -1,5 +1,5 @@
 <script lang="ts" setup>
-const { user: userRef } = useUserSession();
+const { user: userRef } = useBasisAuthSession();
 const userID = computed(() => userRef.value?.id);
 
 if (!userID.value) {

@@ -5,8 +5,6 @@ import { Readable } from "stream";
 import { UserIdParams } from "~~/shared/schemas";
 
 export default defineEventHandler(async (event) => {
-    const currentUser = await getUserSession(event);
-
     setResponseHeader(event, "Content-Type", "image/png");
     const { id } = await getValidatedRouterParams(event, UserIdParams.parse);
 

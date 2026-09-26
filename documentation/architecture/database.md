@@ -103,6 +103,17 @@ Individual project scores within a ballot. Scores must be 1–5 or null.
 
 **Unique constraint**: `(ballot_id, project_id)`
 
+### `basis_auth_sessions`
+
+Stores OAuth token state on the server so the browser-facing Nuxt session stays below browser cookie-size limits. Token payloads are encrypted with a key derived from `NUXT_SESSION_PASSWORD` before being written to SQLite.
+
+| Column             | Type               | Description                                       |
+| ------------------ | ------------------ | ------------------------------------------------- |
+| `session_id`       | `TEXT PRIMARY KEY` | Nuxt session identifier                           |
+| `user_id`          | `INTEGER NOT NULL` | FK to `users.id` (ON DELETE CASCADE)              |
+| `encrypted_tokens` | `TEXT NOT NULL`    | AES-256-GCM encrypted access/refresh token bundle |
+| `expires_at`       | `INTEGER NOT NULL` | Absolute token-session expiry in milliseconds     |
+
 ### `oauth2_applications`
 
 | Column            | Type               | Description                    |
@@ -210,6 +221,7 @@ Each table has a dedicated helper module in `server/utils/database/`:
 | `members.ts` | Team member management |
 | `scores.ts` | Judge score CRUD |
 | `ballots.ts` | Ballot and ballot score management |
+| `basis-auth-sessions.ts` | Encrypted basis-auth token persistence by Nuxt session ID |
 | `hackathon.ts` | Hackathon state queries and updates |
 | `oauth2_applications.ts` | Application CRUD, secret management, redirect URI management |
 | `seasons.ts` | `getSeasons`, `getSeasonById`, `getActiveSeason`, `setActiveSeason`, `getScoreRankVisibilityResolver` |
@@ -347,6 +359,7 @@ PRAGMA foreign_keys = ON;
 This is set in `createDrizzleDatabase()` (via `server/database/index.ts`) and in the `init-database.ts` plugin. Cascade deletes are configured on:
 
 - `ballot_scores.ballot_id` → `ballots.id` (ON DELETE CASCADE)
+- `basis_auth_sessions.user_id` → `users.id` (ON DELETE CASCADE)
 - `user_past_teams.user_id` → `users.id` (ON DELETE CASCADE)
 - `user_past_teams.team_id` → `teams.id` (ON DELETE CASCADE)
 - `team_awards.team_id` → `teams.id` (ON DELETE CASCADE)

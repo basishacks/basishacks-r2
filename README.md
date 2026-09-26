@@ -32,11 +32,15 @@ The public `/showcase` page collects the season showcases in one place. The curr
 
 ## Installation
 
+Clone [`@basis/schema`](https://github.com/biszdevelopers/basis-schema) beside this repository, register its Bun link, and then install the application dependencies:
+
 ```bash
+git clone https://github.com/biszdevelopers/basis-schema.git ../basis-schema
+(cd ../basis-schema && bun link)
 bun install
 ```
 
-The `postinstall` script (`nuxt prepare`) runs automatically and generates Nuxt's typed references.
+If both repositories already exist in the same parent directory, only the `bun link` and `bun install` commands are needed. The `postinstall` script (`nuxt prepare`) runs automatically and generates Nuxt's typed references.
 
 ## Environment Setup
 
@@ -54,7 +58,7 @@ The canonical list of variables lives in `.env.example`. The table below summari
 | `BASIS_AUTH_ISSUER` | Required | Exact basis-auth issuer URL used for discovery and token validation |
 | `BASIS_AUTH_CLIENT_ID` | Required | Confidential client ID registered for basishacks |
 | `BASIS_AUTH_CLIENT_SECRET` | Required | Confidential client secret; keep it server-side |
-| `BASIS_AUTH_RESOURCE` | Required | Resource audience for basishacks access tokens (normally `urn:basis:api:basishacks`) |
+| `BASIS_AUTH_RESOURCE` | Required | Resource audience for basishacks access tokens (`devconnect://nethack.bisz.dev`) |
 | `MICROSOFT_TENANT_ID` | Optional | Tenant used only by Graph features |
 | `MICROSOFT_CLIENT_ID` | Optional | Application ID used only by Graph features |
 | `MICROSOFT_CLIENT_SECRET` | Optional | Application secret used only by Graph features |
@@ -71,9 +75,11 @@ The canonical list of variables lives in `.env.example`. The table below summari
 
 ## Authentication
 
-The only login method is the separately deployed **basis-auth** service. `/api/login` discovers the issuer and starts an authorization-code flow with S256 PKCE, state, and nonce. The callback URL is always `${CURRENT_URL_ORIGIN}/api/auth/basis/callback`; it must be registered exactly for each environment.
+The only login method is the separately deployed **basis-auth** service. `/api/login` discovers the issuer and starts an authorization-code flow with S256 PKCE, state, and nonce. The callback URL is always `${CURRENT_URL_ORIGIN}/api/auth/basis/callback`; it must be registered exactly for each environment. Resource-token claims and delegated permissions use the shared `@basis/schema` package; hackathon participant, judge, and administrator roles remain local.
 
-The short-lived login transaction is stored in a separate encrypted HTTP-only session. After the callback validates the ID token and loads UserInfo, basishacks links the first verified login to the existing local user by normalized email. Later logins resolve by the stable issuer and subject, preserving local user IDs, roles, teams, votes, and submissions. Provider tokens are not stored. Logout remains local to basishacks.
+The authorization request targets `devconnect://nethack.bisz.dev` and requests `openid profile email offline_access nethack.access`. Feature authorization is not represented by OAuth scopes: basis-auth supplies a JWT `permissions` array, and basishacks checks the least-privilege `nethack.*` permission required by each protected route. `nethack.all` is the explicit administrative grant. During the role-to-permission migration, legacy `participant`, `judge`, and `admin` grants are expanded into their equivalent granular permissions at the authorization boundary. After validating the ID token and UserInfo, basishacks links the identity and creates the encrypted server-side token record before publishing the browser session. The sealed HTTP-only cookie contains the local user ID and a server-only opaque token-session handle—not the access or refresh tokens—so permission-bearing JWTs cannot overflow the browser cookie limit. `POST /api/auth/token` resolves that stable handle and exposes only the short-lived access token and effective permissions to client memory for display-only UI gating; refresh tokens never reach browser JavaScript. Refresh rotation is single-flight per token session. `POST /api/auth/logout` attempts refresh-family revocation and always clears the local token record and browser credential.
+
+Protected application APIs require `Authorization: Bearer …`; possession of the Nuxt session cookie alone is insufficient. Tokens must be RS256 access tokens issued by basis-auth for the exact resource audience, and their JWT permissions are the sole authorization source. Failed requests use `Accept` negotiation: clients accepting `text/html` receive the shared Barry error page showing only the canonical error code, while other clients receive the `@basis/schema` JSON envelope `{ status, code, error, error_description }` with matching HTTP and envelope status values.
 
 The former basishacks OAuth provider and application-management UI/API have been retired. The legacy `oauth2_applications` table and records remain for audit and rollback. Graph integration is independent and is never used to authenticate a basishacks session.
 
@@ -109,6 +115,8 @@ npm run dev -- --https # or with npm
 ```
 
 For HTTP (not recommended — OAuth2 requires secure context): `bun dev`
+
+The custom Nitro error-handler path is normalized to forward slashes in `nuxt.config.ts`. This keeps the generated virtual module valid on Windows, including when the absolute project path contains digit-leading username segments that JavaScript could otherwise parse as legacy octal escapes.
 
 ## Testing
 

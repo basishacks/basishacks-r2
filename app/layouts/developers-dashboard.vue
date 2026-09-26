@@ -1,10 +1,11 @@
 <script setup lang="ts">
 import type { NavigationMenuItem } from "@nuxt/ui";
-import { hasPermission } from "~~/shared/permissions";
+import { NethackPermissions } from "~~/shared/permissions";
 
 const { user, status } = await useApiUser({ lazy: true });
+const { can } = useNethackPermissions();
 
-const isAdmin = computed(() => hasPermission(user.value?.role, "admin"));
+const isAdmin = computed(() => can(NethackPermissions.all));
 
 if (status.value !== "idle" && status.value !== "pending") {
     if (!isAdmin.value) {

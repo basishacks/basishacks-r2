@@ -63,7 +63,6 @@ function createEvent(overrides: Record<string, unknown> = {}) {
 describe("GET /api/users/:id", () => {
     it("returns 404 when user does not exist", async () => {
         mockParams.values["id"] = "9999";
-        mockSession.value = { user: { id: 9999 } };
 
         await expect(handler(createEvent())).rejects.toMatchObject({
             statusCode: 404,

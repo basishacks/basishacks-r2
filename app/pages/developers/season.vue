@@ -1,4 +1,5 @@
 <script setup lang="ts">
+import { NethackPermissions } from "~~/shared/permissions";
 definePageMeta({
     layout: "developers-dashboard",
     middleware: ["auth"],
@@ -10,9 +11,10 @@ useHead({
 
 const toast = useToast();
 const { data: user, status } = await useApiUser();
+const { can } = useNethackPermissions();
 
 if (status.value !== "pending" && status.value !== "idle") {
-    if (!user.value || user.value.role !== "admin") {
+    if (!user.value || !can(NethackPermissions.all)) {
         throw createError({ statusCode: 403, statusMessage: "Access Denied" });
     }
 }
@@ -20,7 +22,9 @@ if (status.value !== "pending" && status.value !== "idle") {
 // ---------------------------------------------------------------------------
 // Data
 // ---------------------------------------------------------------------------
-const { data: adminData, refresh: refreshAdmin } = await useFetch("/api/admin/hackathon");
+const { data: adminData, refresh: refreshAdmin } = await useFetch("/api/admin/hackathon", {
+    server: false,
+});
 const hackathon = computed(() => adminData.value?.hackathon ?? null);
 const seasons = computed(() => adminData.value?.seasons ?? []);
 
@@ -38,6 +42,18 @@ function tsToDatetime(ts: unknown): string {
 function datetimeToTs(s: string): number {
     if (!s) return 0;
     return new Date(s).getTime();
+}
+
+async function downloadDatabase(format: "sqlite" | "csv") {
+    const blob = await $fetch<Blob>(`/api/admin/database/export?format=${format}`, {
+        responseType: "blob",
+    });
+    const url = URL.createObjectURL(blob);
+    const link = document.createElement("a");
+    link.href = url;
+    link.download = `basishacks-export.${format === "sqlite" ? "db" : "csv"}`;
+    link.click();
+    URL.revokeObjectURL(url);
 }
 
 // All config fields — every field is per-season (saved with season_id)
@@ -489,22 +505,10 @@ async function addSeason() {
                 <h2 class="text-xl font-semibold">Database Export</h2>
                 <p class="text-sm text-ui-text-muted">Download a full snapshot of the database.</p>
                 <div class="flex flex-wrap items-center gap-3">
-                    <UButton
-                        tag="a"
-                        :to="`/api/admin/database/export?format=sqlite`"
-                        target="_blank"
-                        color="primary"
-                        variant="solid"
-                    >
+                    <UButton color="primary" variant="solid" @click="downloadDatabase('sqlite')">
                         Download SQLite
                     </UButton>
-                    <UButton
-                        tag="a"
-                        :to="`/api/admin/database/export?format=csv`"
-                        target="_blank"
-                        color="neutral"
-                        variant="outline"
-                    >
+                    <UButton color="neutral" variant="outline" @click="downloadDatabase('csv')">
                         Download CSV
                     </UButton>
                 </div>

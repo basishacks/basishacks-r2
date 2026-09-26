@@ -51,7 +51,7 @@ function createEvent(overrides: Record<string, unknown> = {}) {
 }
 
 describe("GET /api/seasons/:id/tweaks", () => {
-    it("requires PORTAL_SEASONS_VIEW permission", async () => {
+    it("allows anonymous public season tweak reads", async () => {
         vi.mocked(globalThis.requirePermission).mockRejectedValue(
             Object.assign(new Error("Insufficient permissions"), { statusCode: 403 }),
         );
@@ -59,9 +59,8 @@ describe("GET /api/seasons/:id/tweaks", () => {
         const season = seedSeason(ctx);
         mockParams.values["id"] = String(season.id);
 
-        await expect(getTweaksHandler(createEvent())).rejects.toMatchObject({
-            statusCode: 403,
-        });
+        await expect(getTweaksHandler(createEvent())).resolves.toMatchObject({ id: season.id });
+        expect(globalThis.requirePermission).not.toHaveBeenCalled();
     });
 
     it("returns the season tweak row", async () => {

@@ -36,6 +36,12 @@ jobs:
               with:
                   bun-version: latest
 
+            - name: Link @basis/schema
+              run: |
+                  git clone --depth 1 https://github.com/biszdevelopers/basis-schema.git ../basis-schema
+                  cd ../basis-schema
+                  bun link
+
             - name: Cache Bun dependencies
               uses: actions/cache@v4
               with:

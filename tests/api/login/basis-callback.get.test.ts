@@ -3,9 +3,9 @@ import { setupNitroGlobals } from "../helpers";
 
 const mocks = vi.hoisted(() => ({
     complete: vi.fn(),
-    getFlow: vi.fn(),
+    consumeFlow: vi.fn(),
     linkUser: vi.fn(),
-    clear: vi.fn(),
+    establishSession: vi.fn(),
 }));
 
 vi.mock("~~/server/utils/rateLimit", () => ({
@@ -14,19 +14,21 @@ vi.mock("~~/server/utils/rateLimit", () => ({
 }));
 vi.mock("~~/server/utils/basis-auth", () => ({
     completeBasisAuthFlow: mocks.complete,
-    getBasisAuthFlowSession: mocks.getFlow,
+    sanitizePostLoginRedirect: (value?: string) => value,
 }));
 vi.mock("~~/server/utils/database/users", () => ({
     findOrLinkBasisAuthUser: mocks.linkUser,
 }));
+vi.mock("~~/server/utils/basis-auth-session", () => ({
+    consumeBasisAuthFlowTransaction: mocks.consumeFlow,
+    establishBasisAuthUserSession: mocks.establishSession,
+}));
 
 let handler: any;
-const replaceUserSessionMock = vi.fn();
 const sendRedirectMock = vi.fn();
 
 beforeAll(async () => {
     setupNitroGlobals();
-    vi.stubGlobal("replaceUserSession", replaceUserSessionMock);
     vi.stubGlobal("sendRedirect", sendRedirectMock);
     vi.stubGlobal(
         "getRequestURL",
@@ -38,20 +40,26 @@ beforeAll(async () => {
 beforeEach(() => {
     vi.clearAllMocks();
     vi.spyOn(console, "error").mockImplementation(() => undefined);
-    mocks.getFlow.mockResolvedValue({
-        data: {
-            state: "state",
-            nonce: "nonce",
-            codeVerifier: "verifier",
-            postLoginRedirect: "/teams",
-        },
-        clear: mocks.clear,
+    mocks.consumeFlow.mockReturnValue({
+        state: "state",
+        nonce: "nonce",
+        codeVerifier: "verifier",
+        startedAt: 123,
+        postLoginRedirect: "/teams",
     });
     mocks.complete.mockResolvedValue({
-        issuer: "https://auth.example.test",
-        subject: "subject-1",
-        email: "user@example.com",
-        emailVerified: true,
+        identity: {
+            issuer: "https://auth.example.test",
+            subject: "subject-1",
+            email: "user@example.com",
+            emailVerified: true,
+        },
+        tokens: {
+            accessToken: "access-token",
+            expiresAt: 123456,
+            refreshToken: "refresh-token",
+            scopes: ["Profile.all"],
+        },
     });
     mocks.linkUser.mockResolvedValue({ id: 17 });
 });
@@ -60,15 +68,18 @@ describe("GET /api/auth/basis/callback", () => {
     it("clears the transaction, creates the existing local session, and redirects safely", async () => {
         await handler({ context: {} });
 
-        expect(mocks.clear).toHaveBeenCalledOnce();
+        expect(mocks.consumeFlow).toHaveBeenCalledOnce();
         expect(mocks.complete).toHaveBeenCalledWith(expect.any(URL), {
             state: "state",
             nonce: "nonce",
             codeVerifier: "verifier",
+            startedAt: 123,
             postLoginRedirect: "/teams",
         });
-        expect(replaceUserSessionMock).toHaveBeenCalledWith(expect.anything(), {
-            user: { id: 17 },
+        expect(mocks.establishSession).toHaveBeenCalledWith(expect.anything(), 17, {
+            accessToken: "access-token",
+            accessTokenExpiresAt: 123456,
+            refreshToken: "refresh-token",
         });
         expect(sendRedirectMock).toHaveBeenCalledWith(expect.anything(), "/teams", 302);
     });
@@ -77,7 +88,15 @@ describe("GET /api/auth/basis/callback", () => {
         mocks.complete.mockRejectedValue(new Error("state mismatch"));
 
         await expect(handler({ context: {} })).rejects.toMatchObject({ statusCode: 401 });
-        expect(mocks.clear).toHaveBeenCalledOnce();
-        expect(replaceUserSessionMock).not.toHaveBeenCalled();
+        expect(mocks.consumeFlow).toHaveBeenCalledOnce();
+        expect(mocks.establishSession).not.toHaveBeenCalled();
+    });
+
+    it("fails closed if the atomic local session cannot be established", async () => {
+        mocks.establishSession.mockImplementationOnce(() => {
+            throw new Error("cookie unavailable");
+        });
+
+        await expect(handler({ context: {} })).rejects.toMatchObject({ statusCode: 401 });
     });
 });

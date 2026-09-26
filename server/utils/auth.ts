@@ -1,61 +1,28 @@
 import type { H3Event } from "h3";
-import { hasPermission } from "~~/shared/permissions";
+import type { PermissionRequirement } from "@basis/schema/permissions";
+import { expandLegacyNethackPermissions, hasNethackPermission } from "~~/shared/permissions";
+import { resolveOAuth2User, verifyOAuth2JWT } from "./oauth2-jwt";
+import { readBasisAuthUserSession } from "./basis-auth-session";
 
-export async function requireUser(event: H3Event) {
-    const session = await getUserSession(event);
-    if (!session?.user?.id) {
+export async function requireUser(event: H3Event, permissions?: PermissionRequirement) {
+    const payload = event.context.oauth2?.payload ?? (await verifyOAuth2JWT(event));
+    if (permissions && !hasNethackPermission(payload.permissions, permissions)) {
         throw createError({
-            status: 401,
-            message: "Logged in user not found",
+            statusCode: 403,
+            statusMessage: "insufficient_permission",
+            message: "The access token lacks a required permission",
         });
     }
-
-    const user = await getUser(event, session.user.id);
-    if (!user) {
-        throw createError({
-            status: 401,
-            message: "Logged in user not found",
-        });
-    }
-
+    const user = event.context.oauth2?.user ?? (await resolveOAuth2User(event, payload));
+    event.context.oauth2 = {
+        payload,
+        permissions: expandLegacyNethackPermissions(payload.permissions),
+        user,
+    };
     return user;
 }
 
-export async function requireJudge(event: H3Event) {
-    const user = await requireUser(event);
-
-    if (!hasPermission(user.role, "admin") && !hasPermission(user.role, "judge")) {
-        throw createError({
-            status: 403,
-            message: "Insufficient permissions",
-        });
-    }
-
-    return user;
-}
-
-export async function requireAdmin(event: H3Event) {
-    const user = await requireUser(event);
-
-    if (!hasPermission(user.role, "admin")) {
-        throw createError({
-            status: 403,
-            message: "Insufficient permissions",
-        });
-    }
-
-    return user;
-}
-
-export async function requirePermission(event: H3Event, permission: string) {
-    const user = await requireUser(event);
-
-    if (!hasPermission(user.role, permission) && !hasPermission(user.role, "admin")) {
-        throw createError({
-            status: 403,
-            message: "Insufficient permissions",
-        });
-    }
-
-    return user;
+export async function optionalUser(event: H3Event) {
+    if (!getHeader(event, "authorization") && !readBasisAuthUserSession(event)) return undefined;
+    return await requireUser(event);
 }

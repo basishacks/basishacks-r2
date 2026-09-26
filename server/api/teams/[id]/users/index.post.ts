@@ -1,3 +1,4 @@
+import { NethackPermissions } from "~~/shared/permissions";
 import { AddTeamMemberRequest, TeamIdParams } from "~~/shared/schemas";
 import { applyRateLimit, DEFAULT_RATE_LIMIT_CONFIG } from "~~/server/utils/rateLimit";
 
@@ -5,11 +6,7 @@ export default defineEventHandler(
     applyRateLimit(async (event) => {
         const { id: teamID } = await getValidatedRouterParams(event, TeamIdParams.parse);
 
-        const {
-            user: { id: currentUserID },
-        } = await requireUserSession(event);
-
-        const currentUser = await getUser(event, currentUserID);
+        const currentUser = await requireUser(event, NethackPermissions.Teams.membersAddOwn);
         if (currentUser?.team_id !== teamID) {
             throw createError({
                 status: 403,

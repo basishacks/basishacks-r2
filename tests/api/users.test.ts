@@ -76,6 +76,7 @@ afterEach(() => {
 function createEvent(overrides: Record<string, unknown> = {}) {
     return {
         context: { drizzle: ctx.drizzle },
+        node: { req: { socket: { remoteAddress: "127.0.0.1" } } },
         ...overrides,
     };
 }
@@ -109,7 +110,6 @@ describe("GET /api/users", () => {
 describe("GET /api/users/:id", () => {
     it("returns 404 for non-existing user", async () => {
         mockParams.values["id"] = "9999";
-        mockSession.value = { user: { id: 9999 } };
 
         // getUser returns null → 404
         const { requirePermission } = await import("~~/server/utils/auth");
@@ -207,7 +207,14 @@ describe("GET /api/users/:id", () => {
         mockParams.values["id"] = String(admin.id);
         mockSession.value = { user: { id: admin.id } };
 
-        const result = await getHandler(createEvent());
+        const result = await getHandler(
+            createEvent({
+                context: {
+                    drizzle: ctx.drizzle,
+                    oauth2: { permissions: ["nethack.Judging.resultsRead"] },
+                },
+            }),
+        );
 
         expect(result.team.score).toBe(95);
         expect(result.team.rank).toBe(1);
@@ -263,6 +270,7 @@ describe("GET /api/users/:id", () => {
 
 describe("PATCH /api/users/:id", () => {
     it("returns 403 when updating another user", async () => {
+        seedUser(ctx, { email: "viewer@basischina.com" });
         mockParams.values["id"] = "2";
         mockSession.value = { user: { id: 1 } };
 

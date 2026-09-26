@@ -50,6 +50,7 @@ declare global {
     type Team = Omit<TeamBase, "pathway"> & { pathway: TeamPathway };
     type TeamScores = TeamScoresBase;
     type User = UserBase;
+    type BasisAuthSession = BasisAuthSessionBase;
     type Ballot = BallotBase;
     type BallotScore = BallotScoreBase;
     type OAuth2Application = OAuth2ApplicationBase;

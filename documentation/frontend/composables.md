@@ -5,7 +5,7 @@ description: Shared composables, middleware, constants, error handling, and cros
 
 # Composables & Utilities
 
-The basishacks frontend organizes shared logic into composables (`app/composables/`), route middleware (`app/middleware/`), utility functions (`app/utils/`), and app configuration (`app/app.config.ts`).
+The basishacks frontend organizes shared logic into composables (`app/composables/`), route middleware (`app/middleware/`), utility functions (`app/utils/`), and app configuration (`app/app.config.ts`). `app/plugins/api.client.ts` bootstraps the basis-auth access token into memory, injects bearer headers, unwraps `APIResponse.data`, parses `APIError` envelopes, and performs one single-flight refresh-and-retry after an expired-token response. A failed refresh clears local authentication and restarts login.
 
 ## Composables
 
@@ -24,6 +24,7 @@ export async function useApiUser(options?: { lazy?: boolean }): Promise<UseApiUs
         lazy: options?.lazy ?? false,
         immediate: !!userID.value,
         watch: [userID],
+        server: false,
         default: () => null,
     });
 
@@ -85,7 +86,7 @@ const { user, sessionUser, refresh, clear } = await useApiUser({ lazy: true });
 
 **File:** `app/middleware/auth.ts`
 
-Global route middleware that redirects unauthenticated users to the login endpoint, preserving the originally requested URL.
+Global route middleware that verifies the server session before redirecting unauthenticated users to the login endpoint, preserving the originally requested URL and avoiding a post-OIDC hydration redirect loop.
 
 ```ts
 export default defineNuxtRouteMiddleware((to) => {
@@ -314,14 +315,14 @@ try {
 Role-based access control is enforced at two levels:
 
 1. **Server-side** — `requireUser`, `requireJudge`, `requireAdmin` in `server/utils/auth.ts`
-2. **Client-side** — `hasPermission()` from `~~/shared/permissions` for UI conditionals
+2. **Client-side** — `useNethackPermissions()` for display-only UI conditionals
 
 ```vue
 <script setup>
-import { hasPermission } from "~~/shared/permissions";
+import { NethackPermissions } from "~~/shared/permissions";
 
-const showJudging = computed(
-    () => hasPermission(user.value?.role, "judge") || hasPermission(user.value?.role, "admin"),
+const showJudging = computed(() =>
+    useNethackPermissions().can(NethackPermissions.Judging.assignmentsRead),
 );
 </script>
 

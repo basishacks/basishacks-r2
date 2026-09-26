@@ -20,7 +20,7 @@ const source = readFileSync(
 describe("debug upload endpoint", () => {
     it("requires an authenticated user", () => {
         expect(source).toContain('import { requireUser } from "~~/server/utils/auth"');
-        expect(source).toContain("await requireUser(event)");
+        expect(source).toContain("await requireUser(event, NethackPermissions.Debug.filesWrite)");
     });
 
     it("whitelists file extensions", () => {

@@ -81,11 +81,11 @@ function cleanupStaleEntries(now: number) {
 }
 
 export async function getClientIdentifier(event: H3Event): Promise<string> {
-    // Try to get user ID first (for authenticated requests)
     try {
-        const session = await getUserSession(event);
-        if (session?.user?.id) {
-            return `user:${session.user.id}`;
+        const { readBasisAuthUserSession } = await import("~~/server/utils/basis-auth-session");
+        const session = readBasisAuthUserSession(event);
+        if (session?.userId) {
+            return `user:${session.userId}`;
         }
     } catch {
         // User not authenticated, fall through to IP

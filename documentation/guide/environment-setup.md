@@ -58,9 +58,13 @@ bun --version
 
 ```bash
 git clone <repository-url> basishacks-r2
+git clone https://github.com/biszdevelopers/basis-schema.git basis-schema
 cd basishacks-r2
+(cd ../basis-schema && bun link)
 bun i
 ```
+
+Keep [`@basis/schema`](https://github.com/biszdevelopers/basis-schema) as a sibling checkout. Local builds and tests resolve its source through `../basis-schema`; the CI, lint, and release workflows clone and link the same repository before installing dependencies.
 
 ::: tip Dependency pins `package.json` uses `overrides` to pin two transitive dependencies:
 
@@ -121,7 +125,7 @@ cp .env.example .env
 | `BASIS_AUTH_ISSUER` | Exact basis-auth issuer URL | `http://localhost:3000` |
 | `BASIS_AUTH_CLIENT_ID` | Registered confidential basishacks client ID | Provider-generated value |
 | `BASIS_AUTH_CLIENT_SECRET` | Server-only basishacks client secret | Provider-generated value |
-| `BASIS_AUTH_RESOURCE` | Resource audience registered for basishacks | `urn:basis:api:basishacks` |
+| `BASIS_AUTH_RESOURCE` | Resource audience registered for basishacks | `devconnect://nethack.bisz.dev` |
 
 ::: tip Login is delegated to basis-auth. Register `${CURRENT_URL_ORIGIN}/api/auth/basis/callback` for each environment. :::
 
@@ -186,7 +190,7 @@ NUXT_SESSION_PASSWORD=your_random_string_at_least_32_bytes_long
 BASIS_AUTH_ISSUER=http://localhost:3000
 BASIS_AUTH_CLIENT_ID=your_basis_auth_client_id
 BASIS_AUTH_CLIENT_SECRET=your_basis_auth_client_secret
-BASIS_AUTH_RESOURCE=urn:basis:api:basishacks
+BASIS_AUTH_RESOURCE=devconnect://nethack.bisz.dev
 
 # OPTIONAL - Microsoft Entra ID tenant ID (directory ID)
 MICROSOFT_TENANT_ID=your_microsoft_tenant_id_here
@@ -355,6 +359,10 @@ bun dev --https
 If the page loads without errors, your environment is correctly configured.
 
 ## Troubleshooting
+
+### Nitro Legacy Octal Escape on Windows
+
+The custom Nitro error-handler path is normalized in `nuxt.config.ts` before Nitro writes it into a virtual module. If an older checkout reports `Legacy octal escape is not permitted in strict mode` from `virtual:#nitro-internal-virtual/error-handler`, update to the current configuration and restart the dev server. The error is caused by an unescaped Windows backslash followed by digits in the absolute project path, not by `server/error.ts` itself.
 
 ### Port Already in Use
 
