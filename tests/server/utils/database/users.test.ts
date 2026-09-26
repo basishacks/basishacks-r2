@@ -6,7 +6,6 @@ import {
     updateUserName,
     updateUserProfileTheme,
     updateUserProfilePicture,
-    updateUserRole,
     deleteUsers,
     findOrLinkBasisAuthUser,
     getUserByBasisAuthSubject,
@@ -66,7 +65,7 @@ describe("users database helpers", () => {
         it("links the first verified login by normalized email without changing local ownership", async () => {
             event.context.drizzle
                 .prepare(
-                    "INSERT INTO users(id, email, name, role) VALUES(17, 'user@example.com', 'Old Name', 'judge')",
+                    "INSERT INTO users(id, email, name) VALUES(17, 'user@example.com', 'Old Name')",
                 )
                 .run();
             event.context.drizzle
@@ -81,7 +80,6 @@ describe("users database helpers", () => {
 
             expect(user).toMatchObject({
                 id: 17,
-                role: "judge",
                 team_id: 5,
                 auth_issuer: identity.issuer,
                 auth_subject: identity.subject,
@@ -199,23 +197,6 @@ describe("users database helpers", () => {
                     profile_picture: "/avatars/test.png",
                 } as any),
             ).rejects.toThrow("User not found");
-        });
-    });
-
-    describe("updateUserRole", () => {
-        it("updates the user role successfully", async () => {
-            event.context.drizzle
-                .prepare("INSERT INTO users(email, role) VALUES('user@example.com', 'participant')")
-                .run();
-
-            await updateUserRole(event, 1, "judge");
-
-            const user = await getUser(event, 1);
-            expect(user!.role).toBe("judge");
-        });
-
-        it("throws a 404 error when the user does not exist", async () => {
-            await expect(updateUserRole(event, 999, "admin")).rejects.toThrow("User not found");
         });
     });
 

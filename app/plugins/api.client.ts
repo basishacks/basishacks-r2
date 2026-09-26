@@ -33,7 +33,7 @@ export default defineNuxtPlugin(() => {
                 new APIError("invalid_response", "API request failed", failed.statusCode ?? 500),
             );
             const isAuthEndpoint = path.startsWith("/api/auth/") || path.startsWith("/api/login");
-            if (error.status === 401 && isApi && !isAuthEndpoint && import.meta.client) {
+            if (error.status === 401 && isApi && !isAuthEndpoint) {
                 useBasisAuthSession().reset();
                 const redirect = `${window.location.pathname}${window.location.search}`;
                 window.location.assign(`/api/login?redirect=${encodeURIComponent(redirect)}`);

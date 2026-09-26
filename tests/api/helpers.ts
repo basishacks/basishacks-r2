@@ -325,27 +325,8 @@ async function requireUserMock(event: any) {
     return user;
 }
 
-async function requireJudgeMock(event: any) {
-    const user = await requireUserMock(event);
-    if (user.role !== "judge" && user.role !== "admin") {
-        const error = new Error("Insufficient permissions") as any;
-        error.statusCode = 403;
-        throw error;
-    }
-    return user;
-}
-
-async function requireAdminMock(event: any) {
-    const user = await requireUserMock(event);
-    if (user.role !== "admin") {
-        const error = new Error("Insufficient permissions") as any;
-        error.statusCode = 403;
-        throw error;
-    }
-    return user;
-}
-
 export function setupNitroGlobals() {
+    const requireAuthorizedUser = vi.fn(requireUserMock);
     vi.stubGlobal("defineEventHandler", (fn: any) => fn);
     vi.stubGlobal("readValidatedBody", readBodyMock);
     vi.stubGlobal("readBody", readRawBodyMock);
@@ -358,7 +339,7 @@ export function setupNitroGlobals() {
     vi.stubGlobal("setHeader", setHeaderMock);
     vi.stubGlobal("createError", createErrMock);
     vi.stubGlobal("useRuntimeConfig", configMock);
-    vi.stubGlobal("requireUser", vi.fn(requireUserMock));
+    vi.stubGlobal("requireUser", requireAuthorizedUser);
     vi.stubGlobal(
         "optionalUser",
         vi.fn((event: any) => {
@@ -366,9 +347,12 @@ export function setupNitroGlobals() {
             return requireUserMock(event);
         }),
     );
-    vi.stubGlobal("requireJudge", vi.fn(requireJudgeMock));
-    vi.stubGlobal("requireAdmin", vi.fn(requireAdminMock));
-    vi.stubGlobal("requirePermission", vi.fn(requireUserMock));
+    // All protected routes now authorize through requireUser(event, permission).
+    // Keep the legacy test-global names as aliases so older route tests can
+    // configure and assert the single authorization boundary while migrating.
+    vi.stubGlobal("requireJudge", requireAuthorizedUser);
+    vi.stubGlobal("requireAdmin", requireAuthorizedUser);
+    vi.stubGlobal("requirePermission", requireAuthorizedUser);
     vi.stubGlobal("applyRateLimit", (fn: any) => fn);
 }
 
@@ -390,10 +374,4 @@ export function resetMockState() {
         if (!mockSession.value?.user?.id) return undefined;
         return requireUserMock(event);
     });
-    (globalThis as any).requireJudge?.mockReset?.();
-    (globalThis as any).requireJudge?.mockImplementation?.(requireJudgeMock);
-    (globalThis as any).requireAdmin?.mockReset?.();
-    (globalThis as any).requireAdmin?.mockImplementation?.(requireAdminMock);
-    (globalThis as any).requirePermission?.mockReset?.();
-    (globalThis as any).requirePermission?.mockImplementation?.(requireUserMock);
 }

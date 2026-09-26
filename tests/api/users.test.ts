@@ -76,6 +76,7 @@ afterEach(() => {
 function createEvent(overrides: Record<string, unknown> = {}) {
     return {
         context: { drizzle: ctx.drizzle },
+        node: { req: { socket: { remoteAddress: "127.0.0.1" } } },
         ...overrides,
     };
 }
@@ -206,7 +207,14 @@ describe("GET /api/users/:id", () => {
         mockParams.values["id"] = String(admin.id);
         mockSession.value = { user: { id: admin.id } };
 
-        const result = await getHandler(createEvent());
+        const result = await getHandler(
+            createEvent({
+                context: {
+                    drizzle: ctx.drizzle,
+                    oauth2: { permissions: ["nethack.Judging.resultsRead"] },
+                },
+            }),
+        );
 
         expect(result.team.score).toBe(95);
         expect(result.team.rank).toBe(1);

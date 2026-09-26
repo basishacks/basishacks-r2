@@ -18,6 +18,7 @@ vi.mock("~~/server/utils/basis-auth", () => ({
         clientSecret: "secret",
         resource: "devconnect://nethack.bisz.dev",
     }),
+    getFreshBasisAuthUserSession: vi.fn(),
 }));
 
 vi.mock("~~/server/utils/database/users", () => ({
@@ -26,11 +27,8 @@ vi.mock("~~/server/utils/database/users", () => ({
 
 import {
     extractBearerToken,
-    parseJWScopes,
-    requireScopes,
     resolveOAuth2User,
     verifyAccessToken,
-    withOAuth2JWT,
 } from "~~/server/utils/oauth2-jwt";
 
 const event = () => ({ context: {} }) as any;
@@ -103,50 +101,11 @@ describe("basis-auth access tokens", () => {
     });
 });
 
-describe("OAuth2 bearer helpers", () => {
+describe("OAuth2 bearer parsing", () => {
     it("extracts case-insensitive bearer tokens and rejects malformed headers", () => {
         vi.mocked(getHeader).mockReturnValue("bEaReR token");
         expect(extractBearerToken(event())).toBe("token");
         vi.mocked(getHeader).mockReturnValue("Basic token");
         expect(() => extractBearerToken(event())).toThrow();
-    });
-
-    it("parses and enforces scopes", () => {
-        expect(parseJWScopes("chat.readwrite   profile")).toEqual(["chat.readwrite", "profile"]);
-        expect(parseJWScopes(undefined)).toEqual([]);
-        expect(() => requireScopes(["chat.readwrite"], ["chat.readwrite"])).not.toThrow();
-        expect(() => requireScopes([], ["chat.readwrite"])).toThrow(
-            expect.objectContaining({ statusCode: 403 }),
-        );
-    });
-
-    it("attaches the verified token context before invoking a wrapped handler", async () => {
-        vi.mocked(getHeader).mockReturnValue("Bearer token");
-        jwtVerifyMock.mockResolvedValue({ payload: claims });
-        const wrapped = withOAuth2JWT(async (request) => request.context.oauth2, {
-            requiredScopes: ["chat.readwrite"],
-        });
-
-        await expect(wrapped(event())).resolves.toMatchObject({
-            payload: { sub: "user-1" },
-            scopes: ["chat.readwrite"],
-        });
-    });
-
-    it("checks delegated permissions separately from OAuth scopes", async () => {
-        vi.mocked(getHeader).mockReturnValue("Bearer token");
-        jwtVerifyMock.mockResolvedValue({ payload: claims });
-        const allowed = withOAuth2JWT(async () => "ok", {
-            requiredPermissions: "users.READ",
-        });
-        await expect(allowed(event())).resolves.toBe("ok");
-
-        const denied = withOAuth2JWT(async () => "no", {
-            requiredPermissions: "Users.write",
-        });
-        await expect(denied(event())).rejects.toMatchObject({
-            statusCode: 403,
-            statusMessage: "insufficient_permission",
-        });
     });
 });

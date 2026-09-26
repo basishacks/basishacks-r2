@@ -1,14 +1,9 @@
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import { createMockEvent } from "./database/helpers";
-import {
-    optionalUser,
-    requireAdmin,
-    requireJudge,
-    requirePermission,
-    requireUser,
-} from "~~/server/utils/auth";
+import { optionalUser, requireUser } from "~~/server/utils/auth";
+import { NethackPermissions } from "~~/shared/permissions";
 
-const payload = {
+const basePayload = {
     iss: "https://auth.example.test",
     sub: "subject-1",
     aud: "devconnect://nethack.bisz.dev",
@@ -16,8 +11,8 @@ const payload = {
     iat: Math.floor(Date.now() / 1000),
     type: "access_token" as const,
     client_id: "basishacks",
-    scope: "Profile.all Teams.read.all",
-    permissions: [],
+    scope: "openid nethack.access",
+    permissions: [] as string[],
 };
 
 describe("server/utils/auth bearer authorization", () => {
@@ -28,64 +23,55 @@ describe("server/utils/auth bearer authorization", () => {
         vi.stubGlobal("createError", (input: any) =>
             Object.assign(new Error(input.message), input),
         );
+        vi.stubGlobal("getHeader", () => undefined);
+        vi.stubGlobal("getCookie", () => undefined);
     });
 
-    const authenticate = (role: "participant" | "judge" | "admin") => {
-        const user = { id: 1, role, auth_issuer: payload.iss, auth_subject: payload.sub } as any;
-        event.context.oauth2 = { payload, scopes: payload.scope.split(" "), user };
+    const authenticate = (permissions: string[]) => {
+        const user = { id: 1, auth_issuer: basePayload.iss, auth_subject: basePayload.sub } as any;
+        const payload = { ...basePayload, permissions };
+        event.context.oauth2 = { payload, permissions, user };
         return user;
     };
 
-    it("returns the bearer-linked local user and enforces delegated scope hierarchy", async () => {
-        const user = authenticate("participant");
+    it("returns the linked local user when the JWT has the required permission", async () => {
+        const user = authenticate([NethackPermissions.Profile.updateSelf]);
 
-        await expect(requireUser(event, "Profile.read")).resolves.toBe(user);
-        await expect(requireUser(event, "Teams.read.self")).resolves.toBe(user);
-        expect(event.context.oauth2?.scopes).toEqual(["Profile.all", "Teams.read.all"]);
+        await expect(requireUser(event, NethackPermissions.Profile.updateSelf)).resolves.toBe(user);
+        expect(event.context.oauth2?.permissions).toEqual([NethackPermissions.Profile.updateSelf]);
     });
 
-    it("rejects an insufficient delegated scope", async () => {
-        authenticate("participant");
+    it("rejects a missing delegated permission", async () => {
+        authenticate([NethackPermissions.Profile.updateSelf]);
 
-        await expect(requireUser(event, "Projects.write.self")).rejects.toMatchObject({
+        await expect(
+            requireUser(event, NethackPermissions.Projects.submitOwn),
+        ).rejects.toMatchObject({
             statusCode: 403,
-            statusMessage: "insufficient_scope",
+            statusMessage: "insufficient_permission",
         });
     });
 
-    it("applies participant, judge, and admin RBAC after scope validation", async () => {
-        authenticate("participant");
-        await expect(requireJudge(event, "Profile.read")).rejects.toMatchObject({ status: 403 });
+    it("expands legacy role grants from the access token", async () => {
+        authenticate(["judge"]);
 
-        authenticate("judge");
-        await expect(requireJudge(event, "Profile.read")).resolves.toMatchObject({ role: "judge" });
-        await expect(requireAdmin(event, "Profile.read")).rejects.toMatchObject({ status: 403 });
-
-        authenticate("admin");
-        await expect(requireAdmin(event, "Profile.read")).resolves.toMatchObject({ role: "admin" });
+        await expect(
+            requireUser(event, NethackPermissions.Judging.assignmentsRead),
+        ).resolves.toMatchObject({ id: 1 });
+        expect(event.context.oauth2?.permissions).toContain(
+            NethackPermissions.Judging.assignmentsRead,
+        );
     });
 
-    it("keeps fine-grained local role checks in addition to delegated scopes", async () => {
-        authenticate("participant");
-        await expect(requirePermission(event, "judge", "Profile.read")).rejects.toMatchObject({
-            status: 403,
-        });
-
-        authenticate("admin");
-        await expect(requirePermission(event, "judge", "Profile.read")).resolves.toMatchObject({
-            role: "admin",
-        });
-    });
-
-    it("keeps anonymous reads anonymous when no authorization header is present", async () => {
-        vi.stubGlobal("getHeader", () => undefined);
-
+    it("keeps anonymous reads anonymous when neither bearer nor session cookie exists", async () => {
         await expect(optionalUser(event)).resolves.toBeUndefined();
     });
 
     it("reuses an already verified bearer context", async () => {
-        authenticate("participant");
+        authenticate([NethackPermissions.Teams.list]);
 
-        await expect(requireUser(event, "Profile.read")).resolves.toMatchObject({ id: 1 });
+        await expect(requireUser(event, NethackPermissions.Teams.list)).resolves.toMatchObject({
+            id: 1,
+        });
     });
 });

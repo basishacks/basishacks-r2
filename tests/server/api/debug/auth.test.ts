@@ -26,12 +26,12 @@ const sessionSource = readFileSync(
 
 describe("debug endpoints are protected", () => {
     it("files.get.ts requires permission", () => {
-        expect(filesSource).toContain("requirePermission");
-        expect(filesSource).toContain("DevPermissions.PORTAL_DEBUG_VIEW");
+        expect(filesSource).toContain("requireUser");
+        expect(filesSource).toContain("NethackPermissions.Debug.filesRead");
     });
 
     it("deepseek session get requires permission", () => {
-        expect(sessionSource).toContain("requirePermission");
-        expect(sessionSource).toContain("DevPermissions.PORTAL_DEEPSEEK_VIEW");
+        expect(sessionSource).toContain("requireUser");
+        expect(sessionSource).toContain("NethackPermissions.Debug.deepseekRead");
     });
 });

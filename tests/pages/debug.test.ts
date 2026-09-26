@@ -10,7 +10,7 @@ const source = readFileSync(
 describe("Debug page", () => {
     it("uses auth middleware and requires admin access", () => {
         expect(source).toContain('middleware: ["auth"]');
-        expect(source).toContain('if (!hasPermission(me.value?.role, "admin"))');
+        expect(source).toContain("if (!can(NethackPermissions.all))");
         expect(source).toContain('throw await navigateTo("/")');
     });
 });

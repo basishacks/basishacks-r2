@@ -321,7 +321,14 @@ describe("GET /api/teams/:id", () => {
 
         mockParams.values["id"] = String(team.id);
 
-        const result = await getHandler(createEvent());
+        const result = await getHandler(
+            createEvent({
+                context: {
+                    drizzle: ctx.drizzle,
+                    oauth2: { permissions: ["nethack.Judging.resultsRead"] },
+                },
+            }),
+        );
 
         expect(result.score).toBe(95);
         expect(result.rank).toBe(1);
